@@ -1,0 +1,31 @@
+; Copyright (c) 2021 Fraunhofer AISEC. See the COPYRIGHT
+; file at the top-level directory of this distribution.
+
+; Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+; http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+; <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+; option. This file may not be copied, modified, or distributed
+; except according to those terms.
+
+; This file should be processed with cddl-gen (https://github.com/NordicSemiconductor/cddl-gen/tree/master) to create cbor encoding and decoding code 
+
+
+
+; m2ci = (
+; 	C_I: int / bstr,
+; 	G_Y: tstr / bstr,
+; 	C_R: int / bstr,
+; 	CIPHERTEXT_2: bstr,
+; )
+
+m2 = ( G_Y_CIPHERTEXT_2: bstr, C_R: int / bstr )
+
+
+
+; !IMPORTANT! according to the spec G_Y is bstr. 
+; However msg_2 and msg_err can only be distinguished through this element. 
+; Therefore every time when msg_2 is received check the type of G_Y in order to 
+; know if it is truly msg_2 or an error message
+;data_2 = ( ? C_I: int / bstr, G_Y: tstr / bstr, C_R: int / bstr, )
+
+

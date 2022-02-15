@@ -1,0 +1,64 @@
+[ ca ]
+default_ca = CA_default
+
+[ CA_default ]
+# Directory and file locations.
+dir               = intermediate_ca
+certs             = $dir/certs
+crl_dir           = $dir/crl
+new_certs_dir     = $dir/newcerts
+database          = $dir/index.txt
+serial            = $dir/serial
+RANDFILE          = $dir/private/.rand
+
+# The root key and root certificate.
+private_key       = intermediate_ca/intermediate_ca_priv_key.pem
+certificate       = intermediate_ca/intermediate_ca_cert.pem
+
+# For certificate revocation lists.
+# crlnumber         = $dir/crlnumber
+# crl               = $dir/crl/intermediate.crl.pem
+# crl_extensions    = crl_ext
+# default_crl_days  = 30
+
+# SHA-1 is deprecated, so use SHA-2 instead.
+default_md        = sha256
+
+name_opt          = ca_default
+cert_opt          = ca_default
+default_days      = 375
+preserve          = no
+policy            = policy_loose
+
+
+[ policy_loose ]
+countryName             = optional
+stateOrProvinceName     = optional
+localityName            = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = optional
+serialNumber            = optional
+
+[ req ]
+default_bits = 2048
+default_md = sha256
+prompt = no
+encrypt_key = no
+distinguished_name = dn
+#req_extensions = req_ext
+
+[ dn ]
+C = DE 
+ST = Bavaria
+L= Garching 
+O= Fraunhofer AISEC
+OU = HWS
+CN = $ENV::common_name
+
+
+#[ req_ext ]
+#subjectAltName = test
+
+#$ENV::subject
+

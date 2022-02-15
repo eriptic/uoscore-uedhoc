@@ -1,0 +1,38 @@
+; Copyright (c) 2021 Fraunhofer AISEC. See the COPYRIGHT
+; file at the top-level directory of this distribution.
+
+; Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+; http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+; <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+; option. This file may not be copied, modified, or distributed
+; except according to those terms.
+
+; This file should be processed with cddl-gen (https://github.com/NordicSemiconductor/cddl-gen/tree/master) to create cbor encoding and decoding code 
+
+cert = (
+	cert_type: int,
+	serial_number: int,
+	issuer: tstr,
+	validity_not_before: int,
+	validity_not_after: int,
+	subject: bstr,
+	subject_public_key_algorithm: int,
+	pk: bstr,
+	extensions: int,
+	issuer_signature_algorithm: int,
+	signature: bstr
+)
+
+;This structure is changed in version 08
+; TBSCertificate = (
+;    cborCertificateType: int,
+;    certificateSerialNumber: CertificateSerialNumber,
+;    issuer: Name,
+;    validityNotBefore: Time,
+;    validityNotAfter: Time,
+;    subject: Name,
+;    subjectPublicKeyAlgorithm: AlgorithmIdentifier,
+;    subjectPublicKey: any,
+;    extensions: Extensions,
+;    issuerSignatureAlgorithm: AlgorithmIdentifier,
+; )

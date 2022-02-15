@@ -1,0 +1,13 @@
+; Copyright (c) 2021 Fraunhofer AISEC. See the COPYRIGHT
+; file at the top-level directory of this distribution.
+
+; Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+; http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+; <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+; option. This file may not be copied, modified, or distributed
+; except according to those terms.
+
+; This file should be processed with cddl-gen (https://github.com/NordicSemiconductor/cddl-gen/tree/master) to create cbor encoding and decoding code 
+
+;we use data_2 only for encoding. Decoding with first element ? does not work 
+data_2 = ( ? C_I: int / bstr, G_Y: bstr, C_R: int / bstr, )
