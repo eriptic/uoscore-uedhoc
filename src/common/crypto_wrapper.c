@@ -20,6 +20,10 @@
 
 #include "edhoc/suites.h"
 
+#ifdef EDHOC_MOCK_CRYPTO_WRAPPER
+edhoc_mock_cb edhoc_crypto_mock_cb;
+#endif // EDHOC_MOCK_CRYPTO_WRAPPER
+
 //#define MBEDTLS
 
 #ifdef MBEDTLS
@@ -164,12 +168,39 @@ cleanup:
 
 #endif
 
+#ifdef EDHOC_MOCK_CRYPTO_WRAPPER
+static bool aead_mock_args_match_predefined(
+		edhoc_mock_aead_in_out *predefined,
+		const uint8_t *key, const uint16_t key_len,
+		uint8_t *nonce, const uint16_t nonce_len,
+		const uint8_t *aad, const uint16_t aad_len,
+		uint8_t *tag, const uint16_t tag_len)
+{
+	return array_equals(&predefined->key, &(struct byte_array){.ptr=(void*)key, .len=key_len})
+			&& array_equals(&predefined->nonce, &(struct byte_array){.ptr=nonce, .len=nonce_len})
+			&& array_equals(&predefined->aad, &(struct byte_array){.ptr=(void*)aad, .len=aad_len})
+			&& array_equals(&predefined->tag,  &(struct byte_array){.ptr=tag, .len=tag_len});
+}
+#endif// EDHOC_MOCK_CRYPTO_WRAPPER
+
 enum err __attribute__((weak))
 aead(enum aes_operation op, const uint8_t *in, const uint32_t in_len,
      const uint8_t *key, const uint32_t key_len, uint8_t *nonce,
      const uint32_t nonce_len, const uint8_t *aad, const uint32_t aad_len,
      uint8_t *out, const uint32_t out_len, uint8_t *tag, const uint32_t tag_len)
 {
+#ifdef EDHOC_MOCK_CRYPTO_WRAPPER
+	for(uint32_t i=0; i < edhoc_crypto_mock_cb.aead_in_out_count; i++) {
+		edhoc_mock_aead_in_out *predefined_in_out = edhoc_crypto_mock_cb.aead_in_out + i;
+		if(aead_mock_args_match_predefined(
+				predefined_in_out, key, key_len, nonce, nonce_len, aad, aad_len, tag, tag_len)) {
+			memcpy(out, predefined_in_out->out.ptr, predefined_in_out->out.len);
+			return ok;
+		}
+	}
+	// if no mocked data has been found - continue with normal aead
+#endif
+
 #ifdef TINYCRYPT
 	struct tc_ccm_mode_struct c;
 	struct tc_aes_key_sched_struct sched;
@@ -231,11 +262,34 @@ aead(enum aes_operation op, const uint8_t *in, const uint32_t in_len,
 	return ok;
 }
 
+#ifdef EDHOC_MOCK_CRYPTO_WRAPPER
+static bool sign_mock_args_match_predefined(
+		edhoc_mock_sign_in_out *predefined,
+		 const uint8_t *sk, const size_t sk_len,
+		 const uint8_t *pk, const size_t pk_len,
+		 const uint8_t *msg, const size_t msg_len)
+{
+	return array_equals(&predefined->sk,  &(struct byte_array){.len = sk_len,  .ptr = (void*)sk})
+			&& array_equals(&predefined->pk,  &(struct byte_array){.len = pk_len,  .ptr = (void*)pk})
+			&& array_equals(&predefined->msg, &(struct byte_array){.len = msg_len, .ptr = (void*)msg});
+}
+#endif// EDHOC_MOCK_CRYPTO_WRAPPER
+
 enum err __attribute__((weak))
 sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
      const uint8_t *pk, const uint8_t *msg, const uint32_t msg_len,
      uint8_t *out)
 {
+#ifdef EDHOC_MOCK_CRYPTO_WRAPPER
+	for(uint32_t i=0; i < edhoc_crypto_mock_cb.sign_in_out_count; i++) {
+		edhoc_mock_sign_in_out *predefined_in_out = edhoc_crypto_mock_cb.sign_in_out + i;
+		if(sign_mock_args_match_predefined(predefined_in_out, sk, sk_len, pk, PK_DEFAULT_SIZE, msg, msg_len)){
+			memcpy(out, predefined_in_out->out.ptr, predefined_in_out->out.len);
+			return ok;
+		}
+	}
+#endif // EDHOC_MOCK_CRYPTO_WRAPPER
+
 	if (alg == EdDSA) {
 #if defined(COMPACT25519)
 		edsign_sign(out, pk, sk, msg, msg_len);
