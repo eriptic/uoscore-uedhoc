@@ -129,7 +129,7 @@ void test_main(void)
 	//  ztest_unit_test(test_initiator16),
 	//  ztest_unit_test(test_initiator17));
 
-	//ztest_test_suite(initiator_tests, ztest_unit_test(test_initiator8));
+	// ztest_test_suite(initiator_tests, ztest_unit_test(test_initiator1));
 
 	ztest_test_suite(responder_tests, ztest_unit_test(test_responder1),
 			 ztest_unit_test(test_responder2),

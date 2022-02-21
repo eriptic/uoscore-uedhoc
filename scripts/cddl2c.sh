@@ -17,6 +17,7 @@ SRC="../src/cbor"
 INC="../inc/cbor"
 INC_PATH_IN_C_FILES="cbor/"
 
+
 #clean up 
 echo clean up...
 rm $INC/*.h

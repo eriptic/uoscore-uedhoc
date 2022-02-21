@@ -127,16 +127,18 @@ enum err cert_c509_verify(const uint8_t *cert, uint32_t cert_len,
 	PRINTF("Certificate type: %d\n", c._cert_type);
 	// PRINT_ARRAY("Serial number", c._cert_serial_number.value,
 	// 	    c._cert_serial_number.len);
-	PRINT_ARRAY("issuer", c._cert_issuer.value, c._cert_issuer.len);
+	PRINT_ARRAY("issuer", c._cert_issuer.value,
+		    (uint32_t)c._cert_issuer.len);
 	PRINTF("validity_not_before: %d\n", c._cert_validity_not_before);
 	PRINTF("validity_not_after: %d\n", c._cert_validity_not_after);
-	PRINT_ARRAY("subject", c._cert_subject.value, c._cert_subject.len);
-	PRINT_ARRAY("PK", c._cert_pk.value, c._cert_pk.len);
+	PRINT_ARRAY("subject", c._cert_subject.value,
+		    (uint32_t)c._cert_subject.len);
+	PRINT_ARRAY("PK", c._cert_pk.value, (uint32_t)c._cert_pk.len);
 	PRINTF("extensions: %d\n", c._cert_extensions);
 	PRINTF("issuer_signature_algorithm: %d\n",
 	       c._cert_issuer_signature_algorithm);
 	PRINT_ARRAY("Signature", c._cert_signature.value,
-		    c._cert_signature.len);
+		    (uint32_t)c._cert_signature.len);
 
 	/*get the CA's public key*/
 	uint8_t *root_pk = NULL;
@@ -174,9 +176,10 @@ enum err cert_x509_verify(const uint8_t *cert, uint32_t cert_len,
 		   0);
 
 	/* some raw data from certificate */
-	PRINT_ARRAY("cert.serial", m_cert.serial.p, m_cert.serial.len);
+	PRINT_ARRAY("cert.serial", m_cert.serial.p,
+		    (uint32_t)m_cert.serial.len);
 	PRINT_ARRAY("cert.issuer_raw", m_cert.issuer_raw.p,
-		    m_cert.issuer_raw.len);
+		    (uint32_t)m_cert.issuer_raw.len);
 
 	/* write details about the issuer */
 	/* and find CN (Common Name), further referred to as "issuer_id" */
@@ -198,7 +201,7 @@ enum err cert_x509_verify(const uint8_t *cert, uint32_t cert_len,
 		p = p->next;
 	};
 
-	PRINT_ARRAY("cert issuer_id", issuer_id->p, issuer_id->len);
+	PRINT_ARRAY("cert issuer_id", issuer_id->p, (uint32_t)issuer_id->len);
 
 	enum sign_alg sign_alg;
 
@@ -240,7 +243,7 @@ enum err cert_x509_verify(const uint8_t *cert, uint32_t cert_len,
 		mbedtls_asn1_traverse_sequence_of(&pp, pp + m_cert.sig.len, 0,
 						  0, 0, 0, deser_sign_cb,
 						  &deser_sign_ctx);
-		PRINT_ARRAY("Certificate signature", sig, sig_len);
+		PRINT_ARRAY("Certificate signature", sig, (uint32_t)sig_len);
 	}
 
 	/*verify the certificates signature*/

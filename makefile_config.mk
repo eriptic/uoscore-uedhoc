@@ -3,16 +3,16 @@
 #AR = ar
 #CC = /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-gcc
 #AR = /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-ar
-CC = clang-13
+#CC = clang-13
 
 #architecture
 #ARCH = -m32
 
 # the library is compiled with the folowing optimization 
-OPT = -Og
+OPT = -O3
 
 # Uncomment this to print intermediery results at runtime
-DEBUG_PRINT += -DDEBUG_PRINT
+#DEBUG_PRINT += -DDEBUG_PRINT
 
 
 # CBOR engine

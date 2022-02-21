@@ -12,6 +12,8 @@
 #ifndef COSE_H
 #define COSE_H
 
+#include "common/oscore_edhoc_error.h"
+
 enum cose_context {
 	Encrypt0,
 	Signature1,
