@@ -8,14 +8,17 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
-#include "edhoc/th.h"
 
 #include "edhoc.h"
+
+#include "edhoc/c_x.h"
+#include "edhoc/th.h"
+
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
-#include "edhoc/c_x.h"
+
 #include "cbor/edhoc_encode_data_2.h"
 #include "cbor/edhoc_encode_th2.h"
 #include "cbor/edhoc_encode_th3.h"

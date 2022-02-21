@@ -8,17 +8,18 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
+
 #include <string.h>
 
 #include "edhoc.h"
+
+#include "edhoc/suites.h"
 
 #include "common/crypto_wrapper.h"
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 #include "common/print_util.h"
 #include "common/memcpy_s.h"
-
-#include "edhoc/suites.h"
 
 //#define MBEDTLS
 

@@ -8,13 +8,15 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
+
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "oscore.h"
+
 #include "oscore/aad.h"
-#include "oscore/coap.h"
+#include "oscore/oscore_coap.h"
 #include "oscore/nonce.h"
 #include "oscore/option.h"
 #include "oscore/oscore_cose.h"

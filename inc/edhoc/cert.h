@@ -12,6 +12,7 @@
 #define CERT_H
 
 #include <stdint.h>
+
 #include "common/oscore_edhoc_error.h"
 
 /**

@@ -8,6 +8,7 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
+
 #include <string.h>
 
 #include "edhoc.h"
@@ -18,7 +19,6 @@
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"
 #include "common/print_util.h"
-
 
 enum err prk_derive(bool static_dh_auth, struct suite suite,
 		    const uint8_t *prk_in, const uint32_t prk_in_len,

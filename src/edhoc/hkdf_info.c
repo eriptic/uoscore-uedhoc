@@ -8,13 +8,15 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
-#include "edhoc/hkdf_info.h"
 
 #include <string.h>
 
+#include "edhoc/suites.h"
+#include "edhoc/hkdf_info.h"
+
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
-#include "edhoc/suites.h"
+
 #include "cbor/edhoc_encode_info.h"
 
 enum err create_hkdf_info(const uint8_t *th, uint32_t th_len, const char *label,

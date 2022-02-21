@@ -8,18 +8,21 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
-#include "edhoc/retrieve_cred.h"
 
 #include <string.h>
 
 #include "edhoc.h"
+
+#include "edhoc/cert.h"
+#include "edhoc/signature_or_mac_msg.h"
+#include "edhoc/retrieve_cred.h"
+
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"
 #include "common/print_util.h"
 #include "common/memcpy_s.h"
+
 #include "cbor/edhoc_decode_id_cred_x.h"
-#include "edhoc/cert.h"
-#include "edhoc/signature_or_mac_msg.h"
 
 /**
  * @brief 	This function verifies a certificate and copies it to the cred 

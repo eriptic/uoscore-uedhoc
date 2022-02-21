@@ -12,10 +12,11 @@
 #ifndef SECURITY_CONTEXT_H
 #define SECURITY_CONTEXT_H
 
+#include "supported_algorithm.h"
+#include "oscore_coap.h"
+
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
-#include "supported_algorithm.h"
-#include "coap.h"
 
 #define REPLAY_WINDOW_LEN 32
 

@@ -10,6 +10,7 @@
 */
 #ifndef C_X_H
 #define C_X_H
+
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 

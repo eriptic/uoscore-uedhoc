@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #include "edhoc.h"
+
 #include "edhoc/cert.h"
 
 #include "common/memcpy_s.h"

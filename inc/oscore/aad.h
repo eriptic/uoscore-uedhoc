@@ -12,10 +12,11 @@
 #ifndef AAD_H
 #define AAD_H
 
-#include "common/byte_array.h"
-#include "error.h"
 #include "option.h"
 #include "supported_algorithm.h"
+
+#include "common/byte_array.h"
+#include "common/oscore_edhoc_error.h"
 
 /**
  * @brief   Serialize given parameters into the AAD structure.

@@ -15,13 +15,18 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "common/byte_array.h"
-#include "common/oscore_edhoc_error.h"
-#include "common/print_util.h"
 #include "oscore/security_context.h"
 #include "oscore/supported_algorithm.h"
 
-#define MAX_PLAINTEXT_LEN 128
+#include "common/byte_array.h"
+#include "common/oscore_edhoc_error.h"
+#include "common/print_util.h"
+
+#ifndef OSCORE_MAX_PLAINTEXT_LEN
+    #define OSCORE_MAX_PLAINTEXT_LEN 128
+#endif
+
+#define MAX_PLAINTEXT_LEN OSCORE_MAX_PLAINTEXT_LEN
 #define MAX_CIPHERTEXT_LEN MAX_PLAINTEXT_LEN + AUTH_TAG_LEN
 #define MAX_COAP_OPTIONS_LEN 128
 #define MAX_E_OPTIONS 30

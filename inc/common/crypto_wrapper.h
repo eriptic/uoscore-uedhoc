@@ -13,6 +13,7 @@
 
 #include "byte_array.h"
 #include "oscore_edhoc_error.h"
+
 #include "edhoc/suites.h"
 
 /*Indicates what kind of operation a symmetric cipher will execute*/

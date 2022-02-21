@@ -14,9 +14,10 @@
 
 #include <stdint.h>
 
+#include "oscore_coap.h"
+
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
-#include "coap.h"
 
 enum o_coap_option_num {
 	COAP_OPTION_IF_MATCH = 1,

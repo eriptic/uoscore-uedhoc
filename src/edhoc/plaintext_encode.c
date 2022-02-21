@@ -12,12 +12,15 @@
 #include <stdint.h>
 
 #include "edhoc.h"
-#include "common/oscore_edhoc_error.h"
-#include "common/memcpy_s.h"
-#include "common/print_util.h"
+
 #include "edhoc/retrieve_cred.h"
 #include "edhoc/signature_or_mac_msg.h"
 #include "edhoc/plaintext.h"
+
+#include "common/oscore_edhoc_error.h"
+#include "common/memcpy_s.h"
+#include "common/print_util.h"
+
 #include "cbor/edhoc_decode_id_cred_x.h"
 #include "cbor/edhoc_encode_int_type.h"
 

@@ -11,16 +11,18 @@
 
 #include <stdint.h>
 
-#include "edhoc/signature_or_mac_msg.h"
 #include "edhoc.h"
-#include "common/crypto_wrapper.h"
-#include "common/oscore_edhoc_error.h"
+#include "edhoc/edhoc_cose.h"
 #include "edhoc/hkdf_info.h"
 #include "edhoc/okm.h"
-#include "common/print_util.h"
 #include "edhoc/suites.h"
-#include "edhoc/cose.h"
+#include "edhoc/signature_or_mac_msg.h"
+
+#include "common/print_util.h"
+#include "common/crypto_wrapper.h"
+#include "common/oscore_edhoc_error.h"
 #include "common/memcpy_s.h"
+
 #include "cbor/edhoc_encode_enc_structure.h"
 #include "cbor/edhoc_encode_sig_structure.h"
 #include "cbor/edhoc_encode_bstr_type.h"

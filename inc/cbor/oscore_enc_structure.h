@@ -19,9 +19,9 @@
 #endif
 
 
-bool cbor_encode_enc_structure(
+bool cbor_encode_oscore_enc_structure(
 		uint8_t *payload, size_t payload_len,
-		const struct enc_structure *input,
+		const struct oscore_enc_structure *input,
 		size_t *payload_len_out);
 
 

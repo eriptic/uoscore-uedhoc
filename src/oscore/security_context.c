@@ -8,7 +8,6 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
-#include "oscore/security_context.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,10 +15,11 @@
 
 #include "oscore.h"
 
-#include "oscore/nonce.h"
 #include "oscore/aad.h"
-#include "oscore/coap.h"
+#include "oscore/nonce.h"
+#include "oscore/oscore_coap.h"
 #include "oscore/oscore_hkdf_info.h"
+#include "oscore/security_context.h"
 
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"

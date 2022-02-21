@@ -8,12 +8,15 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
+
 #include <string.h>
 
 #include "oscore/aad.h"
 #include "oscore/oscore_hkdf_info.h"
-#include "cbor/oscore_info.h"
+
 #include "common/oscore_edhoc_error.h"
+
+#include "cbor/oscore_info.h"
 
 /*
 HKDF = composition of HKDF-Extract and HKDF-Expand (RFC5869)

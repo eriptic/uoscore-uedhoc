@@ -15,6 +15,7 @@
 #include <stdint.h>
 
 #include "edhoc.h"
+
 #include "common/oscore_edhoc_error.h"
 
 enum id_cred_x_label {

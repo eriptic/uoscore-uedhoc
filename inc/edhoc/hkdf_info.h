@@ -12,9 +12,10 @@
 #ifndef HKDF_INFO_H
 #define HKDF_INFO_H
 
+#include "suites.h"
+
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
-#include "suites.h"
 
 /**
  * @brief   Encodes the HKDF Info 
