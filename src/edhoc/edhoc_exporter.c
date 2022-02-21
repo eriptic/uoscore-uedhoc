@@ -8,14 +8,17 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
+
 #include <stdint.h>
 
 #include "edhoc.h"
-#include "common/crypto_wrapper.h"
-#include "common/oscore_edhoc_error.h"
+
 #include "edhoc/hkdf_info.h"
 #include "edhoc/okm.h"
 #include "edhoc/suites.h"
+
+#include "common/crypto_wrapper.h"
+#include "common/oscore_edhoc_error.h"
 
 enum err edhoc_exporter(enum hash_alg app_hash_alg,
 				const uint8_t *prk_4x3m, uint32_t prk_4x3m_len,

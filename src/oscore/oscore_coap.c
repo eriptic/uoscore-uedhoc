@@ -14,7 +14,8 @@
 #include <string.h>
 
 #include "oscore.h"
-#include "oscore/coap.h"
+
+#include "oscore/oscore_coap.h"
 
 #include "common/oscore_edhoc_error.h"
 #include "common/memcpy_s.h"

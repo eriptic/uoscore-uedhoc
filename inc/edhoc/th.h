@@ -11,10 +11,11 @@
 #ifndef TH_H
 #define TH_H
 
-#include "common/byte_array.h"
-#include "common/oscore_edhoc_error.h"
 #include "suites.h"
 #include "c_x.h"
+
+#include "common/byte_array.h"
+#include "common/oscore_edhoc_error.h"
 
 /**
  * @brief   calculates transcript hash th2 

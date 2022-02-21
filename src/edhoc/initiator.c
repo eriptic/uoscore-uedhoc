@@ -10,15 +10,17 @@
 */
 
 #include "edhoc.h"
-#include "../edhoc_internal.h"
+#include "edhoc_internal.h"
+
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"
-#include "edhoc/hkdf_info.h"
 #include "common/memcpy_s.h"
+#include "common/print_util.h"
+
+#include "edhoc/hkdf_info.h"
 #include "edhoc/messages.h"
 #include "edhoc/okm.h"
 #include "edhoc/plaintext.h"
-#include "common/print_util.h"
 #include "edhoc/prk.h"
 #include "edhoc/retrieve_cred.h"
 #include "edhoc/signature_or_mac_msg.h"
@@ -28,10 +30,10 @@
 #include "edhoc/c_x.h"
 #include "edhoc/ciphertext.h"
 #include "edhoc/runtime_context.h"
+
 #include "cbor/edhoc_encode_message_1.h"
 #include "cbor/edhoc_decode_message_2.h"
 #include "cbor/edhoc_encode_message_3.h"
-//#include "cbor/edhoc_decode_message_2_c_i.h"
 
 /** 
  * @brief   Parses message 2

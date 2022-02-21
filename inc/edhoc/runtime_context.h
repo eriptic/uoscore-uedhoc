@@ -12,6 +12,7 @@
 #define RUNTIME_CONTEXT_H
 
 #include <stdint.h>
+
 #include "edhoc.h"
 
 struct runtime_context {

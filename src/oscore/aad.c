@@ -8,7 +8,9 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
+
 #include "oscore.h"
+
 #include "oscore/aad.h"
 #include "oscore/option.h"
 

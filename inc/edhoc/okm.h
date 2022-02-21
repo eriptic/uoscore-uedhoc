@@ -13,9 +13,10 @@
 
 #include <stdint.h>
 
-#include "common/oscore_edhoc_error.h"
 #include "hkdf_info.h"
 #include "suites.h"
+
+#include "common/oscore_edhoc_error.h"
 
 /**
  * @brief   Derives output keying material.

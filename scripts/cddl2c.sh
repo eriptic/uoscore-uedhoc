@@ -31,7 +31,7 @@ python3 $ZCBOR -c $MODELS_PATH/oscore_aad_array.cddl code -e -t aad_array --oc $
 
 python3 $ZCBOR -c $MODELS_PATH/oscore_info.cddl code -e -t oscore_info --oc $SRC/oscore_info.c --oh $INC/oscore_info.h
 
-python3 $ZCBOR -c $MODELS_PATH/oscore_enc_structure.cddl code -e -t enc_structure --oc $SRC/oscore_enc_structure.c --oh $INC/oscore_enc_structure.h
+python3 $ZCBOR -c $MODELS_PATH/oscore_enc_structure.cddl code -e -t oscore_enc_structure --oc $SRC/oscore_enc_structure.c --oh $INC/oscore_enc_structure.h
 
 #
 # EDHOC
@@ -59,7 +59,7 @@ python3 $ZCBOR -c $MODELS_PATH/edhoc_message_error.cddl code -e -t message_error
 
 # ###   cose   ###
 
-python3 $ZCBOR -c $MODELS_PATH/edhoc_cose.cddl code -e -t enc_structure --oc $SRC/edhoc_encode_enc_structure.c --oh $INC/edhoc_encode_enc_structure.h
+python3 $ZCBOR -c $MODELS_PATH/edhoc_cose.cddl code -e -t edhoc_enc_structure --oc $SRC/edhoc_encode_enc_structure.c --oh $INC/edhoc_encode_enc_structure.h
 
 python3 $ZCBOR -c $MODELS_PATH/edhoc_cose.cddl code -e -t sig_structure --oc $SRC/edhoc_encode_sig_structure.c --oh $INC/edhoc_encode_sig_structure.h
 

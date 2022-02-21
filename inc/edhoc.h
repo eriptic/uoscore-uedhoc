@@ -14,13 +14,14 @@
 
 #include <stdint.h>
 
-#include "common/oscore_edhoc_error.h"
-#include "common/byte_array.h"
-#include "common/print_util.h"
 #include "edhoc/edhoc_method_type.h"
 #include "edhoc/messages.h"
 #include "edhoc/suites.h"
 #include "edhoc/c_x.h"
+
+#include "common/oscore_edhoc_error.h"
+#include "common/byte_array.h"
+#include "common/print_util.h"
 
 /*define EDHOC_BUF_SIZES_RPK in order to use smaller buffers and save some RAM if need when RPKs are used*/
 //#define EDHOC_BUF_SIZES_RPK

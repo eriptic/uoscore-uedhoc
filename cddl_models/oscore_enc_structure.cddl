@@ -12,4 +12,4 @@
 ; context can be one of "Encrypt" / "Encrypt0" / "Enc_Recipient" /
 ;           "Mac_Recipient" / "Rec_Recipient"
 
-enc_structure = [ context: tstr, protected: bstr, external_aad: bstr, ]
+oscore_enc_structure = [ context: tstr, protected: bstr, external_aad: bstr, ]

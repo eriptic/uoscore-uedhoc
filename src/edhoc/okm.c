@@ -8,12 +8,16 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
+
 #include "edhoc.h"
+
+#include "edhoc/hkdf_info.h"
+#include "edhoc/okm.h"
+
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"
-#include "edhoc/hkdf_info.h"
+
 #include "common/print_util.h"
-#include "edhoc/okm.h"
 
 enum err okm_calc(enum hash_alg hash_alg, const uint8_t *prk, uint32_t prk_len,
 		  const uint8_t *th, uint32_t th_len, const char *label,

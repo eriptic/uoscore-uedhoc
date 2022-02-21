@@ -11,10 +11,12 @@
 
 #include <stdint.h>
 
+#include "edhoc/edhoc_cose.h"
+
 #include "common/oscore_edhoc_error.h"
+
 #include "cbor/edhoc_encode_enc_structure.h"
 #include "cbor/edhoc_encode_sig_structure.h"
-#include "edhoc/cose.h"
 
 enum err cose_enc_structure_encode(const uint8_t *context, uint32_t context_len,
 				   const uint8_t *protected,
@@ -23,17 +25,17 @@ enum err cose_enc_structure_encode(const uint8_t *context, uint32_t context_len,
 				   uint32_t external_aad_len, uint8_t *out,
 				   uint32_t *out_len)
 {
-	struct enc_structure enc_structure;
+	struct edhoc_enc_structure enc_structure;
 
-	enc_structure._enc_structure_context.value = context;
-	enc_structure._enc_structure_context.len = context_len;
-	enc_structure._enc_structure_protected.value = protected;
-	enc_structure._enc_structure_protected.len = protected_len;
-	enc_structure._enc_structure_external_aad.value = external_aad;
-	enc_structure._enc_structure_external_aad.len = external_aad_len;
+    enc_structure._edhoc_enc_structure_context.value = context;
+    enc_structure._edhoc_enc_structure_context.len = context_len;
+    enc_structure._edhoc_enc_structure_protected.value = protected;
+	enc_structure._edhoc_enc_structure_protected.len = protected_len;
+    enc_structure._edhoc_enc_structure_external_aad.value = external_aad;
+	enc_structure._edhoc_enc_structure_external_aad.len = external_aad_len;
 
 	size_t payload_len_out;
-	TRY_EXPECT(cbor_encode_enc_structure(out, *out_len, &enc_structure,
+	TRY_EXPECT(cbor_encode_edhoc_enc_structure(out, *out_len, &enc_structure,
 					     &payload_len_out),
 		   true);
 	*out_len = (uint32_t) payload_len_out;
