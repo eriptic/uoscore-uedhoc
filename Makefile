@@ -117,7 +117,7 @@ EXTENDED_CFLAGS += -Wcast-qual
 EXTENDED_CFLAGS += -Wstack-usage=7000
 EXTENDED_CFLAGS += -Wconversion
 EXTENDED_CFLAGS += -Wpedantic
-EXTENDED_CFLAGS += -Werror
+#EXTENDED_CFLAGS += -Werror
 
 #Clang warning flahs
 else ifeq ($(findstring clang,$(CC)),clang)

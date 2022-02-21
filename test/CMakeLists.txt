@@ -14,8 +14,7 @@ FILE(GLOB app_sources
   ../externals/compact25519/src/*.c
   ../externals/mbedtls/library/*.c)
 target_sources(app PRIVATE ${app_sources})
-#../samples/common/cbor/*.c
-#../samples/common/test_vec_parser.c
+#   ../externals/mbedtls/library/*.c
 
 include_directories(
   ../inc
@@ -26,7 +25,10 @@ include_directories(
   ../externals/mbedtls/include/mbedtls 
   ../externals/mbedtls/include/psa )
 #todo remove the inc after cleaning up all self defined types in oscore.h and edhoc.h
-  #  ../externals/jsmn
+# ../externals/mbedtls/library 
+# ../externals/mbedtls/include 
+# ../externals/mbedtls/include/mbedtls 
+# ../externals/mbedtls/include/psa 
 
 add_definitions(
   #-DDEBUG_PRINT

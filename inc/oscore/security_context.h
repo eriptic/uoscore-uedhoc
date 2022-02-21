@@ -13,7 +13,7 @@
 #define SECURITY_CONTEXT_H
 
 #include "common/byte_array.h"
-#include "error.h"
+#include "common/oscore_edhoc_error.h"
 #include "supported_algorithm.h"
 #include "coap.h"
 
@@ -105,10 +105,8 @@ enum err sender_seq_num2piv(uint64_t ssn, struct byte_array *piv);
  * @param   new_kid_context 
  * @param   c oscore context
  */
-enum err context_update(enum dev_type dev,
-				 struct o_coap_option *options,
-				 uint16_t opt_num, struct byte_array *new_piv,
-				 struct byte_array *new_kid_context,
-				 struct context *c);
+enum err context_update(enum dev_type dev, struct o_coap_option *options,
+			uint16_t opt_num, struct byte_array *new_piv,
+			struct byte_array *new_kid_context, struct context *c);
 
 #endif

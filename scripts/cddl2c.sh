@@ -15,6 +15,7 @@ ZCBOR="../externals/zcbor/zcbor/zcbor.py"
 MODELS_PATH="../cddl_models"
 SRC="../src/cbor"
 INC="../inc/cbor"
+INC_PATH_IN_C_FILES="cbor/"
 
 #clean up 
 echo clean up...

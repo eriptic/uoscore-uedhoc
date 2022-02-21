@@ -3,7 +3,7 @@
 #AR = ar
 #CC = /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-gcc
 #AR = /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-ar
-#CC = clang-13
+CC = clang-13
 
 #architecture
 #ARCH = -m32
@@ -12,7 +12,7 @@
 OPT = -Og
 
 # Uncomment this to print intermediery results at runtime
-#DEBUG_PRINT += -DDEBUG_PRINT
+DEBUG_PRINT += -DDEBUG_PRINT
 
 
 # CBOR engine
