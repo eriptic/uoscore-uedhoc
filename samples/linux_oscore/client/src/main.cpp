@@ -19,11 +19,11 @@
 #include <unistd.h>
 
 extern "C" {
-#include "../../../../modules/oscore/oscore.h"
-#include "../../common/sock.h"
+#include "oscore.h"
+#include "sock.h"
 }
-#include "../../../../externals/cantcoap/cantcoap.h"
-#include "edhoc/credentials.h"
+#include "cantcoap.h"
+#include "oscore_test_vectors.h"
 
 #define USE_IPV6
 
@@ -70,9 +70,18 @@ int main()
 
 	/*OSCORE contex initialization*/
 	oscore_init_params params = {
-		CLIENT,	    MASTER_SECRET_LEN, MASTER_SECRET, SENDER_ID_LEN,
-		SENDER_ID,  RECIPIENT_ID_LEN,  RECIPIENT_ID,  ID_CONTEXT_LEN,
-		ID_CONTEXT, MASTER_SALT_LEN,   MASTER_SALT,   OSCORE_AES_CCM_16_64_128,
+		CLIENT,
+		T1__MASTER_SECRET_LEN,
+		(uint8_t *)T1__MASTER_SECRET,
+		T1__SENDER_ID_LEN,
+		(uint8_t *)T1__SENDER_ID,
+		T1__RECIPIENT_ID_LEN,
+		(uint8_t *)T1__RECIPIENT_ID,
+		T1__ID_CONTEXT_LEN,
+		(uint8_t *)T1__ID_CONTEXT,
+		T1__MASTER_SALT_LEN,
+		(uint8_t *)T1__MASTER_SALT,
+		OSCORE_AES_CCM_16_64_128,
 		OSCORE_SHA_256,
 	};
 	r = oscore_context_init(&params, &c_client);
