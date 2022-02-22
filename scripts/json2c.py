@@ -718,7 +718,7 @@ def main():
         + struct_body_out
         + STRUCT_POPULATE_END
     )
-    with open(in_out_path + "test_vectors.h", "w") as out_fp:
+    with open(in_out_path + "edhoc_test_vectors.h", "w") as out_fp:
         out_fp.write(output)
 
 

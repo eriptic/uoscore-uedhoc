@@ -21,7 +21,7 @@
 extern "C" {
 #include "edhoc.h"
 #include "sock.h"
-#include "test_vectors.h"
+#include "edhoc_test_vectors.h"
 }
 #include "cantcoap.h"
 

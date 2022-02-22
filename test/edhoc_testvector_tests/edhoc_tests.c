@@ -16,7 +16,7 @@
 #include <edhoc.h>
 #include "txrx_wrapper.h"
 #include "edhoc_tests.h"
-#include "test_vectors.h"
+#include "edhoc_test_vectors.h"
 
 struct messages m;
 
