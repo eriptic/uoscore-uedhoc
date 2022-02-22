@@ -38,6 +38,11 @@
 #include "cbor/edhoc_decode_bstr_type.h"
 #include "cbor/edhoc_decode_message_3.h"
 
+#define CBOR_UINT_SINGLE_BYTE_UINT_MAX_VALUE (0x17)
+#define CBOR_UINT_MULTI_BYTE_UINT_MAX_VALUE (0x17)
+#define CBOR_BSTR_TYPE_MIN_VALUE (0x40)
+#define CBOR_BSTR_TYPE_MAX_VALUE (0x57)
+
 /**
  * @brief   Parses message 1
  * @param   msg1 buffer containing message 1
@@ -191,7 +196,7 @@ static inline enum err msg2_encode(const uint8_t *g_y, uint32_t g_y_len,
 }
 
 enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
-		  uint8_t *ead_1, uint32_t *ead_1_len)
+		  uint8_t *ead_1, uint32_t *ead_1_len, uint8_t *c_i_bytes, uint32_t *c_i_bytes_len)
 {
 	PRINT_ARRAY("message_1 (CBOR Sequence)", rc->msg1, rc->msg1_len);
 
@@ -205,6 +210,11 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 
 	TRY(msg1_parse(rc->msg1, rc->msg1_len, &method, suites_i, &suites_i_len,
 		       g_x, &g_x_len, c_i, &c_i_len, ead_1, ead_1_len));
+
+	if ((NULL != c_i_bytes) && (NULL != c_i_bytes_len)) {
+		TRY(_memcpy_s(c_i_bytes, *c_i_bytes_len, c_i, c_i_len));
+		*c_i_bytes_len = c_i_len;
+	}
 
 	if (!(selected_suite_is_supported(suites_i[suites_i_len - 1],
 					  &c->suites_r))) {
@@ -288,7 +298,8 @@ enum err msg3_process(struct edhoc_responder_context *c,
 		      struct runtime_context *rc,
 		      struct other_party_cred *cred_i_array,
 		      uint16_t num_cred_i, uint8_t *ead_3, uint32_t *ead_3_len,
-		      uint8_t *prk_out, uint32_t prk_out_len)
+		      uint8_t *prk_out, uint32_t prk_out_len,
+			  uint8_t *public_key, uint32_t *key_size)
 {
 	uint8_t ciphertext_3[CIPHERTEXT3_DEFAULT_SIZE];
 	uint32_t ciphertext_3_len = sizeof(ciphertext_3);
@@ -335,6 +346,12 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	PRINT_ARRAY("CRED_I", cred_i, cred_i_len);
 	PRINT_ARRAY("pk", pk, pk_len);
 	PRINT_ARRAY("g_i", g_i, g_i_len);
+
+	/* Export public key. */
+	if ((NULL != public_key) && (NULL != key_size)) {
+		_memcpy_s(public_key, *key_size, pk, pk_len);
+		*key_size = pk_len;
+	}
 
 	/*derive prk_4e3m*/
 	TRY(prk_derive(rc->static_dh_i, rc->suite, SALT_4e3m, rc->th3,
@@ -386,6 +403,8 @@ enum err edhoc_responder_run(
 	uint8_t *err_msg, uint32_t *err_msg_len, uint8_t *ead_1,
 	uint32_t *ead_1_len, uint8_t *ead_3, uint32_t *ead_3_len,
 	uint8_t *prk_out, uint32_t prk_out_len,
+	uint8_t *client_pub_key, uint32_t *client_pub_key_size,
+	uint8_t *c_i_bytes, uint32_t *c_i_bytes_len,
 	enum err (*tx)(void *sock, uint8_t *data, uint32_t data_len),
 	enum err (*rx)(void *sock, uint8_t *data, uint32_t *data_len))
 {
@@ -397,7 +416,7 @@ enum err edhoc_responder_run(
 	if (MSG_1_DEFAULT_SIZE < rc.msg1_len) {
 		return error_message_received;
 	}
-	TRY(msg2_gen(c, &rc, ead_1, ead_1_len));
+	TRY(msg2_gen(c, &rc, ead_1, ead_1_len, c_i_bytes, c_i_bytes_len));
 	TRY(tx(c->sock, rc.msg2, rc.msg2_len));
 
 	PRINT_MSG("waiting to receive message 3...\n");
@@ -406,7 +425,7 @@ enum err edhoc_responder_run(
 		return error_message_received;
 	}
 	TRY(msg3_process(c, &rc, cred_i_array, num_cred_i, ead_3, ead_3_len,
-			 prk_out, prk_out_len));
+			 prk_out, prk_out_len, client_pub_key, client_pub_key_size));
 	if (c->msg4) {
 		TRY(msg4_gen(c, &rc));
 		TRY(tx(c->sock, rc.msg4, rc.msg4_len));

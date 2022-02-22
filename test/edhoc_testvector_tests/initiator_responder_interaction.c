@@ -274,6 +274,7 @@ void thread_responder(void *vec_num, void *dummy2, void *dummy3)
 	r = edhoc_responder_run(&c_r, &cred_i, cred_num, R_err_msg,
 				&R_err_msg_len, (uint8_t *)&R_ad_1, &R_ad_1_len,
 				(uint8_t *)&R_ad_3, &R_ad_3_len, R_PRK_out,
+				NULL, 0, NULL, 0,
 				sizeof(R_PRK_out), tx_responder, rx_responder);
 	if (r != ok) {
 		goto end;

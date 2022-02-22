@@ -84,10 +84,12 @@ enum err msg4_process(struct runtime_context *rc, uint8_t *ead_4,
  * @param rc runtime context
  * @param ead_1 EAD_1 from message 1 (output)
  * @param ead_1_len length of EAD_1 
+ * @param c_i_bytes connection identifier C_I
+ * @param c_i_bytes_len length of C_I
  * @return enum err 
  */
 enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
-		  uint8_t *ead_1, uint32_t *ead_1_len);
+		  uint8_t *ead_1, uint32_t *ead_1_len, uint8_t *c_i_bytes, uint32_t *c_i_bytes_len);
 
 /**
  * @brief Processes message 3. This function should by used by on the responder 
@@ -101,13 +103,16 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
  * @param ead_3_len length of EAD_3
  * @param prk_out the derived secret (output)
  * @param prk_out_len length of prk_out
+ * @param public_key public key of initiator
+ * @param size of public key
  * @return enum err 
  */
 enum err msg3_process(struct edhoc_responder_context *c,
 		      struct runtime_context *rc,
 		      struct other_party_cred *cred_i_array,
 		      uint16_t num_cred_i, uint8_t *ead_3, uint32_t *ead_3_len,
-		      uint8_t *prk_out, uint32_t prk_out_len);
+		      uint8_t *prk_out, uint32_t prk_out_len,
+			  uint8_t *public_key, uint32_t *key_size);
 
 /**
  * @brief Generates message 4. This function should by used by on the responder 
