@@ -7747,13 +7747,13 @@ struct test_vector test_vectors[] = {
         .g_r_raw = test_vector_1_g_r_raw,
         .g_r_raw_len = sizeof(test_vector_1_g_r_raw),
         
-        .c_r_raw = test_vector_1_c_r_raw,
-        .c_r_raw_len = sizeof(test_vector_1_c_r_raw),
-        .c_r_raw_int = NULL,
-        
         .c_i_raw = NULL,
         .c_i_raw_len = 0,
         .c_i_raw_int =  &test_vector_1_c_i_raw,
+        
+        .c_r_raw = test_vector_1_c_r_raw,
+        .c_r_raw_len = sizeof(test_vector_1_c_r_raw),
+        .c_r_raw_int = NULL,
 	},
 /*--------------- test_vector_2 ------------*/
  
@@ -8038,13 +8038,13 @@ struct test_vector test_vectors[] = {
         .g_r_raw = NULL,
         .g_r_raw_len = 0,
         
-        .c_r_raw = NULL,
-        .c_r_raw_len = 0,
-        .c_r_raw_int =  &test_vector_2_c_r_raw,
-        
         .c_i_raw = NULL,
         .c_i_raw_len = 0,
         .c_i_raw_int =  &test_vector_2_c_i_raw,
+        
+        .c_r_raw = NULL,
+        .c_r_raw_len = 0,
+        .c_r_raw_int =  &test_vector_2_c_r_raw,
 	},
 /*--------------- test_vector_3 ------------*/
  
@@ -8329,13 +8329,13 @@ struct test_vector test_vectors[] = {
         .g_r_raw = test_vector_3_g_r_raw,
         .g_r_raw_len = sizeof(test_vector_3_g_r_raw),
         
-        .c_r_raw = NULL,
-        .c_r_raw_len = 0,
-        .c_r_raw_int =  &test_vector_3_c_r_raw,
-        
         .c_i_raw = NULL,
         .c_i_raw_len = 0,
         .c_i_raw_int =  &test_vector_3_c_i_raw,
+        
+        .c_r_raw = NULL,
+        .c_r_raw_len = 0,
+        .c_r_raw_int =  &test_vector_3_c_r_raw,
 	},
 /*--------------- test_vector_4 ------------*/
  
@@ -8620,13 +8620,13 @@ struct test_vector test_vectors[] = {
         .g_r_raw = NULL,
         .g_r_raw_len = 0,
         
-        .c_r_raw = NULL,
-        .c_r_raw_len = 0,
-        .c_r_raw_int =  &test_vector_4_c_r_raw,
-        
         .c_i_raw = NULL,
         .c_i_raw_len = 0,
         .c_i_raw_int =  &test_vector_4_c_i_raw,
+        
+        .c_r_raw = NULL,
+        .c_r_raw_len = 0,
+        .c_r_raw_int =  &test_vector_4_c_r_raw,
 	},
 /*--------------- test_vector_5 ------------*/
  
@@ -8911,13 +8911,13 @@ struct test_vector test_vectors[] = {
         .g_r_raw = test_vector_5_g_r_raw,
         .g_r_raw_len = sizeof(test_vector_5_g_r_raw),
         
-        .c_r_raw = NULL,
-        .c_r_raw_len = 0,
-        .c_r_raw_int =  &test_vector_5_c_r_raw,
-        
         .c_i_raw = NULL,
         .c_i_raw_len = 0,
         .c_i_raw_int =  &test_vector_5_c_i_raw,
+        
+        .c_r_raw = NULL,
+        .c_r_raw_len = 0,
+        .c_r_raw_int =  &test_vector_5_c_r_raw,
 	},
 /*--------------- test_vector_6 ------------*/
  
@@ -9202,13 +9202,13 @@ struct test_vector test_vectors[] = {
         .g_r_raw = NULL,
         .g_r_raw_len = 0,
         
-        .c_r_raw = NULL,
-        .c_r_raw_len = 0,
-        .c_r_raw_int =  &test_vector_6_c_r_raw,
-        
         .c_i_raw = NULL,
         .c_i_raw_len = 0,
         .c_i_raw_int =  &test_vector_6_c_i_raw,
+        
+        .c_r_raw = NULL,
+        .c_r_raw_len = 0,
+        .c_r_raw_int =  &test_vector_6_c_r_raw,
 	},
 /*--------------- test_vector_7 ------------*/
  
@@ -9493,13 +9493,13 @@ struct test_vector test_vectors[] = {
         .g_r_raw = NULL,
         .g_r_raw_len = 0,
         
-        .c_r_raw = NULL,
-        .c_r_raw_len = 0,
-        .c_r_raw_int =  &test_vector_7_c_r_raw,
-        
         .c_i_raw = NULL,
         .c_i_raw_len = 0,
         .c_i_raw_int =  &test_vector_7_c_i_raw,
+        
+        .c_r_raw = NULL,
+        .c_r_raw_len = 0,
+        .c_r_raw_int =  &test_vector_7_c_r_raw,
 	},
 /*--------------- test_vector_8 ------------*/
  
@@ -9784,13 +9784,13 @@ struct test_vector test_vectors[] = {
         .g_r_raw = test_vector_8_g_r_raw,
         .g_r_raw_len = sizeof(test_vector_8_g_r_raw),
         
-        .c_r_raw = NULL,
-        .c_r_raw_len = 0,
-        .c_r_raw_int =  &test_vector_8_c_r_raw,
-        
         .c_i_raw = NULL,
         .c_i_raw_len = 0,
         .c_i_raw_int =  &test_vector_8_c_i_raw,
+        
+        .c_r_raw = NULL,
+        .c_r_raw_len = 0,
+        .c_r_raw_int =  &test_vector_8_c_r_raw,
 	},
 /*--------------- test_vector_9 ------------*/
  
@@ -10075,13 +10075,13 @@ struct test_vector test_vectors[] = {
         .g_r_raw = NULL,
         .g_r_raw_len = 0,
         
-        .c_r_raw = NULL,
-        .c_r_raw_len = 0,
-        .c_r_raw_int =  &test_vector_9_c_r_raw,
-        
         .c_i_raw = NULL,
         .c_i_raw_len = 0,
         .c_i_raw_int =  &test_vector_9_c_i_raw,
+        
+        .c_r_raw = NULL,
+        .c_r_raw_len = 0,
+        .c_r_raw_int =  &test_vector_9_c_r_raw,
 	},
 /*--------------- test_vector_10 ------------*/
  
@@ -10366,13 +10366,13 @@ struct test_vector test_vectors[] = {
         .g_r_raw = test_vector_10_g_r_raw,
         .g_r_raw_len = sizeof(test_vector_10_g_r_raw),
         
-        .c_r_raw = test_vector_10_c_r_raw,
-        .c_r_raw_len = sizeof(test_vector_10_c_r_raw),
-        .c_r_raw_int = NULL,
-        
         .c_i_raw = test_vector_10_c_i_raw,
         .c_i_raw_len = sizeof(test_vector_10_c_i_raw),
         .c_i_raw_int = NULL,
+        
+        .c_r_raw = test_vector_10_c_r_raw,
+        .c_r_raw_len = sizeof(test_vector_10_c_r_raw),
+        .c_r_raw_int = NULL,
 	},
 /*--------------- test_vector_11 ------------*/
  
@@ -10657,13 +10657,13 @@ struct test_vector test_vectors[] = {
         .g_r_raw = NULL,
         .g_r_raw_len = 0,
         
-        .c_r_raw = test_vector_11_c_r_raw,
-        .c_r_raw_len = sizeof(test_vector_11_c_r_raw),
-        .c_r_raw_int = NULL,
-        
         .c_i_raw = NULL,
         .c_i_raw_len = 0,
         .c_i_raw_int =  &test_vector_11_c_i_raw,
+        
+        .c_r_raw = test_vector_11_c_r_raw,
+        .c_r_raw_len = sizeof(test_vector_11_c_r_raw),
+        .c_r_raw_int = NULL,
 	},
 /*--------------- test_vector_12 ------------*/
  
@@ -10948,13 +10948,13 @@ struct test_vector test_vectors[] = {
         .g_r_raw = test_vector_12_g_r_raw,
         .g_r_raw_len = sizeof(test_vector_12_g_r_raw),
         
-        .c_r_raw = NULL,
-        .c_r_raw_len = 0,
-        .c_r_raw_int =  &test_vector_12_c_r_raw,
-        
         .c_i_raw = NULL,
         .c_i_raw_len = 0,
         .c_i_raw_int =  &test_vector_12_c_i_raw,
+        
+        .c_r_raw = NULL,
+        .c_r_raw_len = 0,
+        .c_r_raw_int =  &test_vector_12_c_r_raw,
 	},
 /*--------------- test_vector_13 ------------*/
  
@@ -11239,12 +11239,12 @@ struct test_vector test_vectors[] = {
         .g_r_raw = NULL,
         .g_r_raw_len = 0,
         
-        .c_r_raw = NULL,
-        .c_r_raw_len = 0,
-        .c_r_raw_int =  &test_vector_13_c_r_raw,
-        
         .c_i_raw = NULL,
         .c_i_raw_len = 0,
         .c_i_raw_int =  &test_vector_13_c_i_raw,
+        
+        .c_r_raw = NULL,
+        .c_r_raw_len = 0,
+        .c_r_raw_int =  &test_vector_13_c_r_raw,
 	},
 };

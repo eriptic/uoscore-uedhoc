@@ -9,7 +9,7 @@ import binascii
 in_out_path = "../test_vectors/"
 
 HEADER = "/*This is an automatically generated file!*/\n\n"
-INCLUDES = "#include \"edhoc.h\"\n#include <stdint.h>\n#include <stdio.h>\n#include <stdlib.h>\n\n"
+INCLUDES = '#include "edhoc.h"\n#include <stdint.h>\n#include <stdio.h>\n#include <stdlib.h>\n\n'
 STRUCT_DEF = "\n\
 struct test_vector {\n\
         const uint8_t *method;\n\
@@ -584,13 +584,13 @@ STRUCT_POPULATE = "\n\
         .g_r_raw = NULL,\n\
         .g_r_raw_len = 0,\n\
         \n\
-        .c_r_raw = NULL,\n\
-        .c_r_raw_len = 0,\n\
-        .c_r_raw_int = NULL,\n\
-        \n\
         .c_i_raw = NULL,\n\
         .c_i_raw_len = 0,\n\
         .c_i_raw_int = NULL,\n\
+        \n\
+        .c_r_raw = NULL,\n\
+        .c_r_raw_len = 0,\n\
+        .c_r_raw_int = NULL,\n\
 	},\n\
 "
 STRUCT_POPULATE_END = "};"
@@ -602,9 +602,9 @@ def print_c_array(in_string):
     if type(in_string) is str:
         out_string = "[] = {\n\t"
         for i in range(0, len(in_string), 2):
-            out_string = out_string + "0x" + in_string[i]+in_string[i+1]
+            out_string = out_string + "0x" + in_string[i] + in_string[i + 1]
 
-            if i != len(in_string)-2:
+            if i != len(in_string) - 2:
                 out_string = out_string + ", "
                 if cnt == 8:
                     out_string = out_string + "\n\t"
@@ -613,7 +613,7 @@ def print_c_array(in_string):
                 out_string = out_string + "};\n"
             cnt = cnt + 1
 
-        if(len(in_string) == 0):
+        if len(in_string) == 0:
             out_string = out_string + "};\n"
 
     if type(in_string) is int:
@@ -641,16 +641,15 @@ def populate_struct_body(input, val="dummy", key="dummy", array_name="dummy"):
     repl_int_val = "        ." + key + " = &" + array_name
 
     pattern_c_x_int_val = "        ." + key + "_int = NULL"
-#     repl_c_x_str_val = "        ." + key + \
-#         " =  {BSTR, {sizeof(" + array_name + "), " + array_name + "}}"
-    repl_c_x_int_val = "        ." + key + "_int" + \
-        " =  &" + array_name
+    #     repl_c_x_str_val = "        ." + key + \
+    #         " =  {BSTR, {sizeof(" + array_name + "), " + array_name + "}}"
+    repl_c_x_int_val = "        ." + key + "_int" + " =  &" + array_name
 
-#     if (key == "c_r_raw") or (key == "c_i_raw"):
-#         if isinstance(val, str):
-#             return re.sub(pattern_c_x_str_val, repl_c_x_str_val, input)
-#         if isinstance(val, int):
-#             return re.sub(pattern_c_x_str_val, repl_c_x_int_val, input)
+    #     if (key == "c_r_raw") or (key == "c_i_raw"):
+    #         if isinstance(val, str):
+    #             return re.sub(pattern_c_x_str_val, repl_c_x_str_val, input)
+    #         if isinstance(val, int):
+    #             return re.sub(pattern_c_x_str_val, repl_c_x_int_val, input)
 
     if isinstance(val, str):
         changed_len = re.sub(pattern_str_len, repl_str_len, input)
@@ -665,7 +664,7 @@ def populate_struct_body(input, val="dummy", key="dummy", array_name="dummy"):
 
 
 def main():
-    with open(in_out_path + 'edhoc-vectors-json_v11.txt', 'r') as in_fp:
+    with open(in_out_path + "edhoc-vectors-json_v11.txt", "r") as in_fp:
         data = json.load(in_fp)
 
     data_arrays = "\n"
@@ -689,23 +688,37 @@ def main():
 
             # if the value of an element is a int save it as int_32
             if isinstance(type, int):
-                data_arrays = data_arrays + "int32_t " + array_name + \
-                    print_c_array(test_vector_elements[key])
+                data_arrays = (
+                    data_arrays
+                    + "int32_t "
+                    + array_name
+                    + print_c_array(test_vector_elements[key])
+                )
 
             # if the value of an element is a string save it in uint8_t array
             if isinstance(type, str):
-                data_arrays = data_arrays + "static const uint8_t " + array_name + \
-                    print_c_array(test_vector_elements[key])
+                data_arrays = (
+                    data_arrays
+                    + "static const uint8_t "
+                    + array_name
+                    + print_c_array(test_vector_elements[key])
+                )
 
-            struct_body = populate_struct_body(
-                struct_body, type, key, array_name)
+            struct_body = populate_struct_body(struct_body, type, key, array_name)
 
         struct_body_out += "/*--------------- " + vec_num + " ------------*/\n "
         struct_body_out += struct_body
 
-    output = HEADER + INCLUDES + STRUCT_DEF + data_arrays + \
-        STRUCT_POPULATE_START + struct_body_out + STRUCT_POPULATE_END
-    with open(in_out_path + 'test_vectors.h', 'w') as out_fp:
+    output = (
+        HEADER
+        + INCLUDES
+        + STRUCT_DEF
+        + data_arrays
+        + STRUCT_POPULATE_START
+        + struct_body_out
+        + STRUCT_POPULATE_END
+    )
+    with open(in_out_path + "test_vectors.h", "w") as out_fp:
         out_fp.write(output)
 
 
