@@ -14,7 +14,7 @@ FILE(GLOB app_sources
   ../externals/compact25519/src/*.c
   ../externals/mbedtls/library/*.c)
 target_sources(app PRIVATE ${app_sources})
-#   ../externals/mbedtls/library/*.c
+
 
 include_directories(
   ../inc

@@ -86,37 +86,26 @@ int test_edhoc(enum role p, uint8_t vec_num)
 		}
 		c_i.msg4 = true;
 		c_i.method = *test_vectors[vec_num].method;
-
 		c_i.suites_i.len = test_vectors[vec_num].suites_i_len;
 		c_i.suites_i.ptr = (uint8_t *)test_vectors[vec_num].suites_i;
-
 		c_i.ead_1.len = test_vectors[vec_num].ead_1_len;
 		c_i.ead_1.ptr = (uint8_t *)test_vectors[vec_num].ead_1;
-
 		c_i.ead_3.len = test_vectors[vec_num].ead_3_len;
 		c_i.ead_3.ptr = (uint8_t *)test_vectors[vec_num].ead_3;
-
 		c_i.id_cred_i.len = test_vectors[vec_num].id_cred_i_len;
 		c_i.id_cred_i.ptr = (uint8_t *)test_vectors[vec_num].id_cred_i;
-
 		c_i.cred_i.len = test_vectors[vec_num].cred_i_len;
 		c_i.cred_i.ptr = (uint8_t *)test_vectors[vec_num].cred_i;
-
 		c_i.g_x.len = test_vectors[vec_num].g_x_raw_len;
 		c_i.g_x.ptr = (uint8_t *)test_vectors[vec_num].g_x_raw;
-
 		c_i.x.len = test_vectors[vec_num].x_raw_len;
 		c_i.x.ptr = (uint8_t *)test_vectors[vec_num].x_raw;
-
 		c_i.g_i.len = test_vectors[vec_num].g_i_raw_len;
 		c_i.g_i.ptr = (uint8_t *)test_vectors[vec_num].g_i_raw;
-
 		c_i.i.len = test_vectors[vec_num].i_raw_len;
 		c_i.i.ptr = (uint8_t *)test_vectors[vec_num].i_raw;
-
 		c_i.sk_i.len = test_vectors[vec_num].sk_i_raw_len;
 		c_i.sk_i.ptr = (uint8_t *)test_vectors[vec_num].sk_i_raw;
-
 		c_i.pk_i.len = test_vectors[vec_num].pk_i_raw_len;
 		c_i.pk_i.ptr = (uint8_t *)test_vectors[vec_num].pk_i_raw;
 

@@ -26,7 +26,6 @@ LOG_MODULE_REGISTER(net_coap_client_sample, LOG_LEVEL_DBG);
 #include <zephyr.h>
 #include <zephyr/types.h>
 
-#include "credentials.h"
 #include "net_private.h"
 
 #define MAX_COAP_MSG_LEN 256
@@ -51,6 +50,74 @@ K_MBOX_DEFINE(tx_queue);
 
 enum dev_type { SERVER, CLIENT };
 
+#define VEC_NUM 1
+
+/**
+ * @brief	Callback function called inside the frontend when data needs to 
+ * 		be send over the network. We use here CoAP as transport 
+ * @param	data pointer to the data that needs to be send
+ * @param	data_len lenhgt of the data in bytes
+ */
+enum err tx(void *sock, uint8_t *data, uint32_t data_len)
+{
+	// /*construct a CoAP packet*/
+	// static uint16_t mid = 0;
+	// static uint32_t token = 0;
+	// CoapPDU *pdu = new CoapPDU();
+	// pdu->reset();
+	// pdu->setVersion(1);
+	// pdu->setType(CoapPDU::COAP_CONFIRMABLE);
+	// pdu->setCode(CoapPDU::COAP_POST);
+	// pdu->setToken((uint8_t *)&(++token), sizeof(token));
+	// pdu->setMessageID(mid++);
+	// pdu->setURI((char *)".well-known/edhoc", 17);
+	// pdu->setPayload(data, data_len);
+
+	// send(*((int *)sock), pdu->getPDUPointer(), pdu->getPDULength(), 0);
+
+	// delete pdu;
+	return ok;
+}
+
+/**
+ * @brief	Callback function called inside the frontend when data needs to 
+ * 		be received over the network. We use here CoAP as transport 
+ * @param	data pointer to the data that needs to be received
+ * @param	data_len lenhgt of the data in bytes
+ */
+enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
+{
+	// int n;
+	// char buffer[MAXLINE];
+	// CoapPDU *recvPDU;
+	// /* receive */
+	// n = recv(*((int *)sock), (char *)buffer, MAXLINE, MSG_WAITALL);
+	// if (n < 0) {
+	// 	printf("recv error");
+	// }
+
+	// recvPDU = new CoapPDU((uint8_t *)buffer, n);
+
+	// if (recvPDU->validate()) {
+	// 	recvPDU->printHuman();
+	// }
+
+	// uint32_t payload_len = recvPDU->getPayloadLength();
+	// printf("data_len: %d\n", *data_len);
+	// printf("payload_len: %d\n", payload_len);
+
+	// if (*data_len >= payload_len) {
+	// 	memcpy(data, recvPDU->getPayloadPointer(), payload_len);
+	// 	*data_len = payload_len;
+	// } else {
+	// 	printf("insufficient space in buffer");
+	// 	return buffer_to_small;
+	// }
+
+	// delete recvPDU;
+	return ok;
+}
+
 /**
  * @brief	Entry function of EDHOC thread. Starts EDHOC initiator.
  * @param
@@ -58,61 +125,77 @@ enum dev_type { SERVER, CLIENT };
  */
 void edhoc_initiator_init(void)
 {
-	err r;
+	uint8_t vec_num = VEC_NUM - 1;
+
 	uint8_t PRK_4x3m[PRK_DEFAULT_SIZE];
 	uint8_t th4[SHA_DEFAULT_SIZE];
 	uint8_t err_msg[ERR_MSG_DEFAULT_SIZE];
 	uint32_t err_msg_len = sizeof(err_msg);
-	struct other_party_cred cred_r = {
-		.id_cred.ptr = ID_CRED_R,
-		.id_cred.len = ID_CRED_R_LEN,
-		.cred.ptr = CRED_R,
-		.cred.len = CRED_R_LEN,
-		.pk.ptr = PK_R,
-		.pk.len = PK_R_LEN,
-		.g.ptr = G_R,
-		.g.len = G_R_LEN,
-		.ca.ptr = CA,
-		.ca.len = CA_LEN,
-		.ca_pk.ptr = CA_PK,
-		.ca_pk.len = CA_PK_LEN,
-	};
-	uint16_t cred_num = 1;
-	struct edhoc_initiator_context c_i = {
-		.method_type = METHOD_TYPE,
-		.corr = CORR,
-		.suites_i.ptr = SUITES_I,
-		.suites_i.len = SUITES_I_LEN,
-		.g_x.ptr = G_X,
-		.g_x.len = G_X_LEN,
-		.x.ptr = X,
-		.x.len = X_LEN,
-		.c_i.ptr = C_I,
-		.c_i.len = C_I_LEN,
-		.ad_1.ptr = AD_1,
-		.ad_1.len = AD_1_LEN,
-		.g_i.ptr = G_I,
-		.g_i.len = G_I_LEN,
-		.i.ptr = I,
-		.i.len = I_LEN,
-		.ad_3.ptr = AD_3,
-		.ad_3.len = AD_3_LEN,
-		.id_cred_i.ptr = ID_CRED_I,
-		.id_cred_i.len = ID_CRED_I_LEN,
-		.cred_i.ptr = CRED_I,
-		.cred_i.len = CRED_I_LEN,
-		.sk_i.ptr = SK_I,
-		.sk_i.len = SK_I_LEN,
-		.pk_i.ptr = PK_I,
-		.pk_i.len = PK_I_LEN,
-	};
-
+	uint8_t ad_1[AD_DEFAULT_SIZE];
+	uint32_t ad_1_len = sizeof(ad_1);
 	uint8_t ad_2[AD_DEFAULT_SIZE];
-	uint64_t ad_2_len = sizeof(ad_2);
+	uint32_t ad_2_len = sizeof(ad_2);
+	uint8_t ad_3[AD_DEFAULT_SIZE];
+	uint32_t ad_3_len = sizeof(ad_3);
+	uint8_t ad_4[AD_DEFAULT_SIZE];
+	uint32_t ad_4_len = sizeof(ad_2);
+	uint16_t cred_num = 1;
+	struct other_party_cred cred_r;
+	struct edhoc_initiator_context c_i;
+	enum err err;
 
-	r = edhoc_initiator_run(&c_i, &cred_r, cred_num, err_msg, &err_msg_len,
-				ad_2, &ad_2_len, PRK_4x3m, sizeof(PRK_4x3m),
-				th4, sizeof(th4));
+	rx_initiator_switch = true;
+	cred_r.id_cred.len = test_vectors[vec_num].id_cred_r_len;
+	cred_r.id_cred.ptr = (uint8_t *)test_vectors[vec_num].id_cred_r;
+	cred_r.cred.len = test_vectors[vec_num].cred_r_len;
+	cred_r.cred.ptr = (uint8_t *)test_vectors[vec_num].cred_r;
+	cred_r.g.len = test_vectors[vec_num].g_r_raw_len;
+	cred_r.g.ptr = (uint8_t *)test_vectors[vec_num].g_r_raw;
+	cred_r.pk.len = test_vectors[vec_num].pk_r_raw_len;
+	cred_r.pk.ptr = (uint8_t *)test_vectors[vec_num].pk_r_raw;
+	cred_r.ca.len = test_vectors[vec_num].ca_len;
+	cred_r.ca.ptr = (uint8_t *)test_vectors[vec_num].ca;
+	cred_r.ca_pk.len = test_vectors[vec_num].ca_pk_len;
+	cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num].ca_pk;
+
+	if (test_vectors[vec_num].c_i_raw != NULL) {
+		c_i.c_i.type = BSTR;
+		c_i.c_i.mem.c_x_bstr.len = test_vectors[vec_num].c_i_raw_len;
+		c_i.c_i.mem.c_x_bstr.ptr =
+			(uint8_t *)test_vectors[vec_num].c_i_raw;
+	} else {
+		c_i.c_i.type = INT;
+		c_i.c_i.mem.c_x_int = *test_vectors[vec_num].c_i_raw_int;
+	}
+	c_i.msg4 = true;
+	c_i.method = *test_vectors[vec_num].method;
+	c_i.suites_i.len = test_vectors[vec_num].suites_i_len;
+	c_i.suites_i.ptr = (uint8_t *)test_vectors[vec_num].suites_i;
+	c_i.ead_1.len = test_vectors[vec_num].ead_1_len;
+	c_i.ead_1.ptr = (uint8_t *)test_vectors[vec_num].ead_1;
+	c_i.ead_3.len = test_vectors[vec_num].ead_3_len;
+	c_i.ead_3.ptr = (uint8_t *)test_vectors[vec_num].ead_3;
+	c_i.id_cred_i.len = test_vectors[vec_num].id_cred_i_len;
+	c_i.id_cred_i.ptr = (uint8_t *)test_vectors[vec_num].id_cred_i;
+	c_i.cred_i.len = test_vectors[vec_num].cred_i_len;
+	c_i.cred_i.ptr = (uint8_t *)test_vectors[vec_num].cred_i;
+	c_i.g_x.len = test_vectors[vec_num].g_x_raw_len;
+	c_i.g_x.ptr = (uint8_t *)test_vectors[vec_num].g_x_raw;
+	c_i.x.len = test_vectors[vec_num].x_raw_len;
+	c_i.x.ptr = (uint8_t *)test_vectors[vec_num].x_raw;
+	c_i.g_i.len = test_vectors[vec_num].g_i_raw_len;
+	c_i.g_i.ptr = (uint8_t *)test_vectors[vec_num].g_i_raw;
+	c_i.i.len = test_vectors[vec_num].i_raw_len;
+	c_i.i.ptr = (uint8_t *)test_vectors[vec_num].i_raw;
+	c_i.sk_i.len = test_vectors[vec_num].sk_i_raw_len;
+	c_i.sk_i.ptr = (uint8_t *)test_vectors[vec_num].sk_i_raw;
+	c_i.pk_i.len = test_vectors[vec_num].pk_i_raw_len;
+	c_i.pk_i.ptr = (uint8_t *)test_vectors[vec_num].pk_i_raw;
+
+	err = edhoc_initiator_run(&c_i, &cred_r, cred_num, err_msg,
+				  &err_msg_len, ad_2, &ad_2_len, ad_4,
+				  &ad_4_len, PRK_4x3m, sizeof(PRK_4x3m), th4,
+				  sizeof(th4), tx, rx);
 	if (r != ok) {
 		PRINTK("error initiator run (Error Code %d\n)", r);
 	}
