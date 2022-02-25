@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "zcbor_encode.h"
-#include "edhoc_encode_message_error.h"
+#include "cbor/edhoc_encode_message_error.h"
 
 #if DEFAULT_MAX_QTY != 3
 #error "The type file was generated with a different default_max_qty than this file"

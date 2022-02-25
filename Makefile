@@ -45,10 +45,6 @@ vpath %.c $(sort $(dir $(C_SOURCES)))
 # C includes
 C_INCLUDES += -Iinc
 
-#eventually remove this after fix in zcbor
-C_INCLUDES += -Iinc/cbor
-
-
 # Crypto engine
 ifeq ($(findstring COMPACT25519,$(CRYPTO_ENGINE)),COMPACT25519) 
 C_INCLUDES += -Iexternals/compact25519/src/c25519/ 

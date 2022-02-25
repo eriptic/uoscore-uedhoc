@@ -12,7 +12,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "zcbor_encode.h"
-#include "oscore_info_types.h"
+#include "cbor/oscore_info_types.h"
 
 #if DEFAULT_MAX_QTY != 3
 #error "The type file was generated with a different default_max_qty than this file"
