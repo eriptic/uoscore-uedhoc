@@ -23,7 +23,10 @@
 #include "common/print_util.h"
 
 #ifndef OSCORE_MAX_PLAINTEXT_LEN
-    #define OSCORE_MAX_PLAINTEXT_LEN 128
+    #define OSCORE_E_OPTIONS_LEN 40
+    #define OSCORE_COAP_PAYLOAD_LEN 1024
+    /* OSCORE plaintext includes CoAP frame with CoAP payload */
+    #define OSCORE_MAX_PLAINTEXT_LEN (OSCORE_COAP_PAYLOAD_LEN + OSCORE_E_OPTIONS_LEN)
 #endif
 
 #define MAX_PLAINTEXT_LEN OSCORE_MAX_PLAINTEXT_LEN
