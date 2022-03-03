@@ -88,12 +88,16 @@
 #endif
 
 #define ERR_MSG_DEFAULT_SIZE 64
+#define P_256_PRIV_KEY_DEFAULT_SIZE 32
+#define P_256_PUB_KEY_COMPRESSED_SIZE 33
+#define P_256_PUB_KEY_UNCOMPRESSED_SIZE 65
+#define PK_DEFAULT_SIZE P_256_PUB_KEY_UNCOMPRESSED_SIZE
 #define C_R_DEFAULT_SIZE 1
 #define C_I_DEFAULT_SIZE 8
-#define G_Y_DEFAULT_SIZE 65
-#define G_X_DEFAULT_SIZE 65
-#define G_R_DEFAULT_SIZE 65
-#define G_I_DEFAULT_SIZE 65
+#define G_Y_DEFAULT_SIZE P_256_PUB_KEY_COMPRESSED_SIZE
+#define G_X_DEFAULT_SIZE P_256_PUB_KEY_COMPRESSED_SIZE
+#define G_R_DEFAULT_SIZE P_256_PUB_KEY_UNCOMPRESSED_SIZE
+#define G_I_DEFAULT_SIZE P_256_PUB_KEY_UNCOMPRESSED_SIZE
 #define DATA_2_DEFAULT_SIZE                                                    \
 	(C_I_DEFAULT_SIZE + G_Y_DEFAULT_SIZE + C_R_DEFAULT_SIZE)
 #define TH2_INPUT_DEFAULT_SIZE (MSG_1_DEFAULT_SIZE + DATA_2_DEFAULT_SIZE)
@@ -109,9 +113,6 @@
 #define AEAD_KEY_DEFAULT_SIZE 16
 #define MAC_DEFAULT_SIZE 16
 #define AEAD_IV_DEFAULT_SIZE 13
-#define P_256_PRIV_KEY_DEFAULT_SIZE 32
-#define P_256_PUB_KEY_DEFAULT_SIZE 65
-#define PK_DEFAULT_SIZE P_256_PUB_KEY_DEFAULT_SIZE
 #define SIGNATURE_DEFAULT_SIZE 64
 #define TH_ENC_DEFAULT_SIZE 42
 #define ENCODING_OVERHEAD 6
@@ -174,10 +175,14 @@ struct edhoc_initiator_context {
  * @param   seed a random seed
  * @param   sk pointer to a buffer where the secret key will be strored
  * @param   pk pointer to a buffer where the public key will be strored
+ * @param   pk_size pointer to a variable with public key buffer size as input,
+ *          and public key length as output.
+
  */
 enum err __attribute__((weak))
-ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk,
-		     uint8_t *pk);
+ephemeral_dh_key_gen(
+	enum ecdh_alg alg, uint32_t seed, uint8_t *sk,
+	uint8_t *pk, uint32_t *pk_size);
 
 /**
  * @brief   Executes the EDHOC protocol on the initiator side

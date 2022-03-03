@@ -515,7 +515,7 @@ shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 		PRINT_ARRAY("pk", pk, pk_len);
 
 		size_t pk_decompressed_len;
-		uint8_t pk_decompressed[P_256_PUB_KEY_DEFAULT_SIZE];
+		uint8_t pk_decompressed[P_256_PUB_KEY_UNCOMPRESSED_SIZE];
 
 		mbedtls_pk_context ctx_verify;
 		mbedtls_pk_init(&ctx_verify);
@@ -550,7 +550,8 @@ shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 }
 
 enum err __attribute__((weak))
-ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk)
+ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk,
+	uint8_t *pk, uint32_t *pk_size)
 {
 	if (alg == X25519) {
 #ifdef COMPACT25519
@@ -573,20 +574,21 @@ ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk)
 		}
 #endif
 		compact_x25519_keygen(sk, pk, extended_seed);
+		*pk_size = X25519_KEY_SIZE;
 #endif
 	} else if (alg == P256) {
 #ifdef MBEDTLS
 		psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
 		psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-		psa_algorithm_t psa_alg;
-		size_t bits;
-		uint8_t priv_key_size;
-		uint8_t pub_key_size;
+		psa_algorithm_t psa_alg = PSA_ALG_ECDH;
+		uint8_t priv_key_size = P_256_PRIV_KEY_DEFAULT_SIZE;
+		size_t bits = PSA_BYTES_TO_BITS((size_t)priv_key_size);
+		size_t pub_key_uncompressed_size = P_256_PUB_KEY_UNCOMPRESSED_SIZE;
+		uint8_t pub_key_uncompressed[P_256_PUB_KEY_UNCOMPRESSED_SIZE];
 
-		psa_alg = PSA_ALG_ECDH;
-		priv_key_size = P_256_PRIV_KEY_DEFAULT_SIZE;
-		pub_key_size = P_256_PUB_KEY_DEFAULT_SIZE;
-		bits = PSA_BYTES_TO_BITS((size_t)priv_key_size);
+		if (P_256_PUB_KEY_COMPRESSED_SIZE > *pk_size) {
+			return buffer_to_small;
+		}
 
 		TRY_EXPECT(psa_crypto_init(), 0);
 
@@ -602,15 +604,16 @@ ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk)
 
 		TRY_EXPECT(psa_generate_key(&attributes, &key_id), 0);
 
-		size_t key_len = 0;
 		size_t public_key_len = 0;
 
-		TRY_EXPECT(psa_export_key(key_id, sk, priv_key_size, &key_len),
-			   0);
-		TRY_EXPECT(psa_export_public_key(key_id, pk, pub_key_size,
-						 &public_key_len),
-			   0);
-		TRY_EXPECT(psa_destroy_key(key_id), 0);
+		TRY_EXPECT(psa_export_public_key(key_id, pub_key_uncompressed, pub_key_uncompressed_size, &public_key_len),
+		               PSA_SUCCESS);
+		TRY_EXPECT(public_key_len, P_256_PUB_KEY_UNCOMPRESSED_SIZE);
+		/* Prepare output format - compressed public key with X */
+		pk[0] = 0x02;	/* key format tag - commpressed for with X */
+		memcpy((pk + 1), (pub_key_uncompressed + 1), 32);
+		TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
+		*pk_size = P_256_PUB_KEY_COMPRESSED_SIZE;
 
 		return ok;
 #endif
