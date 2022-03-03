@@ -57,6 +57,10 @@ static inline enum err e_u_options_extract(struct o_coap_packet *in_o_coap,
 	uint8_t delta_extra_bytes = 0;
 	uint8_t len_extra_bytes = 0;
 
+	if (MAX_OPTION_COUNT < in_o_coap->options_cnt) {
+		return not_valid_input_packet;
+	}
+
 	for (uint8_t i = 0; i < in_o_coap->options_cnt; i++) {
 		delta_extra_bytes = 0;
 		len_extra_bytes = 0;

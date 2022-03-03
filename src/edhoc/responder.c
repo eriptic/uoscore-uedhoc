@@ -97,7 +97,7 @@ static inline enum err msg1_parse(uint8_t *msg1, uint32_t msg1_len,
 		TRY(c_x_set(INT, NULL, 0, m._message_1_C_I_int, c_i));
 		PRINTF("msg1 C_I_raw (int): %d\n", c_i->mem.c_x_int);
 	} else {
-		TRY(c_x_set(BSTR, m._message_1_C_I_bstr.value, 0,
+		TRY(c_x_set(BSTR, m._message_1_C_I_bstr.value, m._message_1_C_I_bstr.len,
 			    m._message_1_C_I_int, c_i));
 		PRINT_ARRAY("msg1 C_I_raw (bstr)", c_i->mem.c_x_bstr.ptr,
 			    c_i->mem.c_x_bstr.len);
