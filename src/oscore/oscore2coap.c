@@ -575,6 +575,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 	buf.len = buf_in_len;
 
 	/*Parse the incoming message (buf_in) into a CoAP struct*/
+	memset(&oscore_packet, 0, sizeof(oscore_packet));
 	TRY(buf2coap(&buf, &oscore_packet));
 
 	/* Check if the packet is OSCORE packet and if so parse the OSCORE option */

@@ -368,11 +368,17 @@ enum err edhoc_responder_run(
 
 	PRINT_MSG("waiting to receive message 1...\n");
 	TRY(rx(c->sock, rc.msg1, &rc.msg1_len));
+	if (MSG_1_DEFAULT_SIZE < rc.msg1_len) {
+		return error_message_received;
+	}
 	TRY(msg2_gen(c, &rc, ead_1, ead_1_len));
 	TRY(tx(c->sock, rc.msg2, rc.msg2_len));
 
 	PRINT_MSG("waiting to receive message 3...\n");
 	TRY(rx(c->sock, rc.msg3, &rc.msg3_len));
+	if (MSG_3_DEFAULT_SIZE < rc.msg3_len) {
+		return error_message_received;
+	}
 	TRY(msg3_process(c, &rc, cred_i_array, num_cred_i, ead_3, ead_3_len,
 			 prk_4x3m, prk_4x3m_len, th4));
 	if (c->msg4) {
