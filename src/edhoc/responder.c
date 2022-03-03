@@ -123,7 +123,7 @@ static inline enum err msg1_parse(uint8_t *msg1, uint32_t msg1_len,
 static inline bool selected_suite_is_supported(uint8_t selected,
 					       struct byte_array *suites_r)
 {
-	for (uint8_t i = 0; i < suites_r->len; i++) {
+	for (uint32_t i = 0; i < suites_r->len; i++) {
 		if (suites_r->ptr[i] == selected)
 			return true;
 	}

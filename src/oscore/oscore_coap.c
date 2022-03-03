@@ -21,6 +21,7 @@
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
 
+#define OPTIONS_END_MARKER  (0xFF)
 
 enum err options_into_byte_string(struct o_coap_option *options,
 				  uint8_t options_cnt,
@@ -266,7 +267,7 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
 	/* Options, if any */
 	if (payload_len != 0) {
 		/* Check if there any options exist*/
-		if (*tmp_p != 0xFF) {
+		if (*tmp_p != OPTIONS_END_MARKER) {
 			/* Length of options byte string */
 			uint16_t options_len = 0;
 			uint8_t *temp_option_ptr = tmp_p;
@@ -274,7 +275,7 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
 			/* Move tmp_p to the payload to get the length of options byte string*/
 
 			if (payload_len != 0) {
-				while (*tmp_p != 0xFF) {
+				while (*tmp_p != OPTIONS_END_MARKER) {
 					payload_len--;
 					tmp_p++;
 					options_len++;
