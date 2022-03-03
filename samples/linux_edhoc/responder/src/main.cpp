@@ -246,12 +246,13 @@ int main()
 		/*create a random seed*/
 		FILE *fp;
 		fp = fopen("/dev/urandom", "r");
+		uint32_t G_Y_random_len = sizeof(G_Y_random);
 		uint64_t seed_len =
 			fread((uint8_t *)&seed, 1, sizeof(seed), fp);
 		fclose(fp);
 		PRINT_ARRAY("seed", (uint8_t *)&seed, seed_len);
 
-		TRY(ephemeral_dh_key_gen(X25519, seed, Y_random, G_Y_random));
+		TRY(ephemeral_dh_key_gen(X25519, seed, Y_random, G_Y_random, &G_Y_random_len));
 		PRINT_ARRAY("secret ephemeral DH key", c_r.g_y.ptr,
 			    c_r.g_y.len);
 		PRINT_ARRAY("public ephemeral DH key", c_r.y.ptr, c_r.y.len);

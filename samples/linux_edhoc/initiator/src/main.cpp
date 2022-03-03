@@ -204,6 +204,7 @@ int main()
 	uint32_t seed;
 	uint8_t G_X_random[32];
 	uint8_t X_random[32];
+	uint32_t G_X_random_len = sizeof(G_X_random);
 
 	/*create a random seed*/
 	FILE *fp;
@@ -213,7 +214,7 @@ int main()
 	PRINT_ARRAY("seed", (uint8_t *)&seed, seed_len);
 
 	/*create ephemeral DH keys from seed*/
-	TRY(ephemeral_dh_key_gen(X25519, seed, X_random, G_X_random));
+	TRY(ephemeral_dh_key_gen(X25519, seed, X_random, G_X_random, &G_X_random_len));
 	c_i.g_x.ptr = G_X_random;
 	c_i.g_x.len = sizeof(G_X_random);
 	c_i.x.ptr = X_random;
