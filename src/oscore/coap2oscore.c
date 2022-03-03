@@ -423,6 +423,7 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	buf.ptr = buf_o_coap;
 
 	/*Parse the coap buf into a CoAP struct*/
+	memset(&o_coap_pkt, 0, sizeof(o_coap_pkt));
 	TRY(buf2coap(&buf, &o_coap_pkt));
 
 	/* Dismiss OSCORE encryption if messaging layer detected (simple ACK, code=0.00) */
