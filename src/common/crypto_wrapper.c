@@ -34,7 +34,6 @@ modify setting in include/psa/crypto_config.h
 
 #include <psa/crypto.h>
 
-#include "mbedtls/mbedtls_config.h"
 #include "mbedtls/ecp.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/entropy.h"

@@ -149,7 +149,7 @@ static inline enum err payload_decrypt(struct context *c,
 		.len = oscore_packet->payload_len,
 		.ptr = oscore_packet->payload,
 	};
-	return cose_decrypt(&oscore_ciphertext, out_plaintext, &c->rrc.nonce,
+	return oscore_cose_decrypt(&oscore_ciphertext, out_plaintext, &c->rrc.nonce,
 			    &c->rrc.aad, &c->rc.recipient_key);
 }
 
