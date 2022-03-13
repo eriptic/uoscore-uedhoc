@@ -158,8 +158,8 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 2);
 			temp_option_delta =
-				(uint8_t)((*temp_options_ptr) << 8 |
-					  *(temp_options_ptr + 1) - 269);
+				(uint8_t)(((*temp_options_ptr) << 8) |
+					  (*(temp_options_ptr + 1) - 269));
 			temp_options_ptr += 2;
 			break;
 		case 15:
@@ -182,8 +182,8 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 2);
 			temp_option_len =
-				(uint8_t)((*temp_options_ptr) << 8 |
-					  *(temp_options_ptr + 1) + 269);
+				(uint8_t)(((*temp_options_ptr) << 8) |
+					  (*(temp_options_ptr + 1) + 269));
 			temp_options_ptr += 2;
 			break;
 		case 15:
