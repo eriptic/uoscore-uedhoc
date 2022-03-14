@@ -20,7 +20,7 @@ struct runtime_context {
 	uint32_t msg1_len;
 	uint8_t msg2[MSG_2_DEFAULT_SIZE];
 	uint32_t msg2_len;
-	uint8_t msg3[MSG_2_DEFAULT_SIZE];
+	uint8_t msg3[MSG_3_DEFAULT_SIZE];
 	uint32_t msg3_len;
 	uint8_t msg4[MSG_4_DEFAULT_SIZE];
 	uint32_t msg4_len;
