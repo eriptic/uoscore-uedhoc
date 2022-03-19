@@ -608,7 +608,7 @@ ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk,
 
 		TRY_EXPECT(psa_export_public_key(key_id, pub_key_uncompressed, pub_key_uncompressed_size, &public_key_len),
 		               PSA_SUCCESS);
-		TRY_EXPECT(public_key_len, P_256_PUB_KEY_UNCOMPRESSED_SIZE);
+		//TRY_EXPECT(public_key_len, P_256_PUB_KEY_UNCOMPRESSED_SIZE);
 		/* Prepare output format - compressed public key with X */
 		pk[0] = 0x02;	/* key format tag - commpressed for with X */
 		memcpy((pk + 1), (pub_key_uncompressed + 1), 32);

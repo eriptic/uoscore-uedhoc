@@ -14,9 +14,20 @@
 #include <stdint.h>
 #include <stddef.h>
 
-extern int sockfd;
+#ifdef LINUX_SOCKETS
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#else
+#include <net/net_pkt.h>
+#include <net/net_if.h>
+#include <net/net_core.h>
+#include <net/net_context.h>
+#include <net/udp.h>
 
-#define PORT 5683
+#include <net/socket.h>
+#endif
+
+#define COAP_PORT 5683
 #define MAXLINE 1024
 
 enum sock_type {
@@ -30,6 +41,32 @@ enum ip_addr_type {
 };
 
 /**
+ * @brief   Initializes a IPv4 client or server socket
+ * @param   sock_t CLIENT or SERVER
+ * @param   ipv6_addr_str ip address as string
+ * @param   servaddr address struct 
+ * @param   servaddr_len length of servaddr  
+ * @param	sockfd socket file descriptor
+ * @retval	error code
+ */
+int ipv4_sock_init(enum sock_type sock_t, const char *ipv4_addr_str,
+		   struct sockaddr_in *servaddr, size_t servaddr_len,
+		   int *sockfd);
+
+/**
+ * @brief   Initializes a IPv6 client or server socket
+ * @param   sock_t CLIENT or SERVER
+ * @param   ipv6_addr_str ip address as string
+ * @param   servaddr address struct 
+ * @param   servaddr_len length of servaddr  
+ * @param	sockfd socket file descriptor
+ * @retval	error code
+ */
+int ipv6_sock_init(enum sock_type sock_t, const char *ipv6_addr_str,
+		   struct sockaddr_in6 *servaddr, size_t servaddr_len,
+		   int *sockfd);
+
+/**
  * @brief	Initializes an UDP client or server socket.
  * @param   sock_t CLIENT or SERVER
  * @param   addr_str ip address as string
@@ -39,5 +76,6 @@ enum ip_addr_type {
  * @retval	error code
  */
 int sock_init(enum sock_type sock_t, const char *addr_str,
-	      enum ip_addr_type ip_t, void *servaddr, size_t servaddr_len);
+	      enum ip_addr_type ip_t, void *servaddr, size_t servaddr_len,
+	      int *sockfd);
 #endif

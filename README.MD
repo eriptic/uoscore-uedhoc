@@ -126,7 +126,7 @@ When using the samples for microcontroller , they have to be connected to an IPv
 
 * **OSCORE Between a Microcontroller (e.g. nrf52832) as a Server and Linux Host as a Client** 
 
-  The `oscore_device` samples suggest a use of a microcontroller, (e.g. nrf52832) as an OSCORE server and a Linux machine as an OSCORE client. Therefore setting up the network as described in [blerouter](externals/blerouter/README.MD) is required.
+  The `zephyr_oscore` samples suggest a use of a microcontroller, (e.g. nrf52832) as an OSCORE server and a Linux machine as an OSCORE client. Therefore setting up the network as described in [blerouter](externals/blerouter/README.MD) is required.
   As this is a frequent error source: make sure that all addresses are set up correctly in the blerouter.sh script, the samples/oscore_linux/client/src/main.cpp file and the samples/oscore_device/server/prj.conf file.
 
   * Configure and build OSCORE server on a microcontroller (nrf52832) using the Zephyr's build tool west 
@@ -135,7 +135,7 @@ When using the samples for microcontroller , they have to be connected to an IPv
 
     ```bash
     source <path to zephyr root>/zephyrproject/zephyr/zephyr-env.sh
-    west build -b=nrf52dk_nrf52832
+    west build -b=nrf52840dk_nrf52840
     west flash
     ```
 

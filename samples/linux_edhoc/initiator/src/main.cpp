@@ -35,14 +35,14 @@ extern "C" {
  * @param
  * @retval	error code
  */
-static int start_coap_client(void)
+static int start_coap_client(int *sockfd)
 {
 	int err;
 #ifdef USE_IPV4
 	struct sockaddr_in servaddr;
 	const char IPV4_SERVADDR[] = { "127.0.0.1" };
 	err = sock_init(SOCK_CLIENT, IPV4_SERVADDR, IPv4, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);
@@ -53,7 +53,7 @@ static int start_coap_client(void)
 	struct sockaddr_in6 servaddr;
 	const char IPV6_SERVADDR[] = { "::1" };
 	err = sock_init(SOCK_CLIENT, IPV6_SERVADDR, IPv6, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);
@@ -152,6 +152,9 @@ int main()
 
 	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
+	int sockfd;
+	TRY_EXPECT(start_coap_client(&sockfd), 0);
+
 	if (test_vectors[vec_num_i].c_i_raw != NULL) {
 		c_i.c_i.type = BSTR;
 		c_i.c_i.mem.c_x_bstr.len = test_vectors[vec_num_i].c_i_raw_len;
@@ -214,7 +217,8 @@ int main()
 	PRINT_ARRAY("seed", (uint8_t *)&seed, seed_len);
 
 	/*create ephemeral DH keys from seed*/
-	TRY(ephemeral_dh_key_gen(X25519, seed, X_random, G_X_random, &G_X_random_len));
+	TRY(ephemeral_dh_key_gen(X25519, seed, X_random, G_X_random,
+				 &G_X_random_len));
 	c_i.g_x.ptr = G_X_random;
 	c_i.g_x.len = sizeof(G_X_random);
 	c_i.x.ptr = X_random;
@@ -223,8 +227,6 @@ int main()
 	PRINT_ARRAY("public ephemeral DH key", c_i.x.ptr, c_i.x.len);
 
 #endif
-
-	TRY_EXPECT(start_coap_client(), 0);
 
 	TRY(edhoc_initiator_run(&c_i, &cred_r, cred_num, err_msg, &err_msg_len,
 				ad_2, &ad_2_len, ad_4, &ad_4_len, PRK_4x3m,
