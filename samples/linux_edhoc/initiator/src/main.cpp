@@ -40,7 +40,8 @@ static int start_coap_client(int *sockfd)
 	int err;
 #ifdef USE_IPV4
 	struct sockaddr_in servaddr;
-	const char IPV4_SERVADDR[] = { "127.0.0.1" };
+	//const char IPV4_SERVADDR[] = { "127.0.0.1" };
+	const char IPV4_SERVADDR[] = { "172.31.24.45" };
 	err = sock_init(SOCK_CLIENT, IPV4_SERVADDR, IPv4, &servaddr,
 			sizeof(servaddr), sockfd);
 	if (err < 0) {
