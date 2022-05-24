@@ -29,11 +29,15 @@
     #define OSCORE_MAX_PLAINTEXT_LEN (OSCORE_COAP_PAYLOAD_LEN + OSCORE_E_OPTIONS_LEN)
 #endif
 
-#define MAX_PLAINTEXT_LEN OSCORE_MAX_PLAINTEXT_LEN
-#define MAX_CIPHERTEXT_LEN MAX_PLAINTEXT_LEN + AUTH_TAG_LEN
-#define MAX_COAP_OPTIONS_LEN 128
-#define MAX_E_OPTIONS 30
-#define MAX_I_OPTIONS 30
+#define MAX_PLAINTEXT_LEN        OSCORE_MAX_PLAINTEXT_LEN
+#define MAX_CIPHERTEXT_LEN       (MAX_PLAINTEXT_LEN + AUTH_TAG_LEN)
+#ifndef E_OPTIONS_BUFF_MAX_LEN
+    #define E_OPTIONS_BUFF_MAX_LEN    255      /* Maximal length of buffer with all encrypted CoAP options. */
+#endif
+#ifndef I_OPTIONS_BUFF_MAX_LEN
+    #define I_OPTIONS_BUFF_MAX_LEN    255      /* Maximal length of buffer with all not encrypted CoAP options. */
+#endif
+#define MAX_COAP_OPTIONS_LEN     ((E_OPTIONS_BUFF_MAX_LEN > I_OPTIONS_BUFF_MAX_LEN) ? E_OPTIONS_BUFF_MAX_LEN : I_OPTIONS_BUFF_MAX_LEN)
 
 /**
  * Each endpoint derives the parameters in the security context from a

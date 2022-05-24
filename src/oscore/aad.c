@@ -38,8 +38,8 @@ enum err create_aad(struct o_coap_option *options, uint16_t opt_num,
 	/* options */
 	uint32_t encoded_opt_i_len =
 		encoded_option_len(options, opt_num, CLASS_I);
-	TRY(check_buffer_size(MAX_I_OPTIONS, encoded_opt_i_len));
-	uint8_t encoded_opt_i_bytes[MAX_I_OPTIONS];
+	TRY(check_buffer_size(I_OPTIONS_BUFF_MAX_LEN, encoded_opt_i_len));
+	uint8_t encoded_opt_i_bytes[I_OPTIONS_BUFF_MAX_LEN];
 	struct byte_array opts_i = {
 		.len = encoded_opt_i_len,
 		.ptr = encoded_opt_i_bytes,
