@@ -320,7 +320,7 @@ oscore_packet_options_parser(uint8_t *in_data, uint16_t in_data_len,
 		case 13:
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 1);
-			temp_option_delta = (uint8_t)(*temp_options_ptr - 13);
+			temp_option_delta = (uint8_t)(*temp_options_ptr + 13);
 			temp_options_ptr += 1;
 			break;
 		case 14:
@@ -328,7 +328,7 @@ oscore_packet_options_parser(uint8_t *in_data, uint16_t in_data_len,
 				(uint8_t)(temp_option_header_len + 2);
 			temp_option_delta =
 				(uint8_t)(((*temp_options_ptr) << 8 |
-					   *(temp_options_ptr + 1)) -
+					   *(temp_options_ptr + 1)) +
 					  269);
 			temp_options_ptr += 2;
 			break;
@@ -345,14 +345,14 @@ oscore_packet_options_parser(uint8_t *in_data, uint16_t in_data_len,
 		case 13:
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 1);
-			temp_option_len = (uint8_t)(*temp_options_ptr - 13);
+			temp_option_len = (uint8_t)(*temp_options_ptr + 13);
 			temp_options_ptr += 1;
 			break;
 		case 14:
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 2);
 			temp_option_len = (uint8_t)(((*temp_options_ptr) << 8 |
-						     *(temp_options_ptr + 1)) -
+						     *(temp_options_ptr + 1)) +
 						    269);
 			temp_options_ptr += 2;
 			break;

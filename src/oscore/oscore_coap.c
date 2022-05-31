@@ -61,12 +61,12 @@ enum err options_into_byte_string(struct o_coap_option *options,
 			case 1:
 				*(temp_ptr) = (uint8_t)(13 << 4);
 				*(temp_ptr + 1) =
-					(uint8_t)(options[i].delta + 13);
+					(uint8_t)(options[i].delta - 13);
 				break;
 			case 2:
 				*(temp_ptr) = (uint8_t)(14 << 4);
 				uint16_t temp_delta =
-					(uint16_t)(options[i].delta + 269);
+					(uint16_t)(options[i].delta - 269);
 				*(temp_ptr + 1) =
 					(uint8_t)((temp_delta & 0xFF00) >> 8);
 				*(temp_ptr + 2) =
@@ -83,12 +83,12 @@ enum err options_into_byte_string(struct o_coap_option *options,
 			case 1:
 				*(temp_ptr) |= 13;
 				*(temp_ptr + delta_extra_byte + 1) =
-					(uint8_t)(options[i].len + 13);
+					(uint8_t)(options[i].len - 13);
 				break;
 			case 2:
 				*(temp_ptr) |= 14;
 				uint16_t temp_len =
-					(uint16_t)(options[i].len + 269);
+					(uint16_t)(options[i].len - 269);
 				*(temp_ptr + delta_extra_byte + 1) =
 					(uint8_t)((temp_len & 0xFF00) >> 8);
 				*(temp_ptr + delta_extra_byte + 2) =
@@ -170,7 +170,7 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 		case 13:
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 1);
-			temp_option_delta = (uint8_t)(*temp_options_ptr - 13);
+			temp_option_delta = (uint8_t)(*temp_options_ptr + 13);
 			temp_options_ptr += 1;
 			break;
 		case 14:
@@ -178,7 +178,7 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 				(uint8_t)(temp_option_header_len + 2);
 			temp_option_delta =
 				(uint8_t)(((*temp_options_ptr) << 8) |
-					  (*(temp_options_ptr + 1) - 269));
+					  (*(temp_options_ptr + 1) + 269));
 			temp_options_ptr += 2;
 			break;
 		case 15:
