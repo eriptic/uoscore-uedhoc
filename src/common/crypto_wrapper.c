@@ -337,7 +337,7 @@ verify(enum sign_alg alg, const uint8_t *pk, const uint32_t pk_len,
 		return ok;
 #endif
 	}
-	return crypto_operation_not_implemented;
+	return not_implemented;
 }
 
 enum err __attribute__((weak))
@@ -351,7 +351,7 @@ hkdf_extract(enum hash_alg alg, const uint8_t *salt, uint32_t salt_len,
 
 	/*all currently prosed suites use hmac-sha256*/
 	if (alg != SHA_256) {
-		return crypto_operation_not_implemented;
+		return not_implemented;
 	}
 #ifdef TINYCRYPT
 	struct tc_hmac_state_struct h;
@@ -402,7 +402,7 @@ hkdf_expand(enum hash_alg alg, const uint8_t *prk, const uint32_t prk_len,
 	    uint32_t out_len)
 {
 	if (alg != SHA_256) {
-		return crypto_operation_not_implemented;
+		return not_implemented;
 	}
 	/* "N = ceil(L/HashLen)" */
 	uint32_t iterations = (out_len + 31) / 32;
@@ -576,7 +576,7 @@ cleanup:
 	return result;
 #endif
 	}
-	return crypto_operation_not_implemented;
+	return not_implemented;
 }
 
 enum err __attribute__((weak))
@@ -677,5 +677,5 @@ hash(enum hash_alg alg, const uint8_t *in, const uint32_t in_len, uint8_t *out)
 #endif
 	}
 
-	return crypto_operation_not_implemented;
+	return not_implemented;
 }

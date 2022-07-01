@@ -24,7 +24,7 @@ enum err {
 	hkdf_fialed = 2,
 	unexpected_result_from_ext_lib = 3,
 	wrong_parameter = 4,
-	crypto_operation_not_implemented = 5,
+	not_implemented = 5,
 
 	/*EDHOC specifc errors*/
 	/*todo implement error messages*/
@@ -47,6 +47,7 @@ enum err {
 
 	cbor_encoding_error = 119,
 	suites_i_list_to_long = 121,
+	no_such_state = 122,
 
 	/*OSCORE specific errors*/
 	oscore_unknown_hkdf = 202,
