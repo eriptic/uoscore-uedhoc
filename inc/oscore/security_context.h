@@ -58,6 +58,7 @@ struct recipient_context {
 	struct byte_array recipient_id;
 	struct byte_array recipient_key;
 	uint8_t recipient_key_buf[RECIPIENT_KEY_LEN_];
+	uint8_t recipient_id_buf[RECIPIENT_ID_BUFF_LEN];
 	uint64_t replay_window[REPLAY_WINDOW_LEN];
 	uint8_t replay_window_len;
 };

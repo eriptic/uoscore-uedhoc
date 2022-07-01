@@ -190,7 +190,9 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	c->rc.replay_window_len = REPLAY_WINDOW_LEN;
 	memset(c->rc.replay_window, 0,
 	       sizeof(c->rc.replay_window[0]) * c->rc.replay_window_len);
-	c->rc.recipient_id = params->recipient_id;
+	c->rc.recipient_id.len = params->recipient_id.len;
+	c->rc.recipient_id.ptr = c->rc.recipient_id_buf;
+	memcpy(c->rc.recipient_id.ptr, params->recipient_id.ptr, params->recipient_id.len);
 	c->rc.recipient_key.len = sizeof(c->rc.recipient_key_buf);
 	c->rc.recipient_key.ptr = c->rc.recipient_key_buf;
 	TRY(derive_recipient_key(&c->cc, &c->rc));
