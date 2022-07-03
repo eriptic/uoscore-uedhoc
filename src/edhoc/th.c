@@ -37,8 +37,8 @@
  */
 static inline enum err th2_input_encode(uint8_t *hash_msg1,
 					uint32_t hash_msg1_len, uint8_t *g_y,
-					uint32_t g_y_len, struct c_x *c_r,
-					uint8_t *th2_input,
+					uint32_t g_y_len, uint8_t *c_r,
+					uint32_t c_r_len, uint8_t *th2_input,
 					uint32_t *th2_input_len)
 {
 	size_t payload_len_out;
@@ -53,20 +53,20 @@ static inline enum err th2_input_encode(uint8_t *hash_msg1,
 	th2._th2_G_Y.len = g_y_len;
 
 	/*Encode C_R as int or byte*/
-	if (c_r->type == INT) {
-		th2._th2_C_R_choice = _th2_C_R_int;
-		th2._th2_C_R_int = c_r->mem.c_x_int;
-	} else {
-		th2._th2_C_R_choice = _th2_C_R_bstr;
-		th2._th2_C_R_bstr.value = c_r->mem.c_x_bstr.ptr;
-		th2._th2_C_R_bstr.len = c_r->mem.c_x_bstr.len;
-	}
+	// if (c_r->type == INT) {
+	// 	th2._th2_C_R_choice = _th2_C_R_int;
+	// 	th2._th2_C_R_int = c_r->mem.c_x_int;
+	// } else {
+	// 	th2._th2_C_R_choice = _th2_C_R_bstr;
+	// 	th2._th2_C_R_bstr.value = c_r->mem.c_x_bstr.ptr;
+	// 	th2._th2_C_R_bstr.len = c_r->mem.c_x_bstr.len;
+	// }
 	TRY_EXPECT(cbor_encode_th2(th2_input, *th2_input_len, &th2,
 				   &payload_len_out),
 		   true);
 
 	/* Get the the total th2 length */
-	*th2_input_len = (uint32_t) payload_len_out;
+	*th2_input_len = (uint32_t)payload_len_out;
 
 	PRINT_ARRAY("Input to calculate TH_2 (CBOR Sequence)", th2_input,
 		    *th2_input_len);
@@ -104,7 +104,7 @@ static inline enum err th3_input_encode(uint8_t *th2, uint32_t th2_len,
 	TRY_EXPECT(cbor_encode_th3(th3_input, *th3_input_len, &th3,
 				   &payload_len_out),
 		   true);
-	*th3_input_len = (uint32_t) payload_len_out;
+	*th3_input_len = (uint32_t)payload_len_out;
 
 	PRINT_ARRAY("Input to calculate TH_3 (CBOR Sequence)", th3_input,
 		    *th3_input_len);
@@ -141,7 +141,7 @@ static inline enum err th4_input_encode(uint8_t *th3, uint32_t th3_len,
 				   &payload_len_out),
 		   true);
 
-	*th4_input_len = (uint32_t) payload_len_out;
+	*th4_input_len = (uint32_t)payload_len_out;
 
 	PRINT_ARRAY("Input to calculate TH_4 (CBOR Sequence)", th4_input,
 		    *th4_input_len);
@@ -149,8 +149,8 @@ static inline enum err th4_input_encode(uint8_t *th3, uint32_t th3_len,
 }
 
 enum err th2_calculate(enum hash_alg alg, uint8_t *msg1, uint32_t msg1_len,
-		       uint8_t *g_y, uint32_t g_y_len, struct c_x *c_r,
-		       uint8_t *th2)
+		       uint8_t *g_y, uint32_t g_y_len, uint8_t *c_r,
+		       uint32_t c_r_len, uint8_t *th2)
 {
 	uint8_t th2_input[TH2_INPUT_DEFAULT_SIZE];
 	uint32_t th2_input_len = sizeof(th2_input);
@@ -159,7 +159,7 @@ enum err th2_calculate(enum hash_alg alg, uint8_t *msg1, uint32_t msg1_len,
 	TRY(hash(alg, msg1, msg1_len, hash_msg1));
 	PRINT_ARRAY("hash_msg1_raw", hash_msg1, SHA_DEFAULT_SIZE);
 	TRY(th2_input_encode(hash_msg1, sizeof(hash_msg1), g_y, g_y_len, c_r,
-			     th2_input, &th2_input_len));
+			     c_r_len, th2_input, &th2_input_len));
 	TRY(hash(alg, th2_input, th2_input_len, th2));
 	PRINT_ARRAY("TH2", th2, SHA_DEFAULT_SIZE);
 	return ok;

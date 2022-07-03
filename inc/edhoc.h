@@ -131,7 +131,7 @@ struct other_party_cred {
 
 struct edhoc_responder_context {
 	bool msg4; /*if true massage 4 will be send by the responder*/
-	struct c_x c_r; /*connection identifier of the responder*/
+	struct byte_array c_r; /*connection identifier of the responder*/
 	struct byte_array suites_r;
 	struct byte_array g_y; /*ephemeral dh public key*/
 	struct byte_array y; /*ephemeral dh secret key*/
@@ -149,7 +149,7 @@ struct edhoc_responder_context {
 
 struct edhoc_initiator_context {
 	bool msg4; /*if true massage 4 will be send by the responder*/
-	struct c_x c_i; /*connection identifier of the initiator*/
+	struct byte_array c_i; /*connection identifier of the initiator*/
 	enum method_type method;
 	//uint8_t corr;
 	struct byte_array suites_i;

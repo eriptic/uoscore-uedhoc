@@ -14,17 +14,17 @@
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
-enum c_x_type { INT, BSTR };
+// enum c_x_type { INT, BSTR };
 
-union c_x_mem {
-	int c_x_int;
-	struct byte_array c_x_bstr;
-};
+// union c_x_mem {
+// 	int c_x_int;
+// 	struct byte_array c_x_bstr;
+// };
 
-struct c_x {
-	enum c_x_type type;
-	union c_x_mem mem;
-};
+// struct c_x {
+// 	enum c_x_type type;
+// 	union c_x_mem mem;
+// };
 
 /**
  * @brief Initializes a c_x struct
@@ -33,7 +33,7 @@ struct c_x {
  * @param buf buffer containing the data
  * @param buf_len the lenhgt of the data
  */
-void c_x_init(struct c_x *c, uint8_t *buf, uint32_t buf_len);
+// void c_x_init(struct c_x *c, uint8_t *buf, uint32_t buf_len);
 
 /**
  * @brief Sets a c_x struct
@@ -45,7 +45,7 @@ void c_x_init(struct c_x *c, uint8_t *buf, uint32_t buf_len);
  * @param out the output
  * @return enum err 
  */
-enum err c_x_set(enum c_x_type t, const uint8_t *c_x_raw_buf,
-		 uint32_t c_x_raw_buf_len, int c_x_int, struct c_x *out);
+// enum err c_x_set(enum c_x_type t, const uint8_t *c_x_raw_buf,
+// 		 uint32_t c_x_raw_buf_len, int c_x_int, struct c_x *out);
 
 #endif

@@ -44,8 +44,8 @@
  * @param   err_msg pointer to an error message structure
  */
 static inline enum err msg2_parse(uint8_t *msg2, uint32_t msg2_len,
-				  uint8_t *g_y, uint32_t g_y_len,
-				  struct c_x *c_r, uint8_t *ciphertext2,
+				  uint8_t *g_y, uint32_t g_y_len, uint8_t *c_r,
+				  uint32_t c_r_len, uint8_t *ciphertext2,
 				  uint32_t *ciphertext2_len)
 {
 	size_t decode_len = 0;
@@ -62,15 +62,15 @@ static inline enum err msg2_parse(uint8_t *msg2, uint32_t msg2_len,
 	*ciphertext2_len = (uint32_t)m._m2_G_Y_CIPHERTEXT_2.len - g_y_len;
 	PRINT_ARRAY("ciphertext2", ciphertext2, *ciphertext2_len);
 
-	if (m._m2_C_R_choice == _m2_C_R_int) {
-		TRY(c_x_set(INT, NULL, 0, m._m2_C_R_int, c_r));
-		PRINTF("C_R is an int: %d\n", c_r->mem.c_x_int);
-	} else {
-		TRY(c_x_set(BSTR, m._m2_C_R_bstr.value,
-			    (uint32_t)m._m2_C_R_bstr.len, 0, c_r));
-		PRINT_ARRAY("C_R_raw bstr", c_r->mem.c_x_bstr.ptr,
-			    c_r->mem.c_x_bstr.len);
-	}
+	// if (m._m2_C_R_choice == _m2_C_R_int) {
+	// 	TRY(c_x_set(INT, NULL, 0, m._m2_C_R_int, c_r));
+	// 	PRINTF("C_R is an int: %d\n", c_r->mem.c_x_int);
+	// } else {
+	// 	TRY(c_x_set(BSTR, m._m2_C_R_bstr.value,
+	// 		    (uint32_t)m._m2_C_R_bstr.len, 0, c_r));
+	// 	PRINT_ARRAY("C_R_raw bstr", c_r->mem.c_x_bstr.ptr,
+	// 		    c_r->mem.c_x_bstr.len);
+	// }
 
 	return ok;
 }
@@ -101,14 +101,17 @@ enum err msg1_gen(const struct edhoc_initiator_context *c,
 	m1._message_1_G_X.value = c->g_x.ptr;
 	m1._message_1_G_X.len = c->g_x.len;
 
-	/* C_I connection id, encoded as  bstr_identifier */
-	if (c->c_i.type == INT) {
+	/* C_I connection ID  of the initiator*/
+	PRINT_ARRAY("C_I", c->c_i.ptr, c->c_i.len);
+	if (c->c_i.len == 1 &&
+	    ((0x00 < c->c_i.ptr[0] && c->c_i.ptr[0] < 0x18) ||
+	     (0x1F < c->c_i.ptr[0] && c->c_i.ptr[0] < 0x37))) {
 		m1._message_1_C_I_choice = _message_1_C_I_int;
-		m1._message_1_C_I_int = c->c_i.mem.c_x_int;
+		m1._message_1_C_I_int = c->c_i.ptr[0] - 59;
 	} else {
 		m1._message_1_C_I_choice = _message_1_C_I_bstr;
-		m1._message_1_C_I_bstr.value = c->c_i.mem.c_x_bstr.ptr;
-		m1._message_1_C_I_bstr.len = c->c_i.mem.c_x_bstr.len;
+		m1._message_1_C_I_bstr.value = c->c_i.ptr;
+		m1._message_1_C_I_bstr.len = c->c_i.len;
 	}
 
 	if (c->ead_1.len != 0) {
@@ -144,9 +147,9 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	uint8_t g_y[G_Y_DEFAULT_SIZE];
 	uint32_t g_y_len = get_ecdh_pk_len(rc->suite.edhoc_ecdh);
 
-	uint8_t c_r_buf[C_R_DEFAULT_SIZE];
-	struct c_x c_r;
-	c_x_init(&c_r, c_r_buf, sizeof(c_r_buf));
+	// uint8_t c_r_buf[C_R_DEFAULT_SIZE];
+	// struct c_x c_r;
+	// c_x_init(&c_r, c_r_buf, sizeof(c_r_buf));
 
 	uint8_t ciphertext2[CIPHERTEXT2_DEFAULT_SIZE];
 	uint32_t ciphertext2_len = sizeof(ciphertext2);
@@ -159,8 +162,8 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	* return. Then the caller needs to examine SUITES_R in err_msg 
 	* re-initialize the initiator and call edhoc_initiator_run again
 	*/
-	TRY(msg2_parse(rc->msg2, rc->msg2_len, g_y, g_y_len, &c_r,
-		       (uint8_t *)&ciphertext2, &ciphertext2_len));
+	// TRY(msg2_parse(rc->msg2, rc->msg2_len, g_y, g_y_len, &c_r,
+	// 	       (uint8_t *)&ciphertext2, &ciphertext2_len));
 	// if (r == error_message_received) {
 	// 	/*provide the error message to the caller*/
 	// 	r = _memcpy_s(err_msg, *err_msg_len, msg2, msg2_len);
@@ -179,8 +182,8 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 
 	/*calculate th2*/
 	uint8_t th2[SHA_DEFAULT_SIZE];
-	TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1, rc->msg1_len, g_y,
-			  g_y_len, &c_r, th2));
+	// TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1, rc->msg1_len, g_y,
+	// 		  g_y_len, &c_r, th2));
 
 	/*calculate PRK_2e*/
 	uint8_t PRK_2e[PRK_DEFAULT_SIZE];

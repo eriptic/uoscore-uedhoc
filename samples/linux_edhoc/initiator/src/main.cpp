@@ -21,7 +21,7 @@
 extern "C" {
 #include "edhoc.h"
 #include "sock.h"
-#include "edhoc_test_vectors.h"
+#include "edhoc_test_vectors_v14.h"
 }
 #include "cantcoap.h"
 
@@ -145,60 +145,76 @@ int main()
 	uint32_t ad_4_len = sizeof(ad_2);
 
 	/* test vector inputs */
-	const uint8_t TEST_VEC_NUM = 1;
+	//const uint8_t TEST_VEC_NUM = 1;
 	uint16_t cred_num = 1;
 	struct other_party_cred cred_r;
 	struct edhoc_initiator_context c_i;
 
-	uint8_t vec_num_i = TEST_VEC_NUM - 1;
-
-	if (test_vectors[vec_num_i].c_i_raw != NULL) {
-		c_i.c_i.type = BSTR;
-		c_i.c_i.mem.c_x_bstr.len = test_vectors[vec_num_i].c_i_raw_len;
-		c_i.c_i.mem.c_x_bstr.ptr =
-			(uint8_t *)test_vectors[vec_num_i].c_i_raw;
-	} else {
-		c_i.c_i.type = INT;
-		c_i.c_i.mem.c_x_int = *test_vectors[vec_num_i].c_i_raw_int;
-	}
 	c_i.msg4 = true;
-	c_i.method = (enum method_type) * test_vectors[vec_num_i].method;
-	c_i.suites_i.len = test_vectors[vec_num_i].suites_i_len;
-	c_i.suites_i.ptr = (uint8_t *)test_vectors[vec_num_i].suites_i;
-	c_i.ead_1.len = test_vectors[vec_num_i].ead_1_len;
-	c_i.ead_1.ptr = (uint8_t *)test_vectors[vec_num_i].ead_1;
-	c_i.ead_3.len = test_vectors[vec_num_i].ead_3_len;
-	c_i.ead_3.ptr = (uint8_t *)test_vectors[vec_num_i].ead_3;
-	c_i.id_cred_i.len = test_vectors[vec_num_i].id_cred_i_len;
-	c_i.id_cred_i.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_i;
-	c_i.cred_i.len = test_vectors[vec_num_i].cred_i_len;
-	c_i.cred_i.ptr = (uint8_t *)test_vectors[vec_num_i].cred_i;
-	c_i.g_x.len = test_vectors[vec_num_i].g_x_raw_len;
-	c_i.g_x.ptr = (uint8_t *)test_vectors[vec_num_i].g_x_raw;
-	c_i.x.len = test_vectors[vec_num_i].x_raw_len;
-	c_i.x.ptr = (uint8_t *)test_vectors[vec_num_i].x_raw;
-	c_i.g_i.len = test_vectors[vec_num_i].g_i_raw_len;
-	c_i.g_i.ptr = (uint8_t *)test_vectors[vec_num_i].g_i_raw;
-	c_i.i.len = test_vectors[vec_num_i].i_raw_len;
-	c_i.i.ptr = (uint8_t *)test_vectors[vec_num_i].i_raw;
-	c_i.sk_i.len = test_vectors[vec_num_i].sk_i_raw_len;
-	c_i.sk_i.ptr = (uint8_t *)test_vectors[vec_num_i].sk_i_raw;
-	c_i.pk_i.len = test_vectors[vec_num_i].pk_i_raw_len;
-	c_i.pk_i.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
 	c_i.sock = &sockfd;
 
-	cred_r.id_cred.len = test_vectors[vec_num_i].id_cred_r_len;
-	cred_r.id_cred.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_r;
-	cred_r.cred.len = test_vectors[vec_num_i].cred_r_len;
-	cred_r.cred.ptr = (uint8_t *)test_vectors[vec_num_i].cred_r;
-	cred_r.g.len = test_vectors[vec_num_i].g_r_raw_len;
-	cred_r.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_r_raw;
-	cred_r.pk.len = test_vectors[vec_num_i].pk_r_raw_len;
-	cred_r.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_r_raw;
-	cred_r.ca.len = test_vectors[vec_num_i].ca_len;
-	cred_r.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
-	cred_r.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
-	cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
+	c_i.method = T1_METHOD;
+
+	c_i.suites_i.ptr = T1_SUITE_I;
+	c_i.suites_i.len = sizeof(T1_SUITE_I);
+
+	c_i.g_x.ptr = T1_G_X;
+	c_i.g_x.len = sizeof(T1_G_X);
+
+	c_i.c_i.ptr = T1_C_I;
+	c_i.c_i.len = sizeof(T1_C_I);
+
+	c_i.ead_1.ptr = T1_EAD_1;
+	c_i.ead_1.len = sizeof(T1_EAD_1);
+
+	// uint8_t vec_num_i = TEST_VEC_NUM - 1;
+
+	// if (test_vectors[vec_num_i].c_i_raw != NULL) {
+	// 	c_i.c_i.type = BSTR;
+	// 	c_i.c_i.mem.c_x_bstr.len = test_vectors[vec_num_i].c_i_raw_len;
+	// 	c_i.c_i.mem.c_x_bstr.ptr =
+	// 		(uint8_t *)test_vectors[vec_num_i].c_i_raw;
+	// } else {
+	// 	c_i.c_i.type = INT;
+	// 	c_i.c_i.mem.c_x_int = *test_vectors[vec_num_i].c_i_raw_int;
+	// }
+	// c_i.msg4 = true;
+	// c_i.method = (enum method_type) * test_vectors[vec_num_i].method;
+	// c_i.suites_i.len = test_vectors[vec_num_i].suites_i_len;
+	// c_i.suites_i.ptr = (uint8_t *)test_vectors[vec_num_i].suites_i;
+	// c_i.ead_1.len = test_vectors[vec_num_i].ead_1_len;
+	// c_i.ead_1.ptr = (uint8_t *)test_vectors[vec_num_i].ead_1;
+	// c_i.ead_3.len = test_vectors[vec_num_i].ead_3_len;
+	// c_i.ead_3.ptr = (uint8_t *)test_vectors[vec_num_i].ead_3;
+	// c_i.id_cred_i.len = test_vectors[vec_num_i].id_cred_i_len;
+	// c_i.id_cred_i.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_i;
+	// c_i.cred_i.len = test_vectors[vec_num_i].cred_i_len;
+	// c_i.cred_i.ptr = (uint8_t *)test_vectors[vec_num_i].cred_i;
+	// c_i.g_x.len = test_vectors[vec_num_i].g_x_raw_len;
+	// c_i.g_x.ptr = (uint8_t *)test_vectors[vec_num_i].g_x_raw;
+	// c_i.x.len = test_vectors[vec_num_i].x_raw_len;
+	// c_i.x.ptr = (uint8_t *)test_vectors[vec_num_i].x_raw;
+	// c_i.g_i.len = test_vectors[vec_num_i].g_i_raw_len;
+	// c_i.g_i.ptr = (uint8_t *)test_vectors[vec_num_i].g_i_raw;
+	// c_i.i.len = test_vectors[vec_num_i].i_raw_len;
+	// c_i.i.ptr = (uint8_t *)test_vectors[vec_num_i].i_raw;
+	// c_i.sk_i.len = test_vectors[vec_num_i].sk_i_raw_len;
+	// c_i.sk_i.ptr = (uint8_t *)test_vectors[vec_num_i].sk_i_raw;
+	// c_i.pk_i.len = test_vectors[vec_num_i].pk_i_raw_len;
+	// c_i.pk_i.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
+
+	// cred_r.id_cred.len = test_vectors[vec_num_i].id_cred_r_len;
+	// cred_r.id_cred.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_r;
+	// cred_r.cred.len = test_vectors[vec_num_i].cred_r_len;
+	// cred_r.cred.ptr = (uint8_t *)test_vectors[vec_num_i].cred_r;
+	// cred_r.g.len = test_vectors[vec_num_i].g_r_raw_len;
+	// cred_r.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_r_raw;
+	// cred_r.pk.len = test_vectors[vec_num_i].pk_r_raw_len;
+	// cred_r.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_r_raw;
+	// cred_r.ca.len = test_vectors[vec_num_i].ca_len;
+	// cred_r.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
+	// cred_r.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
+	// cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
 
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY
 	uint32_t seed;
@@ -214,7 +230,8 @@ int main()
 	PRINT_ARRAY("seed", (uint8_t *)&seed, seed_len);
 
 	/*create ephemeral DH keys from seed*/
-	TRY(ephemeral_dh_key_gen(X25519, seed, X_random, G_X_random, &G_X_random_len));
+	TRY(ephemeral_dh_key_gen(X25519, seed, X_random, G_X_random,
+				 &G_X_random_len));
 	c_i.g_x.ptr = G_X_random;
 	c_i.g_x.len = sizeof(G_X_random);
 	c_i.x.ptr = X_random;
