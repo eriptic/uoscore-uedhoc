@@ -225,7 +225,7 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	TRY(signature_or_mac(VERIFY, static_dh_r, &rc->suite, NULL, 0, pk,
 			     pk_len, PRK_3e2m, sizeof(PRK_3e2m), th2,
 			     sizeof(th2), id_cred_r, id_cred_r_len, cred_r,
-			     cred_r_len, ead_2, *(uint32_t *)ead_2_len, "MAC_2",
+			     cred_r_len, ead_2, *(uint32_t *)ead_2_len, MAC_2,
 			     sign_or_mac, &sign_or_mac_len));
 
 	/********msg3 create and send**************************************/
@@ -247,7 +247,7 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 			     c->sk_i.len, c->pk_i.ptr, c->pk_i.len, prk_4x3m,
 			     prk_4x3m_len, th3, sizeof(th3), c->id_cred_i.ptr,
 			     c->id_cred_i.len, c->cred_i.ptr, c->cred_i.len,
-			     c->ead_3.ptr, c->ead_3.len, "MAC_3", sign_or_mac_3,
+			     c->ead_3.ptr, c->ead_3.len, MAC_3, sign_or_mac_3,
 			     &sign_or_mac_3_len));
 
 	uint8_t ciphertext_3[CIPHERTEXT3_DEFAULT_SIZE];

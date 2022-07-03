@@ -208,11 +208,32 @@ int main()
 
 	c_r.sock = &sockfd;
 
+	c_r.suites_r.ptr = T1_SUITE_R;
+	c_r.suites_r.len = sizeof(T1_SUITE_R);
+
 	c_r.c_r.ptr = T1_C_R;
 	c_r.c_r.len = sizeof(T1_C_R);
 
+	c_r.y.ptr = T1_Y;
+	c_r.y.len = sizeof(T1_Y);
+
 	c_r.g_y.ptr = T1_G_Y;
 	c_r.g_y.len = sizeof(T1_G_Y);
+
+	c_r.sk_r.ptr = T1_SK_R;
+	c_r.sk_r.len = sizeof(T1_SK_R);
+
+	c_r.pk_r.ptr = T1_PK_R;
+	c_r.pk_r.len = sizeof(T1_PK_R);
+
+	c_r.id_cred_r.ptr = T1_ID_CRED_R;
+	c_r.id_cred_r.len = sizeof(T1_ID_CRED_R);
+
+	c_r.cred_r.ptr = T1_CRED_R;
+	c_r.cred_r.len = sizeof(T1_CRED_R);
+
+	c_r.ead_2.ptr = T1_EAD_2;
+	c_r.ead_2.len = sizeof(T1_EAD_2);
 
 	// if (test_vectors[vec_num_i].c_r_raw != NULL) {
 	// 	c_r.c_r.type = BSTR;
@@ -273,15 +294,15 @@ int main()
 		PRINT_ARRAY("PRK_4x3m", PRK_4x3m, sizeof(PRK_4x3m));
 		PRINT_ARRAY("th4", th4, sizeof(th4));
 
-		TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
-				   sizeof(th4), "OSCORE_Master_Secret",
-				   oscore_master_secret, 16));
-		PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret, 16);
+		// TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
+		// 		   sizeof(th4), "OSCORE_Master_Secret",
+		// 		   oscore_master_secret, 16));
+		// PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret, 16);
 
-		TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
-				   sizeof(th4), "OSCORE_Master_Salt",
-				   oscore_master_salt, 8));
-		PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt, 8);
+		// TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
+		// 		   sizeof(th4), "OSCORE_Master_Salt",
+		// 		   oscore_master_salt, 8));
+		// PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt, 8);
 	}
 
 	close(sockfd);

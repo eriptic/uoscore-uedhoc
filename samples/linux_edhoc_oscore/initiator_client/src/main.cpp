@@ -217,15 +217,15 @@ int main()
 	PRINT_ARRAY("PRK_4x3m", PRK_4x3m, sizeof(PRK_4x3m));
 	PRINT_ARRAY("th4", th4, sizeof(th4));
 
-	TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
-			   sizeof(th4), "OSCORE_Master_Secret",
-			   oscore_master_secret, 16));
-	PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret, 16);
+	// TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
+	// 		   sizeof(th4), "OSCORE_Master_Secret",
+	// 		   oscore_master_secret, 16));
+	// PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret, 16);
 
-	TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
-			   sizeof(th4), "OSCORE_Master_Salt",
-			   oscore_master_salt, 8));
-	PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt, 8);
+	// TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
+	// 		   sizeof(th4), "OSCORE_Master_Salt",
+	// 		   oscore_master_salt, 8));
+	// PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt, 8);
 
 	/*
 	 *  

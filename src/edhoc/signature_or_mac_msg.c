@@ -38,7 +38,7 @@ enum err encode_byte_string(const uint8_t *in, uint32_t in_len, uint8_t *out,
 	TRY_EXPECT(cbor_encode_bstr_type_b_str(out, *out_len, &tmp,
 					       &payload_len_out),
 		   true);
-	*out_len = (uint32_t) payload_len_out;
+	*out_len = (uint32_t)payload_len_out;
 	return ok;
 }
 
@@ -51,8 +51,8 @@ enum err decode_byte_string(const uint8_t *in, const uint32_t in_len,
 	TRY_EXPECT(cbor_decode_bstr_type_b_str(in, in_len, &str, &decode_len),
 		   true);
 
-	TRY(_memcpy_s(out, *out_len, str.value, (uint32_t) str.len));
-	*out_len = (uint32_t) str.len;
+	TRY(_memcpy_s(out, *out_len, str.value, (uint32_t)str.len));
+	*out_len = (uint32_t)str.len;
 
 	return ok;
 }
@@ -60,20 +60,40 @@ enum err decode_byte_string(const uint8_t *in, const uint32_t in_len,
 enum err mac(const uint8_t *prk, uint32_t prk_len, const uint8_t *th,
 	     uint32_t th_len, const uint8_t *id_cred, uint32_t id_cred_len,
 	     const uint8_t *cred, uint32_t cred_len, const uint8_t *ead,
-	     uint32_t ead_len, const char *mac_label, bool static_dh,
+	     uint32_t ead_len, enum info_label mac_label, bool static_dh,
 	     struct suite *suite, uint8_t *mac, uint32_t *mac_len)
 {
-	uint32_t context_mac_len = id_cred_len + cred_len + ead_len;
+	/*encode th as bstr*/
+	uint32_t th_encoded_len = th_len + 2;
+	uint8_t th_encoded[th_encoded_len];
+	TRY(encode_byte_string(th, th_len, th_encoded, &th_encoded_len));
+
+	/*encode cred_r as bstr*/
+	uint32_t cred_encoded_len = cred_len + 2;
+	uint8_t cred_encoded[cred_encoded_len];
+	TRY(encode_byte_string(cred, cred_len, cred_encoded,
+			       &cred_encoded_len));
+
+	/**/
+	uint32_t context_mac_len =
+		id_cred_len + cred_encoded_len + ead_len + th_encoded_len;
 	TRY(check_buffer_size(CONTEXT_MAC_DEFAULT_SIZE, context_mac_len));
 	uint8_t context_mac[CONTEXT_MAC_DEFAULT_SIZE];
 	TRY(_memcpy_s(context_mac, context_mac_len, id_cred, id_cred_len));
 
 	TRY(_memcpy_s((context_mac + id_cred_len),
-		      (context_mac_len - id_cred_len), cred, cred_len));
+		      (context_mac_len - id_cred_len), th_encoded,
+		      th_encoded_len));
 
-	TRY(_memcpy_s((context_mac + id_cred_len + cred_len),
-		      (context_mac_len - id_cred_len - cred_len), ead,
-		      ead_len));
+	TRY(_memcpy_s((context_mac + id_cred_len + th_encoded_len),
+		      (context_mac_len - id_cred_len - th_encoded_len),
+		      cred_encoded, cred_encoded_len));
+
+	TRY(_memcpy_s(
+		(context_mac + id_cred_len + th_encoded_len + cred_encoded_len),
+		(context_mac_len - id_cred_len - th_encoded_len -
+		 cred_encoded_len),
+		ead, ead_len));
 
 	PRINT_ARRAY("MAC context", context_mac, context_mac_len);
 
@@ -84,8 +104,8 @@ enum err mac(const uint8_t *prk, uint32_t prk_len, const uint8_t *th,
 		*mac_len = get_hash_len(suite->edhoc_hash);
 	}
 
-	TRY(okm_calc(suite->edhoc_hash, prk, prk_len, th, th_len, mac_label,
-		     context_mac, context_mac_len, mac, *mac_len));
+	TRY(edhoc_kdf(suite->edhoc_hash, prk, prk_len, mac_label, context_mac,
+		      context_mac_len, *mac_len, mac));
 
 	PRINT_ARRAY("MAC 2/3", mac, *mac_len);
 	return ok;
@@ -101,10 +121,13 @@ static enum err signature_struct_gen(const uint8_t *th, uint32_t th_len,
 {
 	uint8_t th_enc[SHA_DEFAULT_SIZE + 2];
 	uint32_t th_enc_len = sizeof(th_enc);
+	uint8_t cred_enc[CRED_DEFAULT_SIZE + 2];
+	uint32_t cred_enc_len = sizeof(cred_enc);
 
 	TRY(encode_byte_string(th, th_len, th_enc, &th_enc_len));
+	TRY(encode_byte_string(cred, cred_len, cred_enc, &cred_enc_len));
 
-	uint32_t tmp_len = th_enc_len + cred_len + ead_len;
+	uint32_t tmp_len = th_enc_len + cred_enc_len + ead_len;
 
 	TRY(check_buffer_size(CRED_DEFAULT_SIZE + SHA_DEFAULT_SIZE +
 				      AD_DEFAULT_SIZE,
@@ -112,9 +135,9 @@ static enum err signature_struct_gen(const uint8_t *th, uint32_t th_len,
 	uint8_t tmp[CRED_DEFAULT_SIZE + SHA_DEFAULT_SIZE + AD_DEFAULT_SIZE];
 
 	memcpy(tmp, th_enc, th_enc_len);
-	memcpy(tmp + th_enc_len, cred, cred_len);
+	memcpy(tmp + th_enc_len, cred_enc, cred_enc_len);
 	if (ead_len != 0) {
-		memcpy(tmp + th_enc_len + cred_len, ead, ead_len);
+		memcpy(tmp + th_enc_len + cred_enc_len, ead, ead_len);
 	}
 
 	uint8_t context_str[] = { "Signature1" };
@@ -125,14 +148,16 @@ static enum err signature_struct_gen(const uint8_t *th, uint32_t th_len,
 	return ok;
 }
 
-enum err
-signature_or_mac(enum sgn_or_mac_op op, bool static_dh, struct suite *suite,
-		 const uint8_t *sk, uint32_t sk_len, const uint8_t *pk,
-		 uint32_t pk_len, const uint8_t *prk, uint32_t prk_len,
-		 const uint8_t *th, uint32_t th_len, const uint8_t *id_cred,
-		 uint32_t id_cred_len, const uint8_t *cred, uint32_t cred_len,
-		 const uint8_t *ead, uint32_t ead_len, const char *mac_label,
-		 uint8_t *signature_or_mac, uint32_t *signature_or_mac_len)
+enum err signature_or_mac(enum sgn_or_mac_op op, bool static_dh,
+			  struct suite *suite, const uint8_t *sk,
+			  uint32_t sk_len, const uint8_t *pk, uint32_t pk_len,
+			  const uint8_t *prk, uint32_t prk_len,
+			  const uint8_t *th, uint32_t th_len,
+			  const uint8_t *id_cred, uint32_t id_cred_len,
+			  const uint8_t *cred, uint32_t cred_len,
+			  const uint8_t *ead, uint32_t ead_len,
+			  enum info_label mac_label, uint8_t *signature_or_mac,
+			  uint32_t *signature_or_mac_len)
 {
 	if (op == GENERATE) {
 		/*we always calculate the mac*/
@@ -197,7 +222,7 @@ signature_or_mac(enum sgn_or_mac_op op, bool static_dh, struct suite *suite,
 				return signature_authentication_failed;
 			}
 			PRINT_MSG(
-				"Signature or MAC verification successfull!\n");
+				"Signature or MAC verification successful!\n");
 		}
 	}
 	return ok;

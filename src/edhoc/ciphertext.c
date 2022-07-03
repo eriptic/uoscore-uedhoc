@@ -97,26 +97,28 @@ static enum err key_gen(enum ciphertext ctxt, enum hash_alg edhoc_hash,
 {
 	switch (ctxt) {
 	case CIPHERTEXT2:
-		TRY(okm_calc(edhoc_hash, prk, prk_len, th, th_len,
-			     "KEYSTREAM_2", NULL, 0, key, key_len));
+		TRY(edhoc_kdf(edhoc_hash, prk, prk_len, KEYSTREAM_2, th, th_len,
+			      key_len, key));
 		PRINT_ARRAY("KEYSTREAM_2", key, key_len);
 		break;
 
 	case CIPHERTEXT3:
-		TRY(okm_calc(edhoc_hash, prk, prk_len, th, th_len, "K_3", NULL,
-			     0, key, key_len));
+		TRY(edhoc_kdf(edhoc_hash, prk, prk_len, K_3, th, th_len,
+			      key_len, key));
+
 		PRINT_ARRAY("K_3", key, key_len);
-		TRY(okm_calc(edhoc_hash, prk, prk_len, th, th_len, "IV_3", NULL,
-			     0, iv, iv_len));
+
+		TRY(edhoc_kdf(edhoc_hash, prk, prk_len, IV_3, th, th_len,
+			      iv_len, iv));
 		PRINT_ARRAY("IV_3", iv, iv_len);
 		break;
 
 	case CIPHERTEXT4:
-		TRY(edhoc_exporter(edhoc_hash, prk, prk_len, th, th_len,
-				   "EDHOC_K_4", key, key_len));
+		TRY(edhoc_exporter(edhoc_hash, prk, prk_len, th, th_len, K_4,
+				   key, key_len));
 		PRINT_ARRAY("K_4", key, key_len);
-		TRY(edhoc_exporter(edhoc_hash, prk, prk_len, th, th_len,
-				   "EDHOC_IV_4", iv, iv_len));
+		TRY(edhoc_exporter(edhoc_hash, prk, prk_len, th, th_len, IV_4,
+				   iv, iv_len));
 		PRINT_ARRAY("IV_4", iv, iv_len);
 		break;
 	}

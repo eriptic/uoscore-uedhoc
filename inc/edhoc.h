@@ -18,6 +18,7 @@
 #include "edhoc/messages.h"
 #include "edhoc/suites.h"
 #include "edhoc/c_x.h"
+#include "edhoc/hkdf_info.h"
 
 #include "common/oscore_edhoc_error.h"
 #include "common/byte_array.h"
@@ -118,8 +119,6 @@
 #define TH_ENC_DEFAULT_SIZE 42
 #define ENCODING_OVERHEAD 6
 
-
-
 struct other_party_cred {
 	struct byte_array id_cred; /*ID_CRED_x of the other party*/
 	struct byte_array cred; /*CBOR encoded credentials*/
@@ -181,9 +180,8 @@ struct edhoc_initiator_context {
 
  */
 enum err __attribute__((weak))
-ephemeral_dh_key_gen(
-	enum ecdh_alg alg, uint32_t seed, uint8_t *sk,
-	uint8_t *pk, uint32_t *pk_size);
+ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk,
+		     uint32_t *pk_size);
 
 /**
  * @brief   Executes the EDHOC protocol on the initiator side
@@ -258,6 +256,6 @@ enum err edhoc_responder_run(
  */
 enum err edhoc_exporter(enum hash_alg app_hash_alg, const uint8_t *prk_4x3m,
 			uint32_t prk_4x3m_len, const uint8_t *th4,
-			uint32_t th4_len, const char *label, uint8_t *out,
+			uint32_t th4_len, enum info_label label, uint8_t *out,
 			uint32_t out_len);
 #endif

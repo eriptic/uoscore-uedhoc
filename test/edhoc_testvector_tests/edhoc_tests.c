@@ -188,17 +188,17 @@ int test_edhoc(enum role p, uint8_t vec_num)
 		zassert_true(err == 0, "edhoc_responder_run failed");
 	}
 
-	err = edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
-			     sizeof(th4), "OSCORE_Master_Secret",
-			     oscore_master_secret, 16);
+	// err = edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
+	// 		     sizeof(th4), "OSCORE_Master_Secret",
+	// 		     oscore_master_secret, 16);
 
-	zassert_true(err == 0, "edhoc_exporter failed");
+	// zassert_true(err == 0, "edhoc_exporter failed");
 
-	err = edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
-			     sizeof(th4), "OSCORE_Master_Salt",
-			     oscore_master_salt, 8);
+	// err = edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
+	// 		     sizeof(th4), "OSCORE_Master_Salt",
+	// 		     oscore_master_salt, 8);
 
-	zassert_true(err == 0, "edhoc_exporter failed");
+	// zassert_true(err == 0, "edhoc_exporter failed");
 
 	/* check th4, PRK_4x3m, OSCORE Master secret and salt are correct */
 	zassert_mem_equal__(&PRK_4x3m, test_vectors[vec_num].prk_4x3m_raw,

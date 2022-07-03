@@ -68,7 +68,7 @@ enum err signature_or_mac_msg_create(
 enum err mac(const uint8_t *prk, uint32_t prk_len, const uint8_t *th,
 	     uint32_t th_len, const uint8_t *id_cred, uint32_t id_cred_len,
 	     const uint8_t *cred, uint32_t cred_len, const uint8_t *ead,
-	     uint32_t ead_len, const char *mac_label, bool static_dh,
+	     uint32_t ead_len, enum info_label mac_label, bool static_dh,
 	     struct suite *suite, uint8_t *mac, uint32_t *mac_len);
 
 enum err
@@ -77,7 +77,7 @@ signature_or_mac(enum sgn_or_mac_op op, bool static_dh, struct suite *suite,
 		 uint32_t pk_len, const uint8_t *prk, uint32_t prk_len,
 		 const uint8_t *th, uint32_t th_len, const uint8_t *id_cred,
 		 uint32_t id_cred_len, const uint8_t *cred, uint32_t cred_len,
-		 const uint8_t *ead, uint32_t ead_len, const char *mac_label,
+		 const uint8_t *ead, uint32_t ead_len, enum info_label mac_label,
 		 uint8_t *signature_or_mac, uint32_t *signature_or_mac_len);
 
 #endif

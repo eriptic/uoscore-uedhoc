@@ -173,6 +173,17 @@ static inline enum err msg2_encode(const uint8_t *g_y, uint32_t g_y_len,
 	m._m2_G_Y_CIPHERTEXT_2.len = g_y_ciphertext_2_len;
 
 	/*Encode C_R*/
+	PRINT_ARRAY("C_R", c_r, c_r_len);
+	if (c_r_len == 1 &&
+	    ((0x00 < c_r[0] && c_r[0] < 0x18) ||
+	     (0x1F < c_r[0] && c_r[0] < 0x37))) {
+		m._m2_C_R_choice = _m2_C_R_int;
+		m._m2_C_R_int = c_r[0] - 59;
+	} else {
+		m._m2_C_R_choice = _m2_C_R_bstr;
+		m._m2_C_R_bstr.value = c_r;
+		m._m2_C_R_bstr.len = c_r_len;
+	}
 	// if (c_r->type == INT) {
 	// 	m._m2_C_R_choice = _m2_C_R_int;
 	// 	m._m2_C_R_int = c_r->mem.c_x_int;
@@ -213,6 +224,7 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 		// 	return r;
 		// }
 		/*After an error message is sent the protocol must be discontinued*/
+		PRINTF("After an error message is sent the protocol must be discontinued");
 		return error_message_sent;
 	}
 
@@ -255,7 +267,7 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 			     c->sk_r.len, c->pk_r.ptr, c->pk_r.len,
 			     rc->PRK_3e2m, rc->PRK_3e2m_len, th2, th2_len,
 			     c->id_cred_r.ptr, c->id_cred_r.len, c->cred_r.ptr,
-			     c->cred_r.len, c->ead_2.ptr, c->ead_2.len, "MAC_2",
+			     c->cred_r.len, c->ead_2.ptr, c->ead_2.len, MAC_2,
 			     sign_or_mac_2, &sign_or_mac_2_len));
 
 	/*compute ciphertext_2*/
@@ -333,7 +345,7 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	TRY(signature_or_mac(VERIFY, rc->static_dh_i, &rc->suite, NULL, 0, pk,
 			     pk_len, prk_4x3m, prk_4x3m_len, rc->th3,
 			     rc->th3_len, id_cred_i, id_cred_i_len, cred_i,
-			     cred_i_len, ead_3, *(uint32_t *)ead_3_len, "MAC_3",
+			     cred_i_len, ead_3, *(uint32_t *)ead_3_len, MAC_3,
 			     sign_or_mac, &sign_or_mac_len));
 
 	/*TH4*/
