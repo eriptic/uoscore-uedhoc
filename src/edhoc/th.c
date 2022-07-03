@@ -61,6 +61,15 @@ static inline enum err th2_input_encode(uint8_t *hash_msg1,
 	// 	th2._th2_C_R_bstr.value = c_r->mem.c_x_bstr.ptr;
 	// 	th2._th2_C_R_bstr.len = c_r->mem.c_x_bstr.len;
 	// }
+	if (c_r_len == 1 && ((0x00 < c_r[0] && c_r[0] < 0x18) ||
+			     (0x1F < c_r[0] && c_r[0] < 0x37))) {
+		th2._th2_C_R_choice = _th2_C_R_int;
+		th2._th2_C_R_int = c_r[0] - 59;
+	} else {
+		th2._th2_C_R_choice = _th2_C_R_bstr;
+		th2._th2_C_R_bstr.value = c_r;
+		th2._th2_C_R_bstr.len = c_r_len;
+	}
 	TRY_EXPECT(cbor_encode_th2(th2_input, *th2_input_len, &th2,
 				   &payload_len_out),
 		   true);

@@ -208,6 +208,12 @@ int main()
 
 	c_r.sock = &sockfd;
 
+	c_r.c_r.ptr = T1_C_R;
+	c_r.c_r.len = sizeof(T1_C_R);
+
+	c_r.g_y.ptr = T1_G_Y;
+	c_r.g_y.len = sizeof(T1_G_Y);
+
 	// if (test_vectors[vec_num_i].c_r_raw != NULL) {
 	// 	c_r.c_r.type = BSTR;
 	// 	c_r.c_r.mem.c_x_bstr.len = test_vectors[vec_num_i].c_r_raw_len;

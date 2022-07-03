@@ -23,7 +23,6 @@
 #define DEFAULT_MAX_QTY 3
 
 struct th2 {
-	struct zcbor_string _th2_hash_msg1;
 	struct zcbor_string _th2_G_Y;
 	union {
 		struct zcbor_string _th2_C_R_bstr;
@@ -33,6 +32,7 @@ struct th2 {
 		_th2_C_R_bstr,
 		_th2_C_R_int,
 	} _th2_C_R_choice;
+	struct zcbor_string _th2_hash_msg1;
 };
 
 

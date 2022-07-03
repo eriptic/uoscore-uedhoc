@@ -8,7 +8,7 @@
 ; except according to those terms.
 
 ; This file should be processed with cddl-gen (https://github.com/NordicSemiconductor/cddl-gen/tree/master) to create cbor encoding and decoding code 
-th2 = ( hash_msg1: bstr, G_Y: bstr, C_R: bstr / int )
+th2 = ( G_Y: bstr, C_R: bstr / int, hash_msg1: bstr )
 
 th3 = ( th_2: bstr, CIPHERTEXT_2: bstr)
 
