@@ -161,11 +161,27 @@ int main()
 	c_i.g_x.ptr = T1_G_X;
 	c_i.g_x.len = sizeof(T1_G_X);
 
+	c_i.x.ptr = T1_X;
+	c_i.x.len = sizeof(T1_X);
+
 	c_i.c_i.ptr = T1_C_I;
 	c_i.c_i.len = sizeof(T1_C_I);
 
 	c_i.ead_1.ptr = T1_EAD_1;
 	c_i.ead_1.len = sizeof(T1_EAD_1);
+
+	cred_r.id_cred.len = sizeof(T1_ID_CRED_R);
+	cred_r.id_cred.ptr = T1_ID_CRED_R;
+	cred_r.cred.len = sizeof(T1_CRED_R);
+	cred_r.cred.ptr = T1_CRED_R;
+	cred_r.pk.len = sizeof(T1_PK_R);
+	cred_r.pk.ptr = T1_PK_R;
+	// cred_r.g.len = test_vectors[vec_num_i].g_r_raw_len;
+	// cred_r.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_r_raw;
+	// cred_r.ca.len = test_vectors[vec_num_i].ca_len;
+	// cred_r.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
+	// cred_r.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
+	// cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
 
 	// uint8_t vec_num_i = TEST_VEC_NUM - 1;
 

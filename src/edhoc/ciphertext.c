@@ -132,7 +132,8 @@ enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
 				  uint32_t *ead_len, uint8_t *prk,
 				  uint32_t prk_len, uint8_t *th,
 				  uint32_t th_len, uint8_t *ciphertext,
-				  uint32_t ciphertext_len)
+				  uint32_t ciphertext_len, uint8_t *plaintext,
+				  uint32_t plaintext_len)
 {
 	/*generate key and iv (no iv in for ciphertext 2)*/
 	uint32_t key_len;
@@ -160,12 +161,12 @@ enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
 	PRINT_ARRAY("associated_data", associated_data, associated_data_len);
 
 	uint32_t tag_len = get_aead_mac_len(suite->edhoc_aead);
-	uint32_t plaintext_len = ciphertext_len;
+	// uint32_t plaintext_len = ciphertext_len;
 	if (ctxt != CIPHERTEXT2) {
 		plaintext_len -= tag_len;
 	}
-	TRY(check_buffer_size(PLAINTEXT_DEFAULT_SIZE, plaintext_len));
-	uint8_t plaintext[PLAINTEXT_DEFAULT_SIZE];
+	// TRY(check_buffer_size(PLAINTEXT_DEFAULT_SIZE, plaintext_len));
+	// uint8_t plaintext[PLAINTEXT_DEFAULT_SIZE];
 	TRY(ciphertext_encrypt_decrypt(
 		ctxt, DECRYPT, ciphertext, ciphertext_len, key, key_len, iv,
 		iv_len, associated_data, associated_data_len, plaintext,

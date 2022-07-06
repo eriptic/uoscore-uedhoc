@@ -45,7 +45,7 @@
  */
 static inline enum err msg2_parse(uint8_t *msg2, uint32_t msg2_len,
 				  uint8_t *g_y, uint32_t g_y_len, uint8_t *c_r,
-				  uint32_t c_r_len, uint8_t *ciphertext2,
+				  uint32_t *c_r_len, uint8_t *ciphertext2,
 				  uint32_t *ciphertext2_len)
 {
 	size_t decode_len = 0;
@@ -62,15 +62,15 @@ static inline enum err msg2_parse(uint8_t *msg2, uint32_t msg2_len,
 	*ciphertext2_len = (uint32_t)m._m2_G_Y_CIPHERTEXT_2.len - g_y_len;
 	PRINT_ARRAY("ciphertext2", ciphertext2, *ciphertext2_len);
 
-	// if (m._m2_C_R_choice == _m2_C_R_int) {
-	// 	TRY(c_x_set(INT, NULL, 0, m._m2_C_R_int, c_r));
-	// 	PRINTF("C_R is an int: %d\n", c_r->mem.c_x_int);
-	// } else {
-	// 	TRY(c_x_set(BSTR, m._m2_C_R_bstr.value,
-	// 		    (uint32_t)m._m2_C_R_bstr.len, 0, c_r));
-	// 	PRINT_ARRAY("C_R_raw bstr", c_r->mem.c_x_bstr.ptr,
-	// 		    c_r->mem.c_x_bstr.len);
-	// }
+	if (m._m2_C_R_choice == _m2_C_R_int) {
+		c_r[0] = (uint8_t)m._m2_C_R_int + 59;
+		*c_r_len = 1;
+	} else {
+		TRY(_memcpy_s(c_r, *c_r_len, m._m2_C_R_bstr.value,
+			      (uint32_t)m._m2_C_R_bstr.len));
+		*c_r_len = (uint32_t)m._m2_C_R_bstr.len;
+	}
+	PRINT_ARRAY("C_R_raw", c_r, *c_r_len);
 
 	return ok;
 }
@@ -147,9 +147,8 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	uint8_t g_y[G_Y_DEFAULT_SIZE];
 	uint32_t g_y_len = get_ecdh_pk_len(rc->suite.edhoc_ecdh);
 
-	// uint8_t c_r_buf[C_R_DEFAULT_SIZE];
-	// struct c_x c_r;
-	// c_x_init(&c_r, c_r_buf, sizeof(c_r_buf));
+	uint8_t c_r[C_R_DEFAULT_SIZE];
+	uint32_t c_r_len = sizeof(c_r);
 
 	uint8_t ciphertext2[CIPHERTEXT2_DEFAULT_SIZE];
 	uint32_t ciphertext2_len = sizeof(ciphertext2);
@@ -158,12 +157,12 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 
 	/* 
 	* If an error message is received msg2_parse will return 
-	* error_message_received. If this hapens edhoc_initiator_run will 
+	* error_message_received. If this happens edhoc_initiator_run will 
 	* return. Then the caller needs to examine SUITES_R in err_msg 
 	* re-initialize the initiator and call edhoc_initiator_run again
 	*/
-	// TRY(msg2_parse(rc->msg2, rc->msg2_len, g_y, g_y_len, &c_r,
-	// 	       (uint8_t *)&ciphertext2, &ciphertext2_len));
+	TRY(msg2_parse(rc->msg2, rc->msg2_len, g_y, g_y_len, c_r, &c_r_len,
+		       ciphertext2, &ciphertext2_len));
 	// if (r == error_message_received) {
 	// 	/*provide the error message to the caller*/
 	// 	r = _memcpy_s(err_msg, *err_msg_len, msg2, msg2_len);
@@ -182,8 +181,9 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 
 	/*calculate th2*/
 	uint8_t th2[SHA_DEFAULT_SIZE];
-	// TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1, rc->msg1_len, g_y,
-	// 		  g_y_len, &c_r, th2));
+	TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1, rc->msg1_len, g_y,
+			  g_y_len, c_r, c_r_len, th2));
+	PRINT_ARRAY("TH_2", th2, sizeof(th2));
 
 	/*calculate PRK_2e*/
 	uint8_t PRK_2e[PRK_DEFAULT_SIZE];
@@ -193,13 +193,19 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 
 	uint8_t sign_or_mac[SGN_OR_MAC_DEFAULT_SIZE];
 	uint32_t sign_or_mac_len = sizeof(sign_or_mac);
+
 	uint8_t id_cred_r[ID_CRED_DEFAULT_SIZE];
 	uint32_t id_cred_r_len = sizeof(id_cred_r);
+
+	uint32_t plaintext2_len = ciphertext2_len;
+	uint8_t plaintext2[PLAINTEXT_DEFAULT_SIZE];
+	TRY(check_buffer_size(PLAINTEXT_DEFAULT_SIZE, plaintext2_len));
+
 	TRY(ciphertext_decrypt_split(
 		CIPHERTEXT2, &rc->suite, id_cred_r, &id_cred_r_len, sign_or_mac,
 		&sign_or_mac_len, ead_2, (uint32_t *)ead_2_len, PRK_2e,
-		sizeof(PRK_2e), th2, sizeof(th2), ciphertext2,
-		ciphertext2_len));
+		sizeof(PRK_2e), th2, sizeof(th2), ciphertext2, ciphertext2_len,
+		plaintext2, plaintext2_len));
 
 	/*check the authenticity of the responder*/
 	uint8_t cred_r[CRED_DEFAULT_SIZE];
@@ -229,9 +235,10 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 			     sign_or_mac, &sign_or_mac_len));
 
 	/********msg3 create and send**************************************/
-	uint8_t th3[32];
+	uint8_t th3[SHA_DEFAULT_SIZE];
+	//todo use plaintext not ciphertext
 	TRY(th3_calculate(rc->suite.edhoc_hash, (uint8_t *)&th2, sizeof(th2),
-			  ciphertext2, ciphertext2_len, th3));
+			  plaintext2, plaintext2_len, th3));
 
 	/*derive prk_4x3m*/
 	TRY(prk_derive(static_dh_i, rc->suite, (uint8_t *)&PRK_3e2m,
@@ -283,10 +290,10 @@ enum err msg4_process(struct runtime_context *rc, uint8_t *ead_4,
 			       &ciphertext_4_len));
 	PRINT_ARRAY("ciphertext_4", ciphertext_4, ciphertext_4_len);
 
-	TRY(ciphertext_decrypt_split(CIPHERTEXT4, &rc->suite, NULL, 0, NULL, 0,
-				     ead_4, (uint32_t *)ead_4_len, prk_4x3m,
-				     prk_4x3m_len, th4, th4_len, ciphertext_4,
-				     ciphertext_4_len));
+	// TRY(ciphertext_decrypt_split(CIPHERTEXT4, &rc->suite, NULL, 0, NULL, 0,
+	// 			     ead_4, (uint32_t *)ead_4_len, prk_4x3m,
+	// 			     prk_4x3m_len, th4, th4_len, ciphertext_4,
+	// 			     ciphertext_4_len));
 	return ok;
 }
 

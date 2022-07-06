@@ -175,14 +175,14 @@ enum err th2_calculate(enum hash_alg alg, uint8_t *msg1, uint32_t msg1_len,
 }
 
 enum err th3_calculate(enum hash_alg alg, uint8_t *th2, uint32_t th2_len,
-		       uint8_t *ciphertext_2, uint32_t ciphertext_2_len,
+		       uint8_t *plaintext_2, uint32_t plaintext_2_len,
 		       uint8_t *th3)
 {
-	uint32_t th3_input_len = th2_len + ciphertext_2_len + 6;
+	uint32_t th3_input_len = th2_len + plaintext_2_len + 6;
 	TRY(check_buffer_size(TH3_INPUT_DEFAULT_SIZE, th3_input_len));
 	uint8_t th3_input[TH3_INPUT_DEFAULT_SIZE];
 
-	TRY(th3_input_encode(th2, th2_len, ciphertext_2, ciphertext_2_len,
+	TRY(th3_input_encode(th2, th2_len, plaintext_2, plaintext_2_len,
 			     th3_input, &th3_input_len));
 	TRY(hash(alg, th3_input, th3_input_len, th3));
 	PRINT_ARRAY("TH3", th3, SHA_DEFAULT_SIZE);

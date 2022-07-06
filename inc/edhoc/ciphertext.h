@@ -58,15 +58,18 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
  * @param th_len lenhgt of th
  * @param ciphertext the input
  * @param ciphertext_len lenhgt of the input
+ * @param plaintext the plaintext
+ * @param plaintext_len the length of the plaintext
  * @return enum err 
  */
 enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
 				  uint8_t *id_cred, uint32_t *id_cred_len,
 				  uint8_t *signature_or_mac,
 				  uint32_t *signature_or_mac_len, uint8_t *ead,
-				  uint32_t * ead_len, uint8_t *prk,
+				  uint32_t *ead_len, uint8_t *prk,
 				  uint32_t prk_len, uint8_t *th,
 				  uint32_t th_len, uint8_t *ciphertext,
-				  uint32_t ciphertext_len);
+				  uint32_t ciphertext_len, uint8_t *plaintext,
+				  uint32_t plaintext_len);
 
 #endif

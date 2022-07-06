@@ -95,15 +95,9 @@ static inline enum err msg1_parse(uint8_t *msg1, uint32_t msg1_len,
 
 	/*C_I*/
 	if (m._message_1_C_I_choice == _message_1_C_I_int) {
-		// TRY(c_x_set(INT, NULL, 0, m._message_1_C_I_int, c_i));
-
 		c_i[0] = (uint8_t)m._message_1_C_I_int + 59;
 		*c_i_len = 1;
-
 	} else {
-		// TRY(c_x_set(BSTR, m._message_1_C_I_bstr.value, 0,
-		// 	    m._message_1_C_I_int, c_i));
-
 		TRY(_memcpy_s(c_i, *c_i_len, m._message_1_C_I_bstr.value,
 			      (uint32_t)m._message_1_C_I_bstr.len));
 		*c_i_len = (uint32_t)m._message_1_C_I_bstr.len;
@@ -174,9 +168,8 @@ static inline enum err msg2_encode(const uint8_t *g_y, uint32_t g_y_len,
 
 	/*Encode C_R*/
 	PRINT_ARRAY("C_R", c_r, c_r_len);
-	if (c_r_len == 1 &&
-	    ((0x00 < c_r[0] && c_r[0] < 0x18) ||
-	     (0x1F < c_r[0] && c_r[0] < 0x37))) {
+	if (c_r_len == 1 && ((0x00 < c_r[0] && c_r[0] < 0x18) ||
+			     (0x1F < c_r[0] && c_r[0] < 0x37))) {
 		m._m2_C_R_choice = _m2_C_R_int;
 		m._m2_C_R_int = c_r[0] - 59;
 	} else {
@@ -315,11 +308,11 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	uint32_t id_cred_i_len = sizeof(id_cred_i);
 	uint8_t sign_or_mac[SGN_OR_MAC_DEFAULT_SIZE];
 	uint32_t sign_or_mac_len = sizeof(sign_or_mac);
-	TRY(ciphertext_decrypt_split(
-		CIPHERTEXT3, &rc->suite, id_cred_i, &id_cred_i_len, sign_or_mac,
-		&sign_or_mac_len, ead_3, (uint32_t *)ead_3_len, rc->PRK_3e2m,
-		rc->PRK_3e2m_len, rc->th3, rc->th3_len, ciphertext_3,
-		ciphertext_3_len));
+	// TRY(ciphertext_decrypt_split(
+	// 	CIPHERTEXT3, &rc->suite, id_cred_i, &id_cred_i_len, sign_or_mac,
+	// 	&sign_or_mac_len, ead_3, (uint32_t *)ead_3_len, rc->PRK_3e2m,
+	// 	rc->PRK_3e2m_len, rc->th3, rc->th3_len, ciphertext_3,
+	// 	ciphertext_3_len));
 
 	/*check the authenticity of the initiator*/
 	uint8_t cred_i[CRED_DEFAULT_SIZE];

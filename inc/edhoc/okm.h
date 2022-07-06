@@ -24,8 +24,6 @@
  * @param   hash_alg HASH algorithm 
  * @param   prk pseudorandom key
  * @param   prk_len length of prk
- * @param   th transcripthash
- * @param   th_len length of th
  * @param   label human readable label
  * @param   context relevant only for MAC_2 and MAC_3
  * @param   context_len lenhgt of context

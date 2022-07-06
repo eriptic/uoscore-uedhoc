@@ -122,7 +122,7 @@
 struct other_party_cred {
 	struct byte_array id_cred; /*ID_CRED_x of the other party*/
 	struct byte_array cred; /*CBOR encoded credentials*/
-	struct byte_array pk; /*authentication pub key of the party */
+	struct byte_array pk; /*authentication pub key of the other party */
 	struct byte_array g; /*authentication static DH pub key of other party */
 	struct byte_array ca; /*use only when authentication with certificates*/
 	struct byte_array
