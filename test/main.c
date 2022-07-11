@@ -116,40 +116,25 @@ void test_main(void)
 {
 	/* EDHOC testvector tests  */
 
-	ztest_test_suite(initiator_tests, ztest_unit_test(test_initiator1),
-			 ztest_unit_test(test_initiator2),
-			 ztest_unit_test(test_initiator3),
-			 ztest_unit_test(test_initiator4),
-			 //ztest_unit_test(test_initiator8),
-			 //ztest_unit_test(test_initiator9), for 8 and 9 suites_i should be provided in raw form!
-			 ztest_unit_test(test_initiator12),
-			 ztest_unit_test(test_initiator13));
-	//  ztest_unit_test(test_initiator14),
-	//  ztest_unit_test(test_initiator15),
-	//  ztest_unit_test(test_initiator16),
-	//  ztest_unit_test(test_initiator17));
+	// ztest_test_suite(initiator_tests, ztest_unit_test(test_initiator1),
+	// 		 ztest_unit_test(test_initiator2),
+	// 		 ztest_unit_test(test_initiator3),
+	// 		 ztest_unit_test(test_initiator4),
+	// 		 ztest_unit_test(test_initiator12),
+	// 		 ztest_unit_test(test_initiator13));
 
-	// ztest_test_suite(initiator_tests, ztest_unit_test(test_initiator1));
+	// ztest_test_suite(responder_tests, ztest_unit_test(test_responder1),
+	// 		 ztest_unit_test(test_responder2),
+	// 		 ztest_unit_test(test_responder3),
+	// 		 ztest_unit_test(test_responder4),
+	// 		 ztest_unit_test(test_responder8),
+	// 		 ztest_unit_test(test_responder9),
+	// 		 ztest_unit_test(test_responder12),
+	// 		 ztest_unit_test(test_responder13));
 
-	ztest_test_suite(responder_tests, ztest_unit_test(test_responder1),
-			 ztest_unit_test(test_responder2),
-			 ztest_unit_test(test_responder3),
-			 ztest_unit_test(test_responder4),
-			 ztest_unit_test(test_responder8),
-			 ztest_unit_test(test_responder9),
-			 ztest_unit_test(test_responder12),
-			 ztest_unit_test(test_responder13));
-	//  ztest_unit_test(test_responder14),
-	//  ztest_unit_test(test_responder15),
-	//  ztest_unit_test(test_responder16),
-	//  ztest_unit_test(test_responder17));
+	ztest_test_suite(exporter, ztest_unit_test(test_prk_out2exporter));
 
-	//ztest_test_suite(responder_tests, ztest_unit_test(test_responder8));
-
-	ztest_run_test_suite(initiator_tests);
-	ztest_run_test_suite(responder_tests);
-
-	/* OSCORE testvector tests */
+	/* OSCORE test-vector tests */
 
 	ztest_test_suite(oscore_tests, ztest_unit_test(oscore_client_test1),
 			 ztest_unit_test(oscore_server_test2),
@@ -160,8 +145,8 @@ void test_main(void)
 			 //test7 - not supported yet
 			 ztest_unit_test(oscore_misc_test8));
 
-	// ztest_test_suite(oscore_tests, ztest_unit_test(oscore_client_test1),
-	// 		 ztest_unit_test(oscore_server_test2));
-
 	ztest_run_test_suite(oscore_tests);
+	ztest_run_test_suite(exporter);
+	// ztest_run_test_suite(initiator_tests);
+	// ztest_run_test_suite(responder_tests);
 }

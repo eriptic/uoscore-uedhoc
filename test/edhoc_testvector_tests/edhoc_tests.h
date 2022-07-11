@@ -37,4 +37,5 @@ enum role { INITIATOR, RESPONDER };
  */
 int test_edhoc(enum role p, uint8_t vec_num);
 
+void test_prk_out2exporter(void);
 #endif

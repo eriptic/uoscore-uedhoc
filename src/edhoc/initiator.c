@@ -236,7 +236,6 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 
 	/********msg3 create and send**************************************/
 	uint8_t th3[SHA_DEFAULT_SIZE];
-	//todo use plaintext not ciphertext
 	TRY(th3_calculate(rc->suite.edhoc_hash, (uint8_t *)&th2, sizeof(th2),
 			  plaintext2, plaintext2_len, th3));
 
@@ -257,13 +256,16 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 			     c->ead_3.ptr, c->ead_3.len, MAC_3, sign_or_mac_3,
 			     &sign_or_mac_3_len));
 
+	uint8_t plaintext_3[PLAINTEXT_DEFAULT_SIZE];
+	uint32_t plaintext_3_len = sizeof(plaintext_3);
 	uint8_t ciphertext_3[CIPHERTEXT3_DEFAULT_SIZE];
 	uint32_t ciphertext_3_len = sizeof(ciphertext_3);
+
 	TRY(ciphertext_gen(CIPHERTEXT3, &rc->suite, c->id_cred_i.ptr,
 			   c->id_cred_i.len, sign_or_mac_3, sign_or_mac_3_len,
 			   c->ead_3.ptr, c->ead_3.len, PRK_3e2m,
 			   sizeof(PRK_3e2m), th3, sizeof(th3), ciphertext_3,
-			   &ciphertext_3_len));
+			   &ciphertext_3_len, plaintext_3, &plaintext_3_len));
 
 	/*massage 3 create and send*/
 	TRY(check_buffer_size(CIPHERTEXT3_DEFAULT_SIZE,

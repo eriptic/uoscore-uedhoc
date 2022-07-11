@@ -60,20 +60,19 @@ modify setting in include/psa/crypto_config.h
 #include <tinycrypt/ecc_dh.h>
 #endif
 
-
 #ifdef MBEDTLS
-#define TRY_EXPECT_PSA(x, expected_result, key_id, err_code)                \
-	do {                                                                    \
-		int retval = (int)(x);                                              \
-		if ((expected_result) != retval) {                                  \
-			if(PSA_KEY_HANDLE_INIT != (key_id)) {                           \
-				psa_destroy_key(key_id);                                    \
-			}                                                               \
-			PRINTF(RED                                                      \
-			       "Runtime error: %s error code %d at %s:%d\n\n" RESET,    \
-			       #x, retval, __FILE__, __LINE__);                         \
-			return err_code;                                                \
-		}                                                                   \
+#define TRY_EXPECT_PSA(x, expected_result, key_id, err_code)                         \
+	do {                                                                         \
+		int retval = (int)(x);                                               \
+		if ((expected_result) != retval) {                                   \
+			if (PSA_KEY_HANDLE_INIT != (key_id)) {                       \
+				psa_destroy_key(key_id);                             \
+			}                                                            \
+			PRINTF(RED                                                   \
+			       "Runtime error: %s error code %d at %s:%d\n\n" RESET, \
+			       #x, retval, __FILE__, __LINE__);                      \
+			return err_code;                                             \
+		}                                                                    \
 	} while (0)
 
 /**
@@ -199,8 +198,8 @@ aead(enum aes_operation op, const uint8_t *in, const uint32_t in_len,
 #ifdef MBEDTLS
 	psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
 
-	TRY_EXPECT_PSA(psa_crypto_init(),
-				   PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+	TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
+		       unexpected_result_from_ext_lib);
 
 	psa_algorithm_t alg =
 		PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, (uint32_t)tag_len);
@@ -213,21 +212,23 @@ aead(enum aes_operation op, const uint8_t *in, const uint32_t in_len,
 	psa_set_key_bits(&attr, ((size_t)key_len << 3));
 	psa_set_key_lifetime(&attr, PSA_KEY_LIFETIME_VOLATILE);
 	TRY_EXPECT_PSA(psa_import_key(&attr, key, key_len, &key_id),
-				   PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		       PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 
 	if (op == DECRYPT) {
 		size_t out_len_re = 0;
-		TRY_EXPECT_PSA(psa_aead_decrypt(key_id, alg, nonce, nonce_len, aad,
-					    aad_len, in, in_len, out, out_len,
-					    &out_len_re),
-						PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(psa_aead_decrypt(key_id, alg, nonce, nonce_len,
+						aad, aad_len, in, in_len, out,
+						out_len, &out_len_re),
+			       PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 	} else {
 		size_t out_len_re;
-		TRY_EXPECT_PSA(psa_aead_encrypt(key_id, alg, nonce, nonce_len, aad,
-					    aad_len, in, in_len, out,
-					    (size_t)(in_len + tag_len),
-					    &out_len_re),
-						PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(psa_aead_encrypt(key_id, alg, nonce, nonce_len,
+						aad, aad_len, in, in_len, out,
+						(size_t)(in_len + tag_len),
+						&out_len_re),
+			       PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 		memcpy(tag, out + out_len_re - tag_len, tag_len);
 	}
 	TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
@@ -255,11 +256,12 @@ sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
 		psa_alg = PSA_ALG_ECDSA(PSA_ALG_SHA_256);
 		bits = PSA_BYTES_TO_BITS((size_t)sk_len);
 
-		TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 
 		psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 		psa_set_key_usage_flags(&attributes,
-						PSA_KEY_USAGE_VERIFY_MESSAGE |
+					PSA_KEY_USAGE_VERIFY_MESSAGE |
 						PSA_KEY_USAGE_VERIFY_HASH |
 						PSA_KEY_USAGE_SIGN_MESSAGE |
 						PSA_KEY_USAGE_SIGN_HASH);
@@ -270,15 +272,18 @@ sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
 		psa_set_key_lifetime(&attributes, PSA_KEY_LIFETIME_VOLATILE);
 
 		TRY_EXPECT_PSA(psa_import_key(&attributes, sk, sk_len, &key_id),
-		               PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+			       PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 
 		size_t signature_length;
-		TRY_EXPECT_PSA(psa_sign_message(key_id, psa_alg, msg, msg_len, out,
-						SIGNATURE_DEFAULT_SIZE,
-					    &signature_length),
-		               PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(psa_sign_message(key_id, psa_alg, msg, msg_len,
+						out, SIGNATURE_DEFAULT_SIZE,
+						&signature_length),
+			       PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 
-		TRY_EXPECT_PSA(signature_length, SIGNATURE_DEFAULT_SIZE, key_id, sign_failed);
+		TRY_EXPECT_PSA(signature_length, SIGNATURE_DEFAULT_SIZE, key_id,
+			       sign_failed);
 		TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
 		return ok;
 #endif
@@ -312,7 +317,8 @@ verify(enum sign_alg alg, const uint8_t *pk, const uint32_t pk_len,
 		psa_alg = PSA_ALG_ECDSA(PSA_ALG_SHA_256);
 		bits = PSA_BYTES_TO_BITS(P_256_PRIV_KEY_DEFAULT_SIZE);
 
-		TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 
 		psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 
@@ -324,7 +330,8 @@ verify(enum sign_alg alg, const uint8_t *pk, const uint32_t pk_len,
 						      PSA_ECC_FAMILY_SECP_R1));
 		psa_set_key_bits(&attributes, bits);
 		TRY_EXPECT_PSA(psa_import_key(&attributes, pk, pk_len, &key_id),
-		               PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+			       PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 
 		status = psa_verify_message(key_id, psa_alg, msg, msg_len, sgn,
 					    sgn_len);
@@ -371,7 +378,8 @@ hkdf_extract(enum hash_alg alg, const uint8_t *salt, uint32_t salt_len,
 	psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
 	psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
 
-	TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+	TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
+		       unexpected_result_from_ext_lib);
 
 	psa_set_key_lifetime(&attr, PSA_KEY_LIFETIME_VOLATILE);
 	psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_HASH);
@@ -380,16 +388,19 @@ hkdf_extract(enum hash_alg alg, const uint8_t *salt, uint32_t salt_len,
 
 	if (salt && salt_len) {
 		TRY_EXPECT_PSA(psa_import_key(&attr, salt, salt_len, &key_id),
-					PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+			       PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 	} else {
 		uint8_t zero_salt[32] = { 0 };
 
 		TRY_EXPECT_PSA(psa_import_key(&attr, zero_salt, 32, &key_id),
-						PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+			       PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 	}
 	size_t out_len;
-	TRY_EXPECT_PSA(psa_mac_compute(key_id, psa_alg, ikm, ikm_len, out, 32, &out_len),
-					PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+	TRY_EXPECT_PSA(psa_mac_compute(key_id, psa_alg, ikm, ikm_len, out, 32,
+				       &out_len),
+		       PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 
 	TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
 #endif
@@ -408,7 +419,7 @@ hkdf_expand(enum hash_alg alg, const uint8_t *prk, const uint32_t prk_len,
 	uint32_t iterations = (out_len + 31) / 32;
 	/* "L length of output keying material in octets (<= 255*HashLen)"*/
 	if (iterations > 255) {
-		return hkdf_fialed;
+		return hkdf_failed;
 	}
 
 #ifdef TINYCRYPT
@@ -423,8 +434,7 @@ hkdf_expand(enum hash_alg alg, const uint8_t *prk, const uint32_t prk_len,
 		}
 		TRY_EXPECT(tc_hmac_update(&h, info, info_len), 1);
 		TRY_EXPECT(tc_hmac_update(&h, &i, 1), 1);
-		TRY_EXPECT(tc_hmac_final(t, TC_SHA256_DIGEST_SIZE, &h),
-				1);
+		TRY_EXPECT(tc_hmac_final(t, TC_SHA256_DIGEST_SIZE, &h), 1);
 		if (out_len < i * 32) {
 			memcpy(&out[(i - 1) * 32], t, out_len % 32);
 		} else {
@@ -437,19 +447,21 @@ hkdf_expand(enum hash_alg alg, const uint8_t *prk, const uint32_t prk_len,
 	psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
 	psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
 
-	TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+	TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
+		       unexpected_result_from_ext_lib);
 	psa_set_key_lifetime(&attr, PSA_KEY_LIFETIME_VOLATILE);
 	psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_HASH);
 	psa_set_key_algorithm(&attr, PSA_ALG_HMAC(PSA_ALG_SHA_256));
 	psa_set_key_type(&attr, PSA_KEY_TYPE_HMAC);
 
 	TRY_EXPECT_PSA(psa_import_key(&attr, prk, prk_len, &key_id),
-					PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		       PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 
 	size_t combo_len = (32 + (size_t)info_len + 1);
 
-	TRY_EXPECT_PSA(check_buffer_size(INFO_DEFAULT_SIZE, (uint32_t)combo_len),
-					ok, key_id, unexpected_result_from_ext_lib);
+	TRY_EXPECT_PSA(check_buffer_size(INFO_DEFAULT_SIZE,
+					 (uint32_t)combo_len),
+		       ok, key_id, unexpected_result_from_ext_lib);
 
 	uint8_t combo[INFO_DEFAULT_SIZE];
 	uint8_t tmp_out[32];
@@ -460,12 +472,11 @@ hkdf_expand(enum hash_alg alg, const uint8_t *prk, const uint32_t prk_len,
 		memcpy(combo, tmp_out, 32);
 		combo[combo_len - 1] = (uint8_t)i;
 		size_t tmp_out_len;
-		status = psa_mac_compute(key_id,
-						PSA_ALG_HMAC(PSA_ALG_SHA_256),
-						combo + offset,
-						combo_len - offset, tmp_out,
-						32, &tmp_out_len);
-		TRY_EXPECT_PSA(status, PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		status = psa_mac_compute(key_id, PSA_ALG_HMAC(PSA_ALG_SHA_256),
+					 combo + offset, combo_len - offset,
+					 tmp_out, 32, &tmp_out_len);
+		TRY_EXPECT_PSA(status, PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 		offset = 0;
 		uint8_t *dest = out + ((i - 1) << 5);
 		if (out_len < (uint32_t)(i << 5)) {
@@ -516,7 +527,8 @@ shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 		psa_alg = PSA_ALG_ECDH;
 		bits = PSA_BYTES_TO_BITS(sk_len);
 
-		TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 
 		psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
 		psa_set_key_lifetime(&attr, PSA_KEY_LIFETIME_VOLATILE);
@@ -525,8 +537,9 @@ shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 		psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_KEY_PAIR(
 						PSA_ECC_FAMILY_SECP_R1));
 
-        TRY_EXPECT_PSA(psa_import_key(&attr, sk, (size_t)sk_len, &key_id),
-					PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(
+			psa_import_key(&attr, sk, (size_t)sk_len, &key_id),
+			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 		psa_key_type_t type = psa_get_key_type(&attr);
 		size_t shared_size =
 			PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(type, bits);
@@ -537,23 +550,25 @@ shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 		size_t pk_decompressed_len;
 		uint8_t pk_decompressed[P_256_PUB_KEY_UNCOMPRESSED_SIZE];
 
-		mbedtls_pk_context ctx_verify = {0};
+		mbedtls_pk_context ctx_verify = { 0 };
 		mbedtls_pk_init(&ctx_verify);
-		if(PSA_SUCCESS != mbedtls_pk_setup(
-						&ctx_verify,
-						mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY))) {
+		if (PSA_SUCCESS !=
+		    mbedtls_pk_setup(&ctx_verify, mbedtls_pk_info_from_type(
+							  MBEDTLS_PK_ECKEY))) {
 			result = unexpected_result_from_ext_lib;
 			goto cleanup;
 		}
-		if(PSA_SUCCESS != mbedtls_ecp_group_load(&mbedtls_pk_ec(ctx_verify)->grp,
-												MBEDTLS_ECP_DP_SECP256R1)){
+		if (PSA_SUCCESS !=
+		    mbedtls_ecp_group_load(&mbedtls_pk_ec(ctx_verify)->grp,
+					   MBEDTLS_ECP_DP_SECP256R1)) {
 			result = unexpected_result_from_ext_lib;
 			goto cleanup;
 		}
-		if(PSA_SUCCESS != mbedtls_ecp_decompress(
-						&mbedtls_pk_ec(ctx_verify)->grp, pk, pk_len,
-						pk_decompressed, &pk_decompressed_len,
-						sizeof(pk_decompressed))){
+		if (PSA_SUCCESS !=
+		    mbedtls_ecp_decompress(&mbedtls_pk_ec(ctx_verify)->grp, pk,
+					   pk_len, pk_decompressed,
+					   &pk_decompressed_len,
+					   sizeof(pk_decompressed))) {
 			result = unexpected_result_from_ext_lib;
 			goto cleanup;
 		}
@@ -561,27 +576,27 @@ shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 		PRINT_ARRAY("pk_decompressed", pk_decompressed,
 			    (uint32_t)pk_decompressed_len);
 
-		if(PSA_SUCCESS != psa_raw_key_agreement(
-						PSA_ALG_ECDH, key_id, pk_decompressed,
-						pk_decompressed_len, shared_secret,
-						shared_size, &shared_secret_len)){
+		if (PSA_SUCCESS !=
+		    psa_raw_key_agreement(PSA_ALG_ECDH, key_id, pk_decompressed,
+					  pk_decompressed_len, shared_secret,
+					  shared_size, &shared_secret_len)) {
 			result = unexpected_result_from_ext_lib;
 			goto cleanup;
 		}
-cleanup:
-	if(PSA_KEY_HANDLE_INIT != key_id) {
-		TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
-	}
-	mbedtls_pk_free(&ctx_verify);
-	return result;
+	cleanup:
+		if (PSA_KEY_HANDLE_INIT != key_id) {
+			TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
+		}
+		mbedtls_pk_free(&ctx_verify);
+		return result;
 #endif
 	}
 	return crypto_operation_not_implemented;
 }
 
 enum err __attribute__((weak))
-ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk,
-	uint8_t *pk, uint32_t *pk_size)
+ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk,
+		     uint32_t *pk_size)
 {
 	if (alg == X25519) {
 #ifdef COMPACT25519
@@ -613,16 +628,18 @@ ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk,
 		psa_algorithm_t psa_alg = PSA_ALG_ECDH;
 		uint8_t priv_key_size = P_256_PRIV_KEY_DEFAULT_SIZE;
 		size_t bits = PSA_BYTES_TO_BITS((size_t)priv_key_size);
-		size_t pub_key_uncompressed_size = P_256_PUB_KEY_UNCOMPRESSED_SIZE;
+		size_t pub_key_uncompressed_size =
+			P_256_PUB_KEY_UNCOMPRESSED_SIZE;
 		uint8_t pub_key_uncompressed[P_256_PUB_KEY_UNCOMPRESSED_SIZE];
 
 		if (P_256_PUB_KEY_COMPRESSED_SIZE > *pk_size) {
 			return buffer_to_small;
 		}
-		TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 
 		psa_set_key_usage_flags(&attributes,
-						PSA_KEY_USAGE_EXPORT |
+					PSA_KEY_USAGE_EXPORT |
 						PSA_KEY_USAGE_DERIVE |
 						PSA_KEY_USAGE_SIGN_MESSAGE |
 						PSA_KEY_USAGE_SIGN_HASH);
@@ -632,18 +649,24 @@ ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk,
 		psa_set_key_bits(&attributes, bits);
 
 		TRY_EXPECT_PSA(psa_generate_key(&attributes, &key_id),
-		               PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+			       PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 
 		size_t key_len = 0;
 		size_t public_key_len = 0;
 
-		TRY_EXPECT_PSA(psa_export_key(key_id, sk, priv_key_size, &key_len),
-		               PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
-		TRY_EXPECT_PSA(psa_export_public_key(key_id, pub_key_uncompressed, pub_key_uncompressed_size, &public_key_len),
-		               PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
-		TRY_EXPECT_PSA(public_key_len, P_256_PUB_KEY_UNCOMPRESSED_SIZE, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(
+			psa_export_key(key_id, sk, priv_key_size, &key_len),
+			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(
+			psa_export_public_key(key_id, pub_key_uncompressed,
+					      pub_key_uncompressed_size,
+					      &public_key_len),
+			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(public_key_len, P_256_PUB_KEY_UNCOMPRESSED_SIZE,
+			       key_id, unexpected_result_from_ext_lib);
 		/* Prepare output format - compressed public key with X */
-		pk[0] = 0x02;	/* key format tag - commpressed for with X */
+		pk[0] = 0x02; /* key format tag - commpressed for with X */
 		memcpy((pk + 1), (pub_key_uncompressed + 1), 32);
 		TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
 		*pk_size = P_256_PUB_KEY_COMPRESSED_SIZE;
@@ -669,7 +692,7 @@ hash(enum hash_alg alg, const uint8_t *in, const uint32_t in_len, uint8_t *out)
 		size_t length;
 		TRY_EXPECT(psa_hash_compute(PSA_ALG_SHA_256, in, in_len, out,
 					    SHA_DEFAULT_SIZE, &length),
-				  PSA_SUCCESS);
+			   PSA_SUCCESS);
 		if (length != SHA_DEFAULT_SIZE) {
 			return sha_failed;
 		}

@@ -241,21 +241,25 @@ enum err edhoc_responder_run(
 	enum err (*rx)(void *sock, uint8_t *data, uint32_t *data_len));
 
 /**
- * @brief   used to create application specific symmetric keys using the 
- *          calculated in edhoc_initiator_run()/edhoc_responder_run() prk_4x3m
- *          and th4
- * @param   app_hash_alg hash algorithm to be used in the derivation
- * @param   app_aead_alg AEAD algorithm to be used in the derivation
- * @param   prk_4x3m derived key  
- * @param   prk_4x3m_len length of prk_4x3m
- * @param   th4 transcripthash see edhoc_initiator_run()/edhoc_responder_run()
- * @param   th4_len length of th4
- * @param   label a human readble string idicating the key purpose
- * @param   out container for the derivide key
- * @param   out_len length of the derived key
+ * @brief	Computes PRK_exporter from PRK_out
+ * 
+ * @param 	app_hash_alg the EDHOC hash algorithm
+ * @param 	prk_out the prk_out value is the product of a successful 
+ * 			EDHOC execution 
+ * @param 	prk_out_len length of prk_out
+ * @param 	prk_exporter 
+ * @return enum err 
  */
-enum err edhoc_exporter(enum hash_alg app_hash_alg, const uint8_t *prk_4x3m,
-			uint32_t prk_4x3m_len, const uint8_t *th4,
-			uint32_t th4_len, enum info_label label, uint8_t *out,
-			uint32_t out_len);
+enum err prk_out2exporter(enum hash_alg app_hash_alg, uint8_t *prk_out,
+			  uint32_t prk_out_len, uint8_t *prk_exporter);
+
+enum export_label {
+	OSCORE_MASTER_SECRET = 0,
+	OSCORE_MASTER_SALT = 1,
+};
+
+enum err edhoc_exporter(enum hash_alg app_hash_alg, enum export_label label,
+			uint8_t *prk_exporter, uint32_t prk_exporter_len,
+			uint8_t *out, uint32_t out_len);
+
 #endif

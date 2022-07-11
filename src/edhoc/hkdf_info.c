@@ -20,7 +20,7 @@
 #include "cbor/edhoc_encode_info.h"
 
 enum err create_hkdf_info(
-			  enum info_label label, uint8_t *context,
+			  uint8_t label, uint8_t *context,
 			  uint32_t context_len, uint32_t okm_len, uint8_t *out,
 			  uint32_t *out_len)
 {

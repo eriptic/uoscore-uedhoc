@@ -214,6 +214,12 @@ enum err signature_or_mac(enum sgn_or_mac_op op, bool static_dh,
 				signature_struct, &signature_struct_len));
 
 			bool result;
+			PRINT_ARRAY("pk", pk, pk_len);
+			PRINT_ARRAY("signature_struct", signature_struct,
+				    signature_struct_len);
+			PRINT_ARRAY("signature_or_mac", signature_or_mac,
+				    *signature_or_mac_len);
+
 			TRY(verify(suite->edhoc_sign, pk, pk_len,
 				   signature_struct, signature_struct_len,
 				   signature_or_mac, *signature_or_mac_len,

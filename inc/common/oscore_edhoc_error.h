@@ -21,7 +21,7 @@ enum err {
 	/*common errors*/
 	ok = 0,
 	buffer_to_small = 1,
-	hkdf_fialed = 2,
+	hkdf_failed = 2,
 	unexpected_result_from_ext_lib = 3,
 	wrong_parameter = 4,
 	crypto_operation_not_implemented = 5,

@@ -114,11 +114,11 @@ static enum err key_gen(enum ciphertext ctxt, enum hash_alg edhoc_hash,
 		break;
 
 	case CIPHERTEXT4:
-		TRY(edhoc_exporter(edhoc_hash, prk, prk_len, th, th_len, K_4,
-				   key, key_len));
+		TRY(edhoc_kdf(edhoc_hash, prk, prk_len, K_4, th, th_len,
+			      key_len, key));
 		PRINT_ARRAY("K_4", key, key_len);
-		TRY(edhoc_exporter(edhoc_hash, prk, prk_len, th, th_len, IV_4,
-				   iv, iv_len));
+		TRY(edhoc_kdf(edhoc_hash, prk, prk_len, IV_4, th, th_len,
+			      iv_len, iv));
 		PRINT_ARRAY("IV_4", iv, iv_len);
 		break;
 	}
@@ -202,12 +202,9 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
 			uint32_t signature_or_mac_len, uint8_t *ead,
 			uint32_t ead_len, uint8_t *prk, uint32_t prk_len,
 			uint8_t *th, uint32_t th_len, uint8_t *ciphertext,
-			uint32_t *ciphertext_len)
+			uint32_t *ciphertext_len, uint8_t *plaintext,
+			uint32_t *plaintext_len)
 {
-	/*Encode plaintext*/
-	uint8_t plaintext[PLAINTEXT_DEFAULT_SIZE];
-	uint32_t plaintext_len = sizeof(plaintext);
-
 	TRY(check_buffer_size(SGN_OR_MAC_DEFAULT_SIZE,
 			      signature_or_mac_len + 2));
 	uint8_t signature_or_mac_enc[SGN_OR_MAC_DEFAULT_SIZE];
@@ -225,45 +222,45 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
 
 		if (kid_len != 0) {
 			/*id_cred_x is a KID*/
-			TRY(_memcpy_s(plaintext, plaintext_len, kid_buf,
+			TRY(_memcpy_s(plaintext, *plaintext_len, kid_buf,
 				      kid_len));
 
 			TRY(_memcpy_s(plaintext + kid_len,
-				      plaintext_len - kid_len,
+				      *plaintext_len - kid_len,
 				      signature_or_mac_enc,
 				      signature_or_mac_enc_len));
 
-			plaintext_len = signature_or_mac_enc_len + kid_len;
+			*plaintext_len = signature_or_mac_enc_len + kid_len;
 		} else {
 			/*id_cred_x is NOT a KID*/
-			TRY(_memcpy_s(plaintext, plaintext_len, id_cred,
+			TRY(_memcpy_s(plaintext, *plaintext_len, id_cred,
 				      id_cred_len));
 
 			TRY(_memcpy_s(plaintext + id_cred_len,
-				      plaintext_len - id_cred_len,
+				      *plaintext_len - id_cred_len,
 				      signature_or_mac_enc,
 				      signature_or_mac_enc_len));
 
-			plaintext_len = id_cred_len + signature_or_mac_enc_len;
+			*plaintext_len = id_cred_len + signature_or_mac_enc_len;
 		}
 	} else {
-		plaintext_len = 0;
+		*plaintext_len = 0;
 	}
 	if (ead_len > 0) {
-		TRY(_memcpy_s(plaintext + plaintext_len,
-			      (uint32_t)sizeof(plaintext) - plaintext_len, ead,
+		TRY(_memcpy_s(plaintext + *plaintext_len,
+			      (uint32_t)sizeof(plaintext) - *plaintext_len, ead,
 			      ead_len));
 
-		plaintext_len += ead_len;
+		*plaintext_len += ead_len;
 	}
 
-	PRINT_ARRAY("plaintext", plaintext, plaintext_len);
+	PRINT_ARRAY("plaintext", plaintext, *plaintext_len);
 
 	/*generate key and iv (no iv in for ciphertext 2)*/
 	uint32_t key_len;
 	uint8_t key[CIPHERTEXT2_DEFAULT_SIZE];
 	if (ctxt == CIPHERTEXT2) {
-		key_len = plaintext_len;
+		key_len = *plaintext_len;
 	} else {
 		key_len = get_aead_key_len(suite->edhoc_aead);
 	}
@@ -290,9 +287,9 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
 		tag_len = 0;
 	}
 
-	*ciphertext_len = plaintext_len;
+	*ciphertext_len = *plaintext_len;
 
-	TRY(ciphertext_encrypt_decrypt(ctxt, ENCRYPT, plaintext, plaintext_len,
+	TRY(ciphertext_encrypt_decrypt(ctxt, ENCRYPT, plaintext, *plaintext_len,
 				       key, key_len, iv, iv_len, aad, aad_len,
 				       ciphertext, *ciphertext_len, tag,
 				       tag_len));

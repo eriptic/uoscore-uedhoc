@@ -193,14 +193,14 @@ int main()
 
 	TRY_EXPECT(start_coap_server(), 0);
 
-	// cred_i.id_cred.len = test_vectors[vec_num_i].id_cred_i_len;
-	// cred_i.id_cred.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_i;
-	// cred_i.cred.len = test_vectors[vec_num_i].cred_i_len;
-	// cred_i.cred.ptr = (uint8_t *)test_vectors[vec_num_i].cred_i;
+	cred_i.id_cred.len = sizeof(T1_ID_CRED_I);
+	cred_i.id_cred.ptr = T1_ID_CRED_I;
+	cred_i.cred.len = sizeof(T1_CRED_I);
+	cred_i.cred.ptr = T1_CRED_I;
+	cred_i.pk.len = sizeof(T1_PK_I);
+	cred_i.pk.ptr = T1_PK_I;
 	// cred_i.g.len = test_vectors[vec_num_i].g_i_raw_len;
 	// cred_i.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_i_raw;
-	// cred_i.pk.len = test_vectors[vec_num_i].pk_i_raw_len;
-	// cred_i.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
 	// cred_i.ca.len = test_vectors[vec_num_i].ca_len;
 	// cred_i.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
 	// cred_i.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
@@ -234,6 +234,9 @@ int main()
 
 	c_r.ead_2.ptr = T1_EAD_2;
 	c_r.ead_2.len = sizeof(T1_EAD_2);
+
+	c_r.ead_4.ptr = T1_EAD_4;
+	c_r.ead_4.len = sizeof(T1_EAD_4);
 
 	// if (test_vectors[vec_num_i].c_r_raw != NULL) {
 	// 	c_r.c_r.type = BSTR;

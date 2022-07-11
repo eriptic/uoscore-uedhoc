@@ -28,6 +28,8 @@ enum ciphertext { CIPHERTEXT2, CIPHERTEXT3, CIPHERTEXT4 };
  * @param prk_len lenhgt of prk
  * @param th transkript hash
  * @param th_len lenhgt of th
+ * @param plaintext a plaintext constructed from the other input parameters
+ * @param plaintext_len length of plaintext
  * @param ciphertext the output
  * @param ciphertext_len lenhgt of the output
  * @return enum err 
@@ -38,7 +40,8 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
 			uint32_t signature_or_mac_len, uint8_t *ead,
 			uint32_t ead_len, uint8_t *prk, uint32_t prk_len,
 			uint8_t *th, uint32_t th_len, uint8_t *ciphertext,
-			uint32_t *ciphertext_len);
+			uint32_t *ciphertext_len, uint8_t *plaintext,
+			uint32_t *plaintext_len);
 
 /**
  * @brief Decrypts a ciphertest and splits the resulting plaintext into its 

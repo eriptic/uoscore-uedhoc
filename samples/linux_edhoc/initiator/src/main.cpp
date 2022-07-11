@@ -167,8 +167,23 @@ int main()
 	c_i.c_i.ptr = T1_C_I;
 	c_i.c_i.len = sizeof(T1_C_I);
 
+	c_i.id_cred_i.ptr = T1_ID_CRED_I;
+	c_i.id_cred_i.len = sizeof(T1_ID_CRED_I);
+
+	c_i.cred_i.ptr = T1_CRED_I;
+	c_i.cred_i.len = sizeof(T1_CRED_I);
+
 	c_i.ead_1.ptr = T1_EAD_1;
 	c_i.ead_1.len = sizeof(T1_EAD_1);
+
+	c_i.ead_3.ptr = T1_EAD_3;
+	c_i.ead_3.len = sizeof(T1_EAD_3);
+
+	c_i.sk_i.ptr = T1_SK_I;
+	c_i.sk_i.len = sizeof(T1_SK_I);
+
+	c_i.pk_i.ptr = T1_PK_I;
+	c_i.pk_i.len = sizeof(T1_PK_I);
 
 	cred_r.id_cred.len = sizeof(T1_ID_CRED_R);
 	cred_r.id_cred.ptr = T1_ID_CRED_R;

@@ -264,20 +264,23 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 			     sign_or_mac_2, &sign_or_mac_2_len));
 
 	/*compute ciphertext_2*/
+	uint8_t plaintext_2[PLAINTEXT_DEFAULT_SIZE];
+	uint32_t plaintext_2_len = sizeof(plaintext_2);
 	uint8_t ciphertext_2[CIPHERTEXT2_DEFAULT_SIZE];
 	uint32_t ciphertext_2_len = sizeof(ciphertext_2);
 	TRY(ciphertext_gen(CIPHERTEXT2, &rc->suite, c->id_cred_r.ptr,
 			   c->id_cred_r.len, sign_or_mac_2, sign_or_mac_2_len,
 			   c->ead_2.ptr, c->ead_2.len, PRK_2e, sizeof(PRK_2e),
-			   th2, th2_len, ciphertext_2, &ciphertext_2_len));
+			   th2, th2_len, ciphertext_2, &ciphertext_2_len,
+			   plaintext_2, &plaintext_2_len));
 
 	/*message 2 create*/
 	TRY(msg2_encode(c->g_y.ptr, c->g_y.len, c->c_r.ptr, c->c_r.len,
 			ciphertext_2, ciphertext_2_len, rc->msg2,
 			&rc->msg2_len));
 
-	TRY(th3_calculate(rc->suite.edhoc_hash, th2, th2_len, ciphertext_2,
-			  ciphertext_2_len, rc->th3));
+	TRY(th3_calculate(rc->suite.edhoc_hash, th2, th2_len, plaintext_2,
+			  plaintext_2_len, rc->th3));
 
 	return ok;
 }
@@ -308,11 +311,16 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	uint32_t id_cred_i_len = sizeof(id_cred_i);
 	uint8_t sign_or_mac[SGN_OR_MAC_DEFAULT_SIZE];
 	uint32_t sign_or_mac_len = sizeof(sign_or_mac);
-	// TRY(ciphertext_decrypt_split(
-	// 	CIPHERTEXT3, &rc->suite, id_cred_i, &id_cred_i_len, sign_or_mac,
-	// 	&sign_or_mac_len, ead_3, (uint32_t *)ead_3_len, rc->PRK_3e2m,
-	// 	rc->PRK_3e2m_len, rc->th3, rc->th3_len, ciphertext_3,
-	// 	ciphertext_3_len));
+
+	uint32_t plaintext3_len = ciphertext_3_len;
+	uint8_t plaintext3[PLAINTEXT_DEFAULT_SIZE];
+	TRY(check_buffer_size(PLAINTEXT_DEFAULT_SIZE, ciphertext_3_len));
+
+	TRY(ciphertext_decrypt_split(
+		CIPHERTEXT3, &rc->suite, id_cred_i, &id_cred_i_len, sign_or_mac,
+		&sign_or_mac_len, ead_3, (uint32_t *)ead_3_len, rc->PRK_3e2m,
+		rc->PRK_3e2m_len, rc->th3, rc->th3_len, ciphertext_3,
+		ciphertext_3_len, plaintext3, plaintext3_len));
 
 	/*check the authenticity of the initiator*/
 	uint8_t cred_i[CRED_DEFAULT_SIZE];
@@ -352,12 +360,15 @@ enum err msg4_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 		  uint32_t th4_len)
 {
 	/*Ciphertext 4 calculate*/
+	uint8_t plaintext_4[PLAINTEXT_DEFAULT_SIZE];
+	uint32_t plaintext_4_len = sizeof(plaintext_4);
 	uint8_t ciphertext_4[CIPHERTEXT4_DEFAULT_SIZE];
 	uint32_t ciphertext_4_len = sizeof(ciphertext_4);
 
 	TRY(ciphertext_gen(CIPHERTEXT4, &rc->suite, NULL, 0, NULL, 0,
 			   c->ead_4.ptr, c->ead_4.len, prk_4x3m, prk_4x3m_len,
-			   th4, th4_len, ciphertext_4, &ciphertext_4_len));
+			   th4, th4_len, ciphertext_4, &ciphertext_4_len,
+			   plaintext_4, &plaintext_4_len));
 
 	TRY(encode_byte_string(ciphertext_4, ciphertext_4_len, rc->msg4,
 			       &rc->msg4_len));

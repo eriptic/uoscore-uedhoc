@@ -28,6 +28,7 @@ enum info_label {
 	PRK_out = 7,
 	K_4 = 8,
 	IV_4 = 9,
+	PRK_exporter = 10,
 };
 
 /**
@@ -41,8 +42,7 @@ enum info_label {
  * @param   out_len length of out
  * @return  err
  */
-enum err create_hkdf_info(enum info_label label, uint8_t *context,
-			  uint32_t context_len, uint32_t okm_len, uint8_t *out,
-			  uint32_t *out_len);
+enum err create_hkdf_info(uint8_t label, uint8_t *context, uint32_t context_len,
+			  uint32_t okm_len, uint8_t *out, uint32_t *out_len);
 
 #endif
