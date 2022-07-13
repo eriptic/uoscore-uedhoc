@@ -241,23 +241,51 @@ enum err edhoc_responder_run(
 	enum err (*rx)(void *sock, uint8_t *data, uint32_t *data_len));
 
 /**
- * @brief	Computes PRK_exporter from PRK_out
+ * @brief Computes PRK_exporter from PRK_out
  * 
- * @param 	app_hash_alg the EDHOC hash algorithm
- * @param 	prk_out the prk_out value is the product of a successful 
- * 			EDHOC execution 
- * @param 	prk_out_len length of prk_out
- * @param 	prk_exporter 
- * @return enum err 
+ * @param app_hash_alg 	the EDHOC hash algorithm
+ * @param prk_out 		the product of a successful EDHOC execution
+ * @param prk_out_len 	length of prk_out
+ * @param prk_exporter 	pointer where the prk_exporter value will be written
+ * @return enum err 0 or error code
  */
 enum err prk_out2exporter(enum hash_alg app_hash_alg, uint8_t *prk_out,
 			  uint32_t prk_out_len, uint8_t *prk_exporter);
+
+/**
+ * @brief Updates PRK_out
+ * 
+ * @param app_hash_alg 	the EDHOC hash algorithm
+ * @param prk_out 		the product of a successful EDHOC execution 
+ * @param prk_out_len 	length of prk_out
+ * @param context		A context on which initiator and responder needs to 
+ * 						agree in front
+ * @param context_len	length of context
+ * @param prk_out_new 	pointer where the prk_out_new value will be written
+ * @return enum err 0 or error code
+ */
+enum err prk_out_update(enum hash_alg app_hash_alg, uint8_t *prk_out,
+			uint32_t prk_out_len, uint8_t *context,
+			uint32_t context_len, uint8_t *prk_out_new);
 
 enum export_label {
 	OSCORE_MASTER_SECRET = 0,
 	OSCORE_MASTER_SALT = 1,
 };
 
+/**
+ * @brief 	Computes key material to be used within the application, 
+ * 			e.g., OSCORE master secret or OSCORE master salt
+ * 
+ * @param app_hash_alg		the application hash algorithm
+ * @param label				an uint value defined by the application 
+ * @param prk_exporter		PRK computed with prk_out2exporter()
+ * @param prk_exporter_len 	length of prk_exporter
+ * @param out 				the result of the computation,
+ * 							e.g., OSCORE master secret or OSCORE master salt
+ * @param out_len 			length of out
+ * @return enum err 		0 or error code
+ */
 enum err edhoc_exporter(enum hash_alg app_hash_alg, enum export_label label,
 			uint8_t *prk_exporter, uint32_t prk_exporter_len,
 			uint8_t *out, uint32_t out_len);

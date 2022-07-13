@@ -29,6 +29,7 @@ enum info_label {
 	K_4 = 8,
 	IV_4 = 9,
 	PRK_exporter = 10,
+	PRK_out_update = 11,
 };
 
 /**

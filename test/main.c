@@ -132,7 +132,7 @@ void test_main(void)
 	// 		 ztest_unit_test(test_responder12),
 	// 		 ztest_unit_test(test_responder13));
 
-	ztest_test_suite(exporter, ztest_unit_test(test_prk_out2exporter));
+	ztest_test_suite(exporter, ztest_unit_test(test_exporter));
 
 	/* OSCORE test-vector tests */
 
