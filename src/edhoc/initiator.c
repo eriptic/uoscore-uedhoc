@@ -30,6 +30,7 @@
 #include "edhoc/c_x.h"
 #include "edhoc/ciphertext.h"
 #include "edhoc/runtime_context.h"
+#include "edhoc/bstr_encode_decode.h"
 
 #include "cbor/edhoc_encode_message_1.h"
 #include "cbor/edhoc_decode_message_2.h"

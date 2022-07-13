@@ -13,6 +13,7 @@
 
 #include "edhoc/c_x.h"
 #include "edhoc/th.h"
+#include "edhoc/bstr_encode_decode.h"
 
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"
@@ -21,8 +22,6 @@
 
 #include "cbor/edhoc_encode_data_2.h"
 #include "cbor/edhoc_encode_th2.h"
-#include "cbor/edhoc_encode_th3.h"
-#include "cbor/edhoc_encode_th4.h"
 
 /**
  * @brief   Setups a data structure used as input for th2, namely CBOR sequence
@@ -94,26 +93,20 @@ static inline enum err th2_input_encode(uint8_t *hash_msg1,
  * @param   th3_input_len length of th3_input
  */
 static inline enum err th3_input_encode(uint8_t *th2, uint32_t th2_len,
-					uint8_t *ciphertext_2,
-					uint32_t ciphertext_2_len,
+					uint8_t *plaintext_2,
+					uint32_t plaintext_2_len,
 					uint8_t *th3_input,
 					uint32_t *th3_input_len)
 {
-	struct th3 th3;
+	TRY(check_buffer_size(*th3_input_len, th2_len + 2));
 
-	/*Encode th2*/
-	th3._th3_th_2.value = th2;
-	th3._th3_th_2.len = th2_len;
+	uint32_t th2_encoded_len = *th3_input_len;
+	TRY(encode_byte_string(th2, th2_len, th3_input, &th2_encoded_len));
+	TRY(_memcpy_s(th3_input + th2_encoded_len,
+		      *th3_input_len - th2_encoded_len, plaintext_2,
+		      plaintext_2_len));
 
-	/*Encode ciphertext_2*/
-	th3._th3_CIPHERTEXT_2.value = ciphertext_2;
-	th3._th3_CIPHERTEXT_2.len = ciphertext_2_len;
-
-	size_t payload_len_out;
-	TRY_EXPECT(cbor_encode_th3(th3_input, *th3_input_len, &th3,
-				   &payload_len_out),
-		   true);
-	*th3_input_len = (uint32_t)payload_len_out;
+	*th3_input_len = th2_encoded_len + plaintext_2_len;
 
 	PRINT_ARRAY("Input to calculate TH_3 (CBOR Sequence)", th3_input,
 		    *th3_input_len);
@@ -135,22 +128,22 @@ static inline enum err th4_input_encode(uint8_t *th3, uint32_t th3_len,
 					uint8_t *th4_input,
 					uint32_t *th4_input_len)
 {
-	struct th4 th4;
+	// struct th4 th4;
 
-	/*Encode th2*/
-	th4._th4_th_3.value = th3;
-	th4._th4_th_3.len = th3_len;
+	// /*Encode th2*/
+	// th4._th4_th_3.value = th3;
+	// th4._th4_th_3.len = th3_len;
 
-	/*Encode ciphertext_3*/
-	th4._th4_CIPHERTEXT_3.value = ciphertext_3;
-	th4._th4_CIPHERTEXT_3.len = ciphertext_3_len;
+	// /*Encode ciphertext_3*/
+	// th4._th4_CIPHERTEXT_3.value = ciphertext_3;
+	// th4._th4_CIPHERTEXT_3.len = ciphertext_3_len;
 
-	size_t payload_len_out;
-	TRY_EXPECT(cbor_encode_th4(th4_input, *th4_input_len, &th4,
-				   &payload_len_out),
-		   true);
+	// size_t payload_len_out;
+	// TRY_EXPECT(cbor_encode_th4(th4_input, *th4_input_len, &th4,
+	// 			   &payload_len_out),
+	// 	   true);
 
-	*th4_input_len = (uint32_t)payload_len_out;
+	// *th4_input_len = (uint32_t)payload_len_out;
 
 	PRINT_ARRAY("Input to calculate TH_4 (CBOR Sequence)", th4_input,
 		    *th4_input_len);

@@ -16,6 +16,7 @@
 #include "edhoc/retrieve_cred.h"
 #include "edhoc/signature_or_mac_msg.h"
 #include "edhoc/plaintext.h"
+#include "edhoc/bstr_encode_decode.h"
 
 #include "common/oscore_edhoc_error.h"
 #include "common/memcpy_s.h"
@@ -61,7 +62,7 @@ enum err id_cred2kid(const uint8_t *id_cred, uint32_t id_cred_len,
 				   &map._id_cred_x_map_kid._id_cred_x_map_kid,
 				   &payload_len_out),
 			   true);
-		*kid_len = (uint32_t) payload_len_out;
+		*kid_len = (uint32_t)payload_len_out;
 	} else {
 		*kid_len = 0;
 	}

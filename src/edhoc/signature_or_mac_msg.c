@@ -17,6 +17,7 @@
 #include "edhoc/okm.h"
 #include "edhoc/suites.h"
 #include "edhoc/signature_or_mac_msg.h"
+#include "edhoc/bstr_encode_decode.h"
 
 #include "common/print_util.h"
 #include "common/crypto_wrapper.h"
@@ -25,37 +26,6 @@
 
 #include "cbor/edhoc_encode_enc_structure.h"
 #include "cbor/edhoc_encode_sig_structure.h"
-#include "cbor/edhoc_encode_bstr_type.h"
-#include "cbor/edhoc_decode_bstr_type.h"
-
-enum err encode_byte_string(const uint8_t *in, uint32_t in_len, uint8_t *out,
-			    uint32_t *out_len)
-{
-	size_t payload_len_out;
-	struct zcbor_string tmp;
-	tmp.value = in;
-	tmp.len = in_len;
-	TRY_EXPECT(cbor_encode_bstr_type_b_str(out, *out_len, &tmp,
-					       &payload_len_out),
-		   true);
-	*out_len = (uint32_t)payload_len_out;
-	return ok;
-}
-
-enum err decode_byte_string(const uint8_t *in, const uint32_t in_len,
-			    uint8_t *out, uint32_t *out_len)
-{
-	struct zcbor_string str;
-	size_t decode_len = 0;
-
-	TRY_EXPECT(cbor_decode_bstr_type_b_str(in, in_len, &str, &decode_len),
-		   true);
-
-	TRY(_memcpy_s(out, *out_len, str.value, (uint32_t)str.len));
-	*out_len = (uint32_t)str.len;
-
-	return ok;
-}
 
 enum err mac(const uint8_t *prk, uint32_t prk_len, const uint8_t *th,
 	     uint32_t th_len, const uint8_t *id_cred, uint32_t id_cred_len,
@@ -65,12 +35,14 @@ enum err mac(const uint8_t *prk, uint32_t prk_len, const uint8_t *th,
 {
 	/*encode th as bstr*/
 	uint32_t th_encoded_len = th_len + 2;
-	uint8_t th_encoded[th_encoded_len];
+	TRY(check_buffer_size(SHA_DEFAULT_SIZE + 2, th_encoded_len));
+	uint8_t th_encoded[SHA_DEFAULT_SIZE + 2];
 	TRY(encode_byte_string(th, th_len, th_encoded, &th_encoded_len));
 
 	/*encode cred_r as bstr*/
 	uint32_t cred_encoded_len = cred_len + 2;
-	uint8_t cred_encoded[cred_encoded_len];
+	TRY(check_buffer_size(CERT_DEFAULT_SIZE + 2, cred_encoded_len));
+	uint8_t cred_encoded[CERT_DEFAULT_SIZE];
 	TRY(encode_byte_string(cred, cred_len, cred_encoded,
 			       &cred_encoded_len));
 

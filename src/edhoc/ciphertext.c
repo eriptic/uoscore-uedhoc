@@ -17,6 +17,7 @@
 #include "edhoc/plaintext.h"
 #include "edhoc/associated_data_encode.h"
 #include "edhoc/suites.h"
+#include "edhoc/bstr_encode_decode.h"
 
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"

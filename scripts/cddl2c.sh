@@ -90,13 +90,6 @@ python3 $ZCBOR -c $MODELS_PATH/edhoc_cert.cddl code -d -t cert --oc $SRC/edhoc_d
 # encode th2
 python3 $ZCBOR -c $MODELS_PATH/edhoc_th.cddl code -e -t th2 --oc $SRC/edhoc_encode_th2.c --include-prefix $INC_PATH_IN_C_FILES --oh $INC/edhoc_encode_th2.h
 
-# encode th3
-python3 $ZCBOR -c $MODELS_PATH/edhoc_th.cddl code -e -t th3 --oc $SRC/edhoc_encode_th3.c --include-prefix $INC_PATH_IN_C_FILES --oh $INC/edhoc_encode_th3.h
-
-# encode th4
-python3 $ZCBOR -c $MODELS_PATH/edhoc_th.cddl code -e -t th4 --oc $SRC/edhoc_encode_th4.c --include-prefix $INC_PATH_IN_C_FILES --oh $INC/edhoc_encode_th4.h
-
-
 ### primitive types ###
 #encode byte_string
 python3 $ZCBOR -c $MODELS_PATH/edhoc_primitive_types.cddl code -e -t bstr_type --oc $SRC/edhoc_encode_bstr_type.c --include-prefix $INC_PATH_IN_C_FILES --oh $INC/edhoc_encode_bstr_type.h
