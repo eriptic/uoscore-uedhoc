@@ -351,8 +351,9 @@ enum err msg3_process(struct edhoc_responder_context *c,
 			     sign_or_mac, &sign_or_mac_len));
 
 	/*TH4*/
-	TRY(th4_calculate(rc->suite.edhoc_hash, rc->th3, rc->th3_len,
-			  ciphertext_3, ciphertext_3_len, th4));
+	TRY(th4_calculate(
+		rc->suite.edhoc_hash, rc->th3, rc->th3_len, plaintext3,
+		plaintext3_len - get_aead_mac_len(rc->suite.edhoc_aead), th4));
 	return ok;
 }
 

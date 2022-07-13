@@ -82,71 +82,33 @@ static inline enum err th2_input_encode(uint8_t *hash_msg1,
 }
 
 /**
- * @brief   Setups a data structure used as input for th3
- * @param   th2 pointer to a th2
- * @param   th2_len length of th2
- * @param   ciphertext_2 
- * @param   ciphertext_2_len  length of ciphertext_2_len
- * @param   data_3 
- * @param   data_3_len  length of data_3_len
- * @param   th3_input ouput buffer for the data structure
- * @param   th3_input_len length of th3_input
+ * @brief   Setups a data structure used as input for th3 or th4
+ * 
+ * @param   th23 pointer to a th2/th3
+ * @param   th23_len length of th23
+ * @param   plaintext_23 Plaintext 2 or plaintext 3
+ * @param   plaintext_23_len  length of plaintext_23
+ * @param   th34_input data structure to be hashed for TH_3/4
+ * @param   th34_input_len length of th34_input
  */
-static inline enum err th3_input_encode(uint8_t *th2, uint32_t th2_len,
-					uint8_t *plaintext_2,
-					uint32_t plaintext_2_len,
-					uint8_t *th3_input,
-					uint32_t *th3_input_len)
+static inline enum err th34_input_encode(uint8_t *th23, uint32_t th23_len,
+					 uint8_t *plaintext_23,
+					 uint32_t plaintext_23_len,
+					 uint8_t *th34_input,
+					 uint32_t *th34_input_len)
 {
-	TRY(check_buffer_size(*th3_input_len, th2_len + 2));
+	TRY(check_buffer_size(*th34_input_len, th23_len + 2));
 
-	uint32_t th2_encoded_len = *th3_input_len;
-	TRY(encode_byte_string(th2, th2_len, th3_input, &th2_encoded_len));
-	TRY(_memcpy_s(th3_input + th2_encoded_len,
-		      *th3_input_len - th2_encoded_len, plaintext_2,
-		      plaintext_2_len));
+	uint32_t th23_encoded_len = *th34_input_len;
+	TRY(encode_byte_string(th23, th23_len, th34_input, &th23_encoded_len));
+	TRY(_memcpy_s(th34_input + th23_encoded_len,
+		      *th34_input_len - th23_encoded_len, plaintext_23,
+		      plaintext_23_len));
 
-	*th3_input_len = th2_encoded_len + plaintext_2_len;
+	*th34_input_len = th23_encoded_len + plaintext_23_len;
 
-	PRINT_ARRAY("Input to calculate TH_3 (CBOR Sequence)", th3_input,
-		    *th3_input_len);
-	return ok;
-}
-
-/**
- * @brief   Setups a data structure used as input for th4
- * @param   th3 pointer to a th3
- * @param   th3_len length of th3
- * @param   ciphertext_3
- * @param   ciphertext_3_len  length of ciphertext_3_len
- * @param   th4_input ouput buffer for the data structure
- * @param   th4_input_len length of th4_input
- */
-static inline enum err th4_input_encode(uint8_t *th3, uint32_t th3_len,
-					uint8_t *ciphertext_3,
-					uint32_t ciphertext_3_len,
-					uint8_t *th4_input,
-					uint32_t *th4_input_len)
-{
-	// struct th4 th4;
-
-	// /*Encode th2*/
-	// th4._th4_th_3.value = th3;
-	// th4._th4_th_3.len = th3_len;
-
-	// /*Encode ciphertext_3*/
-	// th4._th4_CIPHERTEXT_3.value = ciphertext_3;
-	// th4._th4_CIPHERTEXT_3.len = ciphertext_3_len;
-
-	// size_t payload_len_out;
-	// TRY_EXPECT(cbor_encode_th4(th4_input, *th4_input_len, &th4,
-	// 			   &payload_len_out),
-	// 	   true);
-
-	// *th4_input_len = (uint32_t)payload_len_out;
-
-	PRINT_ARRAY("Input to calculate TH_4 (CBOR Sequence)", th4_input,
-		    *th4_input_len);
+	PRINT_ARRAY("Input to calculate TH_3/TH_4 (CBOR Sequence)", th34_input,
+		    *th34_input_len);
 	return ok;
 }
 
@@ -171,13 +133,13 @@ enum err th3_calculate(enum hash_alg alg, uint8_t *th2, uint32_t th2_len,
 		       uint8_t *plaintext_2, uint32_t plaintext_2_len,
 		       uint8_t *th3)
 {
-	uint32_t th3_input_len = th2_len + plaintext_2_len + 6;
-	TRY(check_buffer_size(TH3_INPUT_DEFAULT_SIZE, th3_input_len));
+	uint32_t th34_input_len = th2_len + plaintext_2_len + 6;
+	TRY(check_buffer_size(TH3_INPUT_DEFAULT_SIZE, th34_input_len));
 	uint8_t th3_input[TH3_INPUT_DEFAULT_SIZE];
 
-	TRY(th3_input_encode(th2, th2_len, plaintext_2, plaintext_2_len,
-			     th3_input, &th3_input_len));
-	TRY(hash(alg, th3_input, th3_input_len, th3));
+	TRY(th34_input_encode(th2, th2_len, plaintext_2, plaintext_2_len,
+			      th3_input, &th34_input_len));
+	TRY(hash(alg, th3_input, th34_input_len, th3));
 	PRINT_ARRAY("TH3", th3, SHA_DEFAULT_SIZE);
 	return ok;
 }
@@ -190,8 +152,8 @@ enum err th4_calculate(enum hash_alg alg, uint8_t *th3, uint32_t th3_len,
 	TRY(check_buffer_size(TH4_INPUT_DEFAULT_SIZE, th4_input_len));
 	uint8_t th4_input[TH4_INPUT_DEFAULT_SIZE];
 
-	TRY(th4_input_encode(th3, th3_len, ciphertext_3, ciphertext_3_len,
-			     th4_input, &th4_input_len));
+	TRY(th34_input_encode(th3, th3_len, ciphertext_3, ciphertext_3_len,
+			      th4_input, &th4_input_len));
 	TRY(hash(alg, th4_input, th4_input_len, th4));
 	PRINT_ARRAY("TH4", th4, SHA_DEFAULT_SIZE);
 	return ok;

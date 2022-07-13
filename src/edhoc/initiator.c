@@ -276,8 +276,8 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 			       &rc->msg3_len));
 	PRINT_ARRAY("msg3", rc->msg3, rc->msg3_len);
 	/*TH4*/
-	TRY(th4_calculate(rc->suite.edhoc_hash, th3, sizeof(th3), ciphertext_3,
-			  ciphertext_3_len, th4));
+	TRY(th4_calculate(rc->suite.edhoc_hash, th3, sizeof(th3), plaintext_3,
+			  plaintext_3_len, th4));
 	return ok;
 }
 
