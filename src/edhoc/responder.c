@@ -36,6 +36,8 @@
 #include "cbor/edhoc_decode_bstr_type.h"
 #include "cbor/edhoc_decode_message_3.h"
 
+#define CBOR_TRUE (0xf5)
+
 /**
  * @brief   Parses message 1
  * @param   msg1 buffer containing message 1
@@ -195,8 +197,17 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	struct c_x c_i;
 	c_x_init(&c_i, c_i_buf, sizeof(c_i_buf));
 
-	TRY(msg1_parse(rc->msg1, rc->msg1_len, &method, suites_i, &suites_i_len,
-		       g_x, &g_x_len, &c_i, ead_1, ead_1_len));
+	/* If message_1 is sent to the server, the CBOR simple value "true" (0xf5) is sent on the beggining
+	(see EDHOC standard A.3 chapter). */
+	uint32_t edhoc_msg1_offset = 0;
+	if (CBOR_TRUE == rc->msg1[0]) {
+		edhoc_msg1_offset = 1;
+	}
+
+	TRY(msg1_parse(&rc->msg1[edhoc_msg1_offset],
+				(rc->msg1_len - edhoc_msg1_offset),
+				&method, suites_i, &suites_i_len,
+				g_x, &g_x_len, &c_i, ead_1, ead_1_len));
 
 	if (!(selected_suite_is_supported(suites_i[suites_i_len - 1],
 					  &c->suites_r))) {
@@ -219,7 +230,8 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	/******************* create and send message 2*************************/
 	uint8_t th2[SHA_DEFAULT_SIZE];
 	uint32_t th2_len = sizeof(th2);
-	TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1, rc->msg1_len,
+	TRY(th2_calculate(rc->suite.edhoc_hash, &rc->msg1[edhoc_msg1_offset],
+			  (rc->msg1_len - edhoc_msg1_offset),
 			  c->g_y.ptr, c->g_y.len, &c->c_r, th2));
 
 	/*calculate the DH shared secret*/
