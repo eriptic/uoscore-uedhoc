@@ -160,12 +160,12 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
 
 int main()
 {
+	uint8_t prk_exporter[32];
 	uint8_t oscore_master_secret[16];
 	uint8_t oscore_master_salt[8];
 
 	/* edhoc declarations */
-	uint8_t PRK_4x3m[PRK_DEFAULT_SIZE];
-	uint8_t th4[SHA_DEFAULT_SIZE];
+	uint8_t PRK_out[PRK_DEFAULT_SIZE];
 	uint8_t err_msg[ERR_MSG_DEFAULT_SIZE];
 	uint32_t err_msg_len = sizeof(err_msg);
 	uint8_t ad_1[AD_DEFAULT_SIZE];
@@ -292,20 +292,24 @@ int main()
 		TRY(edhoc_responder_run(&c_r, &cred_i, cred_num, err_msg,
 					&err_msg_len, (uint8_t *)&ad_1,
 					&ad_1_len, (uint8_t *)&ad_3, &ad_3_len,
-					PRK_4x3m, sizeof(PRK_4x3m), th4,
-					sizeof(th4), tx, rx));
-		PRINT_ARRAY("PRK_4x3m", PRK_4x3m, sizeof(PRK_4x3m));
-		PRINT_ARRAY("th4", th4, sizeof(th4));
+					PRK_out, sizeof(PRK_out), tx, rx));
+		PRINT_ARRAY("PRK_out", PRK_out, sizeof(PRK_out));
 
-		// TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
-		// 		   sizeof(th4), "OSCORE_Master_Secret",
-		// 		   oscore_master_secret, 16));
-		// PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret, 16);
+		TRY(prk_out2exporter(SHA_256, PRK_out, sizeof(PRK_out),
+				     prk_exporter));
+		PRINT_ARRAY("prk_exporter", prk_exporter, sizeof(prk_exporter));
 
-		// TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
-		// 		   sizeof(th4), "OSCORE_Master_Salt",
-		// 		   oscore_master_salt, 8));
-		// PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt, 8);
+		TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SECRET, prk_exporter,
+				   sizeof(prk_exporter), oscore_master_secret,
+				   sizeof(oscore_master_secret)));
+		PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret,
+			    sizeof(oscore_master_secret));
+
+		TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SALT, prk_exporter,
+				   sizeof(prk_exporter), oscore_master_salt,
+				   sizeof(oscore_master_salt)));
+		PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt,
+			    sizeof(oscore_master_salt));
 	}
 
 	close(sockfd);

@@ -290,7 +290,7 @@ enum err msg3_process(struct edhoc_responder_context *c,
 		      struct runtime_context *rc,
 		      struct other_party_cred *cred_i_array,
 		      uint16_t num_cred_i, uint8_t *ead_3, uint32_t *ead_3_len,
-		      uint8_t *prk_4x3m, uint32_t prk_4x3m_len, uint8_t *th4)
+		      uint8_t *prk_out, uint32_t prk_out_len)
 {
 	uint8_t ciphertext_3[CIPHERTEXT3_DEFAULT_SIZE];
 	uint32_t ciphertext_3_len = sizeof(ciphertext_3);
@@ -338,14 +338,14 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	PRINT_ARRAY("pk", pk, pk_len);
 	PRINT_ARRAY("g_i", g_i, g_i_len);
 
-	/*derive prk_4x3m*/
+	/*derive prk_4e3m*/
 	TRY(prk_derive(rc->static_dh_i, rc->suite, rc->prk_3e2m,
 		       rc->prk_3e2m_len, g_i, g_i_len, c->y.ptr, c->y.len,
-		       prk_4x3m));
-	PRINT_ARRAY("prk_4x3m", prk_4x3m, prk_4x3m_len);
+		       rc->prk_4e3m));
+	PRINT_ARRAY("prk_4e3m", rc->prk_4e3m, rc->prk_4e3m_len);
 
 	TRY(signature_or_mac(VERIFY, rc->static_dh_i, &rc->suite, NULL, 0, pk,
-			     pk_len, prk_4x3m, prk_4x3m_len, rc->th3,
+			     pk_len, rc->prk_4e3m, rc->prk_4e3m_len, rc->th3,
 			     rc->th3_len, id_cred_i, id_cred_i_len, cred_i,
 			     cred_i_len, ead_3, *(uint32_t *)ead_3_len, MAC_3,
 			     sign_or_mac, &sign_or_mac_len));
@@ -353,13 +353,16 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	/*TH4*/
 	TRY(th4_calculate(
 		rc->suite.edhoc_hash, rc->th3, rc->th3_len, plaintext3,
-		plaintext3_len - get_aead_mac_len(rc->suite.edhoc_aead), th4));
+		plaintext3_len - get_aead_mac_len(rc->suite.edhoc_aead),
+		rc->th4));
+
+	/*PRK_out*/
+	TRY(edhoc_kdf(rc->suite.edhoc_hash, rc->prk_4e3m, rc->prk_4e3m_len,
+		      PRK_out, rc->th4, rc->th4_len, prk_out_len, prk_out));
 	return ok;
 }
 
-enum err msg4_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
-		  uint8_t *prk_4x3m, uint32_t prk_4x3m_len, uint8_t *th4,
-		  uint32_t th4_len)
+enum err msg4_gen(struct edhoc_responder_context *c, struct runtime_context *rc)
 {
 	/*Ciphertext 4 calculate*/
 	uint8_t plaintext_4[PLAINTEXT_DEFAULT_SIZE];
@@ -368,9 +371,9 @@ enum err msg4_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	uint32_t ciphertext_4_len = sizeof(ciphertext_4);
 
 	TRY(ciphertext_gen(CIPHERTEXT4, &rc->suite, NULL, 0, NULL, 0,
-			   c->ead_4.ptr, c->ead_4.len, prk_4x3m, prk_4x3m_len,
-			   th4, th4_len, ciphertext_4, &ciphertext_4_len,
-			   plaintext_4, &plaintext_4_len));
+			   c->ead_4.ptr, c->ead_4.len, rc->prk_4e3m,
+			   rc->prk_4e3m_len, rc->th4, rc->th4_len, ciphertext_4,
+			   &ciphertext_4_len, plaintext_4, &plaintext_4_len));
 
 	TRY(encode_byte_string(ciphertext_4, ciphertext_4_len, rc->msg4,
 			       &rc->msg4_len));
@@ -384,8 +387,7 @@ enum err edhoc_responder_run(
 	struct other_party_cred *cred_i_array, uint16_t num_cred_i,
 	uint8_t *err_msg, uint32_t *err_msg_len, uint8_t *ead_1,
 	uint32_t *ead_1_len, uint8_t *ead_3, uint32_t *ead_3_len,
-	uint8_t *prk_4x3m, uint32_t prk_4x3m_len, uint8_t *th4,
-	uint32_t th4_len,
+	uint8_t *prk_out, uint32_t prk_out_len,
 	enum err (*tx)(void *sock, uint8_t *data, uint32_t data_len),
 	enum err (*rx)(void *sock, uint8_t *data, uint32_t *data_len))
 {
@@ -400,9 +402,9 @@ enum err edhoc_responder_run(
 	PRINT_MSG("waiting to receive message 3...\n");
 	TRY(rx(c->sock, rc.msg3, &rc.msg3_len));
 	TRY(msg3_process(c, &rc, cred_i_array, num_cred_i, ead_3, ead_3_len,
-			 prk_4x3m, prk_4x3m_len, th4));
+			 prk_out, prk_out_len));
 	if (c->msg4) {
-		TRY(msg4_gen(c, &rc, prk_4x3m, prk_4x3m_len, th4, th4_len));
+		TRY(msg4_gen(c, &rc));
 		TRY(tx(c->sock, rc.msg4, rc.msg4_len));
 	}
 
