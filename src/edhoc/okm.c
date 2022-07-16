@@ -26,18 +26,10 @@ enum err edhoc_kdf(enum hash_alg hash_alg, const uint8_t *prk, uint32_t prk_len,
 	uint8_t info[INFO_DEFAULT_SIZE];
 	uint32_t info_len = sizeof(info);
 
-	PRINT_ARRAY("PRK", prk, prk_len);
-	PRINTF("label: %d\n", (int)label);
-	PRINT_ARRAY("context", context, context_len);
-	PRINTF("length: %d\n", (int)okm_len);
-
 	TRY(create_hkdf_info(label, context, context_len, okm_len,
 			     (uint8_t *)&info, &info_len));
 
 	PRINT_ARRAY("info", info, info_len);
-	TRY(hkdf_expand(hash_alg, prk, prk_len, (uint8_t *)&info, info_len, okm,
-			okm_len));
-
-	PRINT_ARRAY("OKM", okm, okm_len);
-	return ok;
+	return hkdf_expand(hash_alg, prk, prk_len, (uint8_t *)&info, info_len,
+			   okm, okm_len);
 }

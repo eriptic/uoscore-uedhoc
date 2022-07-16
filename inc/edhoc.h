@@ -195,18 +195,15 @@ ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk,
  * @param   ead_2 the received in msg2 additional data is provided to the 
  *          caller through ead_2
  * @param   ead_2_len length of ead_2
- * @param   prk_4x3m used in the exporter interface
- * @param   prk_4x3m_len length of prk_4x3m
- * @param   th4 transcript hash4 used in the exporter interface
- * @param   th4_len length of th4
+ * @param   prk_out the derived shared secret
+ * @param   prk_out_len length of prk_out
  */
 enum err edhoc_initiator_run(
 	const struct edhoc_initiator_context *c,
 	struct other_party_cred *cred_r_array, uint16_t num_cred_r,
 	uint8_t *err_msg, uint32_t *err_msg_len, uint8_t *ead_2,
 	uint32_t *ead_2_len, uint8_t *ead_4, uint32_t *ead_4_len,
-	uint8_t *prk_4x3m, uint32_t prk_4x3m_len, uint8_t *th4,
-	uint32_t th4_len,
+	uint8_t *prk_out, uint32_t prk_out_len,
 	enum err (*tx)(void *sock, uint8_t *data, uint32_t data_len),
 	enum err (*rx)(void *sock, uint8_t *data, uint32_t *data_len));
 

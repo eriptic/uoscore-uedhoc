@@ -249,8 +249,8 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 
 	/*derive prk_3e2m*/
 	TRY(prk_derive(static_dh_r, rc->suite, PRK_2e, sizeof(PRK_2e), g_x,
-		       g_x_len, c->r.ptr, c->r.len, rc->PRK_3e2m));
-	PRINT_ARRAY("prk_3e2m", rc->PRK_3e2m, rc->PRK_3e2m_len);
+		       g_x_len, c->r.ptr, c->r.len, rc->prk_3e2m));
+	PRINT_ARRAY("prk_3e2m", rc->prk_3e2m, rc->prk_3e2m_len);
 
 	/*compute signature_or_MAC_2*/
 	uint32_t sign_or_mac_2_len = get_signature_len(rc->suite.edhoc_sign);
@@ -259,7 +259,7 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	uint8_t sign_or_mac_2[SIGNATURE_DEFAULT_SIZE];
 	TRY(signature_or_mac(GENERATE, static_dh_r, &rc->suite, c->sk_r.ptr,
 			     c->sk_r.len, c->pk_r.ptr, c->pk_r.len,
-			     rc->PRK_3e2m, rc->PRK_3e2m_len, th2, th2_len,
+			     rc->prk_3e2m, rc->prk_3e2m_len, th2, th2_len,
 			     c->id_cred_r.ptr, c->id_cred_r.len, c->cred_r.ptr,
 			     c->cred_r.len, c->ead_2.ptr, c->ead_2.len, MAC_2,
 			     sign_or_mac_2, &sign_or_mac_2_len));
@@ -319,8 +319,8 @@ enum err msg3_process(struct edhoc_responder_context *c,
 
 	TRY(ciphertext_decrypt_split(
 		CIPHERTEXT3, &rc->suite, id_cred_i, &id_cred_i_len, sign_or_mac,
-		&sign_or_mac_len, ead_3, (uint32_t *)ead_3_len, rc->PRK_3e2m,
-		rc->PRK_3e2m_len, rc->th3, rc->th3_len, ciphertext_3,
+		&sign_or_mac_len, ead_3, (uint32_t *)ead_3_len, rc->prk_3e2m,
+		rc->prk_3e2m_len, rc->th3, rc->th3_len, ciphertext_3,
 		ciphertext_3_len, plaintext3, plaintext3_len));
 
 	/*check the authenticity of the initiator*/
@@ -339,8 +339,8 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	PRINT_ARRAY("g_i", g_i, g_i_len);
 
 	/*derive prk_4x3m*/
-	TRY(prk_derive(rc->static_dh_i, rc->suite, rc->PRK_3e2m,
-		       rc->PRK_3e2m_len, g_i, g_i_len, c->y.ptr, c->y.len,
+	TRY(prk_derive(rc->static_dh_i, rc->suite, rc->prk_3e2m,
+		       rc->prk_3e2m_len, g_i, g_i_len, c->y.ptr, c->y.len,
 		       prk_4x3m));
 	PRINT_ARRAY("prk_4x3m", prk_4x3m, prk_4x3m_len);
 

@@ -137,8 +137,8 @@ enum err msg1_gen(const struct edhoc_initiator_context *c,
 enum err msg3_gen(const struct edhoc_initiator_context *c,
 		  struct runtime_context *rc,
 		  struct other_party_cred *cred_r_array, uint16_t num_cred_r,
-		  uint8_t *ead_2, uint32_t *ead_2_len, uint8_t *prk_4x3m,
-		  uint32_t prk_4x3m_len, uint8_t *th4)
+		  uint8_t *ead_2, uint32_t *ead_2_len, uint8_t *prk_out,
+		  uint32_t prk_out_len)
 {
 	bool static_dh_i = false, static_dh_r = false;
 	TRY(get_suite((enum suite_label)c->suites_i.ptr[c->suites_i.len - 1],
@@ -240,22 +240,22 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	TRY(th3_calculate(rc->suite.edhoc_hash, (uint8_t *)&th2, sizeof(th2),
 			  plaintext2, plaintext2_len, th3));
 
-	/*derive prk_4x3m*/
+	/*derive prk_4e3m*/
 	TRY(prk_derive(static_dh_i, rc->suite, (uint8_t *)&PRK_3e2m,
 		       sizeof(PRK_3e2m), g_y, g_y_len, c->i.ptr, c->i.len,
-		       prk_4x3m));
-	PRINT_ARRAY("prk_4x3m", prk_4x3m, prk_4x3m_len);
+		       rc->prk_4e3m));
+	PRINT_ARRAY("prk_4e3m", rc->prk_4e3m, rc->prk_4e3m_len);
 
 	/*calculate Signature_or_MAC_3*/
 	uint32_t sign_or_mac_3_len = get_signature_len(rc->suite.edhoc_sign);
 	uint8_t sign_or_mac_3[SIGNATURE_DEFAULT_SIZE];
 
 	TRY(signature_or_mac(GENERATE, static_dh_i, &rc->suite, c->sk_i.ptr,
-			     c->sk_i.len, c->pk_i.ptr, c->pk_i.len, prk_4x3m,
-			     prk_4x3m_len, th3, sizeof(th3), c->id_cred_i.ptr,
-			     c->id_cred_i.len, c->cred_i.ptr, c->cred_i.len,
-			     c->ead_3.ptr, c->ead_3.len, MAC_3, sign_or_mac_3,
-			     &sign_or_mac_3_len));
+			     c->sk_i.len, c->pk_i.ptr, c->pk_i.len,
+			     rc->prk_4e3m, rc->prk_4e3m_len, th3, sizeof(th3),
+			     c->id_cred_i.ptr, c->id_cred_i.len, c->cred_i.ptr,
+			     c->cred_i.len, c->ead_3.ptr, c->ead_3.len, MAC_3,
+			     sign_or_mac_3, &sign_or_mac_3_len));
 
 	uint8_t plaintext_3[PLAINTEXT_DEFAULT_SIZE];
 	uint32_t plaintext_3_len = sizeof(plaintext_3);
@@ -275,15 +275,19 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	TRY(encode_byte_string(ciphertext_3, ciphertext_3_len, rc->msg3,
 			       &rc->msg3_len));
 	PRINT_ARRAY("msg3", rc->msg3, rc->msg3_len);
+
 	/*TH4*/
 	TRY(th4_calculate(rc->suite.edhoc_hash, th3, sizeof(th3), plaintext_3,
-			  plaintext_3_len, th4));
+			  plaintext_3_len, rc->th4));
+
+	/*PRK_out*/
+	TRY(edhoc_kdf(rc->suite.edhoc_hash, rc->prk_4e3m, rc->prk_4e3m_len,
+		      PRK_out, rc->th4, rc->th4_len, prk_out_len, prk_out));
 	return ok;
 }
 
 enum err msg4_process(struct runtime_context *rc, uint8_t *ead_4,
-		      uint32_t *ead_4_len, uint8_t *prk_4x3m,
-		      uint32_t prk_4x3m_len, uint8_t *th4, uint32_t th4_len)
+		      uint32_t *ead_4_len)
 {
 	PRINT_ARRAY("message_4 (CBOR Sequence)", rc->msg4, rc->msg4_len);
 
@@ -293,10 +297,15 @@ enum err msg4_process(struct runtime_context *rc, uint8_t *ead_4,
 			       &ciphertext_4_len));
 	PRINT_ARRAY("ciphertext_4", ciphertext_4, ciphertext_4_len);
 
-	// TRY(ciphertext_decrypt_split(CIPHERTEXT4, &rc->suite, NULL, 0, NULL, 0,
-	// 			     ead_4, (uint32_t *)ead_4_len, prk_4x3m,
-	// 			     prk_4x3m_len, th4, th4_len, ciphertext_4,
-	// 			     ciphertext_4_len));
+	uint32_t plaintext4_len = ciphertext_4_len;
+	uint8_t plaintext4[PLAINTEXT_DEFAULT_SIZE];
+	TRY(check_buffer_size(PLAINTEXT_DEFAULT_SIZE, ciphertext_4_len));
+
+	TRY(ciphertext_decrypt_split(CIPHERTEXT4, &rc->suite, NULL, 0, NULL, 0,
+				     ead_4, (uint32_t *)ead_4_len, rc->prk_4e3m,
+				     rc->prk_4e3m_len, rc->th4, rc->th4_len,
+				     ciphertext_4, ciphertext_4_len, plaintext4,
+				     plaintext4_len));
 	return ok;
 }
 
@@ -305,8 +314,7 @@ enum err edhoc_initiator_run(
 	struct other_party_cred *cred_r_array, uint16_t num_cred_r,
 	uint8_t *err_msg, uint32_t *err_msg_len, uint8_t *ead_2,
 	uint32_t *ead_2_len, uint8_t *ead_4, uint32_t *ead_4_len,
-	uint8_t *prk_4x3m, uint32_t prk_4x3m_len, uint8_t *th4,
-	uint32_t th4_len,
+	uint8_t *prk_out, uint32_t prk_out_len,
 	enum err (*tx)(void *sock, uint8_t *data, uint32_t data_len),
 	enum err (*rx)(void *sock, uint8_t *data, uint32_t *data_len))
 {
@@ -319,14 +327,13 @@ enum err edhoc_initiator_run(
 	PRINT_MSG("waiting to receive message 2...\n");
 	TRY(rx(c->sock, rc.msg2, &rc.msg2_len));
 	TRY(msg3_gen(c, &rc, cred_r_array, num_cred_r, ead_2, ead_2_len,
-		     prk_4x3m, prk_4x3m_len, th4));
+		     prk_out, prk_out_len));
 	TRY(tx(c->sock, rc.msg3, rc.msg3_len));
 
 	if (c->msg4) {
 		PRINT_MSG("waiting to receive message 4...\n");
 		TRY(rx(c->sock, rc.msg4, &rc.msg4_len));
-		TRY(msg4_process(&rc, ead_4, ead_4_len, prk_4x3m, prk_4x3m_len,
-				 th4, th4_len));
+		TRY(msg4_process(&rc, ead_4, ead_4_len));
 	}
 	return ok;
 }
