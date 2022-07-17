@@ -231,6 +231,9 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 
 	/*calculate the DH shared secret*/
 	uint8_t g_xy[ECDH_SECRET_DEFAULT_SIZE];
+
+	PRINT_ARRAY("DH_PK", g_x, g_x_len);
+	PRINT_ARRAY("DH_SK", c->y.ptr, c->y.len);
 	TRY(shared_secret_derive(rc->suite.edhoc_ecdh, c->y.ptr, c->y.len, g_x,
 				 g_x_len, g_xy));
 

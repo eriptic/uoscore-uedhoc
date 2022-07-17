@@ -27,8 +27,8 @@ extern "C" {
 #include "cantcoap.h"
 
 #define USE_IPV4
-//#define TEST_SUITE2_METHOD3
-#define TEST_SUITE0_METHOD0
+#define TEST_SUITE2_METHOD3
+//#define TEST_SUITE0_METHOD0
 
 /*comment this out to use DH keys from the test vectors*/
 //#define USE_RANDOM_EPHEMERAL_DH_KEY

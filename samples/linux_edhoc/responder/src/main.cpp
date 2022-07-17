@@ -28,8 +28,8 @@ extern "C" {
 #include "cantcoap.h"
 
 #define USE_IPV4
-//#define TEST_SUITE2_METHOD3
-#define TEST_SUITE0_METHOD0
+#define TEST_SUITE2_METHOD3
+//#define TEST_SUITE0_METHOD0
 
 CoapPDU *txPDU = new CoapPDU();
 

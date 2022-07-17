@@ -9,7 +9,7 @@
 #ARCH = -m32
 
 # the library is compiled with the folowing optimization 
-OPT = -O3
+OPT = -O0
 
 # Uncomment this to print intermediery results at runtime
 DEBUG_PRINT += -DDEBUG_PRINT
