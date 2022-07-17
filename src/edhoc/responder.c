@@ -31,6 +31,7 @@
 #include "edhoc/suites.h"
 #include "edhoc/runtime_context.h"
 #include "edhoc/bstr_encode_decode.h"
+#include "edhoc/int_encode_decode.h"
 
 #include "cbor/edhoc_decode_message_1.h"
 #include "cbor/edhoc_encode_message_2.h"
@@ -96,8 +97,7 @@ static inline enum err msg1_parse(uint8_t *msg1, uint32_t msg1_len,
 
 	/*C_I*/
 	if (m._message_1_C_I_choice == _message_1_C_I_int) {
-		c_i[0] = (uint8_t)m._message_1_C_I_int + 59;
-		*c_i_len = 1;
+		TRY(encode_int(&m._message_1_C_I_int, 1, c_i, c_i_len));
 	} else {
 		TRY(_memcpy_s(c_i, *c_i_len, m._message_1_C_I_bstr.value,
 			      (uint32_t)m._message_1_C_I_bstr.len));
@@ -127,7 +127,9 @@ static inline bool selected_suite_is_supported(uint8_t selected,
 {
 	for (uint8_t i = 0; i < suites_r->len; i++) {
 		if (suites_r->ptr[i] == selected)
-			return true;
+			PRINTF("Suite %d will be used in this EDHOC run.\n",
+			       selected);
+		return true;
 	}
 	return false;
 }
@@ -169,23 +171,15 @@ static inline enum err msg2_encode(const uint8_t *g_y, uint32_t g_y_len,
 
 	/*Encode C_R*/
 	PRINT_ARRAY("C_R", c_r, c_r_len);
-	if (c_r_len == 1 && ((0x00 < c_r[0] && c_r[0] < 0x18) ||
-			     (0x1F < c_r[0] && c_r[0] < 0x37))) {
+	if (c_r_len == 1 && ((0x00 <= c_r[0] && c_r[0] < 0x18) ||
+			     (0x1F < c_r[0] && c_r[0] <= 0x37))) {
 		m._m2_C_R_choice = _m2_C_R_int;
-		m._m2_C_R_int = c_r[0] - 59;
+		TRY(decode_int(c_r, 1, &m._m2_C_R_int));
 	} else {
 		m._m2_C_R_choice = _m2_C_R_bstr;
 		m._m2_C_R_bstr.value = c_r;
 		m._m2_C_R_bstr.len = c_r_len;
 	}
-	// if (c_r->type == INT) {
-	// 	m._m2_C_R_choice = _m2_C_R_int;
-	// 	m._m2_C_R_int = c_r->mem.c_x_int;
-	// } else {
-	// 	m._m2_C_R_choice = _m2_C_R_bstr;
-	// 	m._m2_C_R_bstr.value = c_r->mem.c_x_bstr.ptr;
-	// 	m._m2_C_R_bstr.len = c_r->mem.c_x_bstr.len;
-	// }
 
 	TRY_EXPECT(cbor_encode_m2(msg2, *msg2_len, &m, &payload_len_out), true);
 	*msg2_len = (uint32_t)payload_len_out;

@@ -14,6 +14,7 @@
 #include "edhoc/c_x.h"
 #include "edhoc/th.h"
 #include "edhoc/bstr_encode_decode.h"
+#include "edhoc/int_encode_decode.h"
 
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"
@@ -52,18 +53,10 @@ static inline enum err th2_input_encode(uint8_t *hash_msg1,
 	th2._th2_G_Y.len = g_y_len;
 
 	/*Encode C_R as int or byte*/
-	// if (c_r->type == INT) {
-	// 	th2._th2_C_R_choice = _th2_C_R_int;
-	// 	th2._th2_C_R_int = c_r->mem.c_x_int;
-	// } else {
-	// 	th2._th2_C_R_choice = _th2_C_R_bstr;
-	// 	th2._th2_C_R_bstr.value = c_r->mem.c_x_bstr.ptr;
-	// 	th2._th2_C_R_bstr.len = c_r->mem.c_x_bstr.len;
-	// }
-	if (c_r_len == 1 && ((0x00 < c_r[0] && c_r[0] < 0x18) ||
-			     (0x1F < c_r[0] && c_r[0] < 0x37))) {
+	if (c_r_len == 1 && ((0x00 <= c_r[0] && c_r[0] < 0x18) ||
+			     (0x1F < c_r[0] && c_r[0] <= 0x37))) {
 		th2._th2_C_R_choice = _th2_C_R_int;
-		th2._th2_C_R_int = c_r[0] - 59;
+		TRY(decode_int(c_r, 1, &th2._th2_C_R_int));
 	} else {
 		th2._th2_C_R_choice = _th2_C_R_bstr;
 		th2._th2_C_R_bstr.value = c_r;

@@ -99,3 +99,7 @@ python3 $ZCBOR -c $MODELS_PATH/edhoc_primitive_types.cddl code -d -t bstr_type -
 
 #encode int
 python3 $ZCBOR -c $MODELS_PATH/edhoc_primitive_types.cddl code -e -t int_type --oc $SRC/edhoc_encode_int_type.c --include-prefix $INC_PATH_IN_C_FILES --oh $INC/edhoc_encode_int_type.h
+
+
+#decode int
+python3 $ZCBOR -c $MODELS_PATH/edhoc_primitive_types.cddl code -d -t int_type --oc $SRC/edhoc_decode_int_type.c --include-prefix $INC_PATH_IN_C_FILES --oh $INC/edhoc_decode_int_type.h

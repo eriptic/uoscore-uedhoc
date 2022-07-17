@@ -46,6 +46,7 @@ enum err {
 	no_such_ca = 117,
 
 	cbor_encoding_error = 119,
+	cbor_decoding_error = 120,
 	suites_i_list_to_long = 121,
 
 	/*OSCORE specific errors*/

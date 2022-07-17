@@ -31,6 +31,7 @@
 #include "edhoc/ciphertext.h"
 #include "edhoc/runtime_context.h"
 #include "edhoc/bstr_encode_decode.h"
+#include "edhoc/int_encode_decode.h"
 
 #include "cbor/edhoc_encode_message_1.h"
 #include "cbor/edhoc_decode_message_2.h"
@@ -64,8 +65,7 @@ static inline enum err msg2_parse(uint8_t *msg2, uint32_t msg2_len,
 	PRINT_ARRAY("ciphertext2", ciphertext2, *ciphertext2_len);
 
 	if (m._m2_C_R_choice == _m2_C_R_int) {
-		c_r[0] = (uint8_t)m._m2_C_R_int + 59;
-		*c_r_len = 1;
+		TRY(encode_int(&m._m2_C_R_int, 1, c_r, c_r_len));
 	} else {
 		TRY(_memcpy_s(c_r, *c_r_len, m._m2_C_R_bstr.value,
 			      (uint32_t)m._m2_C_R_bstr.len));
@@ -105,10 +105,10 @@ enum err msg1_gen(const struct edhoc_initiator_context *c,
 	/* C_I connection ID  of the initiator*/
 	PRINT_ARRAY("C_I", c->c_i.ptr, c->c_i.len);
 	if (c->c_i.len == 1 &&
-	    ((0x00 < c->c_i.ptr[0] && c->c_i.ptr[0] < 0x18) ||
-	     (0x1F < c->c_i.ptr[0] && c->c_i.ptr[0] < 0x37))) {
+	    ((0x00 <= c->c_i.ptr[0] && c->c_i.ptr[0] < 0x18) ||
+	     (0x1F < c->c_i.ptr[0] && c->c_i.ptr[0] <= 0x37))) {
 		m1._message_1_C_I_choice = _message_1_C_I_int;
-		m1._message_1_C_I_int = c->c_i.ptr[0] - 59;
+		TRY(decode_int(c->c_i.ptr, 1, &m1._message_1_C_I_int));
 	} else {
 		m1._message_1_C_I_choice = _message_1_C_I_bstr;
 		m1._message_1_C_I_bstr.value = c->c_i.ptr;
