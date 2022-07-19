@@ -21,14 +21,14 @@
 extern "C" {
 #include "edhoc.h"
 #include "sock.h"
-#include "edhoc_test_vectors_v14.h"
+#include "edhoc_test_vectors_ed25519_v14.h"
 #include "edhoc_test_vectors_p256_v14.h"
 }
 #include "cantcoap.h"
 
 #define USE_IPV4
-#define TEST_SUITE2_METHOD3
-//#define TEST_SUITE0_METHOD0
+//#define TEST_SUITE2_METHOD3
+#define TEST_SUITE0_METHOD0
 
 /*comment this out to use DH keys from the test vectors*/
 //#define USE_RANDOM_EPHEMERAL_DH_KEY

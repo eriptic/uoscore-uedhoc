@@ -20,7 +20,10 @@
  * @brief   derives a pseudo random key (prk) form anther prk and static DH 
  *          keys.
  * @parma   static_dh_auth true if static DH keys should be used
- * @param   suite the ciphersuite used
+ * @param   suite the cipher suite used
+ * @param   label EDHOC-KDF label 
+ * @param   context EDHOC-KDF context
+ * @param   context_len length of context
  * @param   prk_in input prk
  * @param   prk_in_len length of prk_in
  * @param   stat_pk static public DH key 
@@ -29,10 +32,11 @@
  * @param   stat_sk_len length of stat_sk
  * @param   prk_out pointer to the buffer for the newly created PRK
  */
-enum err prk_derive(bool static_dh_auth, struct suite suite,
-		      const uint8_t *prk_in, const uint32_t prk_in_len,
-		      const uint8_t *stat_pk, const uint32_t stat_pk_len,
-		      const uint8_t *stat_sk, const uint32_t stat_sk_len,
-		      uint8_t *prk_out);
+enum err prk_derive(bool static_dh_auth, struct suite suite, uint8_t label,
+		    uint8_t *context, uint32_t context_len,
+		    const uint8_t *prk_in, const uint32_t prk_in_len,
+		    const uint8_t *stat_pk, const uint32_t stat_pk_len,
+		    const uint8_t *stat_sk, const uint32_t stat_sk_len,
+		    uint8_t *prk_out);
 
 #endif

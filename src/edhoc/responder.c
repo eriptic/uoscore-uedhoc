@@ -225,15 +225,13 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 
 	/******************* create and send message 2*************************/
 	uint8_t th2[SHA_DEFAULT_SIZE];
-	uint32_t th2_len = sizeof(th2);
+	uint32_t th2_len = get_hash_len(rc->suite.edhoc_hash);
+	TRY(check_buffer_size(SHA_DEFAULT_SIZE, th2_len));
 	TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1, rc->msg1_len,
 			  c->g_y.ptr, c->g_y.len, c->c_r.ptr, c->c_r.len, th2));
 
 	/*calculate the DH shared secret*/
 	uint8_t g_xy[ECDH_SECRET_DEFAULT_SIZE];
-
-	PRINT_ARRAY("DH_PK", g_x, g_x_len);
-	PRINT_ARRAY("DH_SK", c->y.ptr, c->y.len);
 	TRY(shared_secret_derive(rc->suite.edhoc_ecdh, c->y.ptr, c->y.len, g_x,
 				 g_x_len, g_xy));
 
@@ -245,8 +243,9 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	PRINT_ARRAY("PRK_2e", PRK_2e, sizeof(PRK_2e));
 
 	/*derive prk_3e2m*/
-	TRY(prk_derive(static_dh_r, rc->suite, PRK_2e, sizeof(PRK_2e), g_x,
-		       g_x_len, c->r.ptr, c->r.len, rc->prk_3e2m));
+	TRY(prk_derive(static_dh_r, rc->suite, SALT_3e2m, th2, th2_len, PRK_2e,
+		       sizeof(PRK_2e), g_x, g_x_len, c->r.ptr, c->r.len,
+		       rc->prk_3e2m));
 	PRINT_ARRAY("prk_3e2m", rc->prk_3e2m, rc->prk_3e2m_len);
 
 	/*compute signature_or_MAC_2*/
@@ -336,9 +335,9 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	PRINT_ARRAY("g_i", g_i, g_i_len);
 
 	/*derive prk_4e3m*/
-	TRY(prk_derive(rc->static_dh_i, rc->suite, rc->prk_3e2m,
-		       rc->prk_3e2m_len, g_i, g_i_len, c->y.ptr, c->y.len,
-		       rc->prk_4e3m));
+	TRY(prk_derive(rc->static_dh_i, rc->suite, SALT_4e3m, rc->th3,
+		       rc->th3_len, rc->prk_3e2m, rc->prk_3e2m_len, g_i,
+		       g_i_len, c->y.ptr, c->y.len, rc->prk_4e3m));
 	PRINT_ARRAY("prk_4e3m", rc->prk_4e3m, rc->prk_4e3m_len);
 
 	TRY(signature_or_mac(VERIFY, rc->static_dh_i, &rc->suite, NULL, 0, pk,

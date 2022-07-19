@@ -182,9 +182,12 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 
 	/*calculate th2*/
 	uint8_t th2[SHA_DEFAULT_SIZE];
+	uint32_t th2_len = get_hash_len(rc->suite.edhoc_hash);
+	TRY(check_buffer_size(SHA_DEFAULT_SIZE, th2_len));
+
 	TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1, rc->msg1_len, g_y,
 			  g_y_len, c_r, c_r_len, th2));
-	PRINT_ARRAY("TH_2", th2, sizeof(th2));
+	PRINT_ARRAY("TH_2", th2, th2_len);
 
 	/*calculate PRK_2e*/
 	uint8_t PRK_2e[PRK_DEFAULT_SIZE];
@@ -205,7 +208,7 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	TRY(ciphertext_decrypt_split(
 		CIPHERTEXT2, &rc->suite, id_cred_r, &id_cred_r_len, sign_or_mac,
 		&sign_or_mac_len, ead_2, (uint32_t *)ead_2_len, PRK_2e,
-		sizeof(PRK_2e), th2, sizeof(th2), ciphertext2, ciphertext2_len,
+		sizeof(PRK_2e), th2, th2_len, ciphertext2, ciphertext2_len,
 		plaintext2, plaintext2_len));
 
 	/*check the authenticity of the responder*/
@@ -225,25 +228,28 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 
 	/*derive prk_3e2m*/
 	uint8_t PRK_3e2m[PRK_DEFAULT_SIZE];
-	TRY(prk_derive(static_dh_r, rc->suite, PRK_2e, sizeof(PRK_2e), g_r,
-		       g_r_len, c->x.ptr, c->x.len, PRK_3e2m));
+	TRY(prk_derive(static_dh_r, rc->suite, SALT_3e2m, th2, th2_len, PRK_2e,
+		       sizeof(PRK_2e), g_r, g_r_len, c->x.ptr, c->x.len,
+		       PRK_3e2m));
 	PRINT_ARRAY("prk_3e2m", PRK_3e2m, sizeof(PRK_3e2m));
 	//todo why static_dh_r?
 	TRY(signature_or_mac(VERIFY, static_dh_r, &rc->suite, NULL, 0, pk,
-			     pk_len, PRK_3e2m, sizeof(PRK_3e2m), th2,
-			     sizeof(th2), id_cred_r, id_cred_r_len, cred_r,
-			     cred_r_len, ead_2, *(uint32_t *)ead_2_len, MAC_2,
-			     sign_or_mac, &sign_or_mac_len));
+			     pk_len, PRK_3e2m, sizeof(PRK_3e2m), th2, th2_len,
+			     id_cred_r, id_cred_r_len, cred_r, cred_r_len,
+			     ead_2, *(uint32_t *)ead_2_len, MAC_2, sign_or_mac,
+			     &sign_or_mac_len));
 
 	/********msg3 create and send**************************************/
 	uint8_t th3[SHA_DEFAULT_SIZE];
-	TRY(th3_calculate(rc->suite.edhoc_hash, (uint8_t *)&th2, sizeof(th2),
+	uint32_t th3_len = get_hash_len(rc->suite.edhoc_hash);
+	TRY(check_buffer_size(SHA_DEFAULT_SIZE, th3_len));
+	TRY(th3_calculate(rc->suite.edhoc_hash, (uint8_t *)&th2, th2_len,
 			  plaintext2, plaintext2_len, th3));
 
 	/*derive prk_4e3m*/
-	TRY(prk_derive(static_dh_i, rc->suite, (uint8_t *)&PRK_3e2m,
-		       sizeof(PRK_3e2m), g_y, g_y_len, c->i.ptr, c->i.len,
-		       rc->prk_4e3m));
+	TRY(prk_derive(static_dh_i, rc->suite, SALT_4e3m, th3, th3_len,
+		       (uint8_t *)&PRK_3e2m, sizeof(PRK_3e2m), g_y, g_y_len,
+		       c->i.ptr, c->i.len, rc->prk_4e3m));
 	PRINT_ARRAY("prk_4e3m", rc->prk_4e3m, rc->prk_4e3m_len);
 
 	/*calculate Signature_or_MAC_3*/
@@ -252,7 +258,7 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 
 	TRY(signature_or_mac(GENERATE, static_dh_i, &rc->suite, c->sk_i.ptr,
 			     c->sk_i.len, c->pk_i.ptr, c->pk_i.len,
-			     rc->prk_4e3m, rc->prk_4e3m_len, th3, sizeof(th3),
+			     rc->prk_4e3m, rc->prk_4e3m_len, th3, th3_len,
 			     c->id_cred_i.ptr, c->id_cred_i.len, c->cred_i.ptr,
 			     c->cred_i.len, c->ead_3.ptr, c->ead_3.len, MAC_3,
 			     sign_or_mac_3, &sign_or_mac_3_len));
@@ -265,7 +271,7 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	TRY(ciphertext_gen(CIPHERTEXT3, &rc->suite, c->id_cred_i.ptr,
 			   c->id_cred_i.len, sign_or_mac_3, sign_or_mac_3_len,
 			   c->ead_3.ptr, c->ead_3.len, PRK_3e2m,
-			   sizeof(PRK_3e2m), th3, sizeof(th3), ciphertext_3,
+			   sizeof(PRK_3e2m), th3, th3_len, ciphertext_3,
 			   &ciphertext_3_len, plaintext_3, &plaintext_3_len));
 
 	/*massage 3 create and send*/
@@ -277,7 +283,7 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	PRINT_ARRAY("msg3", rc->msg3, rc->msg3_len);
 
 	/*TH4*/
-	TRY(th4_calculate(rc->suite.edhoc_hash, th3, sizeof(th3), plaintext_3,
+	TRY(th4_calculate(rc->suite.edhoc_hash, th3, th3_len, plaintext_3,
 			  plaintext_3_len, rc->th4));
 
 	/*PRK_out*/

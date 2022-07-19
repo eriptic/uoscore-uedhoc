@@ -39,16 +39,9 @@ enum err mac(const uint8_t *prk, uint32_t prk_len, const uint8_t *th,
 	uint8_t th_encoded[SHA_DEFAULT_SIZE + 2];
 	TRY(encode_byte_string(th, th_len, th_encoded, &th_encoded_len));
 
-	/*encode cred_r as bstr*/
-	uint32_t cred_encoded_len = cred_len + 2;
-	TRY(check_buffer_size(CERT_DEFAULT_SIZE + 2, cred_encoded_len));
-	uint8_t cred_encoded[CERT_DEFAULT_SIZE];
-	TRY(encode_byte_string(cred, cred_len, cred_encoded,
-			       &cred_encoded_len));
-
 	/**/
 	uint32_t context_mac_len =
-		id_cred_len + cred_encoded_len + ead_len + th_encoded_len;
+		id_cred_len + cred_len + ead_len + th_encoded_len;
 	TRY(check_buffer_size(CONTEXT_MAC_DEFAULT_SIZE, context_mac_len));
 	uint8_t context_mac[CONTEXT_MAC_DEFAULT_SIZE];
 	TRY(_memcpy_s(context_mac, context_mac_len, id_cred, id_cred_len));
@@ -58,13 +51,12 @@ enum err mac(const uint8_t *prk, uint32_t prk_len, const uint8_t *th,
 		      th_encoded_len));
 
 	TRY(_memcpy_s((context_mac + id_cred_len + th_encoded_len),
-		      (context_mac_len - id_cred_len - th_encoded_len),
-		      cred_encoded, cred_encoded_len));
+		      (context_mac_len - id_cred_len - th_encoded_len), cred,
+		      cred_len));
 
 	TRY(_memcpy_s(
-		(context_mac + id_cred_len + th_encoded_len + cred_encoded_len),
-		(context_mac_len - id_cred_len - th_encoded_len -
-		 cred_encoded_len),
+		(context_mac + id_cred_len + th_encoded_len + cred_len),
+		(context_mac_len - id_cred_len - th_encoded_len - cred_len),
 		ead, ead_len));
 
 	PRINT_ARRAY("MAC context", context_mac, context_mac_len);
@@ -93,13 +85,10 @@ static enum err signature_struct_gen(const uint8_t *th, uint32_t th_len,
 {
 	uint8_t th_enc[SHA_DEFAULT_SIZE + 2];
 	uint32_t th_enc_len = sizeof(th_enc);
-	uint8_t cred_enc[CRED_DEFAULT_SIZE + 2];
-	uint32_t cred_enc_len = sizeof(cred_enc);
 
 	TRY(encode_byte_string(th, th_len, th_enc, &th_enc_len));
-	TRY(encode_byte_string(cred, cred_len, cred_enc, &cred_enc_len));
 
-	uint32_t tmp_len = th_enc_len + cred_enc_len + ead_len;
+	uint32_t tmp_len = th_enc_len + cred_len + ead_len;
 
 	TRY(check_buffer_size(CRED_DEFAULT_SIZE + SHA_DEFAULT_SIZE +
 				      AD_DEFAULT_SIZE,
@@ -107,9 +96,9 @@ static enum err signature_struct_gen(const uint8_t *th, uint32_t th_len,
 	uint8_t tmp[CRED_DEFAULT_SIZE + SHA_DEFAULT_SIZE + AD_DEFAULT_SIZE];
 
 	memcpy(tmp, th_enc, th_enc_len);
-	memcpy(tmp + th_enc_len, cred_enc, cred_enc_len);
+	memcpy(tmp + th_enc_len, cred, cred_len);
 	if (ead_len != 0) {
-		memcpy(tmp + th_enc_len + cred_enc_len, ead, ead_len);
+		memcpy(tmp + th_enc_len + cred_len, ead, ead_len);
 	}
 
 	uint8_t context_str[] = { "Signature1" };

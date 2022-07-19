@@ -105,14 +105,8 @@ static inline int mbedtls_ecp_decompress(const mbedtls_ecp_group *grp,
 	if (osize < *olen)
 		return (MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL);
 
-	if (ilen != plen + 1)
-		return (MBEDTLS_ERR_ECP_BAD_INPUT_DATA);
-
-	if (input[0] != 0x02 && input[0] != 0x03)
-		return (MBEDTLS_ERR_ECP_BAD_INPUT_DATA);
-
 	// output will consist of 0x04|X|Y
-	memcpy(output, input, ilen);
+	memcpy(output + 1, input, ilen);
 	output[0] = 0x04;
 
 	mbedtls_mpi_init(&r);
@@ -120,7 +114,7 @@ static inline int mbedtls_ecp_decompress(const mbedtls_ecp_group *grp,
 	mbedtls_mpi_init(&n);
 
 	// x <= input
-	MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&x, input + 1, plen));
+	MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&x, input, plen));
 
 	// r = x^2
 	MBEDTLS_MPI_CHK(mbedtls_mpi_mul_mpi(&r, &x, &x));
@@ -545,7 +539,6 @@ shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 			PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(type, bits);
 
 		size_t shared_secret_len = 0;
-		PRINT_ARRAY("pk", pk, pk_len);
 
 		size_t pk_decompressed_len;
 		uint8_t pk_decompressed[P_256_PUB_KEY_UNCOMPRESSED_SIZE];
