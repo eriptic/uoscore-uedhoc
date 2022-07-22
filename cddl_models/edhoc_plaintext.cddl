@@ -13,7 +13,7 @@ plaintext = ( ID_CRED_x: map / bstr / int, SGN_or_MAC_x: bstr, ? AD_x: bstr)
 
 ;currently x5bag and x5u are not supported
 map = {
-	? kid: 4 =>  int, 
+	? kid: 4 =>  int / bstr, 
 	
 	? x5bag: 32 => bstr,
 	? x5chain: 33 => bstr,
@@ -29,7 +29,7 @@ map = {
 ;map and id_cred_x_map are identical. 
 ;We just need different names to resolve inclusion conflicts
 id_cred_x_map = {
-	? kid: 4 =>  int, 
+	? kid: 4 =>  int / bstr, 
 ;-------------------------------------------------------------------------------
 	? x5bag: 32 => bstr, ; unordered set of x509 certificates
 	? x5chain: 33 => bstr, ; chain of x509 certificates 

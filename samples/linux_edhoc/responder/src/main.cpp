@@ -24,12 +24,13 @@ extern "C" {
 #include "sock.h"
 #include "edhoc_test_vectors_ed25519_v14.h"
 #include "edhoc_test_vectors_p256_v14.h"
+#include "edhoc_test_vectors_p256_v15.h"
 }
 #include "cantcoap.h"
 
 #define USE_IPV4
 //#define TEST_SUITE2_METHOD3
-#define TEST_SUITE0_METHOD0
+//#define TEST_SUITE0_METHOD0
 
 CoapPDU *txPDU = new CoapPDU();
 
@@ -177,12 +178,12 @@ int main()
 	uint32_t ad_3_len = sizeof(ad_1);
 
 	/* test vector inputs */
-	// const uint8_t TEST_VEC_NUM = 1;
 	uint16_t cred_num = 1;
 	struct other_party_cred cred_i;
 	struct edhoc_responder_context c_r;
 
-	// uint8_t vec_num_i = TEST_VEC_NUM - 1;
+	uint8_t TEST_VEC_NUM = 2;
+	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY
 	uint32_t seed;
@@ -273,38 +274,45 @@ int main()
 	cred_i.g.len = sizeof(T2_G_I);
 	cred_i.g.ptr = T2_G_I;
 #endif
-	// if (test_vectors[vec_num_i].c_r_raw != NULL) {
-	// 	c_r.c_r.type = BSTR;
-	// 	c_r.c_r.mem.c_x_bstr.len = test_vectors[vec_num_i].c_r_raw_len;
-	// 	c_r.c_r.mem.c_x_bstr.ptr =
-	// 		(uint8_t *)test_vectors[vec_num_i].c_r_raw;
-	// } else {
-	// 	c_r.c_r.type = INT;
-	// 	c_r.c_r.mem.c_x_int = *test_vectors[vec_num_i].c_r_raw_int;
-	// }
-	// c_r.msg4 = true; /*we allways test message 4 */
-	// c_r.suites_r.len = test_vectors[vec_num_i].suites_r_len;
-	// c_r.suites_r.ptr = (uint8_t *)test_vectors[vec_num_i].suites_r;
-	// c_r.ead_2.len = test_vectors[vec_num_i].ead_2_len;
-	// c_r.ead_2.ptr = (uint8_t *)test_vectors[vec_num_i].ead_2;
-	// c_r.ead_4.len = test_vectors[vec_num_i].ead_4_len;
-	// c_r.ead_4.ptr = (uint8_t *)test_vectors[vec_num_i].ead_4;
-	// c_r.id_cred_r.len = test_vectors[vec_num_i].id_cred_r_len;
-	// c_r.id_cred_r.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_r;
-	// c_r.cred_r.len = test_vectors[vec_num_i].cred_r_len;
-	// c_r.cred_r.ptr = (uint8_t *)test_vectors[vec_num_i].cred_r;
-	// c_r.g_y.len = test_vectors[vec_num_i].g_y_raw_len;
-	// c_r.g_y.ptr = (uint8_t *)test_vectors[vec_num_i].g_y_raw;
-	// c_r.y.len = test_vectors[vec_num_i].y_raw_len;
-	// c_r.y.ptr = (uint8_t *)test_vectors[vec_num_i].y_raw;
-	// c_r.g_r.len = test_vectors[vec_num_i].g_r_raw_len;
-	// c_r.g_r.ptr = (uint8_t *)test_vectors[vec_num_i].g_r_raw;
-	// c_r.r.len = test_vectors[vec_num_i].r_raw_len;
-	// c_r.r.ptr = (uint8_t *)test_vectors[vec_num_i].r_raw;
-	// c_r.sk_r.len = test_vectors[vec_num_i].sk_r_raw_len;
-	// c_r.sk_r.ptr = (uint8_t *)test_vectors[vec_num_i].sk_r_raw;
-	// c_r.pk_r.len = test_vectors[vec_num_i].pk_r_raw_len;
-	// c_r.pk_r.ptr = (uint8_t *)test_vectors[vec_num_i].pk_r_raw;
+	cred_i.id_cred.len = test_vectors[vec_num_i].id_cred_i_len;
+	cred_i.id_cred.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_i;
+	cred_i.cred.len = test_vectors[vec_num_i].cred_i_len;
+	cred_i.cred.ptr = (uint8_t *)test_vectors[vec_num_i].cred_i;
+	cred_i.g.len = test_vectors[vec_num_i].g_i_raw_len;
+	cred_i.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_i_raw;
+	cred_i.pk.len = test_vectors[vec_num_i].pk_i_raw_len;
+	cred_i.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
+	cred_i.ca.len = test_vectors[vec_num_i].ca_len;
+	cred_i.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
+	cred_i.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
+	cred_i.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
+
+	c_r.msg4 = true; /*we always test message 4 */
+	c_r.c_r.ptr = (uint8_t *)test_vectors[vec_num_i].c_r;
+	c_r.c_r.len = test_vectors[vec_num_i].c_r_len;
+
+	c_r.suites_r.len = test_vectors[vec_num_i].SUITES_R_len;
+	c_r.suites_r.ptr = (uint8_t *)test_vectors[vec_num_i].SUITES_R;
+	c_r.ead_2.len = test_vectors[vec_num_i].ead_2_len;
+	c_r.ead_2.ptr = (uint8_t *)test_vectors[vec_num_i].ead_2;
+	c_r.ead_4.len = test_vectors[vec_num_i].ead_4_len;
+	c_r.ead_4.ptr = (uint8_t *)test_vectors[vec_num_i].ead_4;
+	c_r.id_cred_r.len = test_vectors[vec_num_i].id_cred_r_len;
+	c_r.id_cred_r.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_r;
+	c_r.cred_r.len = test_vectors[vec_num_i].cred_r_len;
+	c_r.cred_r.ptr = (uint8_t *)test_vectors[vec_num_i].cred_r;
+	c_r.g_y.len = test_vectors[vec_num_i].g_y_raw_len;
+	c_r.g_y.ptr = (uint8_t *)test_vectors[vec_num_i].g_y_raw;
+	c_r.y.len = test_vectors[vec_num_i].y_raw_len;
+	c_r.y.ptr = (uint8_t *)test_vectors[vec_num_i].y_raw;
+	c_r.g_r.len = test_vectors[vec_num_i].g_r_raw_len;
+	c_r.g_r.ptr = (uint8_t *)test_vectors[vec_num_i].g_r_raw;
+	c_r.r.len = test_vectors[vec_num_i].r_raw_len;
+	c_r.r.ptr = (uint8_t *)test_vectors[vec_num_i].r_raw;
+	c_r.sk_r.len = test_vectors[vec_num_i].sk_r_raw_len;
+	c_r.sk_r.ptr = (uint8_t *)test_vectors[vec_num_i].sk_r_raw;
+	c_r.pk_r.len = test_vectors[vec_num_i].pk_r_raw_len;
+	c_r.pk_r.ptr = (uint8_t *)test_vectors[vec_num_i].pk_r_raw;
 
 	while (1) {
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY

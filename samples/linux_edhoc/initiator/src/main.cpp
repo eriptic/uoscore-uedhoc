@@ -23,12 +23,13 @@ extern "C" {
 #include "sock.h"
 #include "edhoc_test_vectors_ed25519_v14.h"
 #include "edhoc_test_vectors_p256_v14.h"
+#include "edhoc_test_vectors_p256_v15.h"
 }
 #include "cantcoap.h"
 
 #define USE_IPV4
 //#define TEST_SUITE2_METHOD3
-#define TEST_SUITE0_METHOD0
+//#define TEST_SUITE0_METHOD0
 
 /*comment this out to use DH keys from the test vectors*/
 //#define USE_RANDOM_EPHEMERAL_DH_KEY
@@ -236,61 +237,48 @@ int main()
 	cred_r.g.len = sizeof(T2_G_R);
 	cred_r.g.ptr = T2_G_R;
 #endif
-	// cred_r.g.len = test_vectors[vec_num_i].g_r_raw_len;
-	// cred_r.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_r_raw;
-	// cred_r.ca.len = test_vectors[vec_num_i].ca_len;
-	// cred_r.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
-	// cred_r.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
-	// cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
+	uint8_t TEST_VEC_NUM = 2;
+	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
-	// uint8_t vec_num_i = TEST_VEC_NUM - 1;
+	c_i.msg4 = true;
+	c_i.c_i.len = test_vectors[vec_num_i].c_i_len;
+	c_i.c_i.ptr = (uint8_t *)test_vectors[vec_num_i].c_i;
+	c_i.method = (enum method_type) * test_vectors[vec_num_i].method;
+	c_i.suites_i.len = test_vectors[vec_num_i].SUITES_I_len;
+	c_i.suites_i.ptr = (uint8_t *)test_vectors[vec_num_i].SUITES_I;
+	c_i.ead_1.len = test_vectors[vec_num_i].ead_1_len;
+	c_i.ead_1.ptr = (uint8_t *)test_vectors[vec_num_i].ead_1;
+	c_i.ead_3.len = test_vectors[vec_num_i].ead_3_len;
+	c_i.ead_3.ptr = (uint8_t *)test_vectors[vec_num_i].ead_3;
+	c_i.id_cred_i.len = test_vectors[vec_num_i].id_cred_i_len;
+	c_i.id_cred_i.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_i;
+	c_i.cred_i.len = test_vectors[vec_num_i].cred_i_len;
+	c_i.cred_i.ptr = (uint8_t *)test_vectors[vec_num_i].cred_i;
+	c_i.g_x.len = test_vectors[vec_num_i].g_x_raw_len;
+	c_i.g_x.ptr = (uint8_t *)test_vectors[vec_num_i].g_x_raw;
+	c_i.x.len = test_vectors[vec_num_i].x_raw_len;
+	c_i.x.ptr = (uint8_t *)test_vectors[vec_num_i].x_raw;
+	c_i.g_i.len = test_vectors[vec_num_i].g_i_raw_len;
+	c_i.g_i.ptr = (uint8_t *)test_vectors[vec_num_i].g_i_raw;
+	c_i.i.len = test_vectors[vec_num_i].i_raw_len;
+	c_i.i.ptr = (uint8_t *)test_vectors[vec_num_i].i_raw;
+	c_i.sk_i.len = test_vectors[vec_num_i].sk_i_raw_len;
+	c_i.sk_i.ptr = (uint8_t *)test_vectors[vec_num_i].sk_i_raw;
+	c_i.pk_i.len = test_vectors[vec_num_i].pk_i_raw_len;
+	c_i.pk_i.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
 
-	// if (test_vectors[vec_num_i].c_i_raw != NULL) {
-	// 	c_i.c_i.type = BSTR;
-	// 	c_i.c_i.mem.c_x_bstr.len = test_vectors[vec_num_i].c_i_raw_len;
-	// 	c_i.c_i.mem.c_x_bstr.ptr =
-	// 		(uint8_t *)test_vectors[vec_num_i].c_i_raw;
-	// } else {
-	// 	c_i.c_i.type = INT;
-	// 	c_i.c_i.mem.c_x_int = *test_vectors[vec_num_i].c_i_raw_int;
-	// }
-	// c_i.msg4 = true;
-	// c_i.method = (enum method_type) * test_vectors[vec_num_i].method;
-	// c_i.suites_i.len = test_vectors[vec_num_i].suites_i_len;
-	// c_i.suites_i.ptr = (uint8_t *)test_vectors[vec_num_i].suites_i;
-	// c_i.ead_1.len = test_vectors[vec_num_i].ead_1_len;
-	// c_i.ead_1.ptr = (uint8_t *)test_vectors[vec_num_i].ead_1;
-	// c_i.ead_3.len = test_vectors[vec_num_i].ead_3_len;
-	// c_i.ead_3.ptr = (uint8_t *)test_vectors[vec_num_i].ead_3;
-	// c_i.id_cred_i.len = test_vectors[vec_num_i].id_cred_i_len;
-	// c_i.id_cred_i.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_i;
-	// c_i.cred_i.len = test_vectors[vec_num_i].cred_i_len;
-	// c_i.cred_i.ptr = (uint8_t *)test_vectors[vec_num_i].cred_i;
-	// c_i.g_x.len = test_vectors[vec_num_i].g_x_raw_len;
-	// c_i.g_x.ptr = (uint8_t *)test_vectors[vec_num_i].g_x_raw;
-	// c_i.x.len = test_vectors[vec_num_i].x_raw_len;
-	// c_i.x.ptr = (uint8_t *)test_vectors[vec_num_i].x_raw;
-	// c_i.g_i.len = test_vectors[vec_num_i].g_i_raw_len;
-	// c_i.g_i.ptr = (uint8_t *)test_vectors[vec_num_i].g_i_raw;
-	// c_i.i.len = test_vectors[vec_num_i].i_raw_len;
-	// c_i.i.ptr = (uint8_t *)test_vectors[vec_num_i].i_raw;
-	// c_i.sk_i.len = test_vectors[vec_num_i].sk_i_raw_len;
-	// c_i.sk_i.ptr = (uint8_t *)test_vectors[vec_num_i].sk_i_raw;
-	// c_i.pk_i.len = test_vectors[vec_num_i].pk_i_raw_len;
-	// c_i.pk_i.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
-
-	// cred_r.id_cred.len = test_vectors[vec_num_i].id_cred_r_len;
-	// cred_r.id_cred.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_r;
-	// cred_r.cred.len = test_vectors[vec_num_i].cred_r_len;
-	// cred_r.cred.ptr = (uint8_t *)test_vectors[vec_num_i].cred_r;
-	// cred_r.g.len = test_vectors[vec_num_i].g_r_raw_len;
-	// cred_r.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_r_raw;
-	// cred_r.pk.len = test_vectors[vec_num_i].pk_r_raw_len;
-	// cred_r.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_r_raw;
-	// cred_r.ca.len = test_vectors[vec_num_i].ca_len;
-	// cred_r.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
-	// cred_r.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
-	// cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
+	cred_r.id_cred.len = test_vectors[vec_num_i].id_cred_r_len;
+	cred_r.id_cred.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_r;
+	cred_r.cred.len = test_vectors[vec_num_i].cred_r_len;
+	cred_r.cred.ptr = (uint8_t *)test_vectors[vec_num_i].cred_r;
+	cred_r.g.len = test_vectors[vec_num_i].g_r_raw_len;
+	cred_r.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_r_raw;
+	cred_r.pk.len = test_vectors[vec_num_i].pk_r_raw_len;
+	cred_r.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_r_raw;
+	cred_r.ca.len = test_vectors[vec_num_i].ca_len;
+	cred_r.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
+	cred_r.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
+	cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
 
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY
 	uint32_t seed;

@@ -36,32 +36,12 @@ enum err id_cred2kid(const uint8_t *id_cred, uint32_t id_cred_len,
 		   true);
 
 	if (map._id_cred_x_map_kid_present != 0) {
-		// if (map._id_cred_x_map_kid._id_cred_x_map_kid.len == 1) {
-		// 	int32_t i =
-		// 		*map._id_cred_x_map_kid._id_cred_x_map_kid.value;
-		// 	ok = cbor_encode_int_type_i(_kid, *kid_len, &i,
-		// 				    &payload_len_out);
-		// 	if (!ok) {
-		// 		return cbor_encoding_error;
-		// 	}
-		// 	*kid_len = payload_len_out;
-		// } else {
-		// 	r = _memcpy_s(
-		// 		_kid, *kid_len,
-		// 		map._id_cred_x_map_kid._id_cred_x_map_kid.value,
-		// 		map._id_cred_x_map_kid._id_cred_x_map_kid.len);
-		// 	if (r != ok) {
-		// 		return r;
-		// 	}
-		// 	*kid_len =
-		// 		map._id_cred_x_map_kid._id_cred_x_map_kid.len;
-		// }
-		//*_kid = map._id_cred_x_map_kid._id_cred_x_map_kid;
-		TRY_EXPECT(cbor_encode_int_type_i(
-				   _kid, *kid_len,
-				   &map._id_cred_x_map_kid._id_cred_x_map_kid,
-				   &payload_len_out),
-			   true);
+		TRY_EXPECT(
+			cbor_encode_int_type_i(
+				_kid, *kid_len,
+				&map._id_cred_x_map_kid._id_cred_x_map_kid_int,
+				&payload_len_out),
+			true);
 		*kid_len = (uint32_t)payload_len_out;
 	} else {
 		*kid_len = 0;
