@@ -153,94 +153,11 @@ int main()
 	struct other_party_cred cred_r;
 	struct edhoc_initiator_context c_i;
 
-	c_i.msg4 = true;
-	c_i.sock = &sockfd;
-
-/*EDDSA with signatures and X509 cert*/
-#ifdef TEST_SUITE0_METHOD0
-	c_i.method = T1_METHOD;
-
-	c_i.suites_i.ptr = T1_SUITE_I;
-	c_i.suites_i.len = sizeof(T1_SUITE_I);
-
-	c_i.g_x.ptr = T1_G_X;
-	c_i.g_x.len = sizeof(T1_G_X);
-
-	c_i.x.ptr = T1_X;
-	c_i.x.len = sizeof(T1_X);
-
-	c_i.c_i.ptr = T1_C_I;
-	c_i.c_i.len = sizeof(T1_C_I);
-
-	c_i.id_cred_i.ptr = T1_ID_CRED_I;
-	c_i.id_cred_i.len = sizeof(T1_ID_CRED_I);
-
-	c_i.cred_i.ptr = T1_CRED_I;
-	c_i.cred_i.len = sizeof(T1_CRED_I);
-
-	c_i.ead_1.ptr = T1_EAD_1;
-	c_i.ead_1.len = sizeof(T1_EAD_1);
-
-	c_i.ead_3.ptr = T1_EAD_3;
-	c_i.ead_3.len = sizeof(T1_EAD_3);
-
-	c_i.sk_i.ptr = T1_SK_I;
-	c_i.sk_i.len = sizeof(T1_SK_I);
-
-	c_i.pk_i.ptr = T1_PK_I;
-	c_i.pk_i.len = sizeof(T1_PK_I);
-
-	cred_r.id_cred.len = sizeof(T1_ID_CRED_R);
-	cred_r.id_cred.ptr = T1_ID_CRED_R;
-	cred_r.cred.len = sizeof(T1_CRED_R);
-	cred_r.cred.ptr = T1_CRED_R;
-	cred_r.pk.len = sizeof(T1_PK_R);
-	cred_r.pk.ptr = T1_PK_R;
-#endif
-#ifdef TEST_SUITE2_METHOD3
-	c_i.method = T2_METHOD;
-
-	c_i.suites_i.ptr = T2_SUITE_I;
-	c_i.suites_i.len = sizeof(T2_SUITE_I);
-
-	c_i.g_x.ptr = T2_G_X;
-	c_i.g_x.len = sizeof(T2_G_X);
-
-	c_i.x.ptr = T2_X;
-	c_i.x.len = sizeof(T2_X);
-
-	c_i.c_i.ptr = T2_C_I;
-	c_i.c_i.len = sizeof(T2_C_I);
-
-	c_i.id_cred_i.ptr = T2_ID_CRED_I;
-	c_i.id_cred_i.len = sizeof(T2_ID_CRED_I);
-
-	c_i.cred_i.ptr = T2_CRED_I;
-	c_i.cred_i.len = sizeof(T2_CRED_I);
-
-	c_i.ead_1.ptr = T2_EAD_1;
-	c_i.ead_1.len = sizeof(T2_EAD_1);
-
-	c_i.ead_3.ptr = T2_EAD_3;
-	c_i.ead_3.len = sizeof(T2_EAD_3);
-
-	c_i.i.ptr = T2_I;
-	c_i.i.len = sizeof(T2_I);
-
-	c_i.g_i.ptr = T2_G_I;
-	c_i.g_i.len = sizeof(T2_G_I);
-
-	cred_r.id_cred.len = sizeof(T2_ID_CRED_R);
-	cred_r.id_cred.ptr = T2_ID_CRED_R;
-	cred_r.cred.len = sizeof(T2_CRED_R);
-	cred_r.cred.ptr = T2_CRED_R;
-	cred_r.g.len = sizeof(T2_G_R);
-	cred_r.g.ptr = T2_G_R;
-#endif
 	uint8_t TEST_VEC_NUM = 2;
 	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
 	c_i.msg4 = true;
+	c_i.sock = &sockfd;
 	c_i.c_i.len = test_vectors[vec_num_i].c_i_len;
 	c_i.c_i.ptr = (uint8_t *)test_vectors[vec_num_i].c_i;
 	c_i.method = (enum method_type) * test_vectors[vec_num_i].method;

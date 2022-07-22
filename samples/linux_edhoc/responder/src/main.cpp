@@ -197,100 +197,10 @@ int main()
 
 	TRY_EXPECT(start_coap_server(), 0);
 
+	c_r.msg4 = true;
 	c_r.sock = &sockfd;
-#ifdef TEST_SUITE0_METHOD0
-	c_r.suites_r.ptr = T1_SUITE_R;
-	c_r.suites_r.len = sizeof(T1_SUITE_R);
-
-	c_r.c_r.ptr = T1_C_R;
-	c_r.c_r.len = sizeof(T1_C_R);
-
-	c_r.y.ptr = T1_Y;
-	c_r.y.len = sizeof(T1_Y);
-
-	c_r.g_y.ptr = T1_G_Y;
-	c_r.g_y.len = sizeof(T1_G_Y);
-
-	c_r.sk_r.ptr = T1_SK_R;
-	c_r.sk_r.len = sizeof(T1_SK_R);
-
-	c_r.pk_r.ptr = T1_PK_R;
-	c_r.pk_r.len = sizeof(T1_PK_R);
-
-	c_r.id_cred_r.ptr = T1_ID_CRED_R;
-	c_r.id_cred_r.len = sizeof(T1_ID_CRED_R);
-
-	c_r.cred_r.ptr = T1_CRED_R;
-	c_r.cred_r.len = sizeof(T1_CRED_R);
-
-	c_r.ead_2.ptr = T1_EAD_2;
-	c_r.ead_2.len = sizeof(T1_EAD_2);
-
-	c_r.ead_4.ptr = T1_EAD_4;
-	c_r.ead_4.len = sizeof(T1_EAD_4);
-
-	cred_i.id_cred.len = sizeof(T1_ID_CRED_I);
-	cred_i.id_cred.ptr = T1_ID_CRED_I;
-	cred_i.cred.len = sizeof(T1_CRED_I);
-	cred_i.cred.ptr = T1_CRED_I;
-	cred_i.pk.len = sizeof(T1_PK_I);
-	cred_i.pk.ptr = T1_PK_I;
-#endif
-#ifdef TEST_SUITE2_METHOD3
-	c_r.suites_r.ptr = T2_SUITE_R;
-	c_r.suites_r.len = sizeof(T2_SUITE_R);
-
-	c_r.c_r.ptr = T2_C_R;
-	c_r.c_r.len = sizeof(T2_C_R);
-
-	c_r.y.ptr = T2_Y;
-	c_r.y.len = sizeof(T2_Y);
-
-	c_r.g_y.ptr = T2_G_Y;
-	c_r.g_y.len = sizeof(T2_G_Y);
-
-	c_r.g_r.ptr = T2_G_R;
-	c_r.g_r.len = sizeof(T2_G_R);
-
-	c_r.r.ptr = T2_R;
-	c_r.r.len = sizeof(T2_R);
-
-	c_r.id_cred_r.ptr = T2_ID_CRED_R;
-	c_r.id_cred_r.len = sizeof(T2_ID_CRED_R);
-
-	c_r.cred_r.ptr = T2_CRED_R;
-	c_r.cred_r.len = sizeof(T2_CRED_R);
-
-	c_r.ead_2.ptr = T2_EAD_2;
-	c_r.ead_2.len = sizeof(T2_EAD_2);
-
-	c_r.ead_4.ptr = T2_EAD_4;
-	c_r.ead_4.len = sizeof(T2_EAD_4);
-
-	cred_i.id_cred.len = sizeof(T2_ID_CRED_I);
-	cred_i.id_cred.ptr = T2_ID_CRED_I;
-	cred_i.cred.len = sizeof(T2_CRED_I);
-	cred_i.cred.ptr = T2_CRED_I;
-	cred_i.g.len = sizeof(T2_G_I);
-	cred_i.g.ptr = T2_G_I;
-#endif
-	cred_i.id_cred.len = test_vectors[vec_num_i].id_cred_i_len;
-	cred_i.id_cred.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_i;
-	cred_i.cred.len = test_vectors[vec_num_i].cred_i_len;
-	cred_i.cred.ptr = (uint8_t *)test_vectors[vec_num_i].cred_i;
-	cred_i.g.len = test_vectors[vec_num_i].g_i_raw_len;
-	cred_i.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_i_raw;
-	cred_i.pk.len = test_vectors[vec_num_i].pk_i_raw_len;
-	cred_i.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
-	cred_i.ca.len = test_vectors[vec_num_i].ca_len;
-	cred_i.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
-	cred_i.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
-	cred_i.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
-
-	c_r.msg4 = true; /*we always test message 4 */
 	c_r.c_r.ptr = (uint8_t *)test_vectors[vec_num_i].c_r;
 	c_r.c_r.len = test_vectors[vec_num_i].c_r_len;
-
 	c_r.suites_r.len = test_vectors[vec_num_i].SUITES_R_len;
 	c_r.suites_r.ptr = (uint8_t *)test_vectors[vec_num_i].SUITES_R;
 	c_r.ead_2.len = test_vectors[vec_num_i].ead_2_len;
@@ -313,6 +223,19 @@ int main()
 	c_r.sk_r.ptr = (uint8_t *)test_vectors[vec_num_i].sk_r_raw;
 	c_r.pk_r.len = test_vectors[vec_num_i].pk_r_raw_len;
 	c_r.pk_r.ptr = (uint8_t *)test_vectors[vec_num_i].pk_r_raw;
+
+	cred_i.id_cred.len = test_vectors[vec_num_i].id_cred_i_len;
+	cred_i.id_cred.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_i;
+	cred_i.cred.len = test_vectors[vec_num_i].cred_i_len;
+	cred_i.cred.ptr = (uint8_t *)test_vectors[vec_num_i].cred_i;
+	cred_i.g.len = test_vectors[vec_num_i].g_i_raw_len;
+	cred_i.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_i_raw;
+	cred_i.pk.len = test_vectors[vec_num_i].pk_i_raw_len;
+	cred_i.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
+	cred_i.ca.len = test_vectors[vec_num_i].ca_len;
+	cred_i.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
+	cred_i.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
+	cred_i.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
 
 	while (1) {
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY
