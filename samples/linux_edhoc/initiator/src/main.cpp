@@ -94,7 +94,7 @@ enum err tx(void *sock, uint8_t *data, uint32_t data_len)
  * @brief	Callback function called inside the frontend when data needs to 
  * 		be received over the network. We use here CoAP as transport 
  * @param	data pointer to the data that needs to be received
- * @param	data_len lenhgt of the data in bytes
+ * @param	data_len length of the data in bytes
  */
 enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
 {

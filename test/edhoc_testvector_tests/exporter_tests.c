@@ -1,6 +1,6 @@
 #include <edhoc.h>
 #include <ztest.h>
-#include "edhoc_test_vectors_v14.h"
+#include "edhoc_test_vectors_exporter_v15.h"
 
 void test_exporter(void)
 {

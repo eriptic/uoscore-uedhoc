@@ -212,7 +212,7 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 		// 	return r;
 		// }
 		/*After an error message is sent the protocol must be discontinued*/
-		PRINTF("After an error message is sent the protocol must be discontinued");
+		// PRINTF("After an error message is sent the protocol must be discontinued");
 		return error_message_sent;
 	}
 
