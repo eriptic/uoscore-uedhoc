@@ -22,7 +22,19 @@ K_SEM_DEFINE(tx_responder_completed, 0, 1);
 
 /*message exchange buffer*/
 uint8_t msg_exchange_buf[1024];
-uint32_t msg_exchange_buf_len = 0;
+uint32_t msg_exchange_buf_len = sizeof(msg_exchange_buf);
+
+uint8_t i_tx_buf[1];
+uint32_t i_tx_buf_len = sizeof(i_tx_buf);
+
+uint8_t i_rx_buf[1];
+uint32_t i_rx_buf_len = sizeof(i_rx_buf);
+
+uint8_t r_tx_buf[1];
+uint32_t r_tx_buf_len = sizeof(r_tx_buf);
+
+uint8_t r_rx_buf[1];
+uint32_t r_rx_buf_len = sizeof(r_rx_buf);
 
 void semaphore_give(struct k_sem *sem)
 {
@@ -92,16 +104,15 @@ void thread_initiator(void *dummy1, void *dummy2, void *dummy3)
 	ARG_UNUSED(dummy3);
 
 	PRINT_MSG("Initiator thread started!\n");
-	while (1)
-		;
-	tx_initiator(NULL, NULL, 0);
+
+	tx_initiator(NULL, i_tx_buf, i_tx_buf_len);
 	PRINT_MSG("Initiator sent msg 1!\n");
-	rx_initiator(NULL, NULL, NULL);
+	rx_initiator(NULL, i_rx_buf, &i_rx_buf_len);
 	PRINT_MSG("Initiator received msg 2!\n");
 
-	tx_initiator(NULL, NULL, 0);
+	tx_initiator(NULL, i_tx_buf, i_tx_buf_len);
 	PRINT_MSG("Initiator sent msg 3!\n");
-	rx_initiator(NULL, NULL, NULL);
+	rx_initiator(NULL, i_rx_buf, &i_rx_buf_len);
 	PRINT_MSG("Initiator received msg 4!\n");
 }
 
@@ -112,18 +123,16 @@ void thread_responder(void *dummy1, void *dummy2, void *dummy3)
 	ARG_UNUSED(dummy3);
 
 	PRINT_MSG("Responder thread started!\n");
-	while (1)
-		;
 
-	rx_responder(NULL, NULL, NULL);
+	rx_responder(NULL, r_rx_buf, &r_rx_buf_len);
 	PRINT_MSG("Responder received msg 1!\n");
 
-	tx_responder(NULL, NULL, 0);
+	tx_responder(NULL, r_tx_buf, r_tx_buf_len);
 	PRINT_MSG("Responder sent msg 2!\n");
 
-	rx_responder(NULL, NULL, NULL);
+	rx_responder(NULL, r_rx_buf, &r_rx_buf_len);
 	PRINT_MSG("Responder received msg 3!\n");
-	tx_responder(NULL, NULL, 0);
+	tx_responder(NULL, r_tx_buf, r_tx_buf_len);
 	PRINT_MSG("Responder sent msg 4!\n");
 }
 
@@ -134,17 +143,18 @@ void test_initiator_responder_interaction(uint8_t vec_num)
 	k_thread_create(&thread_initiator_data, thread_initiator_stack_area,
 			K_THREAD_STACK_SIZEOF(thread_initiator_stack_area),
 			thread_initiator, NULL, NULL, NULL, PRIORITY, 0,
-			K_FOREVER);
+			K_NO_WAIT);
 
 	/*responder*/
 	k_thread_create(&thread_responder_data, thread_responder_stack_area,
 			K_THREAD_STACK_SIZEOF(thread_responder_stack_area),
 			thread_responder, NULL, NULL, NULL, PRIORITY, 0,
-			K_FOREVER);
+			K_NO_WAIT);
 
 	k_thread_start(&thread_initiator_data);
 	k_thread_start(&thread_responder_data);
 
+	k_thread_join(&thread_initiator_data, K_FOREVER);
+
 	PRINT_MSG("threads completed\n");
 }
-
