@@ -106,13 +106,15 @@ enum err options_into_byte_string(struct o_coap_option *options,
 			(uint32_t)(out_byte_string->len + 1 + delta_extra_byte +
 				   len_extra_byte + options[i].len);
 		/* Copy the byte string of current option into output*/
-		uint32_t dest_size =
-			out_byte_string_capacity -
-			(uint32_t)(temp_ptr - out_byte_string->ptr);
-		TRY(_memcpy_s(temp_ptr, dest_size, options[i].value,
-			      options[i].len));
+		if (0 != options[i].len) {
+			uint32_t dest_size =
+				out_byte_string_capacity -
+				(uint32_t)(temp_ptr - out_byte_string->ptr);
+			TRY(_memcpy_s(temp_ptr, dest_size, options[i].value,
+					options[i].len));
 
-		temp_ptr += options[i].len;
+			temp_ptr += options[i].len;
+		}
 	}
 	return ok;
 }

@@ -164,6 +164,9 @@ enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
 	uint32_t tag_len = get_aead_mac_len(suite->edhoc_aead);
 	// uint32_t plaintext_len = ciphertext_len;
 	if (ctxt != CIPHERTEXT2) {
+		if(plaintext_len < tag_len){
+			return error_message_received;
+		}
 		plaintext_len -= tag_len;
 	}
 	// TRY(check_buffer_size(PLAINTEXT_DEFAULT_SIZE, plaintext_len));

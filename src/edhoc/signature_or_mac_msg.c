@@ -54,10 +54,13 @@ enum err mac(const uint8_t *prk, uint32_t prk_len, const uint8_t *th,
 		      (context_mac_len - id_cred_len - th_encoded_len), cred,
 		      cred_len));
 
-	TRY(_memcpy_s(
-		(context_mac + id_cred_len + th_encoded_len + cred_len),
-		(context_mac_len - id_cred_len - th_encoded_len - cred_len),
-		ead, ead_len));
+	if (0 < ead_len) {
+    TRY(_memcpy_s(
+      (context_mac + id_cred_len + th_encoded_len + cred_len),
+      (context_mac_len - id_cred_len - th_encoded_len - cred_len),
+      ead, ead_len));
+	}
+
 
 	PRINT_ARRAY("MAC context", context_mac, context_mac_len);
 
