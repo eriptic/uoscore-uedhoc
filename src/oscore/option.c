@@ -8,9 +8,10 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
-#include "oscore/option.h"
 
 #include <string.h>
+
+#include "oscore/option.h"
 
 #include "common/memcpy_s.h"
 
@@ -22,20 +23,16 @@ bool is_class_e(uint16_t code)
 	       code != COAP_OPTION_PROXY_SCHEME;
 }
 
-static bool is_class_i(uint16_t code)
-{
-	/* "Note: There are currently no Class I option message fields defined." */
-	return false;
-}
 
-bool (*class_to_condition(enum option_class class))(uint16_t code)
+
+bool option_belongs_to_class(uint16_t option_num, enum option_class class)
 {
 	switch (class) {
 	case CLASS_I:
 		/* "Note: There are currently no Class I option message fields defined." */
-		return is_class_i;
+		return false;
 	case CLASS_E:
-		return is_class_e;
+		return is_class_e(option_num);
 	default:
 		break;
 	}
@@ -61,13 +58,12 @@ static uint8_t option_field_len(uint16_t value)
 uint32_t encoded_option_len(struct o_coap_option *options, uint16_t opt_num,
 			    enum option_class class)
 {
-	bool (*condition)(uint16_t) = class_to_condition(class);
 	uint32_t len = 0;
 	uint16_t total_delta = 0;
 	for (int i = 0; i < opt_num; i++) {
 		total_delta = (uint16_t)(total_delta + options[i].delta);
 		uint16_t code = total_delta;
-		if (!condition(code)) {
+		if (!option_belongs_to_class(code, class)) {
 			continue;
 		}
 
@@ -82,14 +78,14 @@ enum err encode_options(struct o_coap_option *options, uint16_t opt_num,
 			enum option_class class, uint8_t *out,
 			uint32_t out_buf_len)
 {
-	bool (*condition)(uint16_t) = class_to_condition(class);
 
 	uint32_t index = 0;
 	uint16_t skipped_delta = 0;
 	for (int i = 0; i < opt_num; i++) {
 		// skip options which aren't of requested class
 		uint16_t delta = (uint16_t)(options[i].delta + skipped_delta);
-		if (!condition(delta)) {
+		
+		if (!option_belongs_to_class(delta, class)) {
 			skipped_delta =
 				(uint16_t)(skipped_delta + options[i].delta);
 			continue;

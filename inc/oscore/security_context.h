@@ -12,10 +12,11 @@
 #ifndef SECURITY_CONTEXT_H
 #define SECURITY_CONTEXT_H
 
-#include "common/byte_array.h"
-#include "error.h"
 #include "supported_algorithm.h"
-#include "coap.h"
+#include "oscore_coap.h"
+
+#include "common/byte_array.h"
+#include "common/oscore_edhoc_error.h"
 
 #define REPLAY_WINDOW_LEN 32
 
@@ -57,6 +58,7 @@ struct recipient_context {
 	struct byte_array recipient_id;
 	struct byte_array recipient_key;
 	uint8_t recipient_key_buf[RECIPIENT_KEY_LEN_];
+	uint8_t recipient_id_buf[RECIPIENT_ID_BUFF_LEN];
 	uint64_t replay_window[REPLAY_WINDOW_LEN];
 	uint8_t replay_window_len;
 };
@@ -105,10 +107,8 @@ enum err sender_seq_num2piv(uint64_t ssn, struct byte_array *piv);
  * @param   new_kid_context 
  * @param   c oscore context
  */
-enum err context_update(enum dev_type dev,
-				 struct o_coap_option *options,
-				 uint16_t opt_num, struct byte_array *new_piv,
-				 struct byte_array *new_kid_context,
-				 struct context *c);
+enum err context_update(enum dev_type dev, struct o_coap_option *options,
+			uint16_t opt_num, struct byte_array *new_piv,
+			struct byte_array *new_kid_context, struct context *c);
 
 #endif

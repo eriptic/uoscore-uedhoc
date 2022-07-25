@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "zcbor_encode.h"
-#include "edhoc_encode_message_error.h"
+#include "cbor/edhoc_encode_message_error.h"
 
 #if DEFAULT_MAX_QTY != 3
 #error "The type file was generated with a different default_max_qty than this file"
@@ -37,7 +37,7 @@ static bool encode_repeated_message_error_SUITES_R(
 	zcbor_print("%s\r\n", __func__);
 	bool int_res;
 
-	bool tmp_result = (((((*input)._message_error_SUITES_R_choice == _SUITES_R__supported) ? ((zcbor_list_start_encode(state, 10) && (int_res = (zcbor_multi_encode_minmax(2, 10, &(*input)._SUITES_R__supported_supported_count, (void *)zcbor_int32_encode, state, (&(*input)._SUITES_R__supported_supported), sizeof(int32_t))), ((zcbor_list_end_encode(state, 10)) && int_res))))
+	bool tmp_result = (((((*input)._message_error_SUITES_R_choice == _SUITES_R__supported) ? ((zcbor_list_start_encode(state, 10) && (int_res = (zcbor_multi_encode_minmax(2, 10, &(*input)._SUITES_R__supported_supported_count, (zcbor_encoder_t *)zcbor_int32_encode, state, (&(*input)._SUITES_R__supported_supported), sizeof(int32_t))), ((zcbor_list_end_encode(state, 10)) && int_res))))
 	: (((*input)._message_error_SUITES_R_choice == _message_error_SUITES_R_int) ? ((zcbor_int32_encode(state, (&(*input)._message_error_SUITES_R_int))))
 	: false))));
 
@@ -52,9 +52,9 @@ static bool encode_message_error(
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = (((zcbor_present_encode(&((*input)._message_error_C_x_present), (void *)encode_repeated_message_error_C_x, state, (&(*input)._message_error_C_x))
+	bool tmp_result = (((zcbor_present_encode(&((*input)._message_error_C_x_present), (zcbor_encoder_t *)encode_repeated_message_error_C_x, state, (&(*input)._message_error_C_x))
 	&& ((zcbor_tstr_encode(state, (&(*input)._message_error_DIAG_MSG))))
-	&& zcbor_present_encode(&((*input)._message_error_SUITES_R_present), (void *)encode_repeated_message_error_SUITES_R, state, (&(*input)._message_error_SUITES_R)))));
+	&& zcbor_present_encode(&((*input)._message_error_SUITES_R_present), (zcbor_encoder_t *)encode_repeated_message_error_SUITES_R, state, (&(*input)._message_error_SUITES_R)))));
 
 	if (!tmp_result)
 		zcbor_trace();

@@ -12,10 +12,11 @@
 #ifndef HKDF_INFO_H
 #define HKDF_INFO_H
 
-#include "common/byte_array.h"
-#include "error.h"
 #include "security_context.h"
 #include "supported_algorithm.h"
+
+#include "common/byte_array.h"
+#include "common/oscore_edhoc_error.h"
 
 /**
  * @brief   Encodes the HKDF Info as defined by OSCORE into the out-array

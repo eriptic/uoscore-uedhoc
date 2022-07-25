@@ -8,12 +8,12 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
-#include "oscore/oscore_cose.h"
 
 #include <stdio.h>
 
 #include "oscore.h"
 
+#include "oscore/oscore_cose.h"
 #include "oscore/security_context.h"
 
 #include "common/crypto_wrapper.h"
@@ -35,29 +35,29 @@ static enum err create_enc_structure(struct byte_array *external_aad,
 				     struct byte_array *out)
 {
 	bool success_encoding;
-	struct enc_structure enc_structure;
+	struct oscore_enc_structure enc_structure;
 
 	uint8_t context[] = { "Encrypt0" };
-	enc_structure._enc_structure_context.value = context;
-	enc_structure._enc_structure_context.len =
+    enc_structure._oscore_enc_structure_context.value = context;
+    enc_structure._oscore_enc_structure_context.len =
 		(uint32_t)strlen((char *)context);
-	enc_structure._enc_structure_protected.value = NULL;
-	enc_structure._enc_structure_protected.len = 0;
-	enc_structure._enc_structure_external_aad.value = external_aad->ptr;
-	enc_structure._enc_structure_external_aad.len = external_aad->len;
+    enc_structure._oscore_enc_structure_protected.value = NULL;
+    enc_structure._oscore_enc_structure_protected.len = 0;
+    enc_structure._oscore_enc_structure_external_aad.value = external_aad->ptr;
+    enc_structure._oscore_enc_structure_external_aad.len = external_aad->len;
 
 	size_t payload_len_out = 0;
-	success_encoding = cbor_encode_enc_structure(
+	success_encoding = cbor_encode_oscore_enc_structure(
 		out->ptr, out->len, &enc_structure, &payload_len_out);
 
 	if (!success_encoding) {
 		return cbor_encoding_error;
 	}
-	out->len = payload_len_out;
+	out->len = (uint32_t) payload_len_out;
 	return ok;
 }
 
-enum err cose_decrypt(struct byte_array *in_ciphertext,
+enum err oscore_cose_decrypt(struct byte_array *in_ciphertext,
 		      struct byte_array *out_plaintext,
 		      struct byte_array *nonce,
 		      struct byte_array *recipient_aad, struct byte_array *key)
@@ -88,7 +88,7 @@ enum err cose_decrypt(struct byte_array *in_ciphertext,
 	return ok;
 }
 
-enum err cose_encrypt(struct byte_array *in_plaintext, uint8_t *out_ciphertext,
+enum err oscore_cose_encrypt(struct byte_array *in_plaintext, uint8_t *out_ciphertext,
 		      uint32_t out_ciphertext_len, struct byte_array *nonce,
 		      struct byte_array *sender_aad, struct byte_array *key)
 {

@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "zcbor_decode.h"
-#include "edhoc_decode_message_1.h"
+#include "cbor/edhoc_decode_message_1.h"
 
 #if DEFAULT_MAX_QTY != 3
 #error "The type file was generated with a different default_max_qty than this file"
@@ -23,12 +23,12 @@ static bool decode_message_1(
 	bool int_res;
 
 	bool tmp_result = (((((zcbor_int32_decode(state, (&(*result)._message_1_METHOD))))
-	&& ((zcbor_union_start_code(state) && (int_res = ((((zcbor_list_start_decode(state) && (int_res = (zcbor_multi_decode(2, 10, &(*result)._SUITES_I__suite_suite_count, (void *)zcbor_int32_decode, state, (&(*result)._SUITES_I__suite_suite), sizeof(int32_t))), ((zcbor_list_end_decode(state)) && int_res)))) && (((*result)._message_1_SUITES_I_choice = _SUITES_I__suite) || 1))
+	&& ((zcbor_union_start_code(state) && (int_res = ((((zcbor_list_start_decode(state) && (int_res = (zcbor_multi_decode(2, 10, &(*result)._SUITES_I__suite_suite_count, (zcbor_decoder_t *)zcbor_int32_decode, state, (&(*result)._SUITES_I__suite_suite), sizeof(int32_t))), ((zcbor_list_end_decode(state)) && int_res)))) && (((*result)._message_1_SUITES_I_choice = _SUITES_I__suite) || 1))
 	|| (zcbor_union_elem_code(state) && (((zcbor_int32_decode(state, (&(*result)._message_1_SUITES_I_int)))) && (((*result)._message_1_SUITES_I_choice = _message_1_SUITES_I_int) || 1)))), zcbor_union_end_code(state), int_res)))
 	&& ((zcbor_bstr_decode(state, (&(*result)._message_1_G_X))))
 	&& ((zcbor_union_start_code(state) && (int_res = ((((zcbor_int32_decode(state, (&(*result)._message_1_C_I_int)))) && (((*result)._message_1_C_I_choice = _message_1_C_I_int) || 1))
 	|| (((zcbor_bstr_decode(state, (&(*result)._message_1_C_I_bstr)))) && (((*result)._message_1_C_I_choice = _message_1_C_I_bstr) || 1))), zcbor_union_end_code(state), int_res)))
-	&& zcbor_present_decode(&((*result)._message_1_ead_1_present), (void *)zcbor_bstr_decode, state, (&(*result)._message_1_ead_1)))));
+	&& zcbor_present_decode(&((*result)._message_1_ead_1_present), (zcbor_decoder_t *)zcbor_bstr_decode, state, (&(*result)._message_1_ead_1)))));
 
 	if (!tmp_result)
 		zcbor_trace();

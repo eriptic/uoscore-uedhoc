@@ -45,10 +45,6 @@ vpath %.c $(sort $(dir $(C_SOURCES)))
 # C includes
 C_INCLUDES += -Iinc
 
-#eventually remove this after fix in zcbor
-C_INCLUDES += -Iinc/cbor
-
-
 # Crypto engine
 ifeq ($(findstring COMPACT25519,$(CRYPTO_ENGINE)),COMPACT25519) 
 C_INCLUDES += -Iexternals/compact25519/src/c25519/ 
@@ -115,8 +111,8 @@ EXTENDED_CFLAGS += -Wall
 EXTENDED_CFLAGS += -Wextra
 EXTENDED_CFLAGS += -Wcast-qual
 EXTENDED_CFLAGS += -Wstack-usage=7000
-#EXTENDED_CFLAGS += -Wconversion
-#EXTENDED_CFLAGS += -Wpedantic
+EXTENDED_CFLAGS += -Wconversion
+EXTENDED_CFLAGS += -Wpedantic
 #EXTENDED_CFLAGS += -Werror
 
 #Clang warning flahs
@@ -129,10 +125,10 @@ EXTENDED_CFLAGS += -Wmissing-noreturn
 EXTENDED_CFLAGS += -Wmissing-prototypes
 EXTENDED_CFLAGS += -Wno-missing-braces
 EXTENDED_CFLAGS += -Wold-style-cast
-#EXTENDED_CFLAGS += -Wshadow
+EXTENDED_CFLAGS += -Wshadow
 EXTENDED_CFLAGS += -Wweak-vtables
 EXTENDED_CFLAGS += -Wall
-#EXTENDED_CFLAGS += -Wextra
+EXTENDED_CFLAGS += -Wextra
 EXTENDED_CFLAGS += -Wpedantic
 EXTENDED_CFLAGS += -Wstack-exhausted
 EXTENDED_CFLAGS += -Wconversion

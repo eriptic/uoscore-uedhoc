@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "zcbor_decode.h"
-#include "edhoc_decode_id_cred_x.h"
+#include "cbor/edhoc_decode_id_cred_x.h"
 
 #if DEFAULT_MAX_QTY != 3
 #error "The type file was generated with a different default_max_qty than this file"
@@ -17,12 +17,14 @@
 
 
 static bool decode_repeated_id_cred_x_map_kid(
-		zcbor_state_t *state, struct id_cred_x_map_kid *result)
+		zcbor_state_t *state, struct id_cred_x_map_kid_ *result)
 {
 	zcbor_print("%s\r\n", __func__);
+	bool int_res;
 
 	bool tmp_result = ((((zcbor_uint32_expect(state, (4))))
-	&& (zcbor_int32_decode(state, (&(*result)._id_cred_x_map_kid)))));
+	&& (zcbor_union_start_code(state) && (int_res = ((((zcbor_int32_decode(state, (&(*result)._id_cred_x_map_kid_int)))) && (((*result)._id_cred_x_map_kid_choice = _id_cred_x_map_kid_int) || 1))
+	|| (((zcbor_bstr_decode(state, (&(*result)._id_cred_x_map_kid_bstr)))) && (((*result)._id_cred_x_map_kid_choice = _id_cred_x_map_kid_bstr) || 1))), zcbor_union_end_code(state), int_res))));
 
 	if (!tmp_result)
 		zcbor_trace();
@@ -154,15 +156,15 @@ static bool decode_id_cred_x_map(
 	zcbor_print("%s\r\n", __func__);
 	bool int_res;
 
-	bool tmp_result = (((zcbor_map_start_decode(state) && (int_res = (zcbor_present_decode(&((*result)._id_cred_x_map_kid_present), (void *)decode_repeated_id_cred_x_map_kid, state, (&(*result)._id_cred_x_map_kid))
-	&& zcbor_present_decode(&((*result)._id_cred_x_map_x5bag_present), (void *)decode_repeated_id_cred_x_map_x5bag, state, (&(*result)._id_cred_x_map_x5bag))
-	&& zcbor_present_decode(&((*result)._id_cred_x_map_x5chain_present), (void *)decode_repeated_id_cred_x_map_x5chain, state, (&(*result)._id_cred_x_map_x5chain))
-	&& zcbor_present_decode(&((*result)._id_cred_x_map_x5t_present), (void *)decode_repeated_id_cred_x_map_x5t, state, (&(*result)._id_cred_x_map_x5t))
-	&& zcbor_present_decode(&((*result)._id_cred_x_map_x5u_present), (void *)decode_repeated_id_cred_x_map_x5u, state, (&(*result)._id_cred_x_map_x5u))
-	&& zcbor_present_decode(&((*result)._id_cred_x_map_c5b_present), (void *)decode_repeated_id_cred_x_map_c5b, state, (&(*result)._id_cred_x_map_c5b))
-	&& zcbor_present_decode(&((*result)._id_cred_x_map_c5c_present), (void *)decode_repeated_id_cred_x_map_c5c, state, (&(*result)._id_cred_x_map_c5c))
-	&& zcbor_present_decode(&((*result)._id_cred_x_map_c5t_present), (void *)decode_repeated_id_cred_x_map_c5t, state, (&(*result)._id_cred_x_map_c5t))
-	&& zcbor_present_decode(&((*result)._id_cred_x_map_c5u_present), (void *)decode_repeated_id_cred_x_map_c5u, state, (&(*result)._id_cred_x_map_c5u))), ((zcbor_map_end_decode(state)) && int_res)))));
+	bool tmp_result = (((zcbor_map_start_decode(state) && (int_res = (zcbor_present_decode(&((*result)._id_cred_x_map_kid_present), (zcbor_decoder_t *)decode_repeated_id_cred_x_map_kid, state, (&(*result)._id_cred_x_map_kid))
+	&& zcbor_present_decode(&((*result)._id_cred_x_map_x5bag_present), (zcbor_decoder_t *)decode_repeated_id_cred_x_map_x5bag, state, (&(*result)._id_cred_x_map_x5bag))
+	&& zcbor_present_decode(&((*result)._id_cred_x_map_x5chain_present), (zcbor_decoder_t *)decode_repeated_id_cred_x_map_x5chain, state, (&(*result)._id_cred_x_map_x5chain))
+	&& zcbor_present_decode(&((*result)._id_cred_x_map_x5t_present), (zcbor_decoder_t *)decode_repeated_id_cred_x_map_x5t, state, (&(*result)._id_cred_x_map_x5t))
+	&& zcbor_present_decode(&((*result)._id_cred_x_map_x5u_present), (zcbor_decoder_t *)decode_repeated_id_cred_x_map_x5u, state, (&(*result)._id_cred_x_map_x5u))
+	&& zcbor_present_decode(&((*result)._id_cred_x_map_c5b_present), (zcbor_decoder_t *)decode_repeated_id_cred_x_map_c5b, state, (&(*result)._id_cred_x_map_c5b))
+	&& zcbor_present_decode(&((*result)._id_cred_x_map_c5c_present), (zcbor_decoder_t *)decode_repeated_id_cred_x_map_c5c, state, (&(*result)._id_cred_x_map_c5c))
+	&& zcbor_present_decode(&((*result)._id_cred_x_map_c5t_present), (zcbor_decoder_t *)decode_repeated_id_cred_x_map_c5t, state, (&(*result)._id_cred_x_map_c5t))
+	&& zcbor_present_decode(&((*result)._id_cred_x_map_c5u_present), (zcbor_decoder_t *)decode_repeated_id_cred_x_map_c5u, state, (&(*result)._id_cred_x_map_c5u))), ((zcbor_map_end_decode(state)) && int_res)))));
 
 	if (!tmp_result)
 		zcbor_trace();

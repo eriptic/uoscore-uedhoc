@@ -8,7 +8,6 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
-#include "oscore/security_context.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,10 +15,11 @@
 
 #include "oscore.h"
 
-#include "oscore/nonce.h"
 #include "oscore/aad.h"
-#include "oscore/coap.h"
+#include "oscore/nonce.h"
+#include "oscore/oscore_coap.h"
 #include "oscore/oscore_hkdf_info.h"
+#include "oscore/security_context.h"
 
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"
@@ -190,7 +190,9 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	c->rc.replay_window_len = REPLAY_WINDOW_LEN;
 	memset(c->rc.replay_window, 0,
 	       sizeof(c->rc.replay_window[0]) * c->rc.replay_window_len);
-	c->rc.recipient_id = params->recipient_id;
+	c->rc.recipient_id.len = params->recipient_id.len;
+	c->rc.recipient_id.ptr = c->rc.recipient_id_buf;
+	memcpy(c->rc.recipient_id.ptr, params->recipient_id.ptr, params->recipient_id.len);
 	c->rc.recipient_key.len = sizeof(c->rc.recipient_key_buf);
 	c->rc.recipient_key.ptr = c->rc.recipient_key_buf;
 	TRY(derive_recipient_key(&c->cc, &c->rc));

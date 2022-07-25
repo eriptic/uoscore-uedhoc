@@ -8,6 +8,7 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
+
 #include "edhoc/suites.h"
 
 #include "common/oscore_edhoc_error.h"
@@ -122,8 +123,8 @@ uint32_t get_ecdh_pk_len(enum ecdh_alg alg)
 {
 	switch (alg) {
 	case P256:
-		/*The publick key is in compressed form*/
-		return 33;
+		/*the x coordinate of the public key*/
+		return 32;
 		break;
 	case X25519:
 		return 32;

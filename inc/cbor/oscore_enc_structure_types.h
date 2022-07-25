@@ -22,10 +22,10 @@
  */
 #define DEFAULT_MAX_QTY 3
 
-struct enc_structure {
-	struct zcbor_string _enc_structure_context;
-	struct zcbor_string _enc_structure_protected;
-	struct zcbor_string _enc_structure_external_aad;
+struct oscore_enc_structure {
+	struct zcbor_string _oscore_enc_structure_context;
+	struct zcbor_string _oscore_enc_structure_protected;
+	struct zcbor_string _oscore_enc_structure_external_aad;
 };
 
 

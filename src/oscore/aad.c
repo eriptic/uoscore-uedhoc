@@ -8,7 +8,9 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
+
 #include "oscore.h"
+
 #include "oscore/aad.h"
 #include "oscore/option.h"
 
@@ -53,7 +55,7 @@ enum err create_aad(struct o_coap_option *options, uint16_t opt_num,
 					 &payload_len_out),
 		   true);
 
-	out->len = payload_len_out;
+	out->len = (uint32_t) payload_len_out;
 	PRINT_ARRAY("AAD", out->ptr, out->len);
 	return ok;
 }

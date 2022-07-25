@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+
 #include "common/print_util.h"
 
 void print_array(const uint8_t *in_data, uint32_t in_len)

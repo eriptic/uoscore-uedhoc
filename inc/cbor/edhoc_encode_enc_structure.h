@@ -12,16 +12,16 @@
 #include <stddef.h>
 #include <string.h>
 #include "zcbor_encode.h"
-#include "edhoc_encode_enc_structure_types.h"
+#include "cbor/edhoc_encode_enc_structure_types.h"
 
 #if DEFAULT_MAX_QTY != 3
 #error "The type file was generated with a different default_max_qty than this file"
 #endif
 
 
-bool cbor_encode_enc_structure(
+bool cbor_encode_edhoc_enc_structure(
 		uint8_t *payload, size_t payload_len,
-		const struct enc_structure *input,
+		const struct edhoc_enc_structure *input,
 		size_t *payload_len_out);
 
 

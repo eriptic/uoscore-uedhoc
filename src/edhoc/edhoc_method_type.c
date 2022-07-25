@@ -8,11 +8,13 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
-#include "edhoc/edhoc_method_type.h"
 
 #include <stdbool.h>
 
+#include "edhoc/edhoc_method_type.h"
+
 #include "common/oscore_edhoc_error.h"
+
 enum err authentication_type_get(enum method_type m,
 				   volatile bool *static_dh_i,
 				   volatile bool *static_dh_r)

@@ -8,25 +8,28 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
+
 #include "edhoc.h"
-#include "common/crypto_wrapper.h"
-#include "common/oscore_edhoc_error.h"
+
 #include "edhoc/hkdf_info.h"
-#include "common/print_util.h"
 #include "edhoc/okm.h"
 
-enum err okm_calc(enum hash_alg hash_alg, const uint8_t *prk, uint32_t prk_len,
-		  const uint8_t *th, uint32_t th_len, const char *label,
-		  uint8_t *context, uint32_t context_len, uint8_t *okm,
-		  uint32_t okm_len)
+#include "common/crypto_wrapper.h"
+#include "common/oscore_edhoc_error.h"
+
+#include "common/print_util.h"
+
+enum err edhoc_kdf(enum hash_alg hash_alg, const uint8_t *prk, uint32_t prk_len,
+		   uint8_t label, uint8_t *context, uint32_t context_len,
+		   uint32_t okm_len, uint8_t *okm)
 {
 	uint8_t info[INFO_DEFAULT_SIZE];
 	uint32_t info_len = sizeof(info);
 
-	TRY(create_hkdf_info(th, th_len, label, context, context_len, okm_len,
+	TRY(create_hkdf_info(label, context, context_len, okm_len,
 			     (uint8_t *)&info, &info_len));
+
 	PRINT_ARRAY("info", info, info_len);
-	TRY(hkdf_expand(hash_alg, prk, prk_len, (uint8_t *)&info, info_len, okm,
-			okm_len));
-	return ok;
+	return hkdf_expand(hash_alg, prk, prk_len, (uint8_t *)&info, info_len,
+			   okm, okm_len);
 }

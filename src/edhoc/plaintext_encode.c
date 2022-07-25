@@ -12,12 +12,16 @@
 #include <stdint.h>
 
 #include "edhoc.h"
-#include "common/oscore_edhoc_error.h"
-#include "common/memcpy_s.h"
-#include "common/print_util.h"
+
 #include "edhoc/retrieve_cred.h"
 #include "edhoc/signature_or_mac_msg.h"
 #include "edhoc/plaintext.h"
+#include "edhoc/bstr_encode_decode.h"
+
+#include "common/oscore_edhoc_error.h"
+#include "common/memcpy_s.h"
+#include "common/print_util.h"
+
 #include "cbor/edhoc_decode_id_cred_x.h"
 #include "cbor/edhoc_encode_int_type.h"
 
@@ -32,33 +36,13 @@ enum err id_cred2kid(const uint8_t *id_cred, uint32_t id_cred_len,
 		   true);
 
 	if (map._id_cred_x_map_kid_present != 0) {
-		// if (map._id_cred_x_map_kid._id_cred_x_map_kid.len == 1) {
-		// 	int32_t i =
-		// 		*map._id_cred_x_map_kid._id_cred_x_map_kid.value;
-		// 	ok = cbor_encode_int_type_i(_kid, *kid_len, &i,
-		// 				    &payload_len_out);
-		// 	if (!ok) {
-		// 		return cbor_encoding_error;
-		// 	}
-		// 	*kid_len = payload_len_out;
-		// } else {
-		// 	r = _memcpy_s(
-		// 		_kid, *kid_len,
-		// 		map._id_cred_x_map_kid._id_cred_x_map_kid.value,
-		// 		map._id_cred_x_map_kid._id_cred_x_map_kid.len);
-		// 	if (r != ok) {
-		// 		return r;
-		// 	}
-		// 	*kid_len =
-		// 		map._id_cred_x_map_kid._id_cred_x_map_kid.len;
-		// }
-		//*_kid = map._id_cred_x_map_kid._id_cred_x_map_kid;
-		TRY_EXPECT(cbor_encode_int_type_i(
-				   _kid, *kid_len,
-				   &map._id_cred_x_map_kid._id_cred_x_map_kid,
-				   &payload_len_out),
-			   true);
-		*kid_len = payload_len_out;
+		TRY_EXPECT(
+			cbor_encode_int_type_i(
+				_kid, *kid_len,
+				&map._id_cred_x_map_kid._id_cred_x_map_kid_int,
+				&payload_len_out),
+			true);
+		*kid_len = (uint32_t)payload_len_out;
 	} else {
 		*kid_len = 0;
 	}

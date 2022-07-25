@@ -14,9 +14,10 @@
 
 #include <stdint.h>
 
+#include "oscore_coap.h"
+
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
-#include "coap.h"
 
 enum o_coap_option_num {
 	COAP_OPTION_IF_MATCH = 1,
@@ -42,9 +43,9 @@ enum o_coap_option_num {
 };
 
 enum option_class {
-	CLASS_U,
-	CLASS_I,
-	CLASS_E,
+	CLASS_U, /*unprotected*/
+	CLASS_I, /*integrity protected only*/
+	CLASS_E, /*encrypted and integrity protected*/
 };
 
 /**
@@ -56,12 +57,13 @@ enum option_class {
 bool is_class_e(uint16_t code);
 
 /**
- * @brief   Converts a `option_class` to the function that tests if 
- *          a given CoAP Option code belongs to that class.
- * @param   class `option_class` to get test-function for.
- * @return  Function testing if a given CoAP Option code belongs to given class
+ * @brief Checks if an option belongs to a certain class
+ * 
+ * @param option_num the option number
+ * @return true if the option belongs to a given class
+ * @return false if the option does not belong to a given class
  */
-bool (*class_to_condition(enum option_class class))(uint16_t code);
+bool option_belongs_to_class(uint16_t option_num, enum option_class class);
 
 /**
  * @brief   Parses the passed options until the payload marker of end of 

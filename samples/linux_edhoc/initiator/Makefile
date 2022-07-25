@@ -46,28 +46,27 @@ CPP_SOURCES += ../../../externals/cantcoap/cantcoap.cpp
 # todo clean up this
 $(shell mv ../../../externals/compact25519/src/c25519/sha512.c ../../../externals/compact25519/src/c25519/_sha512.c )
 
-C_SOURCES += $(wildcard ../common/*.c) 
-C_SOURCES += $(wildcard ../common/cbor/*.c) 
-C_SOURCES += $(wildcard ../../../externals/cddl-gen/src/*.c)
+C_SOURCES += src/_entropy.c
+C_SOURCES += $(wildcard ../../common/*.c)
+C_SOURCES += $(wildcard ../../../externals/zcbor/src/*.c)
 C_SOURCES += $(wildcard ../../../externals/mbedtls/library/*.c)
 C_SOURCES += $(wildcard ../../../externals/compact25519/src/c25519/*.c)
 C_SOURCES += $(wildcard ../../../externals/compact25519/src/*.c)
 
-# C_SOURCES += $(wildcard ../../../externals/tinycrypt/lib/source/*.c)
 
 # C includes
-
-C_INCLUDES += -I../../../modules/edhoc/ 
+C_INCLUDES += -I../../../inc/ 
+C_INCLUDES += -I../../common/
+C_INCLUDES += -I../../../test_vectors/ 
 C_INCLUDES += -I../../../externals/cantcoap/ 
-C_INCLUDES += -I../../../externals/jsmn 
-C_INCLUDES += -I../../../externals/cddl-gen/include 
+C_INCLUDES += -I../../../externals/zcbor/include 
 C_INCLUDES += -I../../../externals/mbedtls/library 
 C_INCLUDES += -I../../../externals/mbedtls/include 
 C_INCLUDES += -I../../../externals/mbedtls/include/mbedtls 
 C_INCLUDES += -I../../../externals/mbedtls/include/psa 
 C_INCLUDES += -I../../../externals/compact25519/src/
 C_INCLUDES += -I../../../externals/compact25519/src/c25519
-#C_INCLUDES += -I../../../externals/tinycrypt/lib/include
+
 
 # C defines
 # make PRINT_ARRAY macro usable in the main file

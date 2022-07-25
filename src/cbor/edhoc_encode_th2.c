@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "zcbor_encode.h"
-#include "edhoc_encode_th2.h"
+#include "cbor/edhoc_encode_th2.h"
 
 #if DEFAULT_MAX_QTY != 3
 #error "The type file was generated with a different default_max_qty than this file"
@@ -21,11 +21,11 @@ static bool encode_th2(
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = (((((zcbor_bstr_encode(state, (&(*input)._th2_hash_msg1))))
-	&& ((zcbor_bstr_encode(state, (&(*input)._th2_G_Y))))
+	bool tmp_result = (((((zcbor_bstr_encode(state, (&(*input)._th2_G_Y))))
 	&& ((((*input)._th2_C_R_choice == _th2_C_R_bstr) ? ((zcbor_bstr_encode(state, (&(*input)._th2_C_R_bstr))))
 	: (((*input)._th2_C_R_choice == _th2_C_R_int) ? ((zcbor_int32_encode(state, (&(*input)._th2_C_R_int))))
-	: false))))));
+	: false)))
+	&& ((zcbor_bstr_encode(state, (&(*input)._th2_hash_msg1)))))));
 
 	if (!tmp_result)
 		zcbor_trace();

@@ -4,7 +4,7 @@
 #include <ztest.h>
 #include "oscore.h"
 
-#include "test_vectors_oscore.h"
+#include "oscore_test_vectors.h"
 
 /**
  * Test 1:
@@ -17,15 +17,15 @@ void oscore_client_test1(void)
 	struct context c_client;
 	struct oscore_init_params params = {
 		.dev_type = CLIENT,
-		.master_secret.ptr = T1__MASTER_SECRET,
+		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
 		.master_secret.len = T1__MASTER_SECRET_LEN,
-		.sender_id.ptr = T1__SENDER_ID,
+		.sender_id.ptr = (uint8_t *)T1__SENDER_ID,
 		.sender_id.len = T1__SENDER_ID_LEN,
-		.recipient_id.ptr = T1__RECIPIENT_ID,
+		.recipient_id.ptr = (uint8_t *)T1__RECIPIENT_ID,
 		.recipient_id.len = T1__RECIPIENT_ID_LEN,
-		.master_salt.ptr = T1__MASTER_SALT,
+		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
 		.master_salt.len = T1__MASTER_SALT_LEN,
-		.id_context.ptr = T1__ID_CONTEXT,
+		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
 		.id_context.len = T1__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
@@ -45,8 +45,8 @@ void oscore_client_test1(void)
 	uint8_t buf_oscore[256];
 	uint32_t buf_oscore_len = sizeof(buf_oscore);
 
-	r = coap2oscore(T1__COAP_REQ, T1__COAP_REQ_LEN, (uint8_t *)&buf_oscore,
-			&buf_oscore_len, &c_client);
+	r = coap2oscore((uint8_t *)T1__COAP_REQ, T1__COAP_REQ_LEN,
+			(uint8_t *)&buf_oscore, &buf_oscore_len, &c_client);
 	zassert_equal(r, ok, "Error in coap2oscore!");
 
 	zassert_mem_equal__(c_client.sc.sender_key.ptr, T1__SENDER_KEY,
@@ -76,15 +76,15 @@ void oscore_client_test3(void)
 	struct context c_client;
 	struct oscore_init_params params = {
 		.dev_type = CLIENT,
-		.master_secret.ptr = T3__MASTER_SECRET,
+		.master_secret.ptr = (uint8_t *)T3__MASTER_SECRET,
 		.master_secret.len = T3__MASTER_SECRET_LEN,
-		.sender_id.ptr = T3__SENDER_ID,
+		.sender_id.ptr = (uint8_t *)T3__SENDER_ID,
 		.sender_id.len = T3__SENDER_ID_LEN,
-		.recipient_id.ptr = T3__RECIPIENT_ID,
+		.recipient_id.ptr = (uint8_t *)T3__RECIPIENT_ID,
 		.recipient_id.len = T3__RECIPIENT_ID_LEN,
-		.master_salt.ptr = T3__MASTER_SALT,
+		.master_salt.ptr = (uint8_t *)T3__MASTER_SALT,
 		.master_salt.len = T3__MASTER_SALT_LEN,
-		.id_context.ptr = T3__ID_CONTEXT,
+		.id_context.ptr = (uint8_t *)T3__ID_CONTEXT,
 		.id_context.len = T3__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
@@ -104,8 +104,8 @@ void oscore_client_test3(void)
 	uint8_t buf_oscore[256];
 	uint32_t buf_oscore_len = sizeof(buf_oscore);
 
-	r = coap2oscore(T3__COAP_REQ, T3__COAP_REQ_LEN, (uint8_t *)&buf_oscore,
-			&buf_oscore_len, &c_client);
+	r = coap2oscore((uint8_t *)T3__COAP_REQ, T3__COAP_REQ_LEN,
+			(uint8_t *)&buf_oscore, &buf_oscore_len, &c_client);
 
 	zassert_equal(r, ok, "Error in coap2oscore!");
 
@@ -124,15 +124,15 @@ void oscore_client_test5(void)
 	struct context c_client;
 	struct oscore_init_params params = {
 		.dev_type = CLIENT,
-		.master_secret.ptr = T5__MASTER_SECRET,
+		.master_secret.ptr = (uint8_t *)T5__MASTER_SECRET,
 		.master_secret.len = T5__MASTER_SECRET_LEN,
-		.sender_id.ptr = T5__SENDER_ID,
+		.sender_id.ptr = (uint8_t *)T5__SENDER_ID,
 		.sender_id.len = T5__SENDER_ID_LEN,
-		.recipient_id.ptr = T5__RECIPIENT_ID,
+		.recipient_id.ptr = (uint8_t *)T5__RECIPIENT_ID,
 		.recipient_id.len = T5__RECIPIENT_ID_LEN,
-		.master_salt.ptr = T5__MASTER_SALT,
+		.master_salt.ptr = (uint8_t *)T5__MASTER_SALT,
 		.master_salt.len = T5__MASTER_SALT_LEN,
-		.id_context.ptr = T5__ID_CONTEXT,
+		.id_context.ptr = (uint8_t *)T5__ID_CONTEXT,
 		.id_context.len = T5__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
@@ -152,8 +152,8 @@ void oscore_client_test5(void)
 	uint8_t buf_oscore[256];
 	uint32_t buf_oscore_len = sizeof(buf_oscore);
 
-	r = coap2oscore(T5__COAP_REQ, T5__COAP_REQ_LEN, (uint8_t *)&buf_oscore,
-			&buf_oscore_len, &c_client);
+	r = coap2oscore((uint8_t *)T5__COAP_REQ, T5__COAP_REQ_LEN,
+			(uint8_t *)&buf_oscore, &buf_oscore_len, &c_client);
 
 	zassert_equal(r, ok, "Error in coap2oscore!");
 
@@ -172,15 +172,15 @@ void oscore_server_test2(void)
 	struct context c_server;
 	struct oscore_init_params params_server = {
 		.dev_type = SERVER,
-		.master_secret.ptr = T2__MASTER_SECRET,
+		.master_secret.ptr = (uint8_t *)T2__MASTER_SECRET,
 		.master_secret.len = T2__MASTER_SECRET_LEN,
-		.sender_id.ptr = T2__SENDER_ID,
+		.sender_id.ptr = (uint8_t *)T2__SENDER_ID,
 		.sender_id.len = T2__SENDER_ID_LEN,
-		.recipient_id.ptr = T2__RECIPIENT_ID,
+		.recipient_id.ptr = (uint8_t *)T2__RECIPIENT_ID,
 		.recipient_id.len = T2__RECIPIENT_ID_LEN,
-		.master_salt.ptr = T2__MASTER_SALT,
+		.master_salt.ptr = (uint8_t *)T2__MASTER_SALT,
 		.master_salt.len = T2__MASTER_SALT_LEN,
-		.id_context.ptr = T2__ID_CONTEXT,
+		.id_context.ptr = (uint8_t *)T2__ID_CONTEXT,
 		.id_context.len = T2__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
@@ -195,7 +195,7 @@ void oscore_server_test2(void)
 	uint32_t buf_coap_len = sizeof(buf_coap);
 	bool oscore_present_flag = false;
 
-	r = oscore2coap(T2__OSCORE_REQ, T2__OSCORE_REQ_LEN, buf_coap,
+	r = oscore2coap((uint8_t *)T2__OSCORE_REQ, T2__OSCORE_REQ_LEN, buf_coap,
 			&buf_coap_len, &oscore_present_flag, &c_server);
 
 	zassert_equal(r, ok, "Error in oscore2coap!");
@@ -207,7 +207,7 @@ void oscore_server_test2(void)
 	uint8_t buf_oscore[256];
 	uint32_t buf_oscore_len = sizeof(buf_oscore);
 
-	r = coap2oscore(T2__COAP_RESPONSE, T2__COAP_RESPONSE_LEN,
+	r = coap2oscore((uint8_t *)T2__COAP_RESPONSE, T2__COAP_RESPONSE_LEN,
 			(uint8_t *)&buf_oscore, &buf_oscore_len, &c_server);
 
 	zassert_equal(r, ok, "Error in coap2oscore");
@@ -222,15 +222,15 @@ void oscore_server_test4(void)
 	struct context c_server;
 	struct oscore_init_params params_server = {
 		.dev_type = SERVER,
-		.master_secret.ptr = T4__MASTER_SECRET,
+		.master_secret.ptr = (uint8_t *)T4__MASTER_SECRET,
 		.master_secret.len = T4__MASTER_SECRET_LEN,
-		.sender_id.ptr = T4__SENDER_ID,
+		.sender_id.ptr = (uint8_t *)T4__SENDER_ID,
 		.sender_id.len = T4__SENDER_ID_LEN,
-		.recipient_id.ptr = T4__RECIPIENT_ID,
+		.recipient_id.ptr = (uint8_t *)T4__RECIPIENT_ID,
 		.recipient_id.len = T4__RECIPIENT_ID_LEN,
-		.master_salt.ptr = T4__MASTER_SALT,
+		.master_salt.ptr = (uint8_t *)T4__MASTER_SALT,
 		.master_salt.len = T4__MASTER_SALT_LEN,
-		.id_context.ptr = T4__ID_CONTEXT,
+		.id_context.ptr = (uint8_t *)T4__ID_CONTEXT,
 		.id_context.len = T4__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
@@ -263,15 +263,15 @@ void oscore_server_test6(void)
 	struct context c_server;
 	struct oscore_init_params params_server = {
 		.dev_type = SERVER,
-		.master_secret.ptr = T6__MASTER_SECRET,
+		.master_secret.ptr = (uint8_t *)T6__MASTER_SECRET,
 		.master_secret.len = T6__MASTER_SECRET_LEN,
-		.sender_id.ptr = T6__SENDER_ID,
+		.sender_id.ptr = (uint8_t *)T6__SENDER_ID,
 		.sender_id.len = T6__SENDER_ID_LEN,
-		.recipient_id.ptr = T6__RECIPIENT_ID,
+		.recipient_id.ptr = (uint8_t *)T6__RECIPIENT_ID,
 		.recipient_id.len = T6__RECIPIENT_ID_LEN,
-		.master_salt.ptr = T6__MASTER_SALT,
+		.master_salt.ptr = (uint8_t *)T6__MASTER_SALT,
 		.master_salt.len = T6__MASTER_SALT_LEN,
-		.id_context.ptr = T6__ID_CONTEXT,
+		.id_context.ptr = (uint8_t *)T6__ID_CONTEXT,
 		.id_context.len = T6__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
@@ -304,15 +304,15 @@ void oscore_misc_test8(void)
 	struct context context;
 	struct oscore_init_params params = {
 		.dev_type = SERVER,
-		.master_secret.ptr = T7__MASTER_SECRET,
+		.master_secret.ptr = (uint8_t *)T7__MASTER_SECRET,
 		.master_secret.len = T7__MASTER_SECRET_LEN,
-		.sender_id.ptr = T7__SENDER_ID,
+		.sender_id.ptr = (uint8_t *)T7__SENDER_ID,
 		.sender_id.len = T7__SENDER_ID_LEN,
-		.recipient_id.ptr = T7__RECIPIENT_ID,
+		.recipient_id.ptr = (uint8_t *)T7__RECIPIENT_ID,
 		.recipient_id.len = T7__RECIPIENT_ID_LEN,
-		.master_salt.ptr = T7__MASTER_SALT,
+		.master_salt.ptr = (uint8_t *)T7__MASTER_SALT,
 		.master_salt.len = T7__MASTER_SALT_LEN,
-		.id_context.ptr = T7__ID_CONTEXT,
+		.id_context.ptr = (uint8_t *)T7__ID_CONTEXT,
 		.id_context.len = T7__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
@@ -326,13 +326,13 @@ void oscore_misc_test8(void)
 	uint8_t buf_oscore[256];
 	uint32_t buf_oscore_len = sizeof(buf_oscore);
 
-	r = coap2oscore(T8__COAP_ACK, T8__COAP_ACK_LEN, 
-		(uint8_t *)&buf_oscore, &buf_oscore_len, &context);
+	r = coap2oscore((uint8_t *)T8__COAP_ACK, T8__COAP_ACK_LEN,
+			(uint8_t *)&buf_oscore, &buf_oscore_len, &context);
 
 	zassert_equal(r, ok, "Error in coap2oscore");
 
 	zassert_mem_equal__(&buf_oscore, T8__COAP_ACK, T8__COAP_ACK_LEN,
-		"coap2oscore failed");
+			    "coap2oscore failed");
 
 	zassert_equal(buf_oscore_len, T8__COAP_ACK_LEN, "coap2oscore failed");
 }

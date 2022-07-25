@@ -20,13 +20,15 @@
 #include <unistd.h>
 
 extern "C" {
-#include "../../../../modules/edhoc/edhoc.h"
-#include "../../common/sock.h"
-#include "../../common/test_vec_parser.h"
+#include "edhoc.h"
+#include "sock.h"
+#include "edhoc_test_vectors_p256_v15.h"
 }
-#include "../../../../externals/cantcoap/cantcoap.h"
+#include "cantcoap.h"
 
 #define USE_IPV4
+//#define TEST_SUITE2_METHOD3
+//#define TEST_SUITE0_METHOD0
 
 CoapPDU *txPDU = new CoapPDU();
 
@@ -160,12 +162,12 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
 
 int main()
 {
+	uint8_t prk_exporter[32];
 	uint8_t oscore_master_secret[16];
 	uint8_t oscore_master_salt[8];
 
 	/* edhoc declarations */
-	uint8_t PRK_4x3m[PRK_DEFAULT_SIZE];
-	uint8_t th4[SHA_DEFAULT_SIZE];
+	uint8_t PRK_out[PRK_DEFAULT_SIZE];
 	uint8_t err_msg[ERR_MSG_DEFAULT_SIZE];
 	uint32_t err_msg_len = sizeof(err_msg);
 	uint8_t ad_1[AD_DEFAULT_SIZE];
@@ -174,28 +176,12 @@ int main()
 	uint32_t ad_3_len = sizeof(ad_1);
 
 	/* test vector inputs */
-	const uint8_t TEST_VEC_NUM = 1;
 	uint16_t cred_num = 1;
 	struct other_party_cred cred_i;
 	struct edhoc_responder_context c_r;
-	struct other_party_cred_bufs other_party_bufs;
-	struct edhoc_responder_context_bufs responder_context_bufs;
-	char filename[] = { "../../../test_vectors/edhoc-vectors-json_v11.txt" };
-	char test_vec_buf[1024 * 160];
-	uint32_t test_vec_buf_len = sizeof(test_vec_buf);
 
-	TRY_EXPECT(read_test_vectors(filename, test_vec_buf, &test_vec_buf_len),
-		   0);
-
-	TRY_EXPECT(get_OTHER_PARTY_CRED_from_test_vec(
-			   INITIATOR, &other_party_bufs, &cred_i, TEST_VEC_NUM,
-			   test_vec_buf, test_vec_buf_len),
-		   0);
-
-	TRY_EXPECT(get_EDHOC_RESPONDER_CONTEXT_from_test_vec(
-			   &responder_context_bufs, &c_r, TEST_VEC_NUM,
-			   test_vec_buf, test_vec_buf_len),
-		   0);
+	uint8_t TEST_VEC_NUM = 2;
+	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY
 	uint32_t seed;
@@ -208,7 +194,46 @@ int main()
 #endif
 
 	TRY_EXPECT(start_coap_server(), 0);
+
+	c_r.msg4 = true;
 	c_r.sock = &sockfd;
+	c_r.c_r.ptr = (uint8_t *)test_vectors[vec_num_i].c_r;
+	c_r.c_r.len = test_vectors[vec_num_i].c_r_len;
+	c_r.suites_r.len = test_vectors[vec_num_i].SUITES_R_len;
+	c_r.suites_r.ptr = (uint8_t *)test_vectors[vec_num_i].SUITES_R;
+	c_r.ead_2.len = test_vectors[vec_num_i].ead_2_len;
+	c_r.ead_2.ptr = (uint8_t *)test_vectors[vec_num_i].ead_2;
+	c_r.ead_4.len = test_vectors[vec_num_i].ead_4_len;
+	c_r.ead_4.ptr = (uint8_t *)test_vectors[vec_num_i].ead_4;
+	c_r.id_cred_r.len = test_vectors[vec_num_i].id_cred_r_len;
+	c_r.id_cred_r.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_r;
+	c_r.cred_r.len = test_vectors[vec_num_i].cred_r_len;
+	c_r.cred_r.ptr = (uint8_t *)test_vectors[vec_num_i].cred_r;
+	c_r.g_y.len = test_vectors[vec_num_i].g_y_raw_len;
+	c_r.g_y.ptr = (uint8_t *)test_vectors[vec_num_i].g_y_raw;
+	c_r.y.len = test_vectors[vec_num_i].y_raw_len;
+	c_r.y.ptr = (uint8_t *)test_vectors[vec_num_i].y_raw;
+	c_r.g_r.len = test_vectors[vec_num_i].g_r_raw_len;
+	c_r.g_r.ptr = (uint8_t *)test_vectors[vec_num_i].g_r_raw;
+	c_r.r.len = test_vectors[vec_num_i].r_raw_len;
+	c_r.r.ptr = (uint8_t *)test_vectors[vec_num_i].r_raw;
+	c_r.sk_r.len = test_vectors[vec_num_i].sk_r_raw_len;
+	c_r.sk_r.ptr = (uint8_t *)test_vectors[vec_num_i].sk_r_raw;
+	c_r.pk_r.len = test_vectors[vec_num_i].pk_r_raw_len;
+	c_r.pk_r.ptr = (uint8_t *)test_vectors[vec_num_i].pk_r_raw;
+
+	cred_i.id_cred.len = test_vectors[vec_num_i].id_cred_i_len;
+	cred_i.id_cred.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_i;
+	cred_i.cred.len = test_vectors[vec_num_i].cred_i_len;
+	cred_i.cred.ptr = (uint8_t *)test_vectors[vec_num_i].cred_i;
+	cred_i.g.len = test_vectors[vec_num_i].g_i_raw_len;
+	cred_i.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_i_raw;
+	cred_i.pk.len = test_vectors[vec_num_i].pk_i_raw_len;
+	cred_i.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
+	cred_i.ca.len = test_vectors[vec_num_i].ca_len;
+	cred_i.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
+	cred_i.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
+	cred_i.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
 
 	while (1) {
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY
@@ -216,12 +241,14 @@ int main()
 		/*create a random seed*/
 		FILE *fp;
 		fp = fopen("/dev/urandom", "r");
+		uint32_t G_Y_random_len = sizeof(G_Y_random);
 		uint64_t seed_len =
 			fread((uint8_t *)&seed, 1, sizeof(seed), fp);
 		fclose(fp);
 		PRINT_ARRAY("seed", (uint8_t *)&seed, seed_len);
 
-		TRY(ephemeral_dh_key_gen(X25519, seed, Y_random, G_Y_random));
+		TRY(ephemeral_dh_key_gen(X25519, seed, Y_random, G_Y_random,
+					 &G_Y_random_len));
 		PRINT_ARRAY("secret ephemeral DH key", c_r.g_y.ptr,
 			    c_r.g_y.len);
 		PRINT_ARRAY("public ephemeral DH key", c_r.y.ptr, c_r.y.len);
@@ -229,20 +256,24 @@ int main()
 		TRY(edhoc_responder_run(&c_r, &cred_i, cred_num, err_msg,
 					&err_msg_len, (uint8_t *)&ad_1,
 					&ad_1_len, (uint8_t *)&ad_3, &ad_3_len,
-					PRK_4x3m, sizeof(PRK_4x3m), th4,
-					sizeof(th4), tx, rx));
-		PRINT_ARRAY("PRK_4x3m", PRK_4x3m, sizeof(PRK_4x3m));
-		PRINT_ARRAY("th4", th4, sizeof(th4));
+					PRK_out, sizeof(PRK_out), tx, rx));
+		PRINT_ARRAY("PRK_out", PRK_out, sizeof(PRK_out));
 
-		TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
-				   sizeof(th4), "OSCORE_Master_Secret",
-				   oscore_master_secret, 16));
-		PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret, 16);
+		TRY(prk_out2exporter(SHA_256, PRK_out, sizeof(PRK_out),
+				     prk_exporter));
+		PRINT_ARRAY("prk_exporter", prk_exporter, sizeof(prk_exporter));
 
-		TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
-				   sizeof(th4), "OSCORE_Master_Salt",
-				   oscore_master_salt, 8));
-		PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt, 8);
+		TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SECRET, prk_exporter,
+				   sizeof(prk_exporter), oscore_master_secret,
+				   sizeof(oscore_master_secret)));
+		PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret,
+			    sizeof(oscore_master_secret));
+
+		TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SALT, prk_exporter,
+				   sizeof(prk_exporter), oscore_master_salt,
+				   sizeof(oscore_master_salt)));
+		PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt,
+			    sizeof(oscore_master_salt));
 	}
 
 	close(sockfd);

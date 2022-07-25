@@ -23,8 +23,7 @@
 #define DEFAULT_MAX_QTY 3
 
 struct info {
-	struct zcbor_string _info_transcript_hash;
-	struct zcbor_string _info_label;
+	uint32_t _info_label;
 	struct zcbor_string _info_context;
 	uint32_t _info_length;
 };

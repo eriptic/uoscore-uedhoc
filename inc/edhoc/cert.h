@@ -12,6 +12,7 @@
 #define CERT_H
 
 #include <stdint.h>
+
 #include "common/oscore_edhoc_error.h"
 
 /**
@@ -22,7 +23,7 @@
  * @param   cred_num number of elements in cred_array
  * @param   pk public key contained in the certificate
  * @param   pk_len the length pk
- * @param   verified true if verification successfull
+ * @param   verified true if verification successful
  * @retval  enum err
  */
 enum err cert_c509_verify(const uint8_t *cert, uint32_t cert_len,
@@ -38,7 +39,7 @@ enum err cert_c509_verify(const uint8_t *cert, uint32_t cert_len,
  * @param   cred_num number of elements in cred_array
  * @param   pk public key contained in the certificate
  * @param   pk_len the length pk
- * @param   verified true if verification successfull
+ * @param   verified true if verification successful
  * @retval  enum err
  */
 enum err cert_x509_verify(const uint8_t *cert, uint32_t cert_len,

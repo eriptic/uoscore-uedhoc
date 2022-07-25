@@ -8,13 +8,15 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
+
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "oscore.h"
+
 #include "oscore/aad.h"
-#include "oscore/coap.h"
+#include "oscore/oscore_coap.h"
 #include "oscore/nonce.h"
 #include "oscore/option.h"
 #include "oscore/oscore_cose.h"
@@ -54,6 +56,10 @@ static inline enum err e_u_options_extract(struct o_coap_packet *in_o_coap,
 	uint8_t temp_U_option_delta_sum = 0;
 	uint8_t delta_extra_bytes = 0;
 	uint8_t len_extra_bytes = 0;
+
+	if (MAX_OPTION_COUNT < in_o_coap->options_cnt) {
+		return not_valid_input_packet;
+	}
 
 	for (uint8_t i = 0; i < in_o_coap->options_cnt; i++) {
 		delta_extra_bytes = 0;
@@ -161,7 +167,7 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
 	TRY(options_into_byte_string(E_options, E_options_cnt,
 				     &E_option_byte_string));
 
-	uint32_t dest_size = (uint32_t)(plaintext->len - (temp_plaintext_ptr +
+	uint32_t dest_size = (plaintext->len - (uint32_t)(temp_plaintext_ptr +
 							  1 - plaintext->ptr));
 	TRY(_memcpy_s(++temp_plaintext_ptr, dest_size, temp_opt_bytes,
 		      E_option_byte_string.len));
@@ -172,7 +178,7 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
 		/* An extra byte 0xFF before payload*/
 		*temp_plaintext_ptr = 0xff;
 
-		dest_size = (uint32_t)(plaintext->len - (temp_plaintext_ptr +
+		dest_size = (plaintext->len - (uint32_t)(temp_plaintext_ptr +
 							 1 - plaintext->ptr));
 		TRY(_memcpy_s(++temp_plaintext_ptr, dest_size,
 			      in_o_coap->payload, in_o_coap->payload_len));
@@ -196,7 +202,7 @@ static inline enum err plaintext_encrypt(struct context *c,
 					 uint8_t *out_ciphertext,
 					 uint32_t out_ciphertext_len)
 {
-	return cose_encrypt(in_plaintext, out_ciphertext, out_ciphertext_len,
+	return oscore_cose_encrypt(in_plaintext, out_ciphertext, out_ciphertext_len,
 			    &c->rrc.nonce, &c->rrc.aad, &c->sc.sender_key);
 }
 
@@ -417,6 +423,7 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	buf.ptr = buf_o_coap;
 
 	/*Parse the coap buf into a CoAP struct*/
+	memset(&o_coap_pkt, 0, sizeof(o_coap_pkt));
 	TRY(buf2coap(&buf, &o_coap_pkt));
 
 	/* Dismiss OSCORE encryption if messaging layer detected (simple ACK, code=0.00) */

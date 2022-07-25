@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "zcbor_encode.h"
-#include "edhoc_encode_data_2.h"
+#include "cbor/edhoc_encode_data_2.h"
 
 #if DEFAULT_MAX_QTY != 3
 #error "The type file was generated with a different default_max_qty than this file"
@@ -36,7 +36,7 @@ static bool encode_data_2(
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = (((zcbor_present_encode(&((*input)._data_2_C_I_present), (void *)encode_repeated_data_2_C_I, state, (&(*input)._data_2_C_I))
+	bool tmp_result = (((zcbor_present_encode(&((*input)._data_2_C_I_present), (zcbor_encoder_t *)encode_repeated_data_2_C_I, state, (&(*input)._data_2_C_I))
 	&& ((zcbor_bstr_encode(state, (&(*input)._data_2_G_Y))))
 	&& ((((*input)._data_2_C_R_choice == _data_2_C_R_int) ? ((zcbor_int32_encode(state, (&(*input)._data_2_C_R_int))))
 	: (((*input)._data_2_C_R_choice == _data_2_C_R_bstr) ? ((zcbor_bstr_encode(state, (&(*input)._data_2_C_R_bstr))))

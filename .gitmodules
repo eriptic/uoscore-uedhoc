@@ -13,9 +13,6 @@
 [submodule "externals/mbedtls"]
 	path = externals/mbedtls
 	url = https://github.com/ARMmbed/mbedtls.git
-[submodule "externals/jsmn"]
-	path = externals/jsmn
-	url = https://github.com/zserge/jsmn.git
 [submodule "externals/zcbor"]
 	path = externals/zcbor
 	url = https://github.com/NordicSemiconductor/zcbor.git

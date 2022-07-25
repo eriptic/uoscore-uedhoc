@@ -13,12 +13,12 @@
 ; ========== COSE Enc_structure and Sig_structure ============
 ;                          see RFC8152
 
-cose_struct = ( s: enc_structure / sig_structure )
+cose_struct = ( s: edhoc_enc_structure / sig_structure )
 
 ; context can be one of "Encrypt" / "Encrypt0" / "Enc_Recipient" /
 ;           "Mac_Recipient" / "Rec_Recipient"
 
-enc_structure = [ context: tstr, protected: bstr, external_aad: bstr ]
+edhoc_enc_structure = [ context: tstr, protected: bstr, external_aad: bstr ]
 
 
 

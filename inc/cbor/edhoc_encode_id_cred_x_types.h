@@ -22,8 +22,15 @@
  */
 #define DEFAULT_MAX_QTY 3
 
-struct id_cred_x_map_kid {
-	int32_t _id_cred_x_map_kid;
+struct id_cred_x_map_kid_ {
+	union {
+		int32_t _id_cred_x_map_kid_int;
+		struct zcbor_string _id_cred_x_map_kid_bstr;
+	};
+	enum {
+		_id_cred_x_map_kid_int,
+		_id_cred_x_map_kid_bstr,
+	} _id_cred_x_map_kid_choice;
 };
 
 struct id_cred_x_map_x5bag {
@@ -75,7 +82,7 @@ struct id_cred_x_map_c5u {
 };
 
 struct id_cred_x_map {
-	struct id_cred_x_map_kid _id_cred_x_map_kid;
+	struct id_cred_x_map_kid_ _id_cred_x_map_kid;
 	uint_fast32_t _id_cred_x_map_kid_present;
 	struct id_cred_x_map_x5bag _id_cred_x_map_x5bag;
 	uint_fast32_t _id_cred_x_map_x5bag_present;

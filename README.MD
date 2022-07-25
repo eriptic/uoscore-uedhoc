@@ -18,22 +18,27 @@ For more background and evaluation in terms of speed, RAM and flash requirements
 
 * check the configurations in `makefile_config.mk` and adjust them if necessary
 * run `make` 
-* Link the static library `build/libuoscore-uedhoc` in your project
+* link the static library `build/libuoscore-uedhoc.a` in your project
 
 ## Project (Folder) Structure
 
 ```
 .
+|---cddl_models/
 |---externals/
-|---modules/
+|---inc/
 |---samples/
+|---scripts/
+|---src/
 |---test/
 |---test_vectors/
 ```
-
+* The folder `cddl_models` contains CDDL models for all CBOR structures.
 * The folder `externals` contains the external libraries and tools as git submodules.
-* The folder `modules` contains the core implementations -- OSCORE and EDHOC.
+* The folder `inc` contains all header file.
 * The folder `samples` contains some usage examples.
+* The folder `scripts` contains scripts for generatinc C code from CDDL models and converting the json formatted EDHOC test vectors to a C header
+* The folder `src` contains all source file.
 * The folder `test` contains automated tests. 
 * The folder `test_vectors` contains tests vectors. 
 
@@ -109,25 +114,14 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len);
 ##### uEDHOC
 
 
-| Suit | Algorithms                                                   |
-| ---- | ------------------------------------------------------------ |
-| 0    | AES-CCM-16-64-128, SHA-256, 8, X25519, EdDSA, AES-CCM-16-64-128, SHA-256 |
+| Suit | Algorithms                                                                 |
+| ---- | -------------------------------------------------------------------------- |
+| 0    | AES-CCM-16-64-128, SHA-256, 8, X25519, EdDSA, AES-CCM-16-64-128, SHA-256   |
 | 1    | AES-CCM-16-128-128, SHA-256, 16, X25519, EdDSA, AES-CCM-16-64-128, SHA-256 |
-| 2    | AES-CCM-16-64-128, SHA-256, 8, P-256, ES256, AES-CCM-16-64-128, SHA-256 |
-| 3    | AES-CCM-16-128-128, SHA-256, 16, P-256, ES256, AES-CCM-16-64-128, SHA-256 |
+| 2    | AES-CCM-16-64-128, SHA-256, 8, P-256, ES256, AES-CCM-16-64-128, SHA-256    |
+| 3    | AES-CCM-16-128-128, SHA-256, 16, P-256, ES256, AES-CCM-16-64-128, SHA-256  |
 
 
-
-## External Libraries
-
-Several external libraries are used as git submodules
-
-| Name         | exchangeable | used in        | License                                                      | Version                                  |
-| ------------ | ------------ | -------------- | ------------------------------------------------------------ | ---------------------------------------- |
-| tinycbor     | No           | uOSCORE/uEDHOC | [MIT](https://github.com/zephyrproject-rtos/tinycbor/blob/zephyr/LICENSE) | 31ae89e4b768612722620cb6cb173a0de4a19cc9 |
-| tinycrypt    | Yes          | uOSCORE/uEDHOC | [custom](https://github.com/intel/tinycrypt/blob/master/LICENSE) | 5969b0e0f572a15ed95dc272e57104faeb5eb6b0 |
-| compact25519 | Yes          | uEDHOC         | [CC0 1.0](https://github.com/DavyLandman/compact25519/blob/master/LICENSE) | a5abe6fdf36a13237d674c848b6ccf73efcd5ad4 |
-| cantcoap     | Yes          | Samples        | [BSD 2-Clause](https://github.com/staropram/cantcoap/blob/master/LICENSE) | cce97e570bfc918583ee7f2a3baf17ce9b754754 |
 
 ## Using the Samples
 
