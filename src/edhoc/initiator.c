@@ -27,7 +27,6 @@
 #include "edhoc/suites.h"
 #include "edhoc/th.h"
 #include "edhoc/txrx_wrapper.h"
-#include "edhoc/c_x.h"
 #include "edhoc/ciphertext.h"
 #include "edhoc/runtime_context.h"
 #include "edhoc/bstr_encode_decode.h"

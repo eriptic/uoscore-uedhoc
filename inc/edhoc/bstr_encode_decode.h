@@ -1,4 +1,8 @@
-
+/*
+ * Copyright (c) 2022 Eriptic Technologies.
+ *
+ * SPDX-License-Identifier: Apache-2.0 or MIT
+ */
 
 #ifndef BSTR_ENCODE_DECODE_H
 #define BSTR_ENCODE_DECODE_H

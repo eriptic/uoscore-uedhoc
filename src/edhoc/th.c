@@ -11,7 +11,6 @@
 
 #include "edhoc.h"
 
-#include "edhoc/c_x.h"
 #include "edhoc/th.h"
 #include "edhoc/bstr_encode_decode.h"
 #include "edhoc/int_encode_decode.h"

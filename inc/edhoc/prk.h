@@ -19,7 +19,7 @@
 /**
  * @brief   derives a pseudo random key (prk) form anther prk and static DH 
  *          keys.
- * @parma   static_dh_auth true if static DH keys should be used
+ * @param   static_dh_auth true if static DH keys should be used
  * @param   suite the cipher suite used
  * @param   label EDHOC-KDF label 
  * @param   context EDHOC-KDF context

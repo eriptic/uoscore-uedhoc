@@ -26,7 +26,7 @@
  * @param   prk_len length of prk
  * @param   label predefined integer value
  * @param   context relevant only for MAC_2 and MAC_3
- * @param   context_len lenhgt of context
+ * @param   context_len length of context
  * @param   okm_len length of okm
  * @param   okm ouput pointer
  */

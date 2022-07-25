@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2022 Eriptic Technologies.
+ *
+ * SPDX-License-Identifier: Apache-2.0 or MIT
+ */
+
 #include "cbor/edhoc_encode_bstr_type.h"
 #include "cbor/edhoc_decode_bstr_type.h"
 

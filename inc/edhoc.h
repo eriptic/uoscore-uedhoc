@@ -17,7 +17,6 @@
 #include "edhoc/edhoc_method_type.h"
 #include "edhoc/messages.h"
 #include "edhoc/suites.h"
-#include "edhoc/c_x.h"
 #include "edhoc/hkdf_info.h"
 
 #include "common/oscore_edhoc_error.h"
