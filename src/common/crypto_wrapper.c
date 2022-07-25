@@ -488,7 +488,7 @@ enum err __attribute__((weak))
 hkdf_sha_256(struct byte_array *master_secret, struct byte_array *master_salt,
 	     struct byte_array *info, struct byte_array *out)
 {
-	uint8_t prk[SHA_DEFAULT_SIZE];
+	uint8_t prk[HASH_DEFAULT_SIZE];
 	TRY(hkdf_extract(SHA_256, master_salt->ptr, master_salt->len,
 			 master_secret->ptr, master_secret->len, prk));
 
@@ -604,7 +604,7 @@ ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk,
 #ifdef MBEDTLS
 		size_t length;
 		TRY_EXPECT(psa_hash_compute(PSA_ALG_SHA_256, (uint8_t *)&seed,
-					    sizeof(seed), sk, SHA_DEFAULT_SIZE,
+					    sizeof(seed), sk, HASH_DEFAULT_SIZE,
 					    &length),
 			   0);
 		if (length != 32) {
@@ -684,9 +684,9 @@ hash(enum hash_alg alg, const uint8_t *in, const uint32_t in_len, uint8_t *out)
 #ifdef MBEDTLS
 		size_t length;
 		TRY_EXPECT(psa_hash_compute(PSA_ALG_SHA_256, in, in_len, out,
-					    SHA_DEFAULT_SIZE, &length),
+					    HASH_DEFAULT_SIZE, &length),
 			   PSA_SUCCESS);
-		if (length != SHA_DEFAULT_SIZE) {
+		if (length != HASH_DEFAULT_SIZE) {
 			return sha_failed;
 		}
 		return ok;

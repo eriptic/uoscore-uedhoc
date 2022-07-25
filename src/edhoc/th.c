@@ -26,12 +26,13 @@
 
 /**
  * @brief   Setups a data structure used as input for th2, namely CBOR sequence
- *          (H(message_1), G_Y, C_R)
- * @param   msg1 pointer to a message 1
- * @param   msg1_len length of message 1
- * @param   c_i Pointer to the conception identifier of the initiator
- * @param   g_y Pointer to the public DH parameter
- * @param   c_r Pointer to the conception identifier of the responder
+ *           H( G_Y, C_R, H(message_1) )
+ * @param   hash_msg1 pointer to the hash of message 1
+ * @param   hash_msg1_len length of hash_msg1
+ * @param   g_y pointer to the public DH parameter
+ * @param	g_y_len length of g_y
+ * @param   c_r pointer to the conception identifier of the responder
+ * @param	c_r_len length of c_r
  * @param   th2_input ouput buffer for the data structure
  * @param   th2_input_len length of th2_input
  */
@@ -84,11 +85,10 @@ static inline enum err th2_input_encode(uint8_t *hash_msg1,
  * @param   th34_input data structure to be hashed for TH_3/4
  * @param   th34_input_len length of th34_input
  */
-static inline enum err th34_input_encode(uint8_t *th23, uint32_t th23_len,
-					 uint8_t *plaintext_23,
-					 uint32_t plaintext_23_len,
-					 uint8_t *th34_input,
-					 uint32_t *th34_input_len)
+static enum err th34_input_encode(uint8_t *th23, uint32_t th23_len,
+				  uint8_t *plaintext_23,
+				  uint32_t plaintext_23_len,
+				  uint8_t *th34_input, uint32_t *th34_input_len)
 {
 	TRY(check_buffer_size(*th34_input_len, th23_len + 2));
 
@@ -105,6 +105,36 @@ static inline enum err th34_input_encode(uint8_t *th23, uint32_t th23_len,
 	return ok;
 }
 
+/**
+ * @brief Computes TH_3/TH4. Where: 
+ * 				TH_3 = H(TH_2, PLAINTEXT_2)
+ * 				TH_4 = H(TH_3, PLAINTEXT_3)
+ * 
+ * 
+ * @param alg the hash algorithm to be used
+ * @param th23 th2 if we compute TH_3 and th3 if we compute TH_4
+ * @param th23_len length of th23
+ * @param plaintext_23 the plaintext
+ * @param plaintext_33_len length of plaintext_23
+ * @param th34 the result
+ * @return enum err 
+ */
+static enum err th34_calculate(enum hash_alg alg, uint8_t *th23,
+			       uint32_t th23_len, uint8_t *plaintext_23,
+			       uint32_t plaintext_23_len, uint8_t *th34)
+{
+	uint32_t th34_input_len =
+		th23_len + plaintext_23_len + ENCODING_OVERHEAD;
+	TRY(check_buffer_size(TH34_INPUT_DEFAULT_SIZE, th34_input_len));
+	uint8_t th34_input[TH34_INPUT_DEFAULT_SIZE];
+
+	TRY(th34_input_encode(th23, th23_len, plaintext_23, plaintext_23_len,
+			      th34_input, &th34_input_len));
+	TRY(hash(alg, th34_input, th34_input_len, th34));
+	PRINT_ARRAY("TH34", th34, HASH_DEFAULT_SIZE);
+	return ok;
+}
+
 enum err th2_calculate(enum hash_alg alg, uint8_t *msg1, uint32_t msg1_len,
 		       uint8_t *g_y, uint32_t g_y_len, uint8_t *c_r,
 		       uint32_t c_r_len, uint8_t *th2)
@@ -112,13 +142,13 @@ enum err th2_calculate(enum hash_alg alg, uint8_t *msg1, uint32_t msg1_len,
 	uint8_t th2_input[TH2_INPUT_DEFAULT_SIZE];
 	uint32_t th2_input_len = sizeof(th2_input);
 
-	uint8_t hash_msg1[SHA_DEFAULT_SIZE];
+	uint8_t hash_msg1[HASH_DEFAULT_SIZE];
 	TRY(hash(alg, msg1, msg1_len, hash_msg1));
-	PRINT_ARRAY("hash_msg1_raw", hash_msg1, SHA_DEFAULT_SIZE);
+	PRINT_ARRAY("hash_msg1_raw", hash_msg1, HASH_DEFAULT_SIZE);
 	TRY(th2_input_encode(hash_msg1, sizeof(hash_msg1), g_y, g_y_len, c_r,
 			     c_r_len, th2_input, &th2_input_len));
 	TRY(hash(alg, th2_input, th2_input_len, th2));
-	PRINT_ARRAY("TH2", th2, SHA_DEFAULT_SIZE);
+	PRINT_ARRAY("TH2", th2, HASH_DEFAULT_SIZE);
 	return ok;
 }
 
@@ -126,28 +156,14 @@ enum err th3_calculate(enum hash_alg alg, uint8_t *th2, uint32_t th2_len,
 		       uint8_t *plaintext_2, uint32_t plaintext_2_len,
 		       uint8_t *th3)
 {
-	uint32_t th34_input_len = th2_len + plaintext_2_len + 6;
-	TRY(check_buffer_size(TH3_INPUT_DEFAULT_SIZE, th34_input_len));
-	uint8_t th3_input[TH3_INPUT_DEFAULT_SIZE];
-
-	TRY(th34_input_encode(th2, th2_len, plaintext_2, plaintext_2_len,
-			      th3_input, &th34_input_len));
-	TRY(hash(alg, th3_input, th34_input_len, th3));
-	PRINT_ARRAY("TH3", th3, SHA_DEFAULT_SIZE);
-	return ok;
+	return th34_calculate(alg, th2, th2_len, plaintext_2, plaintext_2_len,
+			      th3);
 }
 
 enum err th4_calculate(enum hash_alg alg, uint8_t *th3, uint32_t th3_len,
-		       uint8_t *ciphertext_3, uint32_t ciphertext_3_len,
+		       uint8_t *plaintext_3, uint32_t plaintext_3_len,
 		       uint8_t *th4)
 {
-	uint32_t th4_input_len = th3_len + ciphertext_3_len + ENCODING_OVERHEAD;
-	TRY(check_buffer_size(TH4_INPUT_DEFAULT_SIZE, th4_input_len));
-	uint8_t th4_input[TH4_INPUT_DEFAULT_SIZE];
-
-	TRY(th34_input_encode(th3, th3_len, ciphertext_3, ciphertext_3_len,
-			      th4_input, &th4_input_len));
-	TRY(hash(alg, th4_input, th4_input_len, th4));
-	PRINT_ARRAY("TH4", th4, SHA_DEFAULT_SIZE);
-	return ok;
+	return th34_calculate(alg, th3, th3_len, plaintext_3, plaintext_3_len,
+			      th4);
 }

@@ -181,9 +181,9 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	PRINT_ARRAY("G_XY (ECDH shared secret) ", g_xy, sizeof(g_xy));
 
 	/*calculate th2*/
-	uint8_t th2[SHA_DEFAULT_SIZE];
+	uint8_t th2[HASH_DEFAULT_SIZE];
 	uint32_t th2_len = get_hash_len(rc->suite.edhoc_hash);
-	TRY(check_buffer_size(SHA_DEFAULT_SIZE, th2_len));
+	TRY(check_buffer_size(HASH_DEFAULT_SIZE, th2_len));
 
 	TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1, rc->msg1_len, g_y,
 			  g_y_len, c_r, c_r_len, th2));
@@ -240,9 +240,9 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 			     &sign_or_mac_len));
 
 	/********msg3 create and send**************************************/
-	uint8_t th3[SHA_DEFAULT_SIZE];
+	uint8_t th3[HASH_DEFAULT_SIZE];
 	uint32_t th3_len = get_hash_len(rc->suite.edhoc_hash);
-	TRY(check_buffer_size(SHA_DEFAULT_SIZE, th3_len));
+	TRY(check_buffer_size(HASH_DEFAULT_SIZE, th3_len));
 	TRY(th3_calculate(rc->suite.edhoc_hash, (uint8_t *)&th2, th2_len,
 			  plaintext2, plaintext2_len, th3));
 

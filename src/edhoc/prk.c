@@ -36,9 +36,9 @@ enum err prk_derive(bool static_dh_auth, struct suite suite, uint8_t label,
 					 stat_pk, stat_pk_len, dh_secret));
 		PRINT_ARRAY("dh_secret", dh_secret, sizeof(dh_secret));
 
-		uint8_t salt[SHA_DEFAULT_SIZE];
+		uint8_t salt[HASH_DEFAULT_SIZE];
 		uint32_t salt_len = get_hash_len(suite.edhoc_hash);
-		TRY(check_buffer_size(SHA_DEFAULT_SIZE, salt_len));
+		TRY(check_buffer_size(HASH_DEFAULT_SIZE, salt_len));
 
 		TRY(edhoc_kdf(suite.edhoc_hash, prk_in, prk_in_len, label,
 			      context, context_len, salt_len, salt));

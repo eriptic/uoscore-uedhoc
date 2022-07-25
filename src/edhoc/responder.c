@@ -224,9 +224,9 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	authentication_type_get(method, &rc->static_dh_i, &static_dh_r);
 
 	/******************* create and send message 2*************************/
-	uint8_t th2[SHA_DEFAULT_SIZE];
+	uint8_t th2[HASH_DEFAULT_SIZE];
 	uint32_t th2_len = get_hash_len(rc->suite.edhoc_hash);
-	TRY(check_buffer_size(SHA_DEFAULT_SIZE, th2_len));
+	TRY(check_buffer_size(HASH_DEFAULT_SIZE, th2_len));
 	TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1, rc->msg1_len,
 			  c->g_y.ptr, c->g_y.len, c->c_r.ptr, c->c_r.len, th2));
 

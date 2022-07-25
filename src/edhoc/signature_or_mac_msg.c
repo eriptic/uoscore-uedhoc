@@ -35,8 +35,8 @@ enum err mac(const uint8_t *prk, uint32_t prk_len, const uint8_t *th,
 {
 	/*encode th as bstr*/
 	uint32_t th_encoded_len = th_len + 2;
-	TRY(check_buffer_size(SHA_DEFAULT_SIZE + 2, th_encoded_len));
-	uint8_t th_encoded[SHA_DEFAULT_SIZE + 2];
+	TRY(check_buffer_size(HASH_DEFAULT_SIZE + 2, th_encoded_len));
+	uint8_t th_encoded[HASH_DEFAULT_SIZE + 2];
 	TRY(encode_byte_string(th, th_len, th_encoded, &th_encoded_len));
 
 	/**/
@@ -83,17 +83,17 @@ static enum err signature_struct_gen(const uint8_t *th, uint32_t th_len,
 				     uint32_t mac_len, uint8_t *out,
 				     uint32_t *out_len)
 {
-	uint8_t th_enc[SHA_DEFAULT_SIZE + 2];
+	uint8_t th_enc[HASH_DEFAULT_SIZE + 2];
 	uint32_t th_enc_len = sizeof(th_enc);
 
 	TRY(encode_byte_string(th, th_len, th_enc, &th_enc_len));
 
 	uint32_t tmp_len = th_enc_len + cred_len + ead_len;
 
-	TRY(check_buffer_size(CRED_DEFAULT_SIZE + SHA_DEFAULT_SIZE +
+	TRY(check_buffer_size(CRED_DEFAULT_SIZE + HASH_DEFAULT_SIZE +
 				      AD_DEFAULT_SIZE,
 			      tmp_len));
-	uint8_t tmp[CRED_DEFAULT_SIZE + SHA_DEFAULT_SIZE + AD_DEFAULT_SIZE];
+	uint8_t tmp[CRED_DEFAULT_SIZE + HASH_DEFAULT_SIZE + AD_DEFAULT_SIZE];
 
 	memcpy(tmp, th_enc, th_enc_len);
 	memcpy(tmp + th_enc_len, cred, cred_len);
@@ -150,8 +150,8 @@ enum err signature_or_mac(enum sgn_or_mac_op op, bool static_dh,
 		}
 	} else { /*we verify here*/
 		uint32_t mac_buf_len = get_hash_len(suite->edhoc_hash);
-		TRY(check_buffer_size(SHA_DEFAULT_SIZE, mac_buf_len));
-		uint8_t mac_buf[SHA_DEFAULT_SIZE];
+		TRY(check_buffer_size(HASH_DEFAULT_SIZE, mac_buf_len));
+		uint8_t mac_buf[HASH_DEFAULT_SIZE];
 
 		TRY(mac(prk, prk_len, th, th_len, id_cred, id_cred_len, cred,
 			cred_len, ead, ead_len, mac_label, static_dh, suite,

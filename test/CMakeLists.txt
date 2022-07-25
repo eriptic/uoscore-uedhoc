@@ -24,11 +24,6 @@ include_directories(
   ../externals/mbedtls/include/mbedtls
   ../externals/mbedtls/include/psa)
 
-# todo remove the inc after cleaning up all self defined types in oscore.h and edhoc.h
-# ../externals/mbedtls/library
-# ../externals/mbedtls/include
-# ../externals/mbedtls/include/mbedtls
-# ../externals/mbedtls/include/psa
 add_definitions(
 
   #-DDEBUG_PRINT
