@@ -61,9 +61,9 @@ The API of uEDHOC consists of four functions:
 * `edhoc_responder_run()`,
 * `edhoc_exporter()`,
 
-`ephemeral_dh_key_gen()` is used to generate fresh ephemeral DH keys before running the protocol. This function requires a random seed suable for cryptographic purposes. `edhoc_initiator_run()` and `edhoc_responder_run() ` has to be called on the initiator and responder side respectively. They return the External Authorization data `EAD_x`,  the derived shared secret `PRK_4x3m` and the transcript hash `TH_4`.   `PRK_4x3m` and `TH_4` are used as inputs for `edhoc_exporter()` to derive application specific keys, e.g., OSCORE master secret and OSCORE master salt.
+`ephemeral_dh_key_gen()` is used to generate fresh ephemeral DH keys before running the protocol. This function requires a random seed suable for cryptographic purposes. `edhoc_initiator_run()` and `edhoc_responder_run() ` has to be called on the initiator and responder side respectively. They return the External Authorization data `EAD_x`,  the derived shared secret `PRK_out`.   `PRK_out` is used as input for `edhoc_exporter()` to derive application specific keys, e.g., OSCORE master secret and OSCORE master salt.
 
-The EDHOC protocol requires the exchange of three messages which is independent of the underlying message transport protocol. For example [appendix-A.3 in the EDHOC specification](https://datatracker.ietf.org/doc/html/draft-ietf-lake-edhoc-12#appendix-A.3) describes how  EDHOC can be transferred over CoAP, however CoAP is not mandatory. In order to be independent of the transport protocol uEDHOC uses two callback functions which need to be implemented by the user for handling the sending and receiving of messages. These functions are:
+The EDHOC protocol requires the exchange of three messages (and an optional message 4) which is independent of the underlying message transport protocol. For example [appendix-A.2 in the EDHOC specification](https://datatracker.ietf.org/doc/html/draft-ietf-lake-edhoc-15#appendix-A.2) describes how  EDHOC can be transferred over CoAP, however CoAP is not mandatory. In order to be independent of the transport protocol uEDHOC uses two callback functions which need to be implemented by the user for handling the sending and receiving of messages. These functions are:
 
 ```c
 /**
