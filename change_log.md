@@ -3,8 +3,8 @@
 #### v0.0.1 -> v0.1.0 (13 Apr 2021)
 * update EDHOC to version v5 of the draft
 
-#### v0.1.0 -> v2.0.0 (xx xx xxxx)
-* update EDHOC to version v12 of the draft
+#### v0.1.0 -> v1.0.0 (25 Jul 2022)
+* update EDHOC to version v15 of the draft
 * change the CBOR library to zcbor
 * change the format of the text vectors
 * Support for suites 0,1,2,3
