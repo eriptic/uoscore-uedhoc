@@ -21,6 +21,7 @@
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
 
+#define OPTIONS_END_MARKER  (0xFF)
 
 enum err options_into_byte_string(struct o_coap_option *options,
 				  uint8_t options_cnt,
@@ -212,7 +213,13 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 		/* Update parameters*/
 		i = (uint16_t)(i + temp_option_header_len + temp_option_len);
 		temp_options_ptr += temp_option_len;
-		temp_options_count++;
+		if (MAX_OPTION_COUNT > temp_options_count) {
+			temp_options_count++;
+		}
+		else {
+			return not_valid_input_packet;
+		}
+
 	}
 
 	// Assign options count number
@@ -230,6 +237,7 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
 	if (payload_len < HEADER_LEN) {
 		return not_valid_input_packet;
 	}
+	out->options_cnt = 0;
 	out->header.ver =
 		((*tmp_p) & HEADER_VERSION_MASK) >> HEADER_VERSION_OFFSET;
 	out->header.type = ((*tmp_p) & HEADER_TYPE_MASK) >> HEADER_TYPE_OFFSET;
@@ -261,10 +269,7 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
 	/* Options, if any */
 	if (payload_len != 0) {
 		/* Check if there any options exist*/
-		if (*tmp_p == 0xFF) {
-			/* No options*/
-			out->options_cnt = 0;
-		} else {
+		if (*tmp_p != OPTIONS_END_MARKER) {
 			/* Length of options byte string */
 			uint16_t options_len = 0;
 			uint8_t *temp_option_ptr = tmp_p;
@@ -272,7 +277,7 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
 			/* Move tmp_p to the payload to get the length of options byte string*/
 
 			if (payload_len != 0) {
-				while (*tmp_p != 0xFF) {
+				while (*tmp_p != OPTIONS_END_MARKER) {
 					payload_len--;
 					tmp_p++;
 					options_len++;
@@ -287,9 +292,6 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
 				TRY(buf2options(temp_option_ptr, options_len,
 						out->options,
 						&(out->options_cnt)));
-
-			} else {
-				out->options_cnt = 0;
 			}
 		}
 	}

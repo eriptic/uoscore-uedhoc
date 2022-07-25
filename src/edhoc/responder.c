@@ -99,9 +99,11 @@ static inline enum err msg1_parse(uint8_t *msg1, uint32_t msg1_len,
 	if (m._message_1_C_I_choice == _message_1_C_I_int) {
 		TRY(encode_int(&m._message_1_C_I_int, 1, c_i, c_i_len));
 	} else {
-		TRY(_memcpy_s(c_i, *c_i_len, m._message_1_C_I_bstr.value,
-			      (uint32_t)m._message_1_C_I_bstr.len));
-		*c_i_len = (uint32_t)m._message_1_C_I_bstr.len;
+
+  TRY(_memcpy_s(c_i, *c_i_len, m._message_1_C_I_bstr.value,
+              (uint32_t)m._message_1_C_I_bstr.len));
+      *c_i_len = (uint32_t)m._message_1_C_I_bstr.len;
+
 	}
 	PRINT_ARRAY("msg1 C_I_raw", c_i, *c_i_len);
 
@@ -125,7 +127,7 @@ static inline enum err msg1_parse(uint8_t *msg1, uint32_t msg1_len,
 static inline bool selected_suite_is_supported(uint8_t selected,
 					       struct byte_array *suites_r)
 {
-	for (uint8_t i = 0; i < suites_r->len; i++) {
+	for (uint32_t i = 0; i < suites_r->len; i++) {
 		if (suites_r->ptr[i] == selected)
 			PRINTF("Suite %d will be used in this EDHOC run.\n",
 			       selected);
@@ -392,11 +394,17 @@ enum err edhoc_responder_run(
 
 	PRINT_MSG("waiting to receive message 1...\n");
 	TRY(rx(c->sock, rc.msg1, &rc.msg1_len));
+	if (MSG_1_DEFAULT_SIZE < rc.msg1_len) {
+		return error_message_received;
+	}
 	TRY(msg2_gen(c, &rc, ead_1, ead_1_len));
 	TRY(tx(c->sock, rc.msg2, rc.msg2_len));
 
 	PRINT_MSG("waiting to receive message 3...\n");
 	TRY(rx(c->sock, rc.msg3, &rc.msg3_len));
+	if (MSG_3_DEFAULT_SIZE < rc.msg3_len) {
+		return error_message_received;
+	}
 	TRY(msg3_process(c, &rc, cred_i_array, num_cred_i, ead_3, ead_3_len,
 			 prk_out, prk_out_len));
 	if (c->msg4) {
