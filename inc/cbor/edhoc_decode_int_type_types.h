@@ -4,14 +4,14 @@
  * Generated with a --default-max-qty of 3
  */
 
-#ifndef EDHOC_ENCODE_TH4_TYPES_H__
-#define EDHOC_ENCODE_TH4_TYPES_H__
+#ifndef EDHOC_DECODE_INT_TYPE_TYPES_H__
+#define EDHOC_DECODE_INT_TYPE_TYPES_H__
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
-#include "zcbor_encode.h"
+#include "zcbor_decode.h"
 
 /** Which value for --default-max-qty this file was created with.
  *
@@ -22,10 +22,7 @@
  */
 #define DEFAULT_MAX_QTY 3
 
-struct th4 {
-	struct zcbor_string _th4_th_3;
-	struct zcbor_string _th4_CIPHERTEXT_3;
-};
 
 
-#endif /* EDHOC_ENCODE_TH4_TYPES_H__ */
+
+#endif /* EDHOC_DECODE_INT_TYPE_TYPES_H__ */

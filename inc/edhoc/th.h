@@ -12,7 +12,6 @@
 #define TH_H
 
 #include "suites.h"
-#include "c_x.h"
 
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
@@ -23,24 +22,26 @@
  * @param   msg1 pointer to a message 1
  * @param   msg1_len length of message 1
  * @param   g_y Pointer to the public DH parameter
+ * @param   g_y_len length of g_y
  * @param   c_r Pointer to the conception identifier of the responder
+ * @param   c_r_len length of c_r
  * @param   th2 ouput buffer
  */
 enum err th2_calculate(enum hash_alg alg, uint8_t *msg1, uint32_t msg1_len,
-		       uint8_t *g_y, uint32_t g_y_len, struct c_x *c_r,
-		       uint8_t *th2);
+		       uint8_t *g_y, uint32_t g_y_len, uint8_t *c_r,
+		       uint32_t c_r_len, uint8_t *th2);
 
 /**
- * @brief   calculates transcript hash th3
+ * @brief   calculates transcript hash th3. TH_3 = H(TH_2, PLAINTEXT_2) 
  * @param   alg hash algorithm to be used
  * @param   th2 pointer to a th2
  * @param   th2_len length of th2
- * @param   ciphertext_2 
- * @param   ciphertext_2_len  length of ciphertext_2_len
+ * @param   plaintext_2 plaintext 2
+ * @param   PLAINTEXT_2_len  length of plaintext_2
  * @param   th3 ouput buffer
  */
 enum err th3_calculate(enum hash_alg alg, uint8_t *th2, uint32_t th2_len,
-		       uint8_t *ciphertext_2, uint32_t ciphertext_2_len,
+		       uint8_t *plaintext_2, uint32_t plaintext_2_len,
 		       uint8_t *th3);
 
 /**
@@ -48,12 +49,12 @@ enum err th3_calculate(enum hash_alg alg, uint8_t *th2, uint32_t th2_len,
  * @param   alg hash algorithm to be used
  * @param   th3 pointer to a th3
  * @param   th3_len length of th3
- * @param   ciphertext_3
- * @param   ciphertext_3_len  length of ciphertext_3_len
+ * @param   plaintext_3 plaintext 3
+ * @param   plaintext_3_len  length of plaintext_3
  * @param   th4 ouput buffer
  */
 enum err th4_calculate(enum hash_alg alg, uint8_t *th3, uint32_t th3_len,
-		       uint8_t *ciphertext_3, uint32_t ciphertext_3_len,
+		       uint8_t *plaintext_3, uint32_t plaintext_3_len,
 		       uint8_t *th4);
 
 #endif

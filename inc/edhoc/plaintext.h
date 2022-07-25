@@ -27,7 +27,7 @@ enum err id_cred2kid(const uint8_t *id_cred, uint32_t id_cred_len,
 
 /**
  * @brief   Splits a the plaintext of message 2 to its subfields
- * @param   ptxt pointer to the paintext
+ * @param   ptxt pointer to the plaintext
  * @param   ptxt_len length of ptxt
  * @param   id_cred_x ID_CRED_x
  * @param   id_cred_x_len length of id_cred_x_len
@@ -49,8 +49,8 @@ enum err plaintext_split(uint8_t *ptxt, const uint32_t ptxt_len,
  * @param   sign_or_mac_len length of sign_or_mac
  * @param   ad axillary data
  * @param   ad_len length of ad 
- * @param   paintext pointer to the paintext
- * @param   paintext_len length of paintext
+ * @param   plaintext pointer to the plaintext
+ * @param   plaintext_len length of plaintext
  */
 enum err plaintext_encode(const uint8_t *id_cred, uint32_t id_cred_len,
 			  const uint8_t *sgn_or_mac, uint32_t sgn_or_mac_len,

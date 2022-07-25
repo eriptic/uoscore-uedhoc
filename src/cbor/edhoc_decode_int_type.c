@@ -8,21 +8,20 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
-#include "zcbor_encode.h"
-#include "cbor/edhoc_encode_th4.h"
+#include "zcbor_decode.h"
+#include "cbor/edhoc_decode_int_type.h"
 
 #if DEFAULT_MAX_QTY != 3
 #error "The type file was generated with a different default_max_qty than this file"
 #endif
 
 
-static bool encode_th4(
-		zcbor_state_t *state, const struct th4 *input)
+static bool decode_int_type_i(
+		zcbor_state_t *state, int32_t *result)
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = (((((zcbor_bstr_encode(state, (&(*input)._th4_th_3))))
-	&& ((zcbor_bstr_encode(state, (&(*input)._th4_CIPHERTEXT_3)))))));
+	bool tmp_result = (((zcbor_int32_decode(state, (&(*result))))));
 
 	if (!tmp_result)
 		zcbor_trace();
@@ -32,16 +31,16 @@ static bool encode_th4(
 
 
 
-bool cbor_encode_th4(
-		uint8_t *payload, size_t payload_len,
-		const struct th4 *input,
+bool cbor_decode_int_type_i(
+		const uint8_t *payload, size_t payload_len,
+		int32_t *result,
 		size_t *payload_len_out)
 {
 	zcbor_state_t states[2];
 
-	zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), payload, payload_len, 2);
+	zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), payload, payload_len, 1);
 
-	bool ret = encode_th4(states, input);
+	bool ret = decode_int_type_i(states, result);
 
 	if (ret && (payload_len_out != NULL)) {
 		*payload_len_out = MIN(payload_len,

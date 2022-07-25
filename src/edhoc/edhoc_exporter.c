@@ -20,12 +20,26 @@
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"
 
-enum err edhoc_exporter(enum hash_alg app_hash_alg,
-				const uint8_t *prk_4x3m, uint32_t prk_4x3m_len,
-				const uint8_t *th4, uint32_t th4_len,
-				const char *label, uint8_t *out,
-				uint32_t out_len)
+enum err prk_out2exporter(enum hash_alg app_hash_alg, uint8_t *prk_out,
+			  uint32_t prk_out_len, uint8_t *prk_exporter)
 {
-	return okm_calc(app_hash_alg, prk_4x3m, prk_4x3m_len, th4, th4_len,
-			label, NULL, 0, out, out_len);
+	return edhoc_kdf(app_hash_alg, prk_out, prk_out_len, PRK_exporter, NULL,
+			 0, get_hash_len(app_hash_alg), prk_exporter);
+}
+
+enum err prk_out_update(enum hash_alg app_hash_alg, uint8_t *prk_out,
+			uint32_t prk_out_len, uint8_t *context,
+			uint32_t context_len, uint8_t *prk_out_new)
+{
+	return edhoc_kdf(app_hash_alg, prk_out, prk_out_len, PRK_out_update,
+			 context, context_len, get_hash_len(app_hash_alg),
+			 prk_out_new);
+}
+
+enum err edhoc_exporter(enum hash_alg app_hash_alg, enum export_label label,
+			uint8_t *prk_exporter, uint32_t prk_exporter_len,
+			uint8_t *out, uint32_t out_len)
+{
+	return edhoc_kdf(app_hash_alg, prk_exporter, prk_exporter_len, label,
+			 NULL, 0, out_len, out);
 }
