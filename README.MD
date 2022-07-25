@@ -207,16 +207,3 @@ When using the samples for microcontroller , they have to be connected to an IPv
 
 The logic of uOSCORE and uEDHOC is independent form the cryptographic library, i.e., the cryptographic library can easily be exchanged by the user. For that the user needs to provide implementations for the functions specified in `crypto_wrapper.c`. 
 
-<<<<<<< HEAD
-## Using uOSCORE and uEDHOC as Static Libraries 
-
-Self-contained, tested static libraries are available in the folder `test/packaged` .  They contain the protocol logic and the required subroutines from tinycrypt, tinycbor and compact25519. These libraries are build with optimization -O3. Currently supported are the following architectures:
-
-* x86
-* x86-64
-* Cortex M0
-* Cortex M3
-* Cortex M4
-* Cortex M33
-=======
->>>>>>> zephyr_contrib
