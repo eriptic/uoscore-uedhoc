@@ -27,8 +27,10 @@ enum err check_buffer_size(uint32_t is_size, uint32_t required_size)
 enum err _memcpy_s(uint8_t *dest, uint32_t dest_len, const uint8_t *source,
 		   uint32_t source_len)
 {
-	if ((NULL == dest) || (NULL == source))
-	{
+	if (source_len == 0) {
+		return ok;
+	}
+	if ((NULL == dest) || (NULL == source)) {
 		return wrong_parameter;
 	}
 
