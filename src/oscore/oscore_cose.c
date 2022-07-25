@@ -57,7 +57,7 @@ static enum err create_enc_structure(struct byte_array *external_aad,
 	return ok;
 }
 
-enum err cose_decrypt(struct byte_array *in_ciphertext,
+enum err oscore_cose_decrypt(struct byte_array *in_ciphertext,
 		      struct byte_array *out_plaintext,
 		      struct byte_array *nonce,
 		      struct byte_array *recipient_aad, struct byte_array *key)
@@ -88,7 +88,7 @@ enum err cose_decrypt(struct byte_array *in_ciphertext,
 	return ok;
 }
 
-enum err cose_encrypt(struct byte_array *in_plaintext, uint8_t *out_ciphertext,
+enum err oscore_cose_encrypt(struct byte_array *in_plaintext, uint8_t *out_ciphertext,
 		      uint32_t out_ciphertext_len, struct byte_array *nonce,
 		      struct byte_array *sender_aad, struct byte_array *key)
 {

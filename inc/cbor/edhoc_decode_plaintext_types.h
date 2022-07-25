@@ -22,8 +22,15 @@
  */
 #define DEFAULT_MAX_QTY 3
 
-struct map_kid {
-	int32_t _map_kid;
+struct map_kid_ {
+	union {
+		int32_t _map_kid_int;
+		struct zcbor_string _map_kid_bstr;
+	};
+	enum {
+		_map_kid_int,
+		_map_kid_bstr,
+	} _map_kid_choice;
 };
 
 struct map_x5bag {
@@ -75,7 +82,7 @@ struct map_c5u {
 };
 
 struct map {
-	struct map_kid _map_kid;
+	struct map_kid_ _map_kid;
 	uint_fast32_t _map_kid_present;
 	struct map_x5bag _map_x5bag;
 	uint_fast32_t _map_x5bag_present;

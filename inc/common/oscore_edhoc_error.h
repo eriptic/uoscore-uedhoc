@@ -21,8 +21,10 @@ enum err {
 	/*common errors*/
 	ok = 0,
 	buffer_to_small = 1,
-	hkdf_fialed = 2,
+	hkdf_failed = 2,
 	unexpected_result_from_ext_lib = 3,
+	wrong_parameter = 4,
+	crypto_operation_not_implemented = 5,
 
 	/*EDHOC specifc errors*/
 	/*todo implement error messages*/
@@ -44,6 +46,7 @@ enum err {
 	no_such_ca = 117,
 
 	cbor_encoding_error = 119,
+	cbor_decoding_error = 120,
 	suites_i_list_to_long = 121,
 
 	/*OSCORE specific errors*/

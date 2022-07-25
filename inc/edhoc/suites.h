@@ -65,18 +65,50 @@ struct suite {
 enum err get_suite(enum suite_label label, struct suite *suite);
 
 /**
+ * @brief Gets the length of the hash
  * 
- * 
+ * @param alg the hash algorithm used
+ * @return the length
  */
 uint32_t get_hash_len(enum hash_alg alg);
 
 /**
+ * @brief Gets the length of MAC
  * 
- * 
+ * @param alg the AEAD algorithm used
+ * @return the length
  */
 uint32_t get_aead_mac_len(enum aead_alg alg);
+
+/**
+ * @brief Gets the length of KEY
+ * 
+ * @param alg the AEAD algorithm used
+ * @return the length
+ */
 uint32_t get_aead_key_len(enum aead_alg alg);
+
+/**
+ * @brief Gets the length of IV
+ * 
+ * @param alg the AEAD algorithm used
+ * @return the length
+ */
 uint32_t get_aead_iv_len(enum aead_alg alg);
+
+/**
+ * @brief Gets the length of the signature
+ * 
+ * @param alg the signature algorithm used
+ * @return the length
+ */
 uint32_t get_signature_len(enum sign_alg alg);
+
+/**
+ * @brief Gets the length of the ECDH public key
+ * 
+ * @param alg the ECDH algorithm used
+ * @return the length
+ */
 uint32_t get_ecdh_pk_len(enum ecdh_alg alg);
 #endif

@@ -18,9 +18,8 @@
 #include "common/oscore_edhoc_error.h"
 
 #define MAX_PIV_LEN 5
-#define MAX_KID_CONTEXT_LEN                                                    \
-	8 /*This implementation supports Context IDs up to 8 byte*/
-#define MAX_KID_LEN 7
+#define MAX_KID_CONTEXT_LEN 8 /*This implementation supports Context IDs up to 8 byte*/
+#define MAX_KID_LEN 8
 #define MAX_AAD_LEN 30
 #define MAX_INFO_LEN 50
 

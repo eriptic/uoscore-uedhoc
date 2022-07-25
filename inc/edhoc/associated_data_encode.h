@@ -16,7 +16,7 @@
 #include "common/oscore_edhoc_error.h"
 
 /**
- * @brief   Ecodes associated data for message 3. (COSE "Encrypt0") data 
+ * @brief   Encodes associated data for message 3. (COSE "Encrypt0") data 
  *          structure is used 
  * @param   th can be th2 or th3
  * @param   th_len the length of th

@@ -14,7 +14,7 @@
 #include "edhoc.h"
 
 #include "edhoc/cert.h"
-#include "edhoc/signature_or_mac_msg.h"
+#include "edhoc/bstr_encode_decode.h"
 #include "edhoc/retrieve_cred.h"
 
 #include "common/crypto_wrapper.h"
@@ -171,7 +171,8 @@ enum err retrieve_cred(bool static_dh_auth, struct other_party_cred *cred_array,
 		TRY(verify_cert2cred(
 			static_dh_auth, cred_array, cred_num, x5chain,
 			map._id_cred_x_map_x5chain._id_cred_x_map_x5chain.value,
-			(uint32_t) map._id_cred_x_map_x5chain._id_cred_x_map_x5chain.len,
+			(uint32_t)map._id_cred_x_map_x5chain
+				._id_cred_x_map_x5chain.len,
 			cred, cred_len, pk, pk_len, g, g_len));
 		return ok;
 	}
@@ -180,8 +181,9 @@ enum err retrieve_cred(bool static_dh_auth, struct other_party_cred *cred_array,
 		TRY(verify_cert2cred(
 			static_dh_auth, cred_array, cred_num, x5bag,
 			map._id_cred_x_map_x5bag._id_cred_x_map_x5bag.value,
-			(uint32_t) map._id_cred_x_map_x5bag._id_cred_x_map_x5bag.len, cred,
-			cred_len, pk, pk_len, g, g_len));
+			(uint32_t)map._id_cred_x_map_x5bag._id_cred_x_map_x5bag
+				.len,
+			cred, cred_len, pk, pk_len, g, g_len));
 		return ok;
 	}
 	/*c5c*/
@@ -189,8 +191,8 @@ enum err retrieve_cred(bool static_dh_auth, struct other_party_cred *cred_array,
 		TRY(verify_cert2cred(
 			static_dh_auth, cred_array, cred_num, c5c,
 			map._id_cred_x_map_c5c._id_cred_x_map_c5c.value,
-			(uint32_t) map._id_cred_x_map_c5c._id_cred_x_map_c5c.len, cred,
-			cred_len, pk, pk_len, g, g_len));
+			(uint32_t)map._id_cred_x_map_c5c._id_cred_x_map_c5c.len,
+			cred, cred_len, pk, pk_len, g, g_len));
 		return ok;
 	}
 	/*c5b*/
@@ -198,8 +200,8 @@ enum err retrieve_cred(bool static_dh_auth, struct other_party_cred *cred_array,
 		TRY(verify_cert2cred(
 			static_dh_auth, cred_array, cred_num, c5b,
 			map._id_cred_x_map_c5b._id_cred_x_map_c5b.value,
-			(uint32_t) map._id_cred_x_map_c5b._id_cred_x_map_c5b.len, cred,
-			cred_len, pk, pk_len, g, g_len));
+			(uint32_t)map._id_cred_x_map_c5b._id_cred_x_map_c5b.len,
+			cred, cred_len, pk, pk_len, g, g_len));
 		return ok;
 	}
 

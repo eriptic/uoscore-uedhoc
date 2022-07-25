@@ -202,7 +202,7 @@ static inline enum err plaintext_encrypt(struct context *c,
 					 uint8_t *out_ciphertext,
 					 uint32_t out_ciphertext_len)
 {
-	return cose_encrypt(in_plaintext, out_ciphertext, out_ciphertext_len,
+	return oscore_cose_encrypt(in_plaintext, out_ciphertext, out_ciphertext_len,
 			    &c->rrc.nonce, &c->rrc.aad, &c->sc.sender_key);
 }
 

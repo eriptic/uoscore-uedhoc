@@ -37,4 +37,19 @@ enum role { INITIATOR, RESPONDER };
  */
 int test_edhoc(enum role p, uint8_t vec_num);
 
+/**
+ * @brief 		Tests the functions of the exporter interface
+ */
+void test_exporter(void);
+
+/**
+ * @brief 		Executes an instance of a responder and a initiator in 
+ * 				parallel and checks if the results are the same. This test is 
+ * 				especially relevant for ECC suites, e.g. P256 since signatures 
+ * 				created with such suites are non-deterministic and therefore it 
+ * 				is not possible to run only one of the party and to compare the 
+ * 				results with pre computed values.  
+ * @param		vec_num the test vector number
+ */
+void test_initiator_responder_interaction(uint8_t vec_num);
 #endif

@@ -107,13 +107,15 @@ enum err options_into_byte_string(struct o_coap_option *options,
 			(uint32_t)(out_byte_string->len + 1 + delta_extra_byte +
 				   len_extra_byte + options[i].len);
 		/* Copy the byte string of current option into output*/
-		uint32_t dest_size =
-			out_byte_string_capacity -
-			(uint32_t)(temp_ptr - out_byte_string->ptr);
-		TRY(_memcpy_s(temp_ptr, dest_size, options[i].value,
-			      options[i].len));
+		if (0 != options[i].len) {
+			uint32_t dest_size =
+				out_byte_string_capacity -
+				(uint32_t)(temp_ptr - out_byte_string->ptr);
+			TRY(_memcpy_s(temp_ptr, dest_size, options[i].value,
+					options[i].len));
 
-		temp_ptr += options[i].len;
+			temp_ptr += options[i].len;
+		}
 	}
 	return ok;
 }
@@ -159,8 +161,8 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 2);
 			temp_option_delta =
-				(uint8_t)((*temp_options_ptr) << 8 |
-					  *(temp_options_ptr + 1) - 269);
+				(uint8_t)(((*temp_options_ptr) << 8) |
+					  (*(temp_options_ptr + 1) - 269));
 			temp_options_ptr += 2;
 			break;
 		case 15:
@@ -183,8 +185,8 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 2);
 			temp_option_len =
-				(uint8_t)((*temp_options_ptr) << 8 |
-					  *(temp_options_ptr + 1) + 269);
+				(uint8_t)(((*temp_options_ptr) << 8) |
+					  (*(temp_options_ptr + 1) + 269));
 			temp_options_ptr += 2;
 			break;
 		case 15:
