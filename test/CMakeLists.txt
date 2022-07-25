@@ -31,7 +31,7 @@ include_directories(
 # ../externals/mbedtls/include/psa
 add_definitions(
 
-  -DDEBUG_PRINT
+  #-DDEBUG_PRINT
   -DZCBOR_CANONICAL
 )
 

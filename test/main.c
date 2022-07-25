@@ -117,6 +117,11 @@ static void test_initiator_responder_interaction1(void)
 	test_initiator_responder_interaction(1);
 }
 
+static void test_initiator_responder_interaction2(void)
+{
+	test_initiator_responder_interaction(2);
+}
+
 void test_main(void)
 {
 	/* EDHOC testvector tests  */
@@ -140,7 +145,8 @@ void test_main(void)
 	ztest_test_suite(exporter, ztest_unit_test(test_exporter));
 	ztest_test_suite(
 		initiator_responder_interaction,
-		ztest_unit_test(test_initiator_responder_interaction1));
+		ztest_unit_test(test_initiator_responder_interaction1),
+		ztest_unit_test(test_initiator_responder_interaction2));
 
 	/* OSCORE test-vector tests */
 

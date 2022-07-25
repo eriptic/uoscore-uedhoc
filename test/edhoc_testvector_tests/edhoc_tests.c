@@ -23,25 +23,7 @@ struct messages m;
 //todo check that as well that the AD are correct
 int test_edhoc(enum role p, uint8_t vec_num)
 {
-	// /* oscore declarations*/
-	// uint8_t oscore_master_secret[16];
-	// uint8_t oscore_master_salt[8];
-	// /* edhoc declarations */
-	// uint8_t PRK_4x3m[PRK_DEFAULT_SIZE];
-	// uint8_t th4[SHA_DEFAULT_SIZE];
-	// uint8_t err_msg[ERR_MSG_DEFAULT_SIZE];
-	// uint32_t err_msg_len = sizeof(err_msg);
-	// uint8_t ad_1[AD_DEFAULT_SIZE];
-	// uint32_t ad_1_len = sizeof(ad_1);
-	// uint8_t ad_2[AD_DEFAULT_SIZE];
-	// uint32_t ad_2_len = sizeof(ad_2);
-	// uint8_t ad_3[AD_DEFAULT_SIZE];
-	// uint32_t ad_3_len = sizeof(ad_3);
-	// uint8_t ad_4[AD_DEFAULT_SIZE];
-	// uint32_t ad_4_len = sizeof(ad_2);
-	// enum err err;
 
-	// vec_num = vec_num - 1;
 
 	// rx_init();
 
