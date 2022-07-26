@@ -13,6 +13,7 @@
 #include <ztest.h>
 #include "edhoc_testvector_tests/edhoc_tests.h"
 #include "oscore_testvector_tests/oscore_tests.h"
+#include "oscore_testvector_tests/replay_protection_tests.h"
 
 // static void test_initiator1(void)
 // {
@@ -164,4 +165,6 @@ void test_main(void)
 	ztest_run_test_suite(initiator_responder_interaction);
 	// ztest_run_test_suite(initiator_tests);
 	// ztest_run_test_suite(responder_tests);
+
+	run_replay_protection_tests();
 }
