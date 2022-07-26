@@ -2,38 +2,40 @@
 
 This repository contains C implementations  for constrained (and non-constrained) devices of the IETF protocols:
 
-* [OSCORE (RFC8613)](https://tools.ietf.org/html/rfc8613) and
-* [EDHOC (draft-ietf-lake-edhoc-02 )](https://tools.ietf.org/html/draft-ietf-lake-edhoc-02). 
+* [OSOCRE (RFC8613)](https://tools.ietf.org/html/rfc8613) and
+* [EDHOC (draft-ietf-lake-edhoc-15 )](https://datatracker.ietf.org/doc/html/draft-ietf-lake-edhoc-15). 
 
-Main features of uOSCORE and uEDHOC are their independence from the OS, cryptographic engine and in the case of uEDHOC transport protocol. Additionally,  uOSCORE and uEDHOC use only stack memory (no heap). uOSCORE and uEDHOC are available as pre-compiled static libraries for several popular architectures such as x86 and Cortex M.
+Main features of uOSCORE and uEDHOC are their independence from the OS, cryptographic engine and in the case of uEDHOC transport protocol. Additionally,  uOSCORE and uEDHOC use only stack memory (no heap).
 
 For more background and evaluation in terms of speed, RAM and flash requirements see our paper [The Cost of OSCORE and EDHOC for Constrained Devices](https://arxiv.org/pdf/2103.13832.pdf).
 
+## How to Build and Link
 
+* check the configurations in `makefile_config.mk` and adjust them if necessary
+* run `make` 
+* link the static library `build/libuoscore-uedhoc.a` in your project
 
 ## Project (Folder) Structure
 
 ```
 .
+|---cddl_models/
 |---externals/
-| |---blerouter/
-| |---cantcoap/
-| |---compact25519/
-| |---tinycbor/
-| |---tinycrypt/
-|---modules/
-| |---oscore/
-| |---edhoc/
+|---inc/
 |---samples/
+|---scripts/
+|---src/
 |---test/
-  |---packaged
+|---test_vectors/
 ```
-
+* The folder `cddl_models` contains CDDL models for all CBOR structures.
 * The folder `externals` contains the external libraries and tools as git submodules.
-* The folder `modules` contains the core implementations -- OSCORE and EDHOC.
+* The folder `inc` contains all header file.
 * The folder `samples` contains some usage examples.
+* The folder `scripts` contains scripts for generatinc C code from CDDL models and converting the json formatted EDHOC test vectors to a C header
+* The folder `src` contains all source file.
 * The folder `test` contains automated tests. 
-* The  folder `test/packaged` contains tested uOSCORE and UEDHOC static libraries for some common architectures.
+* The folder `test_vectors` contains tests vectors. 
 
 ## API and Usage Model
 
@@ -53,60 +55,68 @@ First, `oscore_context_init()` function needs to be called on the client and ser
 
 #### uEDHOC
 
-The API of uEDHOC consists of three functions:
+The API of uEDHOC consists of four functions:
 *  `ephemeral_dh_key_gen()`
 * `edhoc_initiator_run()`,
 * `edhoc_responder_run()`,
 * `edhoc_exporter()`,
 
-`ephemeral_dh_key_gen()` is used to generate fresh ephemeral DH keys before running the protocol. This function requires a random seed suable for cryptographic purposes. `edhoc_initiator_run()` and `edhoc_responder_run() ` has to be called on the initiator and responder side respectively. They return the exchanged auxiliary data `AD_x`,  the derived shared secret `PRK_4x3m` and the transcript hash `TH_4`.   `PRK_4x3m` and `TH_4` are used as inputs for `edhoc_exporter()` to derive application specific keys, e.g., OSCORE master secret and OSCORE master salt.
+`ephemeral_dh_key_gen()` is used to generate fresh ephemeral DH keys before running the protocol. This function requires a random seed suable for cryptographic purposes. `edhoc_initiator_run()` and `edhoc_responder_run() ` has to be called on the initiator and responder side respectively. They return the External Authorization data `EAD_x`,  the derived shared secret `PRK_out`.   `PRK_out` is used as input for `edhoc_exporter()` to derive application specific keys, e.g., OSCORE master secret and OSCORE master salt.
 
-The EDHOC protocol requires the exchange of three messages which is independent from the underlying message transport protocol. For example [Section 7 in the EDHOC specification](https://tools.ietf.org/html/draft-ietf-lake-edhoc-03#section-7) describes how  EDHOC can be transfered over CoAP, however CoAP is not mandatory. In order to be independent from the transport protocol uEDHOC uses two functions which need to be implemented by the user for handling the sending and receiving of messages. These functions are:
+The EDHOC protocol requires the exchange of three messages (and an optional message 4) which is independent of the underlying message transport protocol. For example [appendix-A.2 in the EDHOC specification](https://datatracker.ietf.org/doc/html/draft-ietf-lake-edhoc-15#appendix-A.2) describes how  EDHOC can be transferred over CoAP, however CoAP is not mandatory. In order to be independent of the transport protocol uEDHOC uses two callback functions which need to be implemented by the user for handling the sending and receiving of messages. These functions are:
 
 ```c
 /**
  * @brief   The user should call inside this function its send function. 
+ *
+ * 
+ * @param   sock a pointer used to identify the rx chanel, 
+ *          e.g. a socket handler
  * @param   data pointer to the data to be send
  * @param   data_len length of the data
  */
-extern EdhocError tx(uint8_t *data, uint32_t data_len);
+enum err tx(void *sock, uint8_t *data, uint32_t data_len);
 
 /**
- * @brief   The user should call inside this function its receive function.  
- *          The length of the buffer pointed by data can be checked before 
- *          copying data into it by using *data_len. After copying the length 
- *          of the received data should be written in data_len.
- * @param   data pointer to a buffer where the edhoc message must be copied in
- * @param   data_len length of the received data
+ * @brief   The user should call inside this function its receive 
+ *          function and copy the received data in the buffer <data>.
+ *          The length of the buffer <data> must be 
+ *          checked before copying into it by using <data_len>. 
+ *          After copying the length of the received data should be written 
+ *          in <data_len>.
+ *
+ * 
+ * @param   sock a pointer used to identify the rx chanel, 
+ *          e.g. a socket handler
+ * @param   data pointer to a buffer where the edhoc message must be copied 
+ * @param   data_len length of the received data. When this function is 
+ *          called inside EDHOC <data_len> is initialized with the actual 
+ *          available length of the <data>.
  */
-extern EdhocError rx(uint8_t *data, uint32_t *data_len);
+enum err rx(void *sock, uint8_t *data, uint32_t *data_len);
 ```
 
 
 
 ## Supported Cipher Suites
 
-| uOSCORE                                              |
-| ---------------------------------------------------- |
-| AES-CCM-16-64-128,  SHA-256 (mandatory to implement) |
+##### uOSCORE
+
+| Algorithms                  |
+| --------------------------- |
+| AES-CCM-16-64-128,  SHA-256 |
+
+##### uEDHOC
 
 
-| uEDHOC                                                       |
-| ------------------------------------------------------------ |
-| AES-CCM-16-64-128, SHA-256, X25519, EdDSA, Ed25519, AES-CCM-16-64-128, SHA-256 (mandatory to implement, suite 0) |
+| Suit | Algorithms                                                                 |
+| ---- | -------------------------------------------------------------------------- |
+| 0    | AES-CCM-16-64-128, SHA-256, 8, X25519, EdDSA, AES-CCM-16-64-128, SHA-256   |
+| 1    | AES-CCM-16-128-128, SHA-256, 16, X25519, EdDSA, AES-CCM-16-64-128, SHA-256 |
+| 2    | AES-CCM-16-64-128, SHA-256, 8, P-256, ES256, AES-CCM-16-64-128, SHA-256    |
+| 3    | AES-CCM-16-128-128, SHA-256, 16, P-256, ES256, AES-CCM-16-64-128, SHA-256  |
 
 
-
-## External Libraries
-
-Several external libraries are used as git submodules
-
-| Name         | exchangeable | used in        | License                                                      | Version                                  |
-| ------------ | ------------ | -------------- | ------------------------------------------------------------ | ---------------------------------------- |
-| tinycbor     | No           | uOSCORE/uEDHOC | [MIT](https://github.com/zephyrproject-rtos/tinycbor/blob/zephyr/LICENSE) | 31ae89e4b768612722620cb6cb173a0de4a19cc9 |
-| tinycrypt    | Yes          | uOSCORE/uEDHOC | [custom](https://github.com/intel/tinycrypt/blob/master/LICENSE) | 5969b0e0f572a15ed95dc272e57104faeb5eb6b0 |
-| compact25519 | Yes          | uEDHOC         | [CC0 1.0](https://github.com/DavyLandman/compact25519/blob/master/LICENSE) | a5abe6fdf36a13237d674c848b6ccf73efcd5ad4 |
-| cantcoap     | Yes          | Samples        | [BSD 2-Clause](https://github.com/staropram/cantcoap/blob/master/LICENSE) | cce97e570bfc918583ee7f2a3baf17ce9b754754 |
 
 ## Using the Samples
 
@@ -197,13 +207,3 @@ When using the samples for microcontroller , they have to be connected to an IPv
 
 The logic of uOSCORE and uEDHOC is independent form the cryptographic library, i.e., the cryptographic library can easily be exchanged by the user. For that the user needs to provide implementations for the functions specified in `crypto_wrapper.c`. 
 
-## Using uOSCORE and uEDHOC as Static Libraries 
-
-Self-contained, tested static libraries are available in the folder `test/packaged` .  They contain the protocol logic and the required subroutines from tinycrypt, tinycbor and compact25519. These libraries are build with optimization -O3. Currently supported are the following architectures:
-
-* x86
-* x86-64
-* Cortex M0
-* Cortex M3
-* Cortex M4
-* Cortex M33

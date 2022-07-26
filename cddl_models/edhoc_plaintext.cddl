@@ -1,0 +1,75 @@
+; Copyright (c) 2021 Fraunhofer AISEC. See the COPYRIGHT
+; file at the top-level directory of this distribution.
+
+; Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+; http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+; <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+; option. This file may not be copied, modified, or distributed
+; except according to those terms.
+
+; This file should be processed with cddl-gen (https://github.com/NordicSemiconductor/cddl-gen/tree/master) to create cbor encoding and decoding code 
+
+plaintext = ( ID_CRED_x: map / bstr / int, SGN_or_MAC_x: bstr, ? AD_x: bstr)
+
+;currently x5bag and x5u are not supported
+map = {
+	? kid: 4 =>  int / bstr, 
+	
+	? x5bag: 32 => bstr,
+	? x5chain: 33 => bstr,
+	? x5t: 34 => [alg: (int / tstr), hash: bstr ],  
+	? x5u: 35 => bstr, 
+
+	? c5b: 52 => bstr, 
+	? c5c: 53 => bstr,
+	? c5t: 54 => [alg: (int / tstr), hash: bstr ],
+	? c5u: 55 => bstr,
+}
+
+;map and id_cred_x_map are identical. 
+;We just need different names to resolve inclusion conflicts
+id_cred_x_map = {
+	? kid: 4 =>  int / bstr, 
+;-------------------------------------------------------------------------------
+	? x5bag: 32 => bstr, ; unordered set of x509 certificates
+	? x5chain: 33 => bstr, ; chain of x509 certificates 
+	? x5t: 34 => [alg: (int / tstr), hash: bstr ], ; x509 certificate identified by hash value 
+	? x5u: 35 => bstr, ; x509 certificate identified by URI
+;-------------------------------------------------------------------------------
+	? c5b: 52 => bstr, ; unordered set of x509 certificates
+	? c5c: 53 => bstr, ; chain of c509 certificate 
+	? c5t: 54 => [alg: (int / tstr), hash: bstr ], ; c509 certificate identified by hash value 
+	? c5u: 55 => bstr, ; c509 certificate identified by URI
+;-------------------------------------------------------------------------------
+;	? kcwt: 42 => xxx, ; COSE Web Token (CWT)
+;	? kccs: 43 => xxx, ; CWT Claim Set (CCS) 
+}
+
+; COSE_CertHash = [ hashAlg: (int / tstr), hashValue: bstr ]
+
+; COSE_X509 = bstr / [ 2*certs: bstr ]
+; COSE_C509 = C509Certificate / [ 2* C509Certificate ]
+
+;     C509Certificate = [
+;        TBSCertificate,
+;        issuerSignatureValue : any,
+;     ]
+
+;     ; The elements of the following group are used in a CBOR Sequence:
+;     TBSCertificate = (
+;        c509CertificateType: int,
+;        certificateSerialNumber: CertificateSerialNumber,
+;        issuer: Name,
+;        validityNotBefore: Time,
+;        validityNotAfter: Time,
+;        subject: Name,
+;        subjectPublicKeyAlgorithm: AlgorithmIdentifier,
+;        subjectPublicKey: any,
+;        extensions: Extensions,
+;        issuerSignatureAlgorithm: AlgorithmIdentifier,
+;     )
+
+; CBOR Object Signing and Encryption (COSE): Header parameters for carrying and referencing X.509 certificates https://datatracker.ietf.org/doc/draft-ietf-cose-x509/
+
+; CBOR Encoded X.509 Certificates (C509 Certificates) https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/
+

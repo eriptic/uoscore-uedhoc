@@ -1,0 +1,33 @@
+; Copyright (c) 2021 Fraunhofer AISEC. See the COPYRIGHT
+; file at the top-level directory of this distribution.
+
+; Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+; http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+; <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+; option. This file may not be copied, modified, or distributed
+; except according to those terms.
+
+; This file shold be processed with cddl-gen (https://github.com/NordicSemiconductor/cddl-gen/tree/master) to create cbor encoding and decoding code 
+
+
+; ========== COSE Enc_structure and Sig_structure ============
+;                          see RFC8152
+
+cose_struct = ( s: edhoc_enc_structure / sig_structure )
+
+; context can be one of "Encrypt" / "Encrypt0" / "Enc_Recipient" /
+;           "Mac_Recipient" / "Rec_Recipient"
+
+edhoc_enc_structure = [ context: tstr, protected: bstr, external_aad: bstr ]
+
+
+
+; context can be one of "Signature" / "Signature1" / "CounterSignature"
+
+sig_structure = [
+	context: tstr,
+	protected: bstr,
+	external_aad: bstr,
+	payload: bstr
+]
+
