@@ -188,10 +188,10 @@ int main()
 	cred_r.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_r_raw;
 	cred_r.pk.len = test_vectors[vec_num_i].pk_r_raw_len;
 	cred_r.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_r_raw;
-	cred_r.ca.len = test_vectors[vec_num_i].ca_len;
-	cred_r.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
-	cred_r.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
-	cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
+	cred_r.ca.len = test_vectors[vec_num_i].ca_r_len;
+	cred_r.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca_r;
+	cred_r.ca_pk.len = test_vectors[vec_num_i].ca_r_pk_len;
+	cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_r_pk;
 
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY
 	uint32_t seed;

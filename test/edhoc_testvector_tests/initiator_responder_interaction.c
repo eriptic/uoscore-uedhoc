@@ -168,10 +168,10 @@ void thread_initiator(void *vec_num, void *dummy2, void *dummy3)
 	cred_r.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_r_raw;
 	cred_r.pk.len = test_vectors[vec_num_i].pk_r_raw_len;
 	cred_r.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_r_raw;
-	cred_r.ca.len = test_vectors[vec_num_i].ca_len;
-	cred_r.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
-	cred_r.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
-	cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
+	cred_r.ca.len = test_vectors[vec_num_i].ca_r_len;
+	cred_r.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca_r;
+	cred_r.ca_pk.len = test_vectors[vec_num_i].ca_r_pk_len;
+	cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_r_pk;
 
 	r = edhoc_initiator_run(&c_i, &cred_r, cred_num, I_err_msg,
 				&I_err_msg_len, I_ad_2, &I_ad_2_len, I_ad_4,
@@ -266,16 +266,16 @@ void thread_responder(void *vec_num, void *dummy2, void *dummy3)
 	cred_i.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_i_raw;
 	cred_i.pk.len = test_vectors[vec_num_i].pk_i_raw_len;
 	cred_i.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
-	cred_i.ca.len = test_vectors[vec_num_i].ca_len;
-	cred_i.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
-	cred_i.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
-	cred_i.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
+	cred_i.ca.len = test_vectors[vec_num_i].ca_i_len;
+	cred_i.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca_i;
+	cred_i.ca_pk.len = test_vectors[vec_num_i].ca_i_pk_len;
+	cred_i.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_i_pk;
 
 	r = edhoc_responder_run(&c_r, &cred_i, cred_num, R_err_msg,
 				&R_err_msg_len, (uint8_t *)&R_ad_1, &R_ad_1_len,
-				(uint8_t *)&R_ad_3, &R_ad_3_len, R_PRK_out,
+				(uint8_t *)&R_ad_3, &R_ad_3_len, R_PRK_out, sizeof(R_PRK_out),
 				NULL, 0, NULL, 0,
-				sizeof(R_PRK_out), tx_responder, rx_responder);
+				tx_responder, rx_responder);
 	if (r != ok) {
 		goto end;
 	}
