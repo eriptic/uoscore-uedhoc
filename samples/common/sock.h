@@ -16,7 +16,9 @@
 
 extern int sockfd;
 
+#ifndef PORT
 #define PORT 5683
+#endif
 #define MAXLINE 1024
 
 enum sock_type {
