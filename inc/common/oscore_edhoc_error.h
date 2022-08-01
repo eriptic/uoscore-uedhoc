@@ -62,7 +62,6 @@ enum err {
 	delta_extra_byte_error = 215,
 	len_extra_byte_error = 216,
 	not_valid_input_packet = 218,
-	replayed_packed_received = 219,
 
 };
 
