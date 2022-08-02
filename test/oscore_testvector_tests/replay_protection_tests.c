@@ -5,202 +5,371 @@
 
 #include "oscore/replay_protection.h"
 
+#define WINDOW_SIZE OSCORE_SERVER_REPLAY_WINDOW_SIZE
+#define DUMMY_BYTE 10
+#define WINDOW_SIZE_BYTES (WINDOW_SIZE * sizeof(uint64_t))
 
-#define WINDOW_SIZE         32
-#define DUMMY_BYTE          10
+static server_replay_window_t replay_window;
 
+static void _copy_window(server_replay_window_t *dest,
+			 const server_replay_window_t *src)
+{
+	memcpy(dest, src, sizeof(server_replay_window_t));
+}
+
+static void _compare_windows(server_replay_window_t *current,
+			     const server_replay_window_t *expected)
+{
+	zassert_mem_equal(current->window, expected->window, WINDOW_SIZE_BYTES,
+			  "");
+	zassert_equal(current->seq_num_zero_received,
+		      expected->seq_num_zero_received, "");
+}
+
+static void
+_update_window_and_check_result(uint64_t seq_num,
+				server_replay_window_t *replay_window,
+				bool expected_result)
+{
+	bool result = server_replay_window_update(seq_num, replay_window);
+	zassert_equal(expected_result, result, "");
+}
+
+static void
+_validate_window_and_check_result(uint64_t seq_num,
+				  server_replay_window_t *replay_window,
+				  bool expected_result)
+{
+	bool result = server_is_sequence_number_valid(seq_num, replay_window);
+	zassert_equal(expected_result, result, "");
+}
 
 /**
  * @brief Test replay window initialization.
  */
 static void server_replay_init_test(void)
 {
-    enum err result;
-    static uint64_t test_window[WINDOW_SIZE];
-    static uint64_t compare_window[WINDOW_SIZE];
+	static server_replay_window_t compare_window = { 0 };
 
-    uint16_t size = WINDOW_SIZE * sizeof(compare_window[0]);
-    memset(test_window, DUMMY_BYTE, size);
-    memset(compare_window, 0, size);
+	/* set random data to all fields */
+	memset(replay_window.window, DUMMY_BYTE, WINDOW_SIZE_BYTES);
+	replay_window.seq_num_zero_received = true;
 
-    result = server_replay_window_init(NULL, WINDOW_SIZE);
-    zassert_equal(wrong_parameter, result, "");
+	enum err result;
+	result = server_replay_window_init(NULL);
+	zassert_equal(wrong_parameter, result, "");
 
-    result = server_replay_window_init(test_window, 0);
-    zassert_equal(wrong_parameter, result, "");
-
-    result = server_replay_window_init(test_window, WINDOW_SIZE);
-    zassert_equal(ok, result, "");
-    zassert_mem_equal(test_window, compare_window, size, "");
+	result = server_replay_window_init(&replay_window);
+	zassert_equal(ok, result, "");
+	_compare_windows(&replay_window, &compare_window);
 }
 
+/**
+ * @brief Test replay window re-initialization.
+ */
+static void server_replay_reinit_test(void)
+{
+	static const server_replay_window_t compare_window_1 = {
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6 },
+		true
+	};
+
+	static const server_replay_window_t compare_window_2 = {
+		{ 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
+		  111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
+		  122, 123, 124, 125, 126, 127, 128, 129, 130, 131 },
+		true
+	};
+
+	enum err result;
+	result = server_replay_window_reinit(6, NULL);
+	zassert_equal(wrong_parameter, result, "");
+
+	result = server_replay_window_reinit(6, &replay_window);
+	zassert_equal(ok, result, "");
+	_compare_windows(&replay_window, &compare_window_1);
+
+	result = server_replay_window_reinit(131, &replay_window);
+	zassert_equal(ok, result, "");
+	_compare_windows(&replay_window, &compare_window_2);
+}
+
+/**
+ * @brief Test reading last sequence number from replay window.
+ */
+static void server_replay_get_sequence_number_test(void)
+{
+	static const server_replay_window_t test_window_1 = {
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6 },
+		false
+	};
+
+	static const server_replay_window_t test_window_2 = {
+		{ 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
+		  111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
+		  122, 123, 124, 125, 126, 127, 128, 129, 130, 131 },
+		false
+	};
+
+	uint64_t seq_num;
+	enum err result;
+
+	result = server_replay_window_get_last_number(NULL, NULL);
+	zassert_equal(wrong_parameter, result, "");
+
+	result = server_replay_window_get_last_number(&seq_num, NULL);
+	zassert_equal(wrong_parameter, result, "");
+
+	result = server_replay_window_get_last_number(NULL, &test_window_1);
+	zassert_equal(wrong_parameter, result, "");
+
+	result = server_replay_window_get_last_number(&seq_num, &test_window_1);
+	zassert_equal(ok, result, "");
+	zassert_equal(6, seq_num, "");
+
+	result = server_replay_window_get_last_number(&seq_num, &test_window_2);
+	zassert_equal(ok, result, "");
+	zassert_equal(131, seq_num, "");
+}
 
 /**
  * @brief Test replay window check for various sequence numbers - this case represents beginning of the communication.
  */
-static void server_replay_beginning_test(void)
+static void server_replay_check_at_start_test(void)
 {
-    // missing Sequence Numbers in test_window: 9, 5, 3, 2, 1
-    // SN 11 is ahead of current window = OK
-    // SN 12 might be received before SN 11 = also OK
-    // SN 10 is received in the last message = NOT OK
-    // SN 9 is delayed and not received yet = OK
-    // SN 8 is already received = NOT OK
+	// missing Sequence Numbers in starting_point: 9, 5, 3, 2, 1, 0
+	// SN 11 is ahead of current window = OK
+	// SN 12 might be received before SN 11 = also OK
+	// SN 10 is received in the last message = NOT OK
+	// SN 9 is delayed and not received yet = OK
+	// SN 8 is already received = NOT OK
+	// SN 5 is delayed = OK
+	// SN 0 is delayed and still in the window range = OK
 
-    static uint64_t test_window[WINDOW_SIZE] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 6, 7, 8, 10
-        };
+	static const server_replay_window_t starting_point = {
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 6, 7, 8, 10 },
+		false
+	};
 
-    static uint64_t numbers_to_check[] = {11, 12, 10, 9, 8, 5, 0};
-    static bool numbers_results[] = {true, true, false, true, false, true, false};
-    uint16_t check_count = sizeof(numbers_to_check) / sizeof(numbers_to_check[0]);
+	static const uint64_t numbers_to_check[] = { 11, 12, 10, 9, 8, 5, 0 };
+	static const bool numbers_results[] = { true,  true, false, true,
+						false, true, true };
+	const uint16_t check_count =
+		sizeof(numbers_to_check) / sizeof(numbers_to_check[0]);
 
-    for (uint16_t index = 0; index < check_count; index++)
-    {
-        bool result_valid = numbers_results[index];
-        bool result = server_is_sequence_number_valid(numbers_to_check[index], test_window, WINDOW_SIZE);
-        zassert_equal(result_valid, result, "");
-    }
+	_copy_window(&replay_window, &starting_point);
+
+	for (uint16_t index = 0; index < check_count; index++) {
+		bool result_valid = numbers_results[index];
+		uint64_t seq_num = numbers_to_check[index];
+		_validate_window_and_check_result(seq_num, &replay_window,
+						  result_valid);
+	}
 }
-
 
 /**
  * @brief Test replay window check for various sequence numbers - this case represents communication in progress.
  */
-static void server_replay_in_progress_test(void)
+static void server_replay_check_in_progress_test(void)
 {
-    // missing Sequence Numbers in test_window: 126, 127, 133
-    // SN 99 and below are behind the window = NOT OK
+	// missing Sequence Numbers in starting_point: 126, 127, 133
+	// SN 99 and below are behind the window = NOT OK
 
-    static uint64_t test_window[WINDOW_SIZE] = {
-        100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115,
-        116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 128, 129, 130, 131, 132, 134
-        };
+	static const server_replay_window_t starting_point = {
+		{ 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
+		  111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
+		  122, 123, 124, 125, 128, 129, 130, 131, 132, 134 },
+		true
+	};
 
-    static uint64_t numbers_to_check[] = {135, 134, 133, 132, 127, 126, 99, 80};
-    static bool numbers_results[] = {true, false, true, false, true, true, false, false};
-    uint16_t check_count = sizeof(numbers_to_check) / sizeof(numbers_to_check[0]);
+	static const uint64_t numbers_to_check[] = { 135, 134, 133, 132,
+						     127, 126, 99,  80 };
+	static const bool numbers_results[] = { true, false, true,  false,
+						true, true,  false, false };
+	const uint16_t check_count =
+		sizeof(numbers_to_check) / sizeof(numbers_to_check[0]);
 
-    for (uint16_t index = 0; index < check_count; index++)
-    {
-        bool result_valid = numbers_results[index];
-        bool result = server_is_sequence_number_valid(numbers_to_check[index], test_window, WINDOW_SIZE);
-        zassert_equal(result_valid, result, "");
-    }
+	_copy_window(&replay_window, &starting_point);
+
+	for (uint16_t index = 0; index < check_count; index++) {
+		bool result_valid = numbers_results[index];
+		uint64_t seq_num = numbers_to_check[index];
+		_validate_window_and_check_result(seq_num, &replay_window,
+						  result_valid);
+	}
 }
 
+/**
+ * @brief Test inserting zero into replay window at different moments of the session.
+ */
+static void server_replay_insert_zero_test(void)
+{
+	static const server_replay_window_t compare_window_1 = { { 0 }, true };
+
+	static const server_replay_window_t compare_window_2 = {
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+		true
+	};
+
+	server_replay_window_init(&replay_window);
+
+	/* First, check if sequence number 0 at the beginning of the session doesn't break anything. */
+	/* After inserting 0, window should still be empty, but zero received flag should be true. */
+	_update_window_and_check_result(0, &replay_window, true);
+	_compare_windows(&replay_window, &compare_window_1);
+
+	/* Inserting 0 for the second time should result in error. */
+	_update_window_and_check_result(0, &replay_window, false);
+
+	/* Inserting valid number should be ok. */
+	_update_window_and_check_result(1, &replay_window, true);
+	_compare_windows(&replay_window, &compare_window_2);
+
+	/* Reset replay window and insert SeqNum=1. Later, inserting delayed SeqNum=0 should still be ok. */
+	server_replay_window_init(&replay_window);
+	_update_window_and_check_result(1, &replay_window, true);
+	_update_window_and_check_result(0, &replay_window, true);
+	_compare_windows(&replay_window, &compare_window_2);
+
+	/* Reset replay window and test immunity to simple replay attack using SeqNum=0. */
+	server_replay_window_init(&replay_window);
+	_update_window_and_check_result(0, &replay_window, true);
+	_update_window_and_check_result(1, &replay_window, true);
+	_update_window_and_check_result(0, &replay_window, false);
+	_compare_windows(&replay_window, &compare_window_2);
+
+	/* Reset replay window and insert multiple values that will roll the window. Later, inserting delayed SeqNum=0 should fail. */
+	server_replay_window_init(&replay_window);
+	for (uint64_t seq_num = 1; seq_num <= 50; seq_num++) {
+		_update_window_and_check_result(seq_num, &replay_window, true);
+	}
+	_update_window_and_check_result(0, &replay_window, false);
+}
 
 /**
- * @brief Test inserting values into replay window.
+ * @brief Test inserting values into replay window at different moments of the session.
  */
 static void server_replay_insert_test(void)
 {
-    static uint64_t test_window[WINDOW_SIZE] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 6, 7, 8, 10
-        };
-    static uint64_t compare_window_1[WINDOW_SIZE] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 6, 7, 8, 10
-        };
-    static uint64_t compare_window_2[WINDOW_SIZE] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 5, 6, 7, 8, 10
-        };
-    static uint64_t compare_window_3[WINDOW_SIZE] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 5, 6, 7, 8, 9, 10
-        };
-    static uint64_t compare_window_4[WINDOW_SIZE] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 1, 4, 5, 6, 7, 8, 9, 10, 12
-        };
-    static uint64_t compare_window_5[WINDOW_SIZE] = {
-        69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84,
-        85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100
-        };
-    uint16_t size = WINDOW_SIZE * sizeof(test_window[0]);
+	static const server_replay_window_t starting_point = {
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 6, 7, 8, 10 },
+		false
+	};
+	static const server_replay_window_t compare_window_1 = {
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 6, 7, 8, 10 },
+		false
+	};
+	static const server_replay_window_t compare_window_2 = {
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 5, 6, 7, 8, 10 },
+		false
+	};
+	static const server_replay_window_t compare_window_3 = {
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		  0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 5, 6, 7, 8, 9, 10 },
+		false
+	};
+	static const server_replay_window_t compare_window_4 = {
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	0,
+		  0, 0, 0, 0, 0, 0, 0, 1, 4, 5, 6, 7, 8, 9, 10, 12 },
+		false
+	};
+	static const server_replay_window_t compare_window_5 = {
+		{ 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+		  80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
+		  91, 92, 93, 94, 95, 96, 97, 98, 99, 100 },
+		false
+	};
 
-    server_replay_window_update(1, test_window, WINDOW_SIZE);
-    zassert_mem_equal(test_window, compare_window_1, size, "");
+	_copy_window(&replay_window, &starting_point);
 
-    server_replay_window_update(5, test_window, WINDOW_SIZE);
-    zassert_mem_equal(test_window, compare_window_2, size, "");
+	_update_window_and_check_result(1, &replay_window, true);
+	_compare_windows(&replay_window, &compare_window_1);
 
-    server_replay_window_update(9, test_window, WINDOW_SIZE);
-    zassert_mem_equal(test_window, compare_window_3, size, "");
+	_update_window_and_check_result(5, &replay_window, true);
+	_compare_windows(&replay_window, &compare_window_2);
 
-    server_replay_window_update(12, test_window, WINDOW_SIZE);
-    zassert_mem_equal(test_window, compare_window_4, size, "");
+	_update_window_and_check_result(9, &replay_window, true);
+	_compare_windows(&replay_window, &compare_window_3);
 
-    for (uint64_t seq_num = 13; seq_num <= 100; seq_num++)
-    {
-        server_replay_window_update(seq_num, test_window, WINDOW_SIZE);
-    }
-    zassert_mem_equal(test_window, compare_window_5, size, "");
+	_update_window_and_check_result(12, &replay_window, true);
+	_compare_windows(&replay_window, &compare_window_4);
+
+	for (uint64_t seq_num = 13; seq_num <= 100; seq_num++) {
+		_update_window_and_check_result(seq_num, &replay_window, true);
+	}
+	_compare_windows(&replay_window, &compare_window_5);
 }
-
 
 /**
  * @brief Standard scenario test - checks and updates
  */
 static void server_replay_standard_scenario_test(void)
 {
-    static uint64_t test_window[WINDOW_SIZE];
-    static uint64_t compare_window_1[WINDOW_SIZE] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5
-        };
-    static uint64_t compare_window_2[WINDOW_SIZE] = {
-        19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,
-        35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50
-        };
-    uint16_t size = WINDOW_SIZE * sizeof(test_window[0]);
+	static const server_replay_window_t compare_window_1 = {
+		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5 },
+		true
+	};
 
-    static uint64_t incoming_numbers[] = {1, 4, 4, 2, 3, 5, 1, 0};
-    static enum err check_results[] = {true, true, false, true, true, true, false, false};
-    uint16_t check_count = sizeof(incoming_numbers) / sizeof(incoming_numbers[0]);
+	static const server_replay_window_t compare_window_2 = {
+		{ 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+		  30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+		  41, 42, 43, 44, 45, 46, 47, 48, 49, 50 },
+		true
+	};
 
-    server_replay_window_init(test_window, WINDOW_SIZE);
+	static const uint64_t incoming_numbers[] = { 1, 0, 4, 4, 2, 3, 5, 1, 0 };
+	static const enum err check_results[] = { true,	 true,	true,
+						  false, true,	true,
+						  true,	 false, false };
+	uint16_t const check_count =
+		sizeof(incoming_numbers) / sizeof(incoming_numbers[0]);
 
-    //several messages are out of order or repeated
-    for (uint16_t index = 0; index < check_count; index++)
-    {
-        uint64_t seq_number = incoming_numbers[index];
-        bool result_valid = check_results[index];
-        bool result = server_is_sequence_number_valid(seq_number, test_window, WINDOW_SIZE);
-        zassert_equal(result_valid, result, "");
+	server_replay_window_init(&replay_window);
 
-        if (result_valid)
-        {
-            //replay check OK - after MAC verification, window can be updated
-            server_replay_window_update(seq_number, test_window, WINDOW_SIZE);
-        }
-    }
-    zassert_mem_equal(test_window, compare_window_1, size, "");
+	//several messages are out of order or repeated
+	for (uint16_t index = 0; index < check_count; index++) {
+		bool result_valid = check_results[index];
+		uint64_t seq_num = incoming_numbers[index];
+		_validate_window_and_check_result(seq_num, &replay_window,
+						  result_valid);
 
-    //proper reception of multiple messages, to make sure that in real scenario window can do its job
-    for (uint64_t seq_number = 10; seq_number <= 50; seq_number++)
-    {
-        bool result = server_is_sequence_number_valid(seq_number, test_window, WINDOW_SIZE);
-        zassert_equal(true, result, "");
+		if (result_valid) {
+			//replay check OK - after MAC verification, window can be updated
+			_update_window_and_check_result(seq_num, &replay_window,
+							true);
+		}
+	}
+	_compare_windows(&replay_window, &compare_window_1);
 
-        server_replay_window_update(seq_number, test_window, WINDOW_SIZE);
-    }
-    zassert_mem_equal(test_window, compare_window_2, size, "");
+	//proper reception of multiple messages, to make sure that in real scenario window can do its job
+	for (uint64_t seq_num = 10; seq_num <= 50; seq_num++) {
+		_validate_window_and_check_result(seq_num, &replay_window,
+						  true);
+		_update_window_and_check_result(seq_num, &replay_window, true);
+	}
+	_compare_windows(&replay_window, &compare_window_2);
 }
-
 
 void run_replay_protection_tests(void)
 {
-    ztest_test_suite(oscore_replay_protection,
-                    ztest_unit_test(server_replay_init_test),
-                    ztest_unit_test(server_replay_beginning_test),
-                    ztest_unit_test(server_replay_in_progress_test),
-                    ztest_unit_test(server_replay_insert_test),
-                    ztest_unit_test(server_replay_standard_scenario_test)
-                    );
+	ztest_test_suite(
+		oscore_replay_protection,
+		ztest_unit_test(server_replay_init_test),
+		ztest_unit_test(server_replay_reinit_test),
+		ztest_unit_test(server_replay_get_sequence_number_test),
+		ztest_unit_test(server_replay_check_at_start_test),
+		ztest_unit_test(server_replay_check_in_progress_test),
+		ztest_unit_test(server_replay_insert_zero_test),
+		ztest_unit_test(server_replay_insert_test),
+		ztest_unit_test(server_replay_standard_scenario_test));
 
-    ztest_run_test_suite(oscore_replay_protection);
+	ztest_run_test_suite(oscore_replay_protection);
 }
