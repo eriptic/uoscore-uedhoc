@@ -679,7 +679,7 @@ ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk,
 			P_256_PUB_KEY_UNCOMPRESSED_SIZE;
 		uint8_t pub_key_uncompressed[P_256_PUB_KEY_UNCOMPRESSED_SIZE];
 
-		if (P_256_PUB_KEY_COMPRESSED_SIZE > *pk_size) {
+		if (P_256_PUB_KEY_X_CORD_SIZE > *pk_size) {
 			return buffer_to_small;
 		}
 		TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
@@ -712,11 +712,10 @@ ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk,
 			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 		TRY_EXPECT_PSA(public_key_len, P_256_PUB_KEY_UNCOMPRESSED_SIZE,
 			       key_id, unexpected_result_from_ext_lib);
-		/* Prepare output format - compressed public key with X */
-		pk[0] = 0x02; /* key format tag - commpressed for with X */
-		memcpy((pk + 1), (pub_key_uncompressed + 1), 32);
+		/* Prepare output format - only x parameter */
+		memcpy(pk, (pub_key_uncompressed + 1), P_256_PUB_KEY_X_CORD_SIZE);
 		TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
-		*pk_size = P_256_PUB_KEY_COMPRESSED_SIZE;
+		*pk_size = P_256_PUB_KEY_X_CORD_SIZE;
 #endif
 	} else {
 		return unsupported_ecdh_curve;
