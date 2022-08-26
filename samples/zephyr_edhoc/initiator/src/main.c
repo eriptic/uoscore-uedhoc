@@ -158,7 +158,7 @@ int main(void)
 
 	/* edhoc declarations */
 	uint8_t PRK_4x3m[PRK_DEFAULT_SIZE];
-	uint8_t th4[SHA_DEFAULT_SIZE];
+	uint8_t th4[HASH_DEFAULT_SIZE];
 	uint8_t err_msg[ERR_MSG_DEFAULT_SIZE];
 	uint32_t err_msg_len = sizeof(err_msg);
 	uint8_t ad_2[AD_DEFAULT_SIZE];

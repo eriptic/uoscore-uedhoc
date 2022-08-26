@@ -7,6 +7,9 @@ import json
 import binascii
 
 in_out_path = "../test_vectors/"
+in_file = "edhoc_test_vectors_p256_v15.json"
+out_file = "edhoc_test_vectors_p256_v15.h"
+
 
 HEADER = "/*This is an automatically generated file!*/\n\n"
 INCLUDES = '#include "edhoc.h"\n#include <stdint.h>\n#include <stdio.h>\n#include <stdlib.h>\n\n'
@@ -15,11 +18,11 @@ struct test_vector {\n\
         const uint8_t *method;\n\
         uint32_t method_len;\n\
         \n\
-        const uint8_t *suites_i;\n\
-        uint32_t suites_i_len;\n\
+        const uint8_t *SUITES_I;\n\
+        uint32_t SUITES_I_len;\n\
         \n\
-        const uint8_t *suites_r;\n\
-        uint32_t suites_r_len;\n\
+        const uint8_t *SUITES_R;\n\
+        uint32_t SUITES_R_len;\n\
         \n\
         const uint8_t *x_raw;\n\
         uint32_t x_raw_len;\n\
@@ -307,11 +310,11 @@ STRUCT_POPULATE = "\n\
         .method = NULL,\n\
         .method_len = 0,\n\
         \n\
-        .suites_i = NULL,\n\
-        .suites_i_len = 0,\n\
+        .SUITES_I = NULL,\n\
+        .SUITES_I_len = 0,\n\
         \n\
-        .suites_r = NULL,\n\
-        .suites_r_len = 0,\n\
+        .SUITES_R = NULL,\n\
+        .SUITES_R_len = 0,\n\
         \n\
         .x_raw = NULL,\n\
         .x_raw_len = 0,\n\
@@ -664,7 +667,7 @@ def populate_struct_body(input, val="dummy", key="dummy", array_name="dummy"):
 
 
 def main():
-    with open(in_out_path + "edhoc-vectors-json_v11.txt", "r") as in_fp:
+    with open(in_out_path + in_file, "r") as in_fp:
         data = json.load(in_fp)
 
     data_arrays = "\n"
@@ -718,7 +721,7 @@ def main():
         + struct_body_out
         + STRUCT_POPULATE_END
     )
-    with open(in_out_path + "edhoc_test_vectors.h", "w") as out_fp:
+    with open(in_out_path + out_file, "w") as out_fp:
         out_fp.write(output)
 
 

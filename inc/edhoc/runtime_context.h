@@ -20,19 +20,22 @@ struct runtime_context {
 	uint32_t msg1_len;
 	uint8_t msg2[MSG_2_DEFAULT_SIZE];
 	uint32_t msg2_len;
-	uint8_t msg3[MSG_2_DEFAULT_SIZE];
+	uint8_t msg3[MSG_3_DEFAULT_SIZE];
 	uint32_t msg3_len;
 	uint8_t msg4[MSG_4_DEFAULT_SIZE];
 	uint32_t msg4_len;
 	struct suite suite;
+	/*initiator specific*/
+	uint8_t th4[HASH_DEFAULT_SIZE];
+	uint32_t th4_len;
+	uint8_t prk_4e3m[PRK_DEFAULT_SIZE];
+	uint32_t prk_4e3m_len;
 	/*responder specific*/
-	uint8_t th3[SHA_DEFAULT_SIZE];
+	uint8_t th3[HASH_DEFAULT_SIZE];
 	uint32_t th3_len;
-	uint8_t PRK_3e2m[PRK_DEFAULT_SIZE];
-	uint32_t PRK_3e2m_len;
+	uint8_t prk_3e2m[PRK_DEFAULT_SIZE];
+	uint32_t prk_3e2m_len;
 	bool static_dh_i;
 };
-
-
 
 #endif

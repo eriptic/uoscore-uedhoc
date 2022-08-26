@@ -17,12 +17,14 @@
 
 
 static bool decode_repeated_id_cred_x_map_kid(
-		zcbor_state_t *state, struct id_cred_x_map_kid *result)
+		zcbor_state_t *state, struct id_cred_x_map_kid_ *result)
 {
 	zcbor_print("%s\r\n", __func__);
+	bool int_res;
 
 	bool tmp_result = ((((zcbor_uint32_expect(state, (4))))
-	&& (zcbor_int32_decode(state, (&(*result)._id_cred_x_map_kid)))));
+	&& (zcbor_union_start_code(state) && (int_res = ((((zcbor_int32_decode(state, (&(*result)._id_cred_x_map_kid_int)))) && (((*result)._id_cred_x_map_kid_choice = _id_cred_x_map_kid_int) || 1))
+	|| (((zcbor_bstr_decode(state, (&(*result)._id_cred_x_map_kid_bstr)))) && (((*result)._id_cred_x_map_kid_choice = _id_cred_x_map_kid_bstr) || 1))), zcbor_union_end_code(state), int_res))));
 
 	if (!tmp_result)
 		zcbor_trace();

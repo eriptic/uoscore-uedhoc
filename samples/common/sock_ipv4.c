@@ -45,16 +45,18 @@ int ipv4_sock_init(enum sock_type sock_t, const char *ipv4_addr_str,
 	if (sock_t == SOCK_CLIENT) {
 		r = connect(*sockfd, (const struct sockaddr *)servaddr,
 			    servaddr_len);
-		if (r < 0)
+		if (r < 0) {
 			return r;
+		}
 
 		printf("IPv4 client to connect to server with address %s started!\n",
 		       ipv4_addr_str);
 	} else {
 		r = bind(*sockfd, (const struct sockaddr *)servaddr,
 			 servaddr_len);
-		if (r < 0)
+		if (r < 0) {
 			return r;
+		}
 
 		printf("IPv4 server with address %s started!\n", ipv4_addr_str);
 	}

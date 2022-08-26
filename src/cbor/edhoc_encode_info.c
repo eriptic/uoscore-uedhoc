@@ -21,8 +21,7 @@ static bool encode_info(
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = (((((zcbor_bstr_encode(state, (&(*input)._info_transcript_hash))))
-	&& ((zcbor_tstr_encode(state, (&(*input)._info_label))))
+	bool tmp_result = (((((zcbor_uint32_encode(state, (&(*input)._info_label))))
 	&& ((zcbor_bstr_encode(state, (&(*input)._info_context))))
 	&& ((zcbor_uint32_encode(state, (&(*input)._info_length)))))));
 
@@ -41,7 +40,7 @@ bool cbor_encode_info(
 {
 	zcbor_state_t states[2];
 
-	zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), payload, payload_len, 4);
+	zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), payload, payload_len, 3);
 
 	bool ret = encode_info(states, input);
 

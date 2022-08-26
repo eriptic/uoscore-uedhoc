@@ -57,6 +57,10 @@ static inline enum err e_u_options_extract(struct o_coap_packet *in_o_coap,
 	uint8_t delta_extra_bytes = 0;
 	uint8_t len_extra_bytes = 0;
 
+	if (MAX_OPTION_COUNT < in_o_coap->options_cnt) {
+		return not_valid_input_packet;
+	}
+
 	for (uint8_t i = 0; i < in_o_coap->options_cnt; i++) {
 		delta_extra_bytes = 0;
 		len_extra_bytes = 0;
@@ -198,7 +202,7 @@ static inline enum err plaintext_encrypt(struct context *c,
 					 uint8_t *out_ciphertext,
 					 uint32_t out_ciphertext_len)
 {
-	return cose_encrypt(in_plaintext, out_ciphertext, out_ciphertext_len,
+	return oscore_cose_encrypt(in_plaintext, out_ciphertext, out_ciphertext_len,
 			    &c->rrc.nonce, &c->rrc.aad, &c->sc.sender_key);
 }
 
@@ -419,6 +423,7 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	buf.ptr = buf_o_coap;
 
 	/*Parse the coap buf into a CoAP struct*/
+	memset(&o_coap_pkt, 0, sizeof(o_coap_pkt));
 	TRY(buf2coap(&buf, &o_coap_pkt));
 
 	/* Dismiss OSCORE encryption if messaging layer detected (simple ACK, code=0.00) */

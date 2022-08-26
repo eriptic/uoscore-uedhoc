@@ -24,17 +24,14 @@
  * @param   hash_alg HASH algorithm 
  * @param   prk pseudorandom key
  * @param   prk_len length of prk
- * @param   th transcripthash
- * @param   th_len length of th
- * @param   label human readable label
+ * @param   label predefined integer value
  * @param   context relevant only for MAC_2 and MAC_3
- * @param   context_len lenhgt of context
- * @param   okm ouput pointer
+ * @param   context_len length of context
  * @param   okm_len length of okm
+ * @param   okm ouput pointer
  */
-enum err okm_calc(enum hash_alg hash_alg, const uint8_t *prk, uint32_t prk_len,
-		  const uint8_t *th, uint32_t th_len, const char *label,
-		  uint8_t *context, uint32_t context_len, uint8_t *okm,
-		  uint32_t okm_len);
+enum err edhoc_kdf(enum hash_alg hash_alg, const uint8_t *prk, uint32_t prk_len,
+		   uint8_t label, uint8_t *context, uint32_t context_len,
+		   uint32_t okm_len, uint8_t *okm);
 
 #endif

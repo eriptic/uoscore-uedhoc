@@ -42,8 +42,11 @@ static enum err id_cred_x_encode(enum id_cred_x_label label, int algo,
 
 	switch (label) {
 	case kid:
+		//todo update that to v15
 		map._id_cred_x_map_kid_present = true;
-		map._id_cred_x_map_kid._id_cred_x_map_kid =
+		map._id_cred_x_map_kid._id_cred_x_map_kid_choice =
+			_id_cred_x_map_kid_int;
+		map._id_cred_x_map_kid._id_cred_x_map_kid_int =
 			*((const int32_t *)id);
 		break;
 	case x5chain:

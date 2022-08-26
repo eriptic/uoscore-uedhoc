@@ -22,6 +22,7 @@
 #include "oscore/option.h"
 #include "oscore/oscore_cose.h"
 #include "oscore/security_context.h"
+#include "oscore/replay_protection.h"
 
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
@@ -111,9 +112,9 @@ oscore_option_parser(struct o_coap_packet *in,
 						++temp_current_option_value_ptr;
 					temp_current_option_value_ptr +=
 						out->kid_context.len;
-					temp_kid_len =
-						(uint8_t)(temp_kid_len -
-							  (out->kid_context.len + 1));
+					temp_kid_len = (uint8_t)(
+						temp_kid_len -
+						(out->kid_context.len + 1));
 				}
 
 				/* Get KID */
@@ -149,8 +150,9 @@ static inline enum err payload_decrypt(struct context *c,
 		.len = oscore_packet->payload_len,
 		.ptr = oscore_packet->payload,
 	};
-	return cose_decrypt(&oscore_ciphertext, out_plaintext, &c->rrc.nonce,
-			    &c->rrc.aad, &c->rc.recipient_key);
+	return oscore_cose_decrypt(&oscore_ciphertext, out_plaintext,
+				   &c->rrc.nonce, &c->rrc.aad,
+				   &c->rc.recipient_key);
 }
 
 /**
@@ -231,10 +233,9 @@ options_from_oscore_reorder(struct o_coap_packet *in_oscore_packet,
 					in_oscore_packet->options[U_opt_idx]
 						.value;
 
-				temp_delta_sum =
-					(uint16_t)(temp_delta_sum +
-						   out->options[out->options_cnt]
-							   .delta);
+				temp_delta_sum = (uint16_t)(
+					temp_delta_sum +
+					out->options[out->options_cnt].delta);
 				out->options_cnt++;
 				U_opt_idx++;
 				continue;
@@ -251,10 +252,9 @@ options_from_oscore_reorder(struct o_coap_packet *in_oscore_packet,
 				out->options[out->options_cnt].value =
 					E_options[E_opt_idx].value;
 
-				temp_delta_sum =
-					(uint16_t)(temp_delta_sum +
-						   out->options[out->options_cnt]
-							   .delta);
+				temp_delta_sum = (uint16_t)(
+					temp_delta_sum +
+					out->options[out->options_cnt].delta);
 				out->options_cnt++;
 				E_opt_idx++;
 				continue;
@@ -492,73 +492,6 @@ static bool is_request(struct o_coap_packet *packet)
 	}
 }
 
-static inline enum err replay_check(uint64_t sender_sequence_number,
-				    uint64_t *replay_window,
-				    uint8_t replay_window_len)
-{
-	bool first_run = true;
-
-	if (first_run) {
-		first_run = false;
-		return ok;
-	} else {
-		/*if the sender sequence number is bigger than the 
-		right most element -> all good */
-		if (sender_sequence_number >
-		    replay_window[replay_window_len - 1]) {
-			return ok;
-		}
-
-		/*if the sender sequence number is smaller than the 
-		left most element -> a replay is detected*/
-		if (sender_sequence_number < replay_window[0]) {
-			return replayed_packed_received;
-		}
-
-		/*if the sender sequence number is in the replay window
-		-> a replay is detected*/
-		for (uint8_t i = 0; i < replay_window_len; i++) {
-			if (sender_sequence_number == replay_window[i]) {
-				return replayed_packed_received;
-			}
-		}
-	}
-
-	return ok;
-}
-
-static void insert_sender_seq_number(uint64_t sender_seq_number,
-				     uint64_t *replay_window, uint8_t position)
-{
-	/*shift all old values to the left*/
-	for (uint8_t j = 0; j < position; j++) {
-		replay_window[j] = replay_window[j + 1];
-	}
-	/*insert the new sender sequence number at a given position*/
-	replay_window[position] = sender_seq_number;
-}
-
-static void update_replay_window(uint64_t sender_seq_number,
-				 uint64_t *replay_window,
-				 uint8_t replay_window_len)
-{
-	for (uint8_t i = 0; i < replay_window_len - 1; i++) {
-		if ((replay_window[i] < sender_seq_number) &&
-		    (sender_seq_number < replay_window[i + 1])) {
-			insert_sender_seq_number(sender_seq_number,
-						 replay_window, i);
-			PRINT_ARRAY("Replay window:", (uint8_t *)replay_window,
-				    (uint32_t)(replay_window_len *
-					       sizeof(replay_window[0])));
-			return;
-		}
-	}
-	insert_sender_seq_number(sender_seq_number, replay_window,
-				 (uint8_t)(replay_window_len - 1));
-	PRINT_ARRAY("Replay window:", (uint8_t *)replay_window,
-		    (uint32_t)(replay_window_len * sizeof(replay_window[0])));
-}
-
 enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		     uint32_t *buf_out_len, bool *oscore_pkg_flag,
 		     struct context *c)
@@ -575,6 +508,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 	buf.len = buf_in_len;
 
 	/*Parse the incoming message (buf_in) into a CoAP struct*/
+	memset(&oscore_packet, 0, sizeof(oscore_packet));
 	TRY(buf2coap(&buf, &oscore_packet));
 
 	/* Check if the packet is OSCORE packet and if so parse the OSCORE option */
@@ -598,9 +532,12 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 			}
 
 			/*check is the packet is replayed*/
-			TRY(replay_check(*oscore_option.piv.ptr,
-					 c->rc.replay_window,
-					 c->rc.replay_window_len));
+			if(!server_is_sequence_number_valid(
+					   *oscore_option.piv.ptr,
+					   &c->rc.replay_window))
+			{
+			    return oscore_replay_window_protection_error;
+			}
 
 			/*If this is a request message we need to calculate the nonce, aad 
             and eventually update the Common IV, Sender and Recipient Keys*/
@@ -626,9 +563,9 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		if (r == ok) {
 			/*update the replay window after the decryption*/
 			if (is_request(&oscore_packet)) {
-				update_replay_window(*oscore_option.piv.ptr,
-						     c->rc.replay_window,
-						     c->rc.replay_window_len);
+				server_replay_window_update(
+					*oscore_option.piv.ptr,
+					&c->rc.replay_window);
 			}
 		} else {
 			return r;
