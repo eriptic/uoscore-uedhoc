@@ -36,14 +36,14 @@ struct context c_client;
  * @param
  * @retval	error code
  */
-static int start_coap_client(void)
+static int start_coap_client(int *sockfd)
 {
 	int err;
 #ifdef USE_IPV4
 	struct sockaddr_in servaddr;
 	const char IPV4_SERVADDR[] = { "127.0.0.1" };
 	err = sock_init(SOCK_CLIENT, IPV4_SERVADDR, IPv4, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);
@@ -54,7 +54,7 @@ static int start_coap_client(void)
 	struct sockaddr_in6 servaddr;
 	const char IPV6_SERVADDR[] = { "::1" };
 	err = sock_init(SOCK_CLIENT, IPV6_SERVADDR, IPv6, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);
@@ -139,6 +139,7 @@ int main()
 	 * 
 	 * 
 	 */
+	int sockfd;
 	uint8_t oscore_master_secret[16];
 	uint8_t oscore_master_salt[8];
 
@@ -160,7 +161,7 @@ int main()
 
 	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
-	start_coap_client();
+	TRY_EXPECT(start_coap_client(&sockfd), 0);
 
 	c_i.c_i.len = test_vectors[vec_num_i].c_i_len;
 	c_i.c_i.ptr = (uint8_t *)test_vectors[vec_num_i].c_i;

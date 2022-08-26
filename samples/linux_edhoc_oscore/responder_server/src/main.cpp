@@ -48,7 +48,7 @@ socklen_t client_addr_len;
  * @param	
  * @retval	error code
  */
-static int start_coap_server(void)
+static int start_coap_server(int *sockfd)
 {
 	int err;
 #ifdef USE_IPV4
@@ -58,7 +58,7 @@ static int start_coap_server(void)
 	memset(&client_addr, 0, sizeof(client_addr));
 	const char IPV4_SERVADDR[] = { "127.0.0.1" };
 	err = sock_init(SOCK_SERVER, IPV4_SERVADDR, IPv4, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);
@@ -72,7 +72,7 @@ static int start_coap_server(void)
 	memset(&client_addr, 0, sizeof(client_addr));
 	const char IPV6_SERVADDR[] = { "::1" };
 	err = sock_init(SOCK_SERVER, IPV6_SERVADDR, IPv6, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);
@@ -185,6 +185,7 @@ int main()
 	 * 
 	 * 
 	 */
+	int sockfd;
 	uint8_t prk_exporter[32];
 	uint8_t oscore_master_secret[16];
 	uint8_t oscore_master_salt[8];
@@ -206,7 +207,7 @@ int main()
 
 	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
-	TRY_EXPECT(start_coap_server(), 0);
+	TRY_EXPECT(start_coap_server(&sockfd), 0);
 
 	cred_i.id_cred.len = test_vectors[vec_num_i].id_cred_i_len;
 	cred_i.id_cred.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_i;
