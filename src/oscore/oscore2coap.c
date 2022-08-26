@@ -532,11 +532,12 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 			}
 
 			/*check is the packet is replayed*/
-			TRY_EXPECT(server_is_sequence_number_valid(
+			if(!server_is_sequence_number_valid(
 					   *oscore_option.piv.ptr,
-					   c->rc.replay_window,
-					   c->rc.replay_window_len),
-				   true);
+					   &c->rc.replay_window))
+			{
+			    return oscore_replay_window_protection_error;
+			}
 
 			/*If this is a request message we need to calculate the nonce, aad 
             and eventually update the Common IV, Sender and Recipient Keys*/
@@ -564,8 +565,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 			if (is_request(&oscore_packet)) {
 				server_replay_window_update(
 					*oscore_option.piv.ptr,
-					c->rc.replay_window,
-					c->rc.replay_window_len);
+					&c->rc.replay_window);
 			}
 		} else {
 			return r;

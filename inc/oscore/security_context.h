@@ -14,11 +14,10 @@
 
 #include "supported_algorithm.h"
 #include "oscore_coap.h"
+#include "oscore/replay_protection.h"
 
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
-
-#define REPLAY_WINDOW_LEN 32
 
 enum dev_type {
 	SERVER,
@@ -59,8 +58,7 @@ struct recipient_context {
 	struct byte_array recipient_key;
 	uint8_t recipient_key_buf[RECIPIENT_KEY_LEN_];
 	uint8_t recipient_id_buf[RECIPIENT_ID_BUFF_LEN];
-	uint64_t replay_window[REPLAY_WINDOW_LEN];
-	uint8_t replay_window_len;
+	server_replay_window_t replay_window;
 };
 
 /*request-response context contains parameters that need to persists between
