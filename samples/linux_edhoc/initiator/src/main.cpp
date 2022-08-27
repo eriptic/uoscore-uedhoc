@@ -25,8 +25,8 @@ extern "C" {
 }
 #include "cantcoap.h"
 
-#define USE_IPV4
-
+//#define USE_IPV4
+#define USE_IPV6
 /*comment this out to use DH keys from the test vectors*/
 //#define USE_RANDOM_EPHEMERAL_DH_KEY
 
@@ -52,7 +52,7 @@ static int start_coap_client(int *sockfd)
 #endif
 #ifdef USE_IPV6
 	struct sockaddr_in6 servaddr;
-	const char IPV6_SERVADDR[] = { "::1" };
+	const char IPV6_SERVADDR[] = { "2001:db8::1" };
 	err = sock_init(SOCK_CLIENT, IPV6_SERVADDR, IPv6, &servaddr,
 			sizeof(servaddr), sockfd);
 	if (err < 0) {

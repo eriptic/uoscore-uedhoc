@@ -26,7 +26,7 @@
 
 #include "edhoc.h"
 #include "sock.h"
-#include "edhoc_test_vectors.h"
+#include "edhoc_test_vectors_p256_v15.h"
 
 #include <net/net_pkt.h>
 #include <net/net_if.h>
@@ -34,9 +34,6 @@
 #include <net/net_context.h>
 #include <net/udp.h>
 #include <net/coap.h>
-
-#define MAX_COAP_MSG_LEN 256
-#define BLOCK_WISE_TRANSFER_SIZE_GET 2048
 
 /**
  * @brief	Initializes sockets for CoAP client.
@@ -46,6 +43,7 @@
 static int start_coap_client(int *sockfd)
 {
 	struct sockaddr_in6 servaddr;
+	//const char IPV6_SERVADDR[] = { "::1" };
 	const char IPV6_SERVADDR[] = { "2001:db9::2" };
 	int r = ipv6_sock_init(SOCK_CLIENT, IPV6_SERVADDR, &servaddr,
 			       sizeof(servaddr), sockfd);
@@ -86,7 +84,13 @@ enum err tx(void *sock, uint8_t *data, uint32_t data_len)
 	/* Append payload */
 	TRY_EXPECT(coap_packet_append_payload(&request, data, data_len), 0);
 
-	send(*((int *)sock), request.data, request.offset, 0);
+	PRINT_ARRAY("CoAP packet", request.data, request.offset);
+	ssize_t n = send(*((int *)sock), request.data, request.offset, 0);
+	if (n < 0) {
+		printf("send failed with error code: %d\n", n);
+	} else {
+		printf("%d bytes sent\n", n);
+	}
 
 	/*construct a CoAP packet*/
 	// static uint16_t mid = 0;
@@ -151,14 +155,15 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
 	return ok;
 }
 
-int main(void)
+void main(void)
 {
+	int sockfd;
+	uint8_t prk_exporter[32];
 	uint8_t oscore_master_secret[16];
 	uint8_t oscore_master_salt[8];
 
 	/* edhoc declarations */
-	uint8_t PRK_4x3m[PRK_DEFAULT_SIZE];
-	uint8_t th4[HASH_DEFAULT_SIZE];
+	uint8_t PRK_out[PRK_DEFAULT_SIZE];
 	uint8_t err_msg[ERR_MSG_DEFAULT_SIZE];
 	uint32_t err_msg_len = sizeof(err_msg);
 	uint8_t ad_2[AD_DEFAULT_SIZE];
@@ -167,26 +172,20 @@ int main(void)
 	uint32_t ad_4_len = sizeof(ad_2);
 
 	/* test vector inputs */
-	const uint8_t TEST_VEC_NUM = 1;
+	const uint8_t TEST_VEC_NUM = 2;
 	uint16_t cred_num = 1;
 	struct other_party_cred cred_r;
 	struct edhoc_initiator_context c_i;
 
 	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
-	if (test_vectors[vec_num_i].c_i_raw != NULL) {
-		c_i.c_i.type = BSTR;
-		c_i.c_i.mem.c_x_bstr.len = test_vectors[vec_num_i].c_i_raw_len;
-		c_i.c_i.mem.c_x_bstr.ptr =
-			(uint8_t *)test_vectors[vec_num_i].c_i_raw;
-	} else {
-		c_i.c_i.type = INT;
-		c_i.c_i.mem.c_x_int = *test_vectors[vec_num_i].c_i_raw_int;
-	}
 	c_i.msg4 = true;
+	c_i.sock = &sockfd;
+	c_i.c_i.len = test_vectors[vec_num_i].c_i_len;
+	c_i.c_i.ptr = (uint8_t *)test_vectors[vec_num_i].c_i;
 	c_i.method = (enum method_type) * test_vectors[vec_num_i].method;
-	c_i.suites_i.len = test_vectors[vec_num_i].suites_i_len;
-	c_i.suites_i.ptr = (uint8_t *)test_vectors[vec_num_i].suites_i;
+	c_i.suites_i.len = test_vectors[vec_num_i].SUITES_I_len;
+	c_i.suites_i.ptr = (uint8_t *)test_vectors[vec_num_i].SUITES_I;
 	c_i.ead_1.len = test_vectors[vec_num_i].ead_1_len;
 	c_i.ead_1.ptr = (uint8_t *)test_vectors[vec_num_i].ead_1;
 	c_i.ead_3.len = test_vectors[vec_num_i].ead_3_len;
@@ -221,26 +220,27 @@ int main(void)
 	cred_r.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
 	cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
 
-	c_i.sock = NULL;
-	TRY_EXPECT(start_coap_client((int *)c_i.sock), 0);
+	start_coap_client(&sockfd);
+	edhoc_initiator_run(&c_i, &cred_r, cred_num, err_msg, &err_msg_len,
+			    ad_2, &ad_2_len, ad_4, &ad_4_len, PRK_out,
+			    sizeof(PRK_out), tx, rx);
 
-	TRY(edhoc_initiator_run(&c_i, &cred_r, cred_num, err_msg, &err_msg_len,
-				ad_2, &ad_2_len, ad_4, &ad_4_len, PRK_4x3m,
-				sizeof(PRK_4x3m), th4, sizeof(th4), tx, rx));
+	PRINT_ARRAY("PRK_out", PRK_out, sizeof(PRK_out));
 
-	PRINT_ARRAY("PRK_4x3m", PRK_4x3m, sizeof(PRK_4x3m));
-	PRINT_ARRAY("th4", th4, sizeof(th4));
+	prk_out2exporter(SHA_256, PRK_out, sizeof(PRK_out), prk_exporter);
+	PRINT_ARRAY("prk_exporter", prk_exporter, sizeof(prk_exporter));
 
-	TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
-			   sizeof(th4), "OSCORE_Master_Secret",
-			   oscore_master_secret, 16));
-	PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret, 16);
+	edhoc_exporter(SHA_256, OSCORE_MASTER_SECRET, prk_exporter,
+		       sizeof(prk_exporter), oscore_master_secret,
+		       sizeof(oscore_master_secret));
+	PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret,
+		    sizeof(oscore_master_secret));
 
-	TRY(edhoc_exporter(SHA_256, PRK_4x3m, sizeof(PRK_4x3m), th4,
-			   sizeof(th4), "OSCORE_Master_Salt",
-			   oscore_master_salt, 8));
-	PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt, 8);
+	edhoc_exporter(SHA_256, OSCORE_MASTER_SALT, prk_exporter,
+		       sizeof(prk_exporter), oscore_master_salt,
+		       sizeof(oscore_master_salt));
+	PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt,
+		    sizeof(oscore_master_salt));
 
-	close(*(int *)c_i.sock);
-	return 0;
+	close(sockfd);
 }

@@ -18,13 +18,12 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #else
-#include <net/net_pkt.h>
-#include <net/net_if.h>
-#include <net/net_core.h>
-#include <net/net_context.h>
-#include <net/udp.h>
-
-#include <net/socket.h>
+#include <zephyr/net/net_pkt.h>
+#include <zephyr/net/net_if.h>
+#include <zephyr/net/net_core.h>
+#include <zephyr/net/net_context.h>
+#include <zephyr/net/udp.h>
+#include <zephyr/net/socket.h>
 #endif
 
 #define COAP_PORT 5683
