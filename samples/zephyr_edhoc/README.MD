@@ -30,7 +30,7 @@ Optionally the board can be connected to a serial terminal for observing status 
 sudo ./ble_connect.sh -d EdhocResponder
 ``` 
 * Once the board is flashed and connected it prints the following output:
-```
+```bash
 uart:~$ *** Booting Zephyr OS build zephyr-v3.1.0-4283-g5108c4f21d3d  ***
 [00:00:00.264,709] <inf> bt_hci_core: HW Platform: Nordic Semiconductor (0x0002)
 [00:00:00.264,739] <inf> bt_hci_core: HW Variant: nRF52x (0x0002)
@@ -43,12 +43,12 @@ waiting to receive message 1...
 waiting to receive in rx()
 ```
 * On the Linux host in the folder `samples/linux_edhoc/initiator` build and run the initiator:
-```
+```bash
 make
 ./build/initiator
 ``` 
 * Both parties should run the EDHOC protocol to an end and derive the same shared secret. The output on both sides -- initiator and responder should look like this:
-```
+```bash
 PRK_out (size 32):
         83 90 E7 65 66 2F 4F 51 3D B1 A4 30 66 BD DA 43 
         27 C9 D1 0F A2 D9 28 08 2A 87 2B BF CA 78 CA 2A 
@@ -66,3 +66,39 @@ info (size 3):
 OSCORE Master Salt (size 8):
         67 FF 58 07 7B DB E2 AC 
 ```
+
+## Setup 1: nRF52840 initiator - Linux host responder
+
+* make sure that the CoAP port 5683 is open on the Linux host. The port can be opened with UFW (Uncomplicated Firewall).
+```bash
+sudo ufw allow 5683/udp
+sudo ufw enable
+sudo ufw status
+# which prints:
+
+# Status: active
+
+# To                         Action      From
+# --                         ------      ----
+# 5683/udp                   ALLOW       Anywhere                  
+# 5683/udp (v6)              ALLOW       Anywhere (v6)    
+```
+* On the Linux host in the folder `samples/linux_edhoc/responder` build and run the responder:
+```
+make
+./build/responder
+``` 
+
+* connect the BLE board to the computer used for building the samples over USB.
+* In the directory `samples/zephyr_edhoc/initiator` build and flash the sample:
+```bash
+west build -b=nrf52840dk_nrf52840
+west flash
+```
+Optionally the board can be connected to a serial terminal for observing status messages.
+
+* Run the script `scripts/ble_connect.sh` as root on a Linux host in order to establish IPv6 over BLE connection between the Linux host and the board.
+```bash
+sudo ./ble_connect.sh -d EdhocInitiator
+```
+* Both parties should run the EDHOC protocol to an end and derive the same shared secret. 

@@ -10,30 +10,11 @@
 */
 
 #include <stdio.h>
-
-// #include <errno.h>
-// #include <net/coap.h>
-// #include <net/coap_link_format.h>
-// #include <net/net_ip.h>
-// //#include <net/net_mgmt.h>
-// #include <net/socket.h>
-// #include <net/udp.h>
-// #include <sys/byteorder.h>
-// #include <sys/printk.h>
-// #include <zephyr.h>
-// #include <zephyr/types.h>
-//#include "net_private.h"
+#include <zephyr/net/coap.h>
 
 #include "edhoc.h"
 #include "sock.h"
 #include "edhoc_test_vectors_p256_v15.h"
-
-#include <net/net_pkt.h>
-#include <net/net_if.h>
-#include <net/net_core.h>
-#include <net/net_context.h>
-#include <net/udp.h>
-#include <net/coap.h>
 
 /**
  * @brief	Initializes sockets for CoAP client.
@@ -44,7 +25,7 @@ static int start_coap_client(int *sockfd)
 {
 	struct sockaddr_in6 servaddr;
 	//const char IPV6_SERVADDR[] = { "::1" };
-	const char IPV6_SERVADDR[] = { "2001:db9::2" };
+	const char IPV6_SERVADDR[] = { "2001:db8::2" };
 	int r = ipv6_sock_init(SOCK_CLIENT, IPV6_SERVADDR, &servaddr,
 			       sizeof(servaddr), sockfd);
 	if (r < 0) {
@@ -92,22 +73,6 @@ enum err tx(void *sock, uint8_t *data, uint32_t data_len)
 		printf("%d bytes sent\n", n);
 	}
 
-	/*construct a CoAP packet*/
-	// static uint16_t mid = 0;
-	// static uint32_t token = 0;
-	// CoapPDU *pdu = new CoapPDU();
-	// pdu->reset();
-	// pdu->setVersion(1);
-	// pdu->setType(CoapPDU::COAP_CONFIRMABLE);
-	// pdu->setCode(CoapPDU::COAP_POST);
-	// pdu->setToken((uint8_t *)&(++token), sizeof(token));
-	// pdu->setMessageID(mid++);
-	// pdu->setURI((char *)".well-known/edhoc", 17);
-	// pdu->setPayload(data, data_len);
-
-	// send(*((int *)sock), pdu->getPDUPointer(), pdu->getPDULength(), 0);
-
-	// delete pdu;
 	return ok;
 }
 
@@ -122,41 +87,41 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
 	int n;
 	char buffer[MAXLINE];
 	struct coap_packet reply;
-	// CoapPDU *recvPDU;
+	const uint8_t *edhoc_data_p;
+	uint16_t edhoc_data_len;
+
 	/* receive */
 	n = recv(*((int *)sock), (char *)buffer, MAXLINE, MSG_WAITALL);
 	if (n < 0) {
 		printf("recv error");
 	}
 
+	PRINT_ARRAY("received data", buffer, n);
+
 	TRY_EXPECT(coap_packet_parse(&reply, buffer, n, NULL, 0), 0);
 
-	printf("coap header len %d\n", reply.hdr_len);
+	edhoc_data_p = coap_packet_get_payload(&reply, &edhoc_data_len);
 
-	// recvPDU = new CoapPDU((uint8_t *)buffer, n);
+	PRINT_ARRAY("received EDHOC data", edhoc_data_p, edhoc_data_len);
 
-	// if (recvPDU->validate()) {
-	// 	recvPDU->printHuman();
-	// }
+	if (*data_len >= edhoc_data_len) {
+		memcpy(data, edhoc_data_p, edhoc_data_len);
+		*data_len = edhoc_data_len;
+	} else {
+		printf("insufficient space in buffer");
+		return buffer_to_small;
+	}
 
-	// uint32_t payload_len = recvPDU->getPayloadLength();
-	// printf("data_len: %d\n", *data_len);
-	// printf("payload_len: %d\n", payload_len);
-
-	// if (*data_len >= payload_len) {
-	// 	memcpy(data, recvPDU->getPayloadPointer(), payload_len);
-	// 	*data_len = payload_len;
-	// } else {
-	// 	printf("insufficient space in buffer");
-	// 	return buffer_to_small;
-	// }
-
-	// delete recvPDU;
 	return ok;
 }
 
 void main(void)
 {
+	int32_t s = 5000;
+	printf("sleep for %d msecond after connection in order to have time to start wireshark on bt0\n", s);
+	k_msleep(s);
+
+
 	int sockfd;
 	uint8_t prk_exporter[32];
 	uint8_t oscore_master_secret[16];

@@ -11,31 +11,11 @@
 
 #include <stdio.h>
 
-// #include <edhoc.h>
-// #include <errno.h>
-// #include <net/coap.h>
-// #include <net/coap_link_format.h>
-// #include <net/net_ip.h>
-// #include <net/net_mgmt.h>
-// #include <net/socket.h>
-// #include <net/udp.h>
-// #include <sys/byteorder.h>
-// #include <sys/printk.h>
-// #include <zephyr.h>
-
-// #include "credentials.h"
-// #include "net_private.h"
+#include <zephyr/net/coap.h>
 
 #include "edhoc.h"
 #include "sock.h"
 #include "edhoc_test_vectors_p256_v15.h"
-
-// #include <net/net_pkt.h>
-// #include <net/net_if.h>
-// #include <net/net_core.h>
-// #include <net/net_context.h>
-// #include <net/udp.h>
-#include <zephyr/net/coap.h>
 
 struct sockaddr_storage client_addr;
 socklen_t client_addr_len;

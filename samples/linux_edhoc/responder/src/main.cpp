@@ -26,8 +26,8 @@ extern "C" {
 }
 #include "cantcoap.h"
 
-#define USE_IPV4
-
+//#define USE_IPV4
+#define USE_IPV6
 
 CoapPDU *txPDU = new CoapPDU();
 
@@ -73,7 +73,7 @@ static int start_coap_server(int *sockfd)
 	//struct sockaddr_in6 client_addr;
 	client_addr_len = sizeof(client_addr);
 	memset(&client_addr, 0, sizeof(client_addr));
-	const char IPV6_SERVADDR[] = { "::1" };
+	const char IPV6_SERVADDR[] = { "2001:db8::2" };
 	err = sock_init(SOCK_SERVER, IPV6_SERVADDR, IPv6, &servaddr,
 			sizeof(servaddr), sockfd);
 	if (err < 0) {
