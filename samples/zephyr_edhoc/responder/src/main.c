@@ -37,7 +37,7 @@
 // #include <net/udp.h>
 #include <zephyr/net/coap.h>
 
-struct sockaddr_in6 client_addr;
+struct sockaddr_storage client_addr;
 socklen_t client_addr_len;
 
 /**
@@ -72,13 +72,35 @@ enum err tx(void *sock, uint8_t *data, uint32_t data_len)
 	char buffer[MAXLINE];
 	struct coap_packet cp_ack;
 	int r;
+	const uint8_t COAP_CHANGED = 0b01000100;
 
-	r = coap_ack_init(cp_ack,
-			  cp_req, buffer,
-			  sizeof(buffer), uint8_t code);
-	
+	r = coap_ack_init(&cp_ack, &cp_req, buffer, sizeof(buffer),
+			  COAP_CHANGED);
 	if (r < 0) {
+		printf("coap_ack_init failed\n");
 		return unexpected_result_from_ext_lib;
+	}
+
+	r = coap_packet_append_payload_marker(&cp_ack);
+	if (r < 0) {
+		printf("coap_packet_append_payload_marker failed\n");
+		return unexpected_result_from_ext_lib;
+	}
+
+	r = coap_packet_append_payload(&cp_ack, data, data_len);
+	if (r < 0) {
+		printf("coap_packet_append_payload failed\n");
+		return unexpected_result_from_ext_lib;
+	}
+
+	PRINT_ARRAY("Sending CoAP message", buffer, cp_ack.offset);
+
+	r = sendto(*((int *)sock), buffer, cp_ack.offset, 0,
+		   (struct sockaddr *)&client_addr, client_addr_len);
+	if (r < 0) {
+		printf("Error: failed to send reply (Code: %d, ErrNo: %d)\n", r,
+		       errno);
+		return r;
 	}
 
 	return ok;
@@ -93,10 +115,18 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
 	uint16_t edhoc_data_len;
 
 	/* receive */
-	n = recv(*((int *)sock), (char *)buffer, MAXLINE, MSG_WAITALL);
+	client_addr_len = sizeof(client_addr);
+	memset(&client_addr, 0, sizeof(client_addr));
+	memset(&cp_req, 0, sizeof(cp_req));
+	memset(&buffer, 0, sizeof(buffer));
+
+	printf("waiting to receive in rx()\n");
+	n = recvfrom(*((int *)sock), (char *)buffer, sizeof(buffer), 0,
+		     (struct sockaddr *)&client_addr, &client_addr_len);
 	if (n < 0) {
-		printf("recv error");
+		printf("recv error\n");
 	}
+
 	PRINT_ARRAY("received data", buffer, n);
 
 	TRY_EXPECT(coap_packet_parse(&cp_req, buffer, n, NULL, 0), 0);

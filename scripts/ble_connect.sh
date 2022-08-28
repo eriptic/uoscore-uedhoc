@@ -78,19 +78,9 @@ function connect(){
 		#max connection interval 7*1.25ms = 8.25ms
 		echo "7" > /sys/kernel/debug/bluetooth/hci0/conn_max_interval
 
-		# Set IPv6 forwarding (must be present).
-		#echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
-
 		#assign a static address to the bt0 interface
 		ip address add 2001:db8::2/64 dev bt0
 
-		# Run radvd daemon.
-		#service radvd restart
-
-
-		# Assign static IPv6 address to the RPi (use the eth0 interface)
-		#sudo ifconfig eth0 add 2001:db9::1/64
-		#sleep 1
 
 		#check if the device is disconnected 
 		connected_device=$(hcitool con | grep $mac)
