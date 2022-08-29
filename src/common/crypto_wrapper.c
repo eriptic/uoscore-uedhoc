@@ -21,7 +21,7 @@
 #include "edhoc/suites.h"
 
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
-edhoc_mock_cb edhoc_crypto_mock_cb;
+struct edhoc_mock_cb edhoc_crypto_mock_cb;
 #endif // EDHOC_MOCK_CRYPTO_WRAPPER
 
 //#define MBEDTLS
@@ -170,7 +170,7 @@ cleanup:
 
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
 static bool aead_mock_args_match_predefined(
-		edhoc_mock_aead_in_out *predefined,
+		struct edhoc_mock_aead_in_out *predefined,
 		const uint8_t *key, const uint16_t key_len,
 		uint8_t *nonce, const uint16_t nonce_len,
 		const uint8_t *aad, const uint16_t aad_len,
@@ -191,7 +191,7 @@ aead(enum aes_operation op, const uint8_t *in, const uint32_t in_len,
 {
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
 	for(uint32_t i=0; i < edhoc_crypto_mock_cb.aead_in_out_count; i++) {
-		edhoc_mock_aead_in_out *predefined_in_out = edhoc_crypto_mock_cb.aead_in_out + i;
+		struct edhoc_mock_aead_in_out *predefined_in_out = edhoc_crypto_mock_cb.aead_in_out + i;
 		if(aead_mock_args_match_predefined(
 				predefined_in_out, key, key_len, nonce, nonce_len, aad, aad_len, tag, tag_len)) {
 			memcpy(out, predefined_in_out->out.ptr, predefined_in_out->out.len);
@@ -264,7 +264,7 @@ aead(enum aes_operation op, const uint8_t *in, const uint32_t in_len,
 
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
 static bool sign_mock_args_match_predefined(
-		edhoc_mock_sign_in_out *predefined,
+		struct edhoc_mock_sign_in_out *predefined,
 		 const uint8_t *sk, const size_t sk_len,
 		 const uint8_t *pk, const size_t pk_len,
 		 const uint8_t *msg, const size_t msg_len)
@@ -282,7 +282,7 @@ sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
 {
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
 	for(uint32_t i=0; i < edhoc_crypto_mock_cb.sign_in_out_count; i++) {
-		edhoc_mock_sign_in_out *predefined_in_out = edhoc_crypto_mock_cb.sign_in_out + i;
+		struct edhoc_mock_sign_in_out *predefined_in_out = edhoc_crypto_mock_cb.sign_in_out + i;
 		if(sign_mock_args_match_predefined(predefined_in_out, sk, sk_len, pk, PK_DEFAULT_SIZE, msg, msg_len)){
 			memcpy(out, predefined_in_out->out.ptr, predefined_in_out->out.len);
 			return ok;

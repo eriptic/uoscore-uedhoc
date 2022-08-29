@@ -153,31 +153,31 @@ enum err hkdf_sha_256(struct byte_array *master_secret,
  *
  * When there is no matching arguments, the function aead()/sign() will continue normally.
  */
-typedef struct {
+struct edhoc_mock_aead_in_out{
 	struct byte_array out;
 	struct byte_array in;
 	struct byte_array key;
 	struct byte_array nonce;
 	struct byte_array aad;
 	struct byte_array tag;
-} edhoc_mock_aead_in_out;
+};
 
-typedef struct {
+struct edhoc_mock_sign_in_out {
 	enum sign_alg curve;
 	struct byte_array sk;
 	struct byte_array pk;
 	struct byte_array msg;
 	struct byte_array out;
-} edhoc_mock_sign_in_out;
+};
 
-typedef struct {
+struct edhoc_mock_cb {
 	int aead_in_out_count;
-	edhoc_mock_aead_in_out *aead_in_out;
+	struct edhoc_mock_aead_in_out *aead_in_out;
 	int sign_in_out_count;
-	edhoc_mock_sign_in_out *sign_in_out;
-} edhoc_mock_cb;
+	struct edhoc_mock_sign_in_out *sign_in_out;
+};
 
-extern edhoc_mock_cb edhoc_crypto_mock_cb;
+extern struct edhoc_mock_cb edhoc_crypto_mock_cb;
 #endif // EDHOC_MOCK_CRYPTO_WRAPPER
 
 #endif
