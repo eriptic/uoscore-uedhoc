@@ -28,7 +28,27 @@ enum err create_hkdf_info(
 
 	info._info_label = label;
 
-	info._info_context.value = context;
+	/* NULL context with zero size is acceptable from EDHOC point of view,
+	 * but CBOR encoder does not accept NULL as input argument.
+	 * Internally it calls memmove that generates runtime error when input
+	 * is NULL even if length is set to 0.
+	 * Workaround is to provide dummy buffer to avoid passing NULL. It does not
+	 * impact the EDHOC process, since context length is set to 0 and no value
+	 * is copied to the EDHOC message. */
+	const char dummy_buffer;
+
+	if (NULL == context) {
+		if (0 != context_len) {
+			return wrong_parameter;
+		}
+		else {
+			info._info_context.value = (const uint8_t *) &dummy_buffer;
+		}
+	}
+	else {
+		info._info_context.value = context;
+	}
+
 	info._info_context.len = context_len;
 
 	info._info_length = okm_len;

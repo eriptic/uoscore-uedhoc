@@ -96,18 +96,57 @@ static enum err ca_pk_get(const struct other_party_cred *cred_array,
 			  uint16_t cred_num, const uint8_t *issuer,
 			  uint8_t **root_pk, uint32_t *root_pk_len)
 {
+	/* when single credential without certificate is stored, return stored ca_pk if available */
+	if(1 == cred_num && ( 0 == cred_array[0].ca.len || NULL == cred_array[0].ca.ptr))
+	{
+		if(NULL == cred_array[0].ca_pk.ptr || 0 == cred_array[0].ca_pk.len)
+		{
+			return no_such_ca;
+		}
+
+		*root_pk = cred_array[0].ca_pk.ptr;
+		*root_pk_len = cred_array[0].ca_pk.len;
+		return ok;
+	}
+
+	/* Accept only certificate based search if multiple credentials available*/
 	for (uint16_t i = 0; i < cred_num; i++) {
+		if(NULL == cred_array[i].ca.ptr || 0 == cred_array[i].ca.len)
+		{
+			continue;
+		}
+
 		PRINT_ARRAY("cred_array[i].ca.ptr", cred_array[i].ca.ptr,
 			    cred_array[i].ca.len);
 		PRINT_ARRAY("issuer", issuer, cred_array[i].ca.len);
 
-		if (0 == memcmp(cred_array[i].ca.ptr, issuer,
-				cred_array[i].ca.len)) {
+		mbedtls_x509_crt m_cert;
+		mbedtls_x509_crt_init(&m_cert);
+
+		/* parse the certificate */
+		TRY_EXPECT(mbedtls_x509_crt_parse_der_nocopy(&m_cert, cred_array[i].ca.ptr, cred_array[i].ca.len), 0);
+
+		const mbedtls_x509_name *p = &m_cert.subject;
+		const mbedtls_asn1_buf *subject_id = NULL;
+		while (p) {
+
+			if (0 == MBEDTLS_OID_CMP(MBEDTLS_OID_AT_CN, &p->oid)) {
+				subject_id = &p->val;
+			}
+			p = p->next;
+		};
+
+		if (0 == memcmp(subject_id->p, issuer,
+				subject_id->len)) {
 			*root_pk = cred_array[i].ca_pk.ptr;
 			*root_pk_len = cred_array[i].ca_pk.len;
 			PRINT_ARRAY("Root PK of the CA", *root_pk,
 				    *root_pk_len);
+			mbedtls_x509_crt_free(&m_cert);
 			return ok;
+		}
+		else{
+			mbedtls_x509_crt_free(&m_cert);
 		}
 	}
 	return no_such_ca;

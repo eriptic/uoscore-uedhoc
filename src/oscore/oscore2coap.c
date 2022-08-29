@@ -29,6 +29,8 @@
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
 
+#define OPTION_PAYLOAD_MARKER  (0xFF)
+
 /**
  * @brief Parse all received options to find the OSCORE_option. If it doesn't  * have OSCORE option, then this packet is a normal CoAP. If it does have, it's * an OSCORE packet, and then parse the compressed OSCORE_option value to get  * value of PIV, KID and KID context of the client.
  * @param in: input OSCORE packet
@@ -278,7 +280,7 @@ options_from_oscore_reorder(struct o_coap_packet *in_oscore_packet,
 static inline enum err
 oscore_packet_options_parser(uint8_t *in_data, uint16_t in_data_len,
 			     struct o_coap_option *out_options,
-			     uint8_t *out_options_count)
+			     uint8_t *out_options_count, struct byte_array *out_payload)
 {
 	uint8_t *temp_options_ptr = in_data;
 	uint8_t temp_options_count = 0;
@@ -287,9 +289,25 @@ oscore_packet_options_parser(uint8_t *in_data, uint16_t in_data_len,
 	uint8_t temp_option_len = 0;
 	uint8_t temp_option_number = 0;
 
+	if(0 == in_data_len) {
+		out_payload->len = 0;
+		out_payload->ptr = NULL;
+		*out_options_count = 0;
+		return ok;
+	}
+
 	// Go through the in_data to find out how many options are there
 	uint16_t i = 0;
 	while (i < in_data_len) {
+		if(OPTION_PAYLOAD_MARKER == in_data[i]) {
+			if((in_data_len - i) < 2) {
+				return not_valid_input_packet;
+			}
+			i++;
+			out_payload->len = ( uint32_t ) in_data_len - i;
+			out_payload->ptr = &in_data[i];
+			return ok;
+		}
 		temp_option_header_len = 1;
 		// Parser first byte,lower 4 bits for option value length and higher 4 bits for option delta
 		temp_option_delta = ((*temp_options_ptr) & 0xF0) >> 4;
@@ -302,7 +320,7 @@ oscore_packet_options_parser(uint8_t *in_data, uint16_t in_data_len,
 		case 13:
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 1);
-			temp_option_delta = (uint8_t)(*temp_options_ptr - 13);
+			temp_option_delta = (uint8_t)(*temp_options_ptr + 13);
 			temp_options_ptr += 1;
 			break;
 		case 14:
@@ -310,7 +328,7 @@ oscore_packet_options_parser(uint8_t *in_data, uint16_t in_data_len,
 				(uint8_t)(temp_option_header_len + 2);
 			temp_option_delta =
 				(uint8_t)(((*temp_options_ptr) << 8 |
-					   *(temp_options_ptr + 1)) -
+					   *(temp_options_ptr + 1)) +
 					  269);
 			temp_options_ptr += 2;
 			break;
@@ -327,14 +345,14 @@ oscore_packet_options_parser(uint8_t *in_data, uint16_t in_data_len,
 		case 13:
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 1);
-			temp_option_len = (uint8_t)(*temp_options_ptr - 13);
+			temp_option_len = (uint8_t)(*temp_options_ptr + 13);
 			temp_options_ptr += 1;
 			break;
 		case 14:
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 2);
 			temp_option_len = (uint8_t)(((*temp_options_ptr) << 8 |
-						     *(temp_options_ptr + 1)) -
+						     *(temp_options_ptr + 1)) +
 						    269);
 			temp_options_ptr += 2;
 			break;
@@ -363,11 +381,10 @@ oscore_packet_options_parser(uint8_t *in_data, uint16_t in_data_len,
 		i = (uint16_t)(i + temp_option_header_len + temp_option_len);
 		temp_options_ptr += temp_option_len;
 		temp_options_count++;
+
+		// Assign options count number
+		*out_options_count = temp_options_count;
 	}
-
-	// Assign options count number
-	*out_options_count = temp_options_count;
-
 	return ok;
 }
 
@@ -392,41 +409,9 @@ static inline enum err oscore_decrypted_payload_parser(
 	*out_code = *(temp_payload_ptr++);
 	temp_payload_len--;
 
-	/* Check whether E-options exists */
-	if (*temp_payload_ptr == 0xFF || temp_payload_len == 0) {
-		*E_options_cnt = 0;
-	} else {
-		uint8_t *temp_option_ptr = temp_payload_ptr;
-		/* Length of E-options byte string*/
-		uint16_t options_len = 0;
-
-		/* Move the temp_ptr to the original unprotected payload */
-		while (*temp_payload_ptr != 0xFF && temp_payload_len != 0) {
-			temp_payload_len--;
-			temp_payload_ptr++;
-			options_len++;
-		}
-
-		/* Parser all options */
-		if (options_len > 0) {
-			TRY(oscore_packet_options_parser(
-				temp_option_ptr, options_len, out_E_options,
-				E_options_cnt));
-
-		} else
-			*E_options_cnt = 0;
-	}
-
-	/* Unprotected CoAP payload */
-	++temp_payload_ptr;
-	if (temp_payload_len == 0) {
-		out_o_coap_payload->len = 0;
-		out_o_coap_payload->ptr = NULL;
-	} else {
-		/* Minus byte of 0xFF */
-		out_o_coap_payload->len = (uint32_t)(temp_payload_len - 1);
-		out_o_coap_payload->ptr = temp_payload_ptr;
-	}
+	TRY(oscore_packet_options_parser(
+				temp_payload_ptr, ( uint16_t ) temp_payload_len, out_E_options,
+				E_options_cnt, out_o_coap_payload));
 
 	return ok;
 }

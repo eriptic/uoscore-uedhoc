@@ -231,10 +231,10 @@ int main()
 	cred_i.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_i_raw;
 	cred_i.pk.len = test_vectors[vec_num_i].pk_i_raw_len;
 	cred_i.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
-	cred_i.ca.len = test_vectors[vec_num_i].ca_len;
-	cred_i.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca;
-	cred_i.ca_pk.len = test_vectors[vec_num_i].ca_pk_len;
-	cred_i.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_pk;
+	cred_i.ca.len = test_vectors[vec_num_i].ca_i_len;
+	cred_i.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca_i;
+	cred_i.ca_pk.len = test_vectors[vec_num_i].ca_i_pk_len;
+	cred_i.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_i_pk;
 
 	while (1) {
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY
@@ -257,7 +257,8 @@ int main()
 		TRY(edhoc_responder_run(&c_r, &cred_i, cred_num, err_msg,
 					&err_msg_len, (uint8_t *)&ad_1,
 					&ad_1_len, (uint8_t *)&ad_3, &ad_3_len,
-					PRK_out, sizeof(PRK_out), tx, rx));
+					PRK_out, sizeof(PRK_out),
+					tx, rx));
 		PRINT_ARRAY("PRK_out", PRK_out, sizeof(PRK_out));
 
 		TRY(prk_out2exporter(SHA_256, PRK_out, sizeof(PRK_out),

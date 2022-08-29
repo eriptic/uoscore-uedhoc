@@ -29,10 +29,31 @@ enum err cose_enc_structure_encode(const uint8_t *context, uint32_t context_len,
 
     enc_structure._edhoc_enc_structure_context.value = context;
     enc_structure._edhoc_enc_structure_context.len = context_len;
-    enc_structure._edhoc_enc_structure_protected.value = protected;
-	enc_structure._edhoc_enc_structure_protected.len = protected_len;
     enc_structure._edhoc_enc_structure_external_aad.value = external_aad;
 	enc_structure._edhoc_enc_structure_external_aad.len = external_aad_len;
+
+	/* NULL protected with zero size is acceptable from EDHOC point of view,
+	 * but CBOR encoder does not accept NULL as input argument.
+	 * Internally it calls memmove that generates runtime error when input
+	 * is NULL even if length is set to 0.
+	 * Workaround is to provide dummy buffer to avoid passing NULL. It does not
+	 * impact the EDHOC process, since protected length is set to 0 and no value
+	 * is copied to the EDHOC message. */
+	const char dummy_buffer;
+
+	if (NULL == protected) {
+		if (0 != protected_len) {
+			return wrong_parameter;
+		}
+		else {
+			enc_structure._edhoc_enc_structure_protected.value = (const uint8_t *) &dummy_buffer;
+		}
+	}
+	else {
+		enc_structure._edhoc_enc_structure_protected.value = protected;
+	}
+
+	enc_structure._edhoc_enc_structure_protected.len = protected_len;
 
 	size_t payload_len_out;
 	TRY_EXPECT(cbor_encode_edhoc_enc_structure(out, *out_len, &enc_structure,

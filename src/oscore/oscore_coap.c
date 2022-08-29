@@ -21,7 +21,7 @@
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
 
-#define OPTIONS_END_MARKER  (0xFF)
+#define OPTION_PAYLOAD_MARKER  (0xFF)
 
 enum err options_into_byte_string(struct o_coap_option *options,
 				  uint8_t options_cnt,
@@ -61,12 +61,12 @@ enum err options_into_byte_string(struct o_coap_option *options,
 			case 1:
 				*(temp_ptr) = (uint8_t)(13 << 4);
 				*(temp_ptr + 1) =
-					(uint8_t)(options[i].delta + 13);
+					(uint8_t)(options[i].delta - 13);
 				break;
 			case 2:
 				*(temp_ptr) = (uint8_t)(14 << 4);
 				uint16_t temp_delta =
-					(uint16_t)(options[i].delta + 269);
+					(uint16_t)(options[i].delta - 269);
 				*(temp_ptr + 1) =
 					(uint8_t)((temp_delta & 0xFF00) >> 8);
 				*(temp_ptr + 2) =
@@ -83,12 +83,12 @@ enum err options_into_byte_string(struct o_coap_option *options,
 			case 1:
 				*(temp_ptr) |= 13;
 				*(temp_ptr + delta_extra_byte + 1) =
-					(uint8_t)(options[i].len + 13);
+					(uint8_t)(options[i].len - 13);
 				break;
 			case 2:
 				*(temp_ptr) |= 14;
 				uint16_t temp_len =
-					(uint16_t)(options[i].len + 269);
+					(uint16_t)(options[i].len - 269);
 				*(temp_ptr + delta_extra_byte + 1) =
 					(uint8_t)((temp_len & 0xFF00) >> 8);
 				*(temp_ptr + delta_extra_byte + 2) =
@@ -129,8 +129,7 @@ enum err options_into_byte_string(struct o_coap_option *options,
  * @return  err
  */
 static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
-				   struct o_coap_option *out_options,
-				   uint8_t *out_options_count)
+				   struct o_coap_packet *out)
 {
 	uint8_t *temp_options_ptr = in_data;
 	uint8_t temp_options_count = 0;
@@ -139,9 +138,26 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 	uint8_t temp_option_len = 0;
 	uint8_t temp_option_number = 0;
 
+	if(0 == in_data_len) {
+		out->payload_len = 0;
+		out->payload = NULL;
+		out->options_cnt = 0;
+		return ok;
+	}
+
 	/* Go through the in_data to find out how many options are there */
 	uint16_t i = 0;
 	while (i < in_data_len) {
+		if(OPTION_PAYLOAD_MARKER == in_data[i]) {
+			if((in_data_len - i) < 2) {
+				return not_valid_input_packet;
+			}
+			i++;
+			out->payload_len = ( uint32_t ) in_data_len - i;
+			out->payload = &in_data[i];
+			return ok;
+		}
+
 		temp_option_header_len = 1;
 		/* Parser first byte,lower 4 bits for option value length and higher 4 bits for option delta*/
 		temp_option_delta = ((*temp_options_ptr) & 0xF0) >> 4;
@@ -154,7 +170,7 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 		case 13:
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 1);
-			temp_option_delta = (uint8_t)(*temp_options_ptr - 13);
+			temp_option_delta = (uint8_t)(*temp_options_ptr + 13);
 			temp_options_ptr += 1;
 			break;
 		case 14:
@@ -162,7 +178,7 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 				(uint8_t)(temp_option_header_len + 2);
 			temp_option_delta =
 				(uint8_t)(((*temp_options_ptr) << 8) |
-					  (*(temp_options_ptr + 1) - 269));
+					  (*(temp_options_ptr + 1) + 269));
 			temp_options_ptr += 2;
 			break;
 		case 15:
@@ -200,14 +216,14 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 		temp_option_number =
 			(uint8_t)(temp_option_number + temp_option_delta);
 		/* Update in output options */
-		out_options[temp_options_count].delta = temp_option_delta;
-		out_options[temp_options_count].len = temp_option_len;
-		out_options[temp_options_count].option_number =
+		out->options[temp_options_count].delta = temp_option_delta;
+		out->options[temp_options_count].len = temp_option_len;
+		out->options[temp_options_count].option_number =
 			temp_option_number;
 		if (temp_option_len == 0)
-			out_options[temp_options_count].value = NULL;
+			out->options[temp_options_count].value = NULL;
 		else
-			out_options[temp_options_count].value =
+			out->options[temp_options_count].value =
 				temp_options_ptr;
 
 		/* Update parameters*/
@@ -219,12 +235,8 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 		else {
 			return not_valid_input_packet;
 		}
-
+		out->options_cnt = temp_options_count;
 	}
-
-	// Assign options count number
-	*out_options_count = temp_options_count;
-
 	return ok;
 }
 
@@ -265,45 +277,7 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
 		tmp_p += out->header.TKL;
 		payload_len -= out->header.TKL;
 	}
-
-	/* Options, if any */
-	if (payload_len != 0) {
-		/* Check if there any options exist*/
-		if (*tmp_p != OPTIONS_END_MARKER) {
-			/* Length of options byte string */
-			uint16_t options_len = 0;
-			uint8_t *temp_option_ptr = tmp_p;
-
-			/* Move tmp_p to the payload to get the length of options byte string*/
-
-			if (payload_len != 0) {
-				while (*tmp_p != OPTIONS_END_MARKER) {
-					payload_len--;
-					tmp_p++;
-					options_len++;
-					if (payload_len == 0) {
-						break;
-					}
-				}
-			}
-
-			/* Parser all options */
-			if (options_len > 0) {
-				TRY(buf2options(temp_option_ptr, options_len,
-						out->options,
-						&(out->options_cnt)));
-			}
-		}
-	}
-	/* Payload, if any */
-	++tmp_p;
-	if (payload_len == 0) {
-		out->payload_len = 0;
-		out->payload = NULL;
-	} else {
-		out->payload_len = --payload_len;
-		out->payload = tmp_p;
-	}
+	TRY(buf2options(tmp_p, ( uint16_t ) payload_len, out));
 
 	return ok;
 }

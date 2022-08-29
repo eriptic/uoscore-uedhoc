@@ -154,8 +154,8 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
 		temp_opt_bytes_len = (uint16_t)(temp_opt_bytes_len + 1 + 2 + 2 +
 						E_options[i].len);
 	/* Setup buffer */
-	TRY(check_buffer_size(MAX_E_OPTIONS, temp_opt_bytes_len));
-	uint8_t temp_opt_bytes[MAX_E_OPTIONS];
+	TRY(check_buffer_size(E_OPTIONS_BUFF_MAX_LEN, temp_opt_bytes_len));
+	uint8_t temp_opt_bytes[E_OPTIONS_BUFF_MAX_LEN];
 	memset(temp_opt_bytes, 0, temp_opt_bytes_len);
 	struct byte_array E_option_byte_string = {
 		.len = temp_opt_bytes_len,

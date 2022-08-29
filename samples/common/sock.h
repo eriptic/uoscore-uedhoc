@@ -26,7 +26,10 @@
 #include <zephyr/net/socket.h>
 #endif
 
-#define COAP_PORT 5683
+#ifndef PORT
+#define PORT 5683
+#endif
+
 #define MAXLINE 1024
 
 enum sock_type {

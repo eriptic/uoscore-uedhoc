@@ -277,11 +277,17 @@ struct test_vector {\n\
         const uint8_t *oscore_salt_key_update_raw;\n\
         uint32_t oscore_salt_key_update_raw_len;\n\
         \n\
-        const uint8_t *ca;\n\
-        uint32_t ca_len;\n\
+        const uint8_t *ca_r;\n\
+        uint32_t ca_r_len;\n\
         \n\
-        const uint8_t *ca_pk;\n\
-        uint32_t ca_pk_len;\n\
+        const uint8_t *ca_i;\n\
+        uint32_t ca_i_len;\n\
+        \n\
+        const uint8_t *ca_r_pk;\n\
+        uint32_t ca_r_pk_len;\n\
+        \n\
+        const uint8_t *ca_i_pk;\n\
+        uint32_t ca_i_pk_len;\n\
         \n\
         const uint8_t *i_raw;\n\
         uint32_t i_raw_len;\n\
@@ -569,11 +575,17 @@ STRUCT_POPULATE = "\n\
         .oscore_salt_key_update_raw = NULL,\n\
         .oscore_salt_key_update_raw_len = 0,\n\
         \n\
-        .ca = NULL,\n\
-        .ca_len = 0,\n\
+        .ca_r = NULL,\n\
+        .ca_r_len = 0,\n\
         \n\
-        .ca_pk = NULL,\n\
-        .ca_pk_len = 0,\n\
+        .ca_i = NULL,\n\
+        .ca_i_len = 0,\n\
+        \n\
+        .ca_r_pk = NULL,\n\
+        .ca_r_pk_len = 0,\n\
+        \n\
+        .ca_i_pk = NULL,\n\
+        .ca_i_pk_len = 0,\n\
         \n\
         .i_raw = NULL,\n\
         .i_raw_len = 0,\n\

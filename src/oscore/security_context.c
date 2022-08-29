@@ -149,8 +149,19 @@ enum err context_update(enum dev_type dev, struct o_coap_option *options,
 
 	/**********************************************************************/
 	/*calculate AAD*/
-	return create_aad(options, opt_num, c->cc.aead_alg, &c->rrc.kid,
-			  &c->rrc.piv, &c->rrc.aad);
+	uint8_t aad_buf[MAX_AAD_LEN];
+
+	struct byte_array aad;
+	aad.len = sizeof(aad_buf);
+	aad.ptr = aad_buf;
+
+	enum err status = create_aad(options, opt_num, c->cc.aead_alg,
+								&c->rrc.kid, &c->rrc.piv, &aad);
+
+	memcpy(c->rrc.aad.ptr, aad.ptr, aad.len);
+	c->rrc.aad.len = aad.len;
+
+	return status;
 }
 
 enum err oscore_context_init(struct oscore_init_params *params,

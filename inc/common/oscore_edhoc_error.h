@@ -25,6 +25,8 @@ enum err {
 	unexpected_result_from_ext_lib = 3,
 	wrong_parameter = 4,
 	crypto_operation_not_implemented = 5,
+	/*indicates that transport layer is not initialized*/
+	transport_deinitialized = 6,
 
 	/*EDHOC specifc errors*/
 	/*todo implement error messages*/
@@ -68,16 +70,22 @@ enum err {
 
 /*This macro checks if a function returns an error and if so it propages 
 	the error to the caller function*/
-#define TRY(x)                                                                       \
-	do {                                                                         \
-		enum err retval = (x);                                               \
-		if (retval != ok) {                                                  \
-			PRINTF(RED                                                   \
-			       "Runtime error: %s error code %d at %s:%d\n\n" RESET, \
-			       #x, retval, __FILE__, __LINE__);                      \
-			return retval;                                               \
-		}                                                                    \
-	} while (0)
+#define TRY(x)                                                           \
+    do {                                                                 \
+        enum err retval = (x);                                           \
+        if (transport_deinitialized == retval) {                         \
+            PRINTF(RESET                                                 \
+                   "Transport deinitialized at %s:%d\n\n",               \
+                   __FILE__, __LINE__);                                  \
+            return retval;                                               \
+        }                                                                \
+        if (ok != retval) {                                              \
+            PRINTF(RED                                                   \
+                   "Runtime error: %s error code %d at %s:%d\n\n" RESET, \
+                   #x, retval, __FILE__, __LINE__);                      \
+            return retval;                                               \
+        }                                                                \
+    } while (0)
 
 /* This macro checks if a function belonging to an external library returns an expected result or an error. If an error is returned the macro returns unexpected_result_from_ext_lib. */
 #define TRY_EXPECT(x, expected_result)                                               \

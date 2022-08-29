@@ -123,3 +123,17 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len);
 
 The logic of uOSCORE and uEDHOC is independent form the cryptographic library, i.e., the cryptographic library can easily be exchanged by the user. For that the user needs to provide implementations for the functions specified in `crypto_wrapper.c`. 
 
+## Additional configuration options
+Following preprocessor directives allow for better memory usage adjustments:
+
+* **edhoc.h**
+
+   * EDHOC_BUF_SIZES_RPK - select when authentication can be based on raw public keys, or
+   * EDHOC_BUF_SIZES_C509_CERT - select when authentication can be based on CBOR encoded certificates, or
+   * EDHOC_BUF_SIZES_X509_CERT - select when authentication can be based on X.509 certificates
+
+*  **oscore.h**
+
+   * OSCORE_MAX_PLAINTEXT_LEN - expected maximal length of OSCORE packet
+   * E_OPTIONS_BUFF_MAX_LEN - expected maximal length of buffer with all encrypted CoAP options
+   * I_OPTIONS_BUFF_MAX_LEN - expected maximal length of buffer with all not encrypted CoAP options
