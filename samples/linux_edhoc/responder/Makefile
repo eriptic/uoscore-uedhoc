@@ -98,6 +98,10 @@ CXXFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # required for gddl-gen library
 CFLAGS += -DZCBOR_CANONICAL 
 
+# use linux sockets 
+CFLAGS += -DLINUX_SOCKETS
+CXXFLAGS += -DLINUX_SOCKETS
+
 # use AddressSanitizer to find memory bugs
 # comment this out for better speed
 #CFLAGS += -fsanitize=address -fno-omit-frame-pointer

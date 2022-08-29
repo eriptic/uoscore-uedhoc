@@ -26,9 +26,8 @@ extern "C" {
 }
 #include "cantcoap.h"
 
-#define USE_IPV4
-//#define TEST_SUITE2_METHOD3
-//#define TEST_SUITE0_METHOD0
+//#define USE_IPV4
+#define USE_IPV6
 
 CoapPDU *txPDU = new CoapPDU();
 
@@ -51,7 +50,7 @@ socklen_t client_addr_len;
  * @param	
  * @retval	error code
  */
-static int start_coap_server(void)
+static int start_coap_server(int *sockfd)
 {
 	int err;
 #ifdef USE_IPV4
@@ -60,8 +59,9 @@ static int start_coap_server(void)
 	client_addr_len = sizeof(client_addr);
 	memset(&client_addr, 0, sizeof(client_addr));
 	const char IPV4_SERVADDR[] = { "127.0.0.1" };
+	//const char IPV4_SERVADDR[] = { "192.168.43.63" };
 	err = sock_init(SOCK_SERVER, IPV4_SERVADDR, IPv4, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);
@@ -73,9 +73,9 @@ static int start_coap_server(void)
 	//struct sockaddr_in6 client_addr;
 	client_addr_len = sizeof(client_addr);
 	memset(&client_addr, 0, sizeof(client_addr));
-	const char IPV6_SERVADDR[] = { "::1" };
+	const char IPV6_SERVADDR[] = { "2001:db8::2" };
 	err = sock_init(SOCK_SERVER, IPV6_SERVADDR, IPv6, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);
@@ -162,6 +162,7 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
 
 int main()
 {
+	int sockfd;
 	uint8_t prk_exporter[32];
 	uint8_t oscore_master_secret[16];
 	uint8_t oscore_master_salt[8];
@@ -183,6 +184,8 @@ int main()
 	uint8_t TEST_VEC_NUM = 2;
 	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
+	TRY_EXPECT(start_coap_server(&sockfd), 0);
+
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY
 	uint32_t seed;
 	uint8_t G_Y_random[32];
@@ -192,8 +195,6 @@ int main()
 	c_r.y.ptr = Y_random;
 	c_r.y.len = sizeof(Y_random);
 #endif
-
-	TRY_EXPECT(start_coap_server(), 0);
 
 	c_r.msg4 = true;
 	c_r.sock = &sockfd;

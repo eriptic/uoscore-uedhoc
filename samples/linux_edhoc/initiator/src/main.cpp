@@ -25,8 +25,8 @@ extern "C" {
 }
 #include "cantcoap.h"
 
-#define USE_IPV4
-
+//#define USE_IPV4
+#define USE_IPV6
 /*comment this out to use DH keys from the test vectors*/
 //#define USE_RANDOM_EPHEMERAL_DH_KEY
 
@@ -35,14 +35,15 @@ extern "C" {
  * @param
  * @retval	error code
  */
-static int start_coap_client(void)
+static int start_coap_client(int *sockfd)
 {
 	int err;
 #ifdef USE_IPV4
 	struct sockaddr_in servaddr;
 	const char IPV4_SERVADDR[] = { "127.0.0.1" };
+	//const char IPV4_SERVADDR[] = { "172.31.24.45" };
 	err = sock_init(SOCK_CLIENT, IPV4_SERVADDR, IPv4, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);
@@ -51,9 +52,9 @@ static int start_coap_client(void)
 #endif
 #ifdef USE_IPV6
 	struct sockaddr_in6 servaddr;
-	const char IPV6_SERVADDR[] = { "::1" };
+	const char IPV6_SERVADDR[] = { "2001:db8::1" };
 	err = sock_init(SOCK_CLIENT, IPV6_SERVADDR, IPv6, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);
@@ -131,6 +132,7 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
 
 int main()
 {
+	int sockfd;
 	uint8_t prk_exporter[32];
 	uint8_t oscore_master_secret[16];
 	uint8_t oscore_master_salt[8];
@@ -218,8 +220,7 @@ int main()
 
 #endif
 
-	TRY_EXPECT(start_coap_client(), 0);
-
+	TRY_EXPECT(start_coap_client(&sockfd), 0);
 	TRY(edhoc_initiator_run(&c_i, &cred_r, cred_num, err_msg, &err_msg_len,
 				ad_2, &ad_2_len, ad_4, &ad_4_len, PRK_out,
 				sizeof(PRK_out), tx, rx));

@@ -31,10 +31,11 @@ jobs:
           pip3 install --user -r ~/zephyrproject/zephyr/scripts/requirements.txt
 
           cd ~
-          wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.13.1/zephyr-sdk-0.13.1-linux-x86_64-setup.run
+          wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.14.2/zephyr-sdk-0.14.2_linux-x86_64.tar.gz
 
-          chmod +x zephyr-sdk-0.13.1-linux-x86_64-setup.run
-          ./zephyr-sdk-0.13.1-linux-x86_64-setup.run -- -d ~/zephyr-sdk-0.13.1
+          tar xvf zephyr-sdk-0.14.2_linux-x86_64.tar.gz
+          cd zephyr-sdk-0.14.2
+          ./setup.sh
       
       - name: Checkout code
         uses: actions/checkout@v2

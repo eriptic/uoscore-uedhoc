@@ -73,6 +73,7 @@ C_INCLUDES += -I../../../externals/compact25519/src/c25519
 # C defines
 # make PRINT_ARRAY macro usable in the main file
 C_DEFS += -DDEBUG_PRINT
+C_DEFS += -DLINUX_SOCKETS
 
 # Linked libraries
 LD_LIBRARY_PATH += -L$(USOCORE_UEDHOC_BUILD_PATH)
@@ -100,7 +101,9 @@ CXXFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # required for gddl-gen library
 CFLAGS += -DZCBOR_CANONICAL 
 
-
+# use linux sockets 
+CFLAGS += -DLINUX_SOCKETS
+CXXFLAGS += -DLINUX_SOCKETS
 
 # use AddressSanitizer to find memory bugs
 # comment this out for better speed

@@ -6,6 +6,7 @@ project(initiator)
 
 FILE(GLOB app_sources 
 	src/*.c
+	../../common/sock_ipv6.c
 	../../../externals/zcbor/src/*.c
 	../../../externals/compact25519/src/c25519/*.c
 	../../../externals/compact25519/src/*.c
@@ -15,6 +16,7 @@ target_sources(app PRIVATE ${app_sources})
 
 target_include_directories(app PRIVATE 
 	$ENV{ZEPHYR_BASE}/subsys/net/ip
+	../../common
 	../../../inc
 	../../../test_vectors
 	../../../externals/zcbor/include 
@@ -26,7 +28,7 @@ target_include_directories(app PRIVATE
 
 
 add_definitions(
-	#-DDEBUG_PRINT
+	-DDEBUG_PRINT
 	-DZCBOR_CANONICAL
 )
 

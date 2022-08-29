@@ -3,6 +3,8 @@
 
 #include "oscore/replay_protection.h"
 
+#define WINDOW_SIZE OSCORE_SERVER_REPLAY_WINDOW_SIZE
+
 /**
  * @brief Insert given sequence number in the specified position of replay window.
 
@@ -11,48 +13,89 @@
  * @param position [in] index to place new number (all older elements will be left-shifted)
  */
 static void server_replay_window_insert(uint64_t seq_number,
-					uint64_t *replay_window,
-					uint8_t position)
+					server_replay_window_t *replay_window,
+					size_t position)
 {
+	uint64_t *window = replay_window->window;
+
 	/*shift all old values one position to the left*/
-	size_t shift_length = position * sizeof(replay_window[0]);
-	memmove(replay_window, replay_window + 1, shift_length);
+	size_t shift_length = position * sizeof(window[0]);
+	memmove(window, window + 1, shift_length);
 
 	/*insert the new sender sequence number at a given position*/
-	replay_window[position] = seq_number;
+	window[position] = seq_number;
 }
 
-enum err server_replay_window_init(uint64_t *replay_window,
-				   uint8_t replay_window_len)
+enum err server_replay_window_init(server_replay_window_t *replay_window)
 {
-	if ((NULL == replay_window) || (0 == replay_window_len)) {
+	if (NULL == replay_window) {
 		return wrong_parameter;
 	}
 
-	memset(replay_window, 0, replay_window_len * sizeof(replay_window[0]));
+	memset(replay_window->window, 0, WINDOW_SIZE * sizeof(replay_window->window[0]));
+	replay_window->seq_num_zero_received = false;
+	return ok;
+}
+
+enum err server_replay_window_reinit(uint64_t current_sequence_number,
+				     server_replay_window_t *replay_window)
+{
+	if (NULL == replay_window) {
+		return wrong_parameter;
+	}
+
+	/*fill the window in a way that only new sequence numbers are accepted*/
+	for (uint8_t j = 0; j < WINDOW_SIZE; j++) {
+		replay_window->window[(WINDOW_SIZE - 1) - j] =
+			current_sequence_number;
+		if (current_sequence_number > 0) {
+			current_sequence_number--;
+		}
+	}
+
+	/* don't accept seqNum=0 anymore */
+	replay_window->seq_num_zero_received = true;
+
+	return ok;
+}
+
+enum err server_replay_window_get_last_number(
+	uint64_t *seq_number, const server_replay_window_t *replay_window)
+{
+	if ((NULL == replay_window) || (NULL == seq_number)) {
+		return wrong_parameter;
+	}
+
+	*seq_number = replay_window->window[WINDOW_SIZE - 1];
 	return ok;
 }
 
 bool server_is_sequence_number_valid(uint64_t seq_number,
-				     uint64_t *replay_window,
-				     uint8_t replay_window_len)
+				     server_replay_window_t *replay_window)
 {
-	/*if the sender sequence number is bigger than the
-    right most element -> all good */
-	if (seq_number > replay_window[replay_window_len - 1]) {
-		return true;
-	}
-
-	/*if the sender sequence number is smaller than the
-    left most element -> a replay is detected*/
-	if (seq_number < replay_window[0]) {
+	if (NULL == replay_window) {
 		return false;
 	}
 
-	/*if the sender sequence number is in the replay window
-    -> a replay is detected*/
-	for (uint8_t i = 0; i < replay_window_len; i++) {
-		if (seq_number == replay_window[i]) {
+	/* replay window uses zeros for unused entries, so in case of sequence number is 0, a little logic is needed */
+	if (0 == seq_number) {
+		if ((!replay_window->seq_num_zero_received) && (0 == replay_window->window[0]))
+		{
+			return true;
+		}
+		return false;
+	}
+
+	if (seq_number > replay_window->window[WINDOW_SIZE - 1]) {
+		return true;
+	}
+
+	if (seq_number < replay_window->window[0]) {
+		return false;
+	}
+
+	for (uint8_t i = 0; i < WINDOW_SIZE; i++) {
+		if (seq_number == replay_window->window[i]) {
 			return false;
 		}
 	}
@@ -60,15 +103,29 @@ bool server_is_sequence_number_valid(uint64_t seq_number,
 	return true;
 }
 
-void server_replay_window_update(uint64_t seq_number, uint64_t *replay_window,
-				 uint8_t replay_window_len)
+bool server_replay_window_update(uint64_t seq_number,
+				 server_replay_window_t *replay_window)
 {
+	/* Although sequence number should be checked before by the calling function, do it again to prevent possible security issues in case it was not. */
+	bool is_valid =
+		server_is_sequence_number_valid(seq_number, replay_window);
+	if (!is_valid) {
+		return false;
+	}
+
+	if (seq_number == 0) {
+		replay_window->seq_num_zero_received = true;
+		return true;
+	}
+
 	uint16_t index;
-	for (index = 0; index < replay_window_len - 1; index++) {
-		if ((replay_window[index] < seq_number) &&
-		    (replay_window[index + 1] > seq_number)) {
+	for (index = 0; index < WINDOW_SIZE - 1; index++) {
+		/* when the loop doesn't find proper index to place the number, it will stop at index = WINDOW_SIZE-1 */
+		if ((replay_window->window[index] < seq_number) &&
+		    (replay_window->window[index + 1] > seq_number)) {
 			break;
 		}
 	}
 	server_replay_window_insert(seq_number, replay_window, index);
+	return true;
 }

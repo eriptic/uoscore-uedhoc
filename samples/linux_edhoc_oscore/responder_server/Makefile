@@ -73,6 +73,7 @@ C_INCLUDES += -I../../../externals/compact25519/src/c25519
 # C defines
 # make PRINT_ARRAY macro usable in the main file
 C_DEFS += -DDEBUG_PRINT
+C_DEFS += -DLINUX_SOCKETS
 
 # Linked libraries
 LD_LIBRARY_PATH += -L$(USOCORE_UEDHOC_BUILD_PATH)
