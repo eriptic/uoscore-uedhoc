@@ -4944,6 +4944,8 @@ static const uint8_t test_vector_4_oscore_salt_key_update_raw[] = {
 	0x03};
 static const uint8_t test_vector_5_SUITES_I[] = {
 	0x02};
+static const uint8_t test_vector_5_SUITES_R[] = {
+	0x02};
 static const uint8_t test_vector_5_x_raw[] = {
 	0x36, 0x8e, 0xc1, 0xf6, 0x9a, 0xeb, 0x65, 0x9b, 
 	0xa3, 0x7d, 0x5a, 0x8d, 0x45, 0xb2, 0x1b, 0xdc, 
@@ -7311,8 +7313,8 @@ struct test_vector test_vectors[] = {
         .SUITES_I = test_vector_5_SUITES_I,
         .SUITES_I_len = sizeof(test_vector_5_SUITES_I),
         
-        .SUITES_R = NULL,
-        .SUITES_R_len = 0,
+        .SUITES_R = test_vector_5_SUITES_R,
+        .SUITES_R_len = sizeof(test_vector_5_SUITES_R),
         
         .x_raw = test_vector_5_x_raw,
         .x_raw_len = sizeof(test_vector_5_x_raw),
