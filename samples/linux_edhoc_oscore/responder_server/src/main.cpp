@@ -251,7 +251,7 @@ int main()
 	TRY(edhoc_responder_run(&c_r, &cred_i, cred_num, err_msg, &err_msg_len,
 				(uint8_t *)&ad_1, &ad_1_len, (uint8_t *)&ad_3,
 				&ad_3_len, PRK_out, sizeof(PRK_out),
-				NULL, 0, NULL, 0, tx, rx));
+				tx, rx));
 	PRINT_ARRAY("PRK_out", PRK_out, sizeof(PRK_out));
 
 	TRY(prk_out2exporter(SHA_256, PRK_out, sizeof(PRK_out), prk_exporter));

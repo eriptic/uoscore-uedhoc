@@ -397,7 +397,7 @@ enum err msg4_gen(struct edhoc_responder_context *c, struct runtime_context *rc)
 	return ok;
 }
 
-enum err edhoc_responder_run(
+enum err edhoc_responder_run_extended(
 	struct edhoc_responder_context *c,
 	struct other_party_cred *cred_i_array, uint16_t num_cred_i,
 	uint8_t *err_msg, uint32_t *err_msg_len, uint8_t *ead_1,
@@ -432,4 +432,20 @@ enum err edhoc_responder_run(
 	}
 
 	return ok;
+}
+
+enum err edhoc_responder_run(
+	struct edhoc_responder_context *c,
+	struct other_party_cred *cred_i_array, uint16_t num_cred_i,
+	uint8_t *err_msg, uint32_t *err_msg_len, uint8_t *ead_1,
+	uint32_t *ead_1_len, uint8_t *ead_3, uint32_t *ead_3_len,
+	uint8_t *prk_out, uint32_t prk_out_len,
+	enum err (*tx)(void *sock, uint8_t *data, uint32_t data_len),
+	enum err (*rx)(void *sock, uint8_t *data, uint32_t *data_len))
+{
+	return edhoc_responder_run_extended(c, cred_i_array, num_cred_i,
+					    err_msg, err_msg_len, ead_1,
+					    ead_1_len, ead_3, ead_3_len,
+					    prk_out, prk_out_len, NULL, NULL,
+					    NULL, NULL, tx, rx);
 }
