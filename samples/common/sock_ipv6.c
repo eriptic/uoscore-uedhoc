@@ -39,7 +39,7 @@ int ipv6_sock_init(enum sock_type sock_t, const char *ipv6_addr_str,
 		return *sockfd;
 
 	servaddr->sin6_family = AF_INET6;
-	servaddr->sin6_port = htons(COAP_PORT);
+	servaddr->sin6_port = htons(PORT);
 	r = inet_pton(AF_INET6, ipv6_addr_str, &servaddr->sin6_addr);
 	if (r < 0)
 		return r;

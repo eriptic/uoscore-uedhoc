@@ -39,7 +39,7 @@ int ipv4_sock_init(enum sock_type sock_t, const char *ipv4_addr_str,
 		return *sockfd;
 
 	servaddr->sin_family = AF_INET;
-	servaddr->sin_port = htons(COAP_PORT);
+	servaddr->sin_port = htons(PORT);
 	servaddr->sin_addr.s_addr = inet_addr(ipv4_addr_str);
 
 	if (sock_t == SOCK_CLIENT) {
