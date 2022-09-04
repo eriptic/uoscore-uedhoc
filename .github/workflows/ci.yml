@@ -45,13 +45,6 @@ jobs:
           cd zephyr-sdk-0.15.0
           ./setup.sh
       
-      - name: Initialize
-        run: |
-          pip3 install -U west
-          west init -l .
-          west update
-          pip3 install -r ../zephyr/scripts/requirements-base.txt
-
       - name: Checkout code
         uses: actions/checkout@v2
         with:
