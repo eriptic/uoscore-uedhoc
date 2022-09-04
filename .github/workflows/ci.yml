@@ -8,35 +8,43 @@ jobs:
   build:
     name: Build uoscore-uedhoc
     runs-on: ubuntu-latest
+    container: zephyrprojectrtos/ci:v0.18.4
     
     steps:
-      - name: Install Zephyr tools
-        run: |
-          sudo apt update
-          sudo apt upgrade
-          wget https://apt.kitware.com/kitware-archive.sh
-          sudo bash kitware-archive.sh
-          sudo apt install --no-install-recommends git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev
+      # - name: Install Zephyr tools
+      #   run: |
+      #     sudo apt update
+      #     sudo apt upgrade
+      #     wget https://apt.kitware.com/kitware-archive.sh
+      #     sudo bash kitware-archive.sh
+      #     sudo apt install --no-install-recommends git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev
 
-          pip3 install --user -U west
-          echo 'export PATH=~/.local/bin:"$PATH"' >> ~/.bashrc
-          source ~/.bashrc
+      #     pip3 install --user -U west
+      #     echo 'export PATH=~/.local/bin:"$PATH"' >> ~/.bashrc
+      #     source ~/.bashrc
 
-          west init ~/zephyrproject
-          cd ~/zephyrproject
-          west update
+      #     west init ~/zephyrproject
+      #     cd ~/zephyrproject
+      #     west update
 
-          west zephyr-export
+      #     west zephyr-export
 
-          pip3 install --user -r ~/zephyrproject/zephyr/scripts/requirements.txt
+      #     pip3 install --user -r ~/zephyrproject/zephyr/scripts/requirements.txt
 
-          cd ~
-          wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.14.2/zephyr-sdk-0.14.2_linux-x86_64.tar.gz
+      #     cd ~
+      #     wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.14.2/zephyr-sdk-0.14.2_linux-x86_64.tar.gz
 
-          tar xvf zephyr-sdk-0.14.2_linux-x86_64.tar.gz
-          cd zephyr-sdk-0.14.2
-          ./setup.sh
+      #     tar xvf zephyr-sdk-0.14.2_linux-x86_64.tar.gz
+      #     cd zephyr-sdk-0.14.2
+      #     ./setup.sh
       
+      - name: Initialize
+        run: |
+          pip3 install -U west
+          west init -l .
+          west update
+          pip3 install -r ../zephyr/scripts/requirements-base.txt
+          
       - name: Checkout code
         uses: actions/checkout@v2
         with:

@@ -10,8 +10,8 @@
 */
 
 #include <stdio.h>
-#include <zephyr.h>
-#include <ztest.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/ztest.h>
 
 #include <edhoc.h>
 #include "txrx_wrapper.h"

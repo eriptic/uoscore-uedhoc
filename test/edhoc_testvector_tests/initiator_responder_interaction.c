@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0 or MIT
  */
 
-#include <zephyr.h>
-#include <ztest.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/ztest.h>
 
 #include <edhoc.h>
 
@@ -273,8 +273,8 @@ void thread_responder(void *vec_num, void *dummy2, void *dummy3)
 
 	r = edhoc_responder_run(&c_r, &cred_i, cred_num, R_err_msg,
 				&R_err_msg_len, (uint8_t *)&R_ad_1, &R_ad_1_len,
-				(uint8_t *)&R_ad_3, &R_ad_3_len, R_PRK_out, sizeof(R_PRK_out),
-				tx_responder, rx_responder);
+				(uint8_t *)&R_ad_3, &R_ad_3_len, R_PRK_out,
+				sizeof(R_PRK_out), tx_responder, rx_responder);
 	if (r != ok) {
 		goto end;
 	}

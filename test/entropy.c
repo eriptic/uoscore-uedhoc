@@ -1,6 +1,6 @@
-#include <zephyr.h>
-#include <device.h>
-#include <drivers/entropy.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/entropy.h>
 #include <mbedtls/entropy.h>
 #include <entropy_poll.h>
 

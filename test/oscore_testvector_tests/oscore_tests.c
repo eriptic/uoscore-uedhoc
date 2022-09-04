@@ -1,7 +1,7 @@
 
 #include <stdio.h>
-#include <zephyr.h>
-#include <ztest.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/ztest.h>
 #include "oscore.h"
 
 #include "oscore_test_vectors.h"

@@ -9,8 +9,8 @@
    except according to those terms.
 */
 
-#include <zephyr.h>
-#include <ztest.h>
+#include <zephyr/zephyr.h>
+#include <zephyr/ztest.h>
 #include "edhoc_testvector_tests/edhoc_tests.h"
 #include "oscore_testvector_tests/oscore_tests.h"
 #include "oscore_testvector_tests/replay_protection_tests.h"
