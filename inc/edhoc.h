@@ -119,6 +119,13 @@
 #define TH_ENC_DEFAULT_SIZE 42
 #define ENCODING_OVERHEAD 6
 
+
+#ifdef _WIN32
+#define WEAK
+#else
+#define WEAK __attribute__((weak))
+#endif
+
 struct other_party_cred {
 	struct byte_array id_cred; /*ID_CRED_x of the other party*/
 	struct byte_array cred; /*CBOR encoded credentials*/
@@ -179,7 +186,7 @@ struct edhoc_initiator_context {
  *          and public key length as output.
 
  */
-enum err __attribute__((weak))
+enum err WEAK
 ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk,
 		     uint32_t *pk_size);
 

@@ -37,7 +37,7 @@ output = HKDF(salt, IKM, info, L
 * https://www.iana.org/assignments/cose/cose.xhtml
 */
 
-inline enum err oscore_create_hkdf_info(struct byte_array *id,
+enum err oscore_create_hkdf_info(struct byte_array *id,
 					struct byte_array *id_context,
 					enum AEAD_algorithm aead_alg,
 					enum derive_type type,
