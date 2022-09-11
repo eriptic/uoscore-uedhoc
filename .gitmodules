@@ -1,18 +1,24 @@
 [submodule "externals/cantcoap"]
 	path = externals/cantcoap
 	url = https://github.com/staropram/cantcoap.git
+	ignore = dirty
 [submodule "externals/tinycrypt"]
 	path = externals/tinycrypt
 	url = https://github.com/intel/tinycrypt.git
+	ignore = dirty
 [submodule "externals/compact25519"]
 	path = externals/compact25519
 	url = https://github.com/DavyLandman/compact25519.git
+	ignore = dirty
 [submodule "externals/blerouter"]
 	path = externals/blerouter
 	url = https://github.com/Fraunhofer-AISEC/blerouter.git
+	ignore = dirty
 [submodule "externals/mbedtls"]
 	path = externals/mbedtls
 	url = https://github.com/ARMmbed/mbedtls.git
+	ignore = dirty
 [submodule "externals/zcbor"]
 	path = externals/zcbor
 	url = https://github.com/NordicSemiconductor/zcbor.git
+	ignore = dirty
