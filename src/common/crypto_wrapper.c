@@ -183,7 +183,7 @@ static bool aead_mock_args_match_predefined(
 }
 #endif// EDHOC_MOCK_CRYPTO_WRAPPER
 
-enum err __attribute__((weak))
+enum err WEAK
 aead(enum aes_operation op, const uint8_t *in, const uint32_t in_len,
      const uint8_t *key, const uint32_t key_len, uint8_t *nonce,
      const uint32_t nonce_len, const uint8_t *aad, const uint32_t aad_len,
@@ -275,7 +275,7 @@ static bool sign_mock_args_match_predefined(
 }
 #endif// EDHOC_MOCK_CRYPTO_WRAPPER
 
-enum err __attribute__((weak))
+enum err WEAK
 sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
      const uint8_t *pk, const uint8_t *msg, const uint32_t msg_len,
      uint8_t *out)
@@ -339,7 +339,7 @@ sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
 	return unsupported_ecdh_curve;
 }
 
-enum err __attribute__((weak))
+enum err WEAK
 verify(enum sign_alg alg, const uint8_t *pk, const uint32_t pk_len,
        const uint8_t *msg, const uint32_t msg_len, const uint8_t *sgn,
        const uint32_t sgn_len, bool *result)
@@ -395,7 +395,7 @@ verify(enum sign_alg alg, const uint8_t *pk, const uint32_t pk_len,
 	return crypto_operation_not_implemented;
 }
 
-enum err __attribute__((weak))
+enum err WEAK
 hkdf_extract(enum hash_alg alg, const uint8_t *salt, uint32_t salt_len,
 	     uint8_t *ikm, uint32_t ikm_len, uint8_t *out)
 {
@@ -455,7 +455,7 @@ hkdf_extract(enum hash_alg alg, const uint8_t *salt, uint32_t salt_len,
 	return ok;
 }
 
-enum err __attribute__((weak))
+enum err WEAK
 hkdf_expand(enum hash_alg alg, const uint8_t *prk, const uint32_t prk_len,
 	    const uint8_t *info, const uint32_t info_len, uint8_t *out,
 	    uint32_t out_len)
@@ -538,7 +538,7 @@ hkdf_expand(enum hash_alg alg, const uint8_t *prk, const uint32_t prk_len,
 	return ok;
 }
 
-enum err __attribute__((weak))
+enum err WEAK
 hkdf_sha_256(struct byte_array *master_secret, struct byte_array *master_salt,
 	     struct byte_array *info, struct byte_array *out)
 {
@@ -551,7 +551,7 @@ hkdf_sha_256(struct byte_array *master_secret, struct byte_array *master_salt,
 	return ok;
 }
 
-enum err __attribute__((weak))
+enum err WEAK
 shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 		     const uint32_t sk_len, const uint8_t *pk,
 		     const uint32_t pk_len, uint8_t *shared_secret)
@@ -641,7 +641,7 @@ shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 	return crypto_operation_not_implemented;
 }
 
-enum err __attribute__((weak))
+enum err WEAK
 ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk,
 		     uint32_t *pk_size)
 {
@@ -723,7 +723,7 @@ ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk,
 	return ok;
 }
 
-enum err __attribute__((weak))
+enum err WEAK
 hash(enum hash_alg alg, const uint8_t *in, const uint32_t in_len, uint8_t *out)
 {
 	if (alg == SHA_256) {
