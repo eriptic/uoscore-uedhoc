@@ -96,6 +96,7 @@ enum err tx(void *sock, uint8_t *data, uint32_t data_len);
 enum err rx(void *sock, uint8_t *data, uint32_t *data_len);
 ```
 
+Note that uEDHOC does not provide correlation of messages. Correlation may be handled on the transport layer completely or partially. In cases when the correlation cannot be handled by the transport protocol the edhoc message needs to be prepended with a connection identifier, that is used on the other side to determine to which session a given message belongs. In order to remain conform with the specification in the cases where the transport cannot handle correlation a connection identifier needs to be prepended in `tx()` function and removed in the `rx()` function.
 
 
 ## Supported Cipher Suites

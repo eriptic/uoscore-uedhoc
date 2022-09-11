@@ -253,7 +253,7 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
 	out->header.ver =
 		((*tmp_p) & HEADER_VERSION_MASK) >> HEADER_VERSION_OFFSET;
 	out->header.type = ((*tmp_p) & HEADER_TYPE_MASK) >> HEADER_TYPE_OFFSET;
-	out->header.TKL = ((*tmp_p) & HEADER_CODE_MASK) >> HEADER_CODE_OFFSET;
+	out->header.TKL = ((*tmp_p) & HEADER_TKL_MASK) >> HEADER_TKL_OFFSET;
 	out->header.code = *(tmp_p + 1);
 	uint16_t mid_l = *(tmp_p + 3);
 	uint16_t mid_h = *(tmp_p + 2);

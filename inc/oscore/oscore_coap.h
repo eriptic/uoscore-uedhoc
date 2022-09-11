@@ -29,8 +29,8 @@
 #define HEADER_VERSION_OFFSET 6
 #define HEADER_TYPE_MASK 0x30
 #define HEADER_TYPE_OFFSET 4
-#define HEADER_CODE_MASK 0x0F
-#define HEADER_CODE_OFFSET 0
+#define HEADER_TKL_MASK 0x0F
+#define HEADER_TKL_OFFSET 0
 
 /* Mask and offset for first byte in compressed OSCORE option*/
 #define COMP_OSCORE_OPT_KIDC_H_MASK 0x10

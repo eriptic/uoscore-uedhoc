@@ -26,8 +26,8 @@ extern "C" {
 }
 #include "cantcoap.h"
 
-//#define USE_IPV4
-#define USE_IPV6
+#define USE_IPV4
+//#define USE_IPV6
 
 CoapPDU *txPDU = new CoapPDU();
 
@@ -257,8 +257,7 @@ int main()
 		TRY(edhoc_responder_run(&c_r, &cred_i, cred_num, err_msg,
 					&err_msg_len, (uint8_t *)&ad_1,
 					&ad_1_len, (uint8_t *)&ad_3, &ad_3_len,
-					PRK_out, sizeof(PRK_out),
-					tx, rx));
+					PRK_out, sizeof(PRK_out), tx, rx));
 		PRINT_ARRAY("PRK_out", PRK_out, sizeof(PRK_out));
 
 		TRY(prk_out2exporter(SHA_256, PRK_out, sizeof(PRK_out),
