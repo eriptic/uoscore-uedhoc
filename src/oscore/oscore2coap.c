@@ -516,6 +516,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 				return oscore_kid_recipent_id_mismatch;
 			}
 
+#ifndef DISABLE_OSCORE_SN_CHECK
 			/*check is the packet is replayed*/
 			if(!server_is_sequence_number_valid(
 					   *oscore_option.piv.ptr,
@@ -523,6 +524,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 			{
 			    return oscore_replay_window_protection_error;
 			}
+#endif
 
 			/*If this is a request message we need to calculate the nonce, aad 
             and eventually update the Common IV, Sender and Recipient Keys*/
