@@ -178,7 +178,7 @@ static inline enum err msg2_encode(const uint8_t *g_y, uint32_t g_y_len,
 
 	/*Encode C_R*/
 	PRINT_ARRAY("C_R", c_r, c_r_len);
-	if (c_r_len == 1 && ((0x00 <= c_r[0] && c_r[0] < 0x18) ||
+	if (c_r_len == 1 && (c_r[0] < 0x18 ||
 			     (0x1F < c_r[0] && c_r[0] <= 0x37))) {
 		m._m2_C_R_choice = _m2_C_R_int;
 		TRY(decode_int(c_r, 1, &m._m2_C_R_int));
