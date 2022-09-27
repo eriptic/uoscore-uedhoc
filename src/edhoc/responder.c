@@ -102,7 +102,8 @@ static inline enum err msg1_parse(uint8_t *msg1, uint32_t msg1_len,
 
 	/*C_I*/
 	if (m._message_1_C_I_choice == _message_1_C_I_int) {
-		TRY(encode_int(&m._message_1_C_I_int, 1, c_i, c_i_len));
+		c_i[0] = (uint8_t)m._message_1_C_I_int;
+		*c_i_len = 1;
 	} else {
 
   TRY(_memcpy_s(c_i, *c_i_len, m._message_1_C_I_bstr.value,
