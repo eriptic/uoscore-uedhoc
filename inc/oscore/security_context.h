@@ -70,14 +70,14 @@ struct req_resp_context {
 	struct byte_array aad;
 	uint8_t aad_buf[MAX_AAD_LEN];
 
-	struct byte_array piv;
-	uint8_t piv_buf[MAX_PIV_LEN];
+	// struct byte_array piv;
+	// uint8_t piv_buf[MAX_PIV_LEN];
 
-	struct byte_array kid_context;
-	uint8_t kid_context_buf[MAX_KID_CONTEXT_LEN];
+	// struct byte_array kid_context;
+	// uint8_t kid_context_buf[MAX_KID_CONTEXT_LEN];
 
-	struct byte_array kid;
-	uint8_t kid_buf[MAX_KID_LEN];
+	// struct byte_array kid;
+	// uint8_t kid_buf[MAX_KID_LEN];
 };
 
 /* Context struct containing all contexts*/

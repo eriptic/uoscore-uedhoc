@@ -202,8 +202,9 @@ static inline enum err plaintext_encrypt(struct context *c,
 					 uint8_t *out_ciphertext,
 					 uint32_t out_ciphertext_len)
 {
-	return oscore_cose_encrypt(in_plaintext, out_ciphertext, out_ciphertext_len,
-			    &c->rrc.nonce, &c->rrc.aad, &c->sc.sender_key);
+	return oscore_cose_encrypt(in_plaintext, out_ciphertext,
+				   out_ciphertext_len, &c->rrc.nonce,
+				   &c->rrc.aad, &c->sc.sender_key);
 }
 
 /**
@@ -469,6 +470,7 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 
 	/* Generate OSCORE option */
 	struct oscore_option oscore_option;
+	oscore_option.option_number = COAP_OPTION_OSCORE;
 
 	/*
     - Only if the packet is a request the OSCORE option has a value 
@@ -476,26 +478,34 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
     */
 	if ((CODE_CLASS_MASK & o_coap_pkt.header.code) == 0) {
 		/*update the piv in the request response context*/
-		TRY(sender_seq_num2piv(c->sc.sender_seq_num++, &c->rrc.piv));
+		uint8_t piv_buf[MAX_PIV_LEN];
+		struct byte_array piv = {
+			.len = sizeof(piv_buf),
+			.ptr = piv_buf,
+		};
 
-		TRY(context_update(CLIENT,
-				   (struct o_coap_option *)&o_coap_pkt.options,
-				   o_coap_pkt.options_cnt, NULL, NULL, c));
+		TRY(sender_seq_num2piv(c->sc.sender_seq_num++, &piv));
+
+		/*calculate nonce*/
+		TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,
+				 &c->rrc.nonce));
+
+		/*compute aad*/
+		TRY(create_aad((struct o_coap_option *)&o_coap_pkt.options,
+			       o_coap_pkt.options_cnt, c->cc.aead_alg,
+			       &c->sc.sender_id, &piv, &c->rrc.aad));
 
 		/*calculate the OSCORE option value*/
 		oscore_option.len = get_oscore_opt_val_len(
-			&c->rrc.piv, &c->rrc.kid, &c->rrc.kid_context);
+			&piv, &c->sc.sender_id, &c->cc.id_context);
 		if (oscore_option.len > OSCORE_OPT_VALUE_LEN) {
 			return oscore_valuelen_to_long_error;
 		}
 
 		oscore_option.value = oscore_option.buf;
-		TRY(oscore_option_generate(&c->rrc.piv, &c->rrc.kid,
-					   &c->rrc.kid_context,
-					   &oscore_option));
-
+		TRY(oscore_option_generate(&piv, &c->sc.sender_id,
+					   &c->cc.id_context, &oscore_option));
 	} else {
-		oscore_option.option_number = COAP_OPTION_OSCORE;
 		oscore_option.len = 0;
 		oscore_option.value = NULL;
 	}
