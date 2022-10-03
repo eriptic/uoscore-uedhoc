@@ -7,8 +7,8 @@ project(auto_test)
 
 FILE(GLOB app_sources
   *.c
-  edhoc_testvector_tests/*.c
-  oscore_testvector_tests/*.c
+  edhoc_integration_tests/*.c
+  oscore_integration_tests/*.c
   ../externals/zcbor/src/*.c
   ../externals/compact25519/src/c25519/*.c
   ../externals/compact25519/src/*.c
