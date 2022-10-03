@@ -29,7 +29,7 @@
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
 
-#define OPTION_PAYLOAD_MARKER  (0xFF)
+#define OPTION_PAYLOAD_MARKER (0xFF)
 
 /**
  * @brief Parse all received options to find the OSCORE_option. If it doesn't  * have OSCORE option, then this packet is a normal CoAP. If it does have, it's * an OSCORE packet, and then parse the compressed OSCORE_option value to get  * value of PIV, KID and KID context of the client.
@@ -114,9 +114,10 @@ oscore_option_parser(struct o_coap_packet *in,
 						++temp_current_option_value_ptr;
 					temp_current_option_value_ptr +=
 						out->kid_context.len;
-					temp_kid_len = (uint8_t)(
-						temp_kid_len -
-						(out->kid_context.len + 1));
+					temp_kid_len =
+						(uint8_t)(temp_kid_len -
+							  (out->kid_context.len +
+							   1));
 				}
 
 				/* Get KID */
@@ -235,9 +236,10 @@ options_from_oscore_reorder(struct o_coap_packet *in_oscore_packet,
 					in_oscore_packet->options[U_opt_idx]
 						.value;
 
-				temp_delta_sum = (uint16_t)(
-					temp_delta_sum +
-					out->options[out->options_cnt].delta);
+				temp_delta_sum =
+					(uint16_t)(temp_delta_sum +
+						   out->options[out->options_cnt]
+							   .delta);
 				out->options_cnt++;
 				U_opt_idx++;
 				continue;
@@ -254,9 +256,10 @@ options_from_oscore_reorder(struct o_coap_packet *in_oscore_packet,
 				out->options[out->options_cnt].value =
 					E_options[E_opt_idx].value;
 
-				temp_delta_sum = (uint16_t)(
-					temp_delta_sum +
-					out->options[out->options_cnt].delta);
+				temp_delta_sum =
+					(uint16_t)(temp_delta_sum +
+						   out->options[out->options_cnt]
+							   .delta);
 				out->options_cnt++;
 				E_opt_idx++;
 				continue;
@@ -280,7 +283,8 @@ options_from_oscore_reorder(struct o_coap_packet *in_oscore_packet,
 static inline enum err
 oscore_packet_options_parser(uint8_t *in_data, uint16_t in_data_len,
 			     struct o_coap_option *out_options,
-			     uint8_t *out_options_count, struct byte_array *out_payload)
+			     uint8_t *out_options_count,
+			     struct byte_array *out_payload)
 {
 	uint8_t *temp_options_ptr = in_data;
 	uint8_t temp_options_count = 0;
@@ -289,7 +293,7 @@ oscore_packet_options_parser(uint8_t *in_data, uint16_t in_data_len,
 	uint8_t temp_option_len = 0;
 	uint8_t temp_option_number = 0;
 
-	if(0 == in_data_len) {
+	if (0 == in_data_len) {
 		out_payload->len = 0;
 		out_payload->ptr = NULL;
 		*out_options_count = 0;
@@ -299,12 +303,12 @@ oscore_packet_options_parser(uint8_t *in_data, uint16_t in_data_len,
 	// Go through the in_data to find out how many options are there
 	uint16_t i = 0;
 	while (i < in_data_len) {
-		if(OPTION_PAYLOAD_MARKER == in_data[i]) {
-			if((in_data_len - i) < 2) {
+		if (OPTION_PAYLOAD_MARKER == in_data[i]) {
+			if ((in_data_len - i) < 2) {
 				return not_valid_input_packet;
 			}
 			i++;
-			out_payload->len = ( uint32_t ) in_data_len - i;
+			out_payload->len = (uint32_t)in_data_len - i;
 			out_payload->ptr = &in_data[i];
 			return ok;
 		}
@@ -410,8 +414,8 @@ static inline enum err oscore_decrypted_payload_parser(
 	temp_payload_len--;
 
 	TRY(oscore_packet_options_parser(
-				temp_payload_ptr, ( uint16_t ) temp_payload_len, out_E_options,
-				E_options_cnt, out_o_coap_payload));
+		temp_payload_ptr, (uint16_t)temp_payload_len, out_E_options,
+		E_options_cnt, out_o_coap_payload));
 
 	return ok;
 }
@@ -513,26 +517,28 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
              belongs.*/
 			if (!array_equals(&c->rc.recipient_id,
 					  &oscore_option.kid)) {
-				return oscore_kid_recipent_id_mismatch;
+				return oscore_kid_recipient_id_mismatch;
 			}
 
 #ifndef DISABLE_OSCORE_SN_CHECK
 			/*check is the packet is replayed*/
-			if(!server_is_sequence_number_valid(
-					   *oscore_option.piv.ptr,
-					   &c->rc.replay_window))
-			{
-			    return oscore_replay_window_protection_error;
+			if (!server_is_sequence_number_valid(
+				    *oscore_option.piv.ptr,
+				    &c->rc.replay_window)) {
+				return oscore_replay_window_protection_error;
 			}
 #endif
 
-			/*If this is a request message we need to calculate the nonce, aad 
-            and eventually update the Common IV, Sender and Recipient Keys*/
-			TRY(context_update(
-				SERVER,
-				(struct o_coap_option *)&oscore_packet.options,
-				oscore_packet.options_cnt, &oscore_option.piv,
-				&oscore_option.kid_context, c));
+			/*calculate nonce*/
+			TRY(create_nonce(&oscore_option.kid, &oscore_option.piv,
+					 &c->cc.common_iv, &c->rrc.nonce));
+
+			/*compute aad*/
+			//for now there are no I options defined
+			// TODO update this to support eventual I Options
+			TRY(create_aad(NULL, 0, c->cc.aead_alg,
+				       &oscore_option.kid, &oscore_option.piv,
+				       &c->rrc.aad));
 		}
 
 		/* Setup buffer for the plaintext. The plaintext is shorter than the ciphertext because of the authentication tag*/

@@ -127,44 +127,26 @@ void test_main(void)
 {
 	/* EDHOC testvector tests  */
 
-	// ztest_test_suite(initiator_tests, ztest_unit_test(test_initiator1),
-	// 		 ztest_unit_test(test_initiator2),
-	// 		 ztest_unit_test(test_initiator3),
-	// 		 ztest_unit_test(test_initiator4),
-	// 		 ztest_unit_test(test_initiator12),
-	// 		 ztest_unit_test(test_initiator13));
-
-	// ztest_test_suite(responder_tests, ztest_unit_test(test_responder1),
-	// 		 ztest_unit_test(test_responder2),
-	// 		 ztest_unit_test(test_responder3),
-	// 		 ztest_unit_test(test_responder4),
-	// 		 ztest_unit_test(test_responder8),
-	// 		 ztest_unit_test(test_responder9),
-	// 		 ztest_unit_test(test_responder12),
-	// 		 ztest_unit_test(test_responder13));
-
-	ztest_test_suite(exporter, ztest_unit_test(test_exporter));
-	ztest_test_suite(
-		initiator_responder_interaction,
-		ztest_unit_test(test_initiator_responder_interaction1),
-		ztest_unit_test(test_initiator_responder_interaction2));
+	// ztest_test_suite(exporter, ztest_unit_test(test_exporter));
+	// ztest_test_suite(
+	// 	initiator_responder_interaction,
+	// 	ztest_unit_test(test_initiator_responder_interaction1),
+	// 	ztest_unit_test(test_initiator_responder_interaction2));
 
 	/* OSCORE test-vector tests */
 
+	// ztest_test_suite(oscore_tests, ztest_unit_test(oscore_server_test2));
 	ztest_test_suite(oscore_tests, ztest_unit_test(oscore_client_test1),
 			 ztest_unit_test(oscore_server_test2),
 			 ztest_unit_test(oscore_client_test3),
 			 ztest_unit_test(oscore_server_test4),
 			 ztest_unit_test(oscore_client_test5),
 			 ztest_unit_test(oscore_server_test6),
-			 //test7 - not supported yet
 			 ztest_unit_test(oscore_misc_test8));
 
 	ztest_run_test_suite(oscore_tests);
-	ztest_run_test_suite(exporter);
-	ztest_run_test_suite(initiator_responder_interaction);
-	// ztest_run_test_suite(initiator_tests);
-	// ztest_run_test_suite(responder_tests);
+	// ztest_run_test_suite(exporter);
+	// ztest_run_test_suite(initiator_responder_interaction);
 
-	run_replay_protection_tests();
+	// run_replay_protection_tests();
 }

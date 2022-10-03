@@ -103,67 +103,6 @@ static enum err derive_recipient_key(struct common_context *cc,
 	return ok;
 }
 
-enum err context_update(enum dev_type dev, struct o_coap_option *options,
-			uint16_t opt_num, struct byte_array *new_piv,
-			struct byte_array *new_kid_context, struct context *c)
-{
-	if (dev == SERVER) {
-		/**************************************************************/
-		/*update PIV*/
-		TRY(_memcpy_s(c->rrc.piv.ptr, MAX_PIV_LEN, new_piv->ptr,
-			      new_piv->len));
-
-		c->rrc.piv.len = new_piv->len;
-
-		/**************************************************************/
-		/*update Sender Key, Recipient Key and Common IV if KID context 
-		defers from the ID Context*/
-		if (!array_equals(&c->cc.id_context, new_kid_context)) {
-			/*if the ID Context is equal to the KID_context (the 
-			ID_context received with the oscore option) no update 
-			of Sender/recipient keys and Common IV required)*/
-
-			/*update KID Context*/
-			TRY(_memcpy_s(c->rrc.kid_context.ptr,
-				      MAX_KID_CONTEXT_LEN, new_kid_context->ptr,
-				      new_kid_context->len));
-
-			c->rrc.kid_context.len = new_kid_context->len;
-
-			TRY(_memcpy_s(
-				c->cc.id_context.ptr, c->cc.id_context.len,
-				new_kid_context->ptr, new_kid_context->len));
-
-			c->cc.id_context.len = new_kid_context->len;
-
-			PRINT_MSG("Common Context Updated*****************\n");
-			TRY(derive_common_iv(&c->cc));
-			TRY(derive_sender_key(&c->cc, &c->sc));
-			TRY(derive_recipient_key(&c->cc, &c->rc));
-		}
-	}
-	/**********************************************************************/
-	/*calculate nonce*/
-	TRY(create_nonce(&c->rrc.kid, &c->rrc.piv, &c->cc.common_iv,
-			 &c->rrc.nonce));
-
-	/**********************************************************************/
-	/*calculate AAD*/
-	uint8_t aad_buf[MAX_AAD_LEN];
-
-	struct byte_array aad;
-	aad.len = sizeof(aad_buf);
-	aad.ptr = aad_buf;
-
-	enum err status = create_aad(options, opt_num, c->cc.aead_alg,
-								&c->rrc.kid, &c->rrc.piv, &aad);
-
-	memcpy(c->rrc.aad.ptr, aad.ptr, aad.len);
-	c->rrc.aad.len = aad.len;
-
-	return status;
-}
-
 enum err oscore_context_init(struct oscore_init_params *params,
 			     struct context *c)
 {
@@ -201,7 +140,8 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	server_replay_window_init(&c->rc.replay_window);
 	c->rc.recipient_id.len = params->recipient_id.len;
 	c->rc.recipient_id.ptr = c->rc.recipient_id_buf;
-	memcpy(c->rc.recipient_id.ptr, params->recipient_id.ptr, params->recipient_id.len);
+	memcpy(c->rc.recipient_id.ptr, params->recipient_id.ptr,
+	       params->recipient_id.len);
 	c->rc.recipient_key.len = sizeof(c->rc.recipient_key_buf);
 	c->rc.recipient_key.ptr = c->rc.recipient_key_buf;
 	TRY(derive_recipient_key(&c->cc, &c->rc));
@@ -219,33 +159,6 @@ enum err oscore_context_init(struct oscore_init_params *params,
 
 	c->rrc.aad.len = sizeof(c->rrc.aad_buf);
 	c->rrc.aad.ptr = c->rrc.aad_buf;
-
-	c->rrc.piv.len = sizeof(c->rrc.piv_buf);
-	c->rrc.piv.ptr = c->rrc.piv_buf;
-
-	c->rrc.kid_context.len = sizeof(c->rrc.kid_context_buf);
-	c->rrc.kid_context.ptr = c->rrc.kid_context_buf;
-
-	c->rrc.kid.len = sizeof(c->rrc.kid_buf);
-	c->rrc.kid.ptr = c->rrc.kid_buf;
-
-	if (params->dev_type == CLIENT) {
-		TRY(_memcpy_s(c->rrc.kid_context.ptr, c->rrc.kid_context.len,
-			      params->id_context.ptr, params->id_context.len));
-		c->rrc.kid_context.len = params->id_context.len;
-		TRY(_memcpy_s(c->rrc.kid.ptr, c->rrc.kid.len,
-			      params->sender_id.ptr, params->sender_id.len));
-		c->rrc.kid.len = params->sender_id.len;
-
-		PRINT_ARRAY("KID context", c->rrc.kid_context.ptr,
-			    c->rrc.kid_context.len);
-	} else {
-		TRY(_memcpy_s(c->rrc.kid.ptr, c->rrc.kid.len,
-			      params->recipient_id.ptr,
-			      params->recipient_id.len));
-		c->rrc.kid.len = params->recipient_id.len;
-	}
-	PRINT_ARRAY("KID", c->rrc.kid.ptr, c->rrc.kid.len);
 	return ok;
 }
 
@@ -260,6 +173,7 @@ enum err sender_seq_num2piv(uint64_t ssn, struct byte_array *piv)
 			TRY(_memcpy_s(piv->ptr, MAX_PIV_LEN, p,
 				      (uint32_t)(i + 1)));
 			piv->len = (uint32_t)(i + 1);
+			PRINT_ARRAY("PIV", piv->ptr, piv->len);
 			return ok;
 		}
 	}
@@ -267,5 +181,6 @@ enum err sender_seq_num2piv(uint64_t ssn, struct byte_array *piv)
 	/*if the sender seq number is 0 piv has value 0 and length 1*/
 	*piv->ptr = 0;
 	piv->len = 1;
+	PRINT_ARRAY("PIV", piv->ptr, piv->len);
 	return ok;
 }

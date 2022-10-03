@@ -55,7 +55,7 @@ enum err {
 	oscore_unknown_hkdf = 202,
 	oscore_invalid_algorithm_aead = 204,
 	oscore_invalid_algorithm_hkdf = 205,
-	oscore_kid_recipent_id_mismatch = 206,
+	oscore_kid_recipient_id_mismatch = 206,
 	oscore_valuelen_to_long_error = 208,
 	oscore_inpkt_invalid_tkl = 209,
 	oscore_inpkt_invalid_option_delta = 210,
