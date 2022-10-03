@@ -11,9 +11,9 @@
 
 #include <zephyr/zephyr.h>
 #include <zephyr/ztest.h>
-#include "edhoc_testvector_tests/edhoc_tests.h"
-#include "oscore_testvector_tests/oscore_tests.h"
-#include "oscore_testvector_tests/replay_protection_tests.h"
+#include "edhoc_integration_tests/edhoc_tests.h"
+#include "oscore_integration_tests/oscore_tests.h"
+#include "oscore_unit_tests/replay_protection_tests.h"
 
 // static void test_initiator1(void)
 // {
@@ -135,14 +135,14 @@ void test_main(void)
 
 	/* OSCORE test-vector tests */
 
-	// ztest_test_suite(oscore_tests, ztest_unit_test(oscore_server_test2));
-	ztest_test_suite(oscore_tests, ztest_unit_test(oscore_client_test1),
-			 ztest_unit_test(oscore_server_test2),
-			 ztest_unit_test(oscore_client_test3),
-			 ztest_unit_test(oscore_server_test4),
-			 ztest_unit_test(oscore_client_test5),
-			 ztest_unit_test(oscore_server_test6),
-			 ztest_unit_test(oscore_misc_test8));
+	// ztest_test_suite(oscore_tests, ztest_unit_test(t2_oscore_server_request_response));
+	ztest_test_suite(oscore_tests, ztest_unit_test(t1_oscore_client_request_response),
+			 ztest_unit_test(t2_oscore_server_request_response),
+			 ztest_unit_test(t3_oscore_client_request),
+			 ztest_unit_test(t4_oscore_server_key_derivation),
+			 ztest_unit_test(t5_oscore_client_request),
+			 ztest_unit_test(t6_oscore_server_key_derivation),
+			 ztest_unit_test(t8_oscore_server_response_simple_ack));
 
 	ztest_run_test_suite(oscore_tests);
 	// ztest_run_test_suite(exporter);
