@@ -37,11 +37,14 @@ enum err th2_calculate(enum hash_alg alg, uint8_t *msg1, uint32_t msg1_len,
  * @param   th2 pointer to a th2
  * @param   th2_len length of th2
  * @param   plaintext_2 plaintext 2
- * @param   PLAINTEXT_2_len  length of plaintext_2
+ * @param   plaintext_2_len length of plaintext_2
+ * @param   cred_r cred_r
+ * @param   cred_r_len length of cred_r
  * @param   th3 ouput buffer
  */
 enum err th3_calculate(enum hash_alg alg, uint8_t *th2, uint32_t th2_len,
 		       uint8_t *plaintext_2, uint32_t plaintext_2_len,
+             uint8_t *cred_r, uint32_t cred_r_len,
 		       uint8_t *th3);
 
 /**
@@ -50,11 +53,14 @@ enum err th3_calculate(enum hash_alg alg, uint8_t *th2, uint32_t th2_len,
  * @param   th3 pointer to a th3
  * @param   th3_len length of th3
  * @param   plaintext_3 plaintext 3
- * @param   plaintext_3_len  length of plaintext_3
+ * @param   plaintext_3_len length of plaintext_3
+ * @param   cred_i cred_i
+ * @param   cred_i_len length of cred_i
  * @param   th4 ouput buffer
  */
 enum err th4_calculate(enum hash_alg alg, uint8_t *th3, uint32_t th3_len,
 		       uint8_t *plaintext_3, uint32_t plaintext_3_len,
+             uint8_t *cred_i, uint32_t cred_i_len,
 		       uint8_t *th4);
 
 #endif

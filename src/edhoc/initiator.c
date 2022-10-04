@@ -190,7 +190,7 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 
 	/*calculate PRK_2e*/
 	uint8_t PRK_2e[PRK_DEFAULT_SIZE];
-	TRY(hkdf_extract(rc->suite.edhoc_hash, NULL, 0, g_xy, sizeof(g_xy),
+	TRY(hkdf_extract(rc->suite.edhoc_hash, th2, th2_len, g_xy, sizeof(g_xy),
 			 PRK_2e));
 	PRINT_ARRAY("PRK_2e", PRK_2e, sizeof(PRK_2e));
 
@@ -243,7 +243,7 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	uint32_t th3_len = get_hash_len(rc->suite.edhoc_hash);
 	TRY(check_buffer_size(HASH_DEFAULT_SIZE, th3_len));
 	TRY(th3_calculate(rc->suite.edhoc_hash, (uint8_t *)&th2, th2_len,
-			  plaintext2, plaintext2_len, th3));
+			  plaintext2, plaintext2_len, cred_r, cred_r_len, th3));
 
 	/*derive prk_4e3m*/
 	TRY(prk_derive(static_dh_i, rc->suite, SALT_4e3m, th3, th3_len,
@@ -283,7 +283,7 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 
 	/*TH4*/
 	TRY(th4_calculate(rc->suite.edhoc_hash, th3, th3_len, plaintext_3,
-			  plaintext_3_len, rc->th4));
+			  plaintext_3_len, c->cred_i.ptr, c->cred_i.len, rc->th4));
 
 	/*PRK_out*/
 	TRY(edhoc_kdf(rc->suite.edhoc_hash, rc->prk_4e3m, rc->prk_4e3m_len,

@@ -290,7 +290,7 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 			&rc->msg2_len));
 
 	TRY(th3_calculate(rc->suite.edhoc_hash, th2, th2_len, plaintext_2,
-			  plaintext_2_len, rc->th3));
+			  plaintext_2_len, c->cred_r.ptr, c->cred_r.len, rc->th3));
 
 	return ok;
 }
@@ -370,6 +370,7 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	TRY(th4_calculate(
 		rc->suite.edhoc_hash, rc->th3, rc->th3_len, plaintext3,
 		plaintext3_len - get_aead_mac_len(rc->suite.edhoc_aead),
+		cred_i, cred_i_len,
 		rc->th4));
 
 	/*PRK_out*/
