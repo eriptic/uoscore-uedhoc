@@ -9,7 +9,7 @@
 
 #include <edhoc.h>
 
-#include "edhoc_test_vectors_p256_v15.h"
+#include "edhoc_test_vectors_p256_v16.h"
 
 uint8_t I_prk_exporter[32];
 uint8_t I_master_secret[16];
