@@ -251,7 +251,7 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	PRINT_ARRAY("G_XY (ECDH shared secret) ", g_xy, sizeof(g_xy));
 
 	uint8_t PRK_2e[PRK_DEFAULT_SIZE];
-	TRY(hkdf_extract(rc->suite.edhoc_hash, NULL, 0, g_xy, sizeof(g_xy),
+	TRY(hkdf_extract(rc->suite.edhoc_hash, th2, th2_len, g_xy, sizeof(g_xy),
 			 PRK_2e));
 	PRINT_ARRAY("PRK_2e", PRK_2e, sizeof(PRK_2e));
 
