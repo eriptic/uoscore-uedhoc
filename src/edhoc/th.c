@@ -95,15 +95,13 @@ static enum err th34_input_encode(uint8_t *th23, uint32_t th23_len,
 
 	uint32_t th23_encoded_len = *th34_input_len;
 	TRY(encode_byte_string(th23, th23_len, th34_input, &th23_encoded_len));
-	
-	TRY(_memcpy_s(th34_input + th23_encoded_len,
-		      *th34_input_len - th23_encoded_len, plaintext_23,
-		      plaintext_23_len));
-
+    
+	TRY(_memcpy_s(th34_input + th23_encoded_len, *th34_input_len - th23_encoded_len - cred_len,
+                  plaintext_23, plaintext_23_len));
+    
 	TRY(_memcpy_s(th34_input + th23_encoded_len + plaintext_23_len,
-		      *th34_input_len - th23_encoded_len - plaintext_23_len, cred,
-		      cred_len));
-
+                  *th34_input_len - th23_encoded_len - plaintext_23_len, cred, cred_len));
+    
 	*th34_input_len = th23_encoded_len + plaintext_23_len + cred_len;
 
 	PRINT_ARRAY("Input to calculate TH_3/TH_4 (CBOR Sequence)", th34_input,
