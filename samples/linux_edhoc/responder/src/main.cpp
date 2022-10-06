@@ -22,7 +22,7 @@
 extern "C" {
 #include "edhoc.h"
 #include "sock.h"
-#include "edhoc_test_vectors_p256_v15.h"
+#include "edhoc_test_vectors_p256_v16.h"
 }
 #include "cantcoap.h"
 
@@ -58,7 +58,7 @@ static int start_coap_server(int *sockfd)
 	//struct sockaddr_in client_addr;
 	client_addr_len = sizeof(client_addr);
 	memset(&client_addr, 0, sizeof(client_addr));
-	const char IPV4_SERVADDR[] = { "127.0.0.1" };
+	const char IPV4_SERVADDR[] = { "0.0.0.0" };
 	//const char IPV4_SERVADDR[] = { "192.168.43.63" };
 	err = sock_init(SOCK_SERVER, IPV4_SERVADDR, IPv4, &servaddr,
 			sizeof(servaddr), sockfd);
@@ -181,7 +181,7 @@ int main()
 	struct other_party_cred cred_i;
 	struct edhoc_responder_context c_r;
 
-	uint8_t TEST_VEC_NUM = 2;
+	uint8_t TEST_VEC_NUM = 1;
 	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
 	TRY_EXPECT(start_coap_server(&sockfd), 0);

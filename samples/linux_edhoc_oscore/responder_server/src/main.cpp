@@ -23,7 +23,7 @@ extern "C" {
 #include "oscore.h"
 #include "edhoc.h"
 #include "sock.h"
-#include "edhoc_test_vectors_p256_v15.h"
+#include "edhoc_test_vectors_p256_v16.h"
 #include "oscore_test_vectors.h"
 }
 #include "cantcoap.h"

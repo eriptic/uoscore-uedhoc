@@ -15,7 +15,7 @@
 
 #include "edhoc.h"
 #include "sock.h"
-#include "edhoc_test_vectors_p256_v15.h"
+#include "edhoc_test_vectors_p256_v16.h"
 
 struct sockaddr_storage client_addr;
 socklen_t client_addr_len;
