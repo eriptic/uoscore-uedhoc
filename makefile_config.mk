@@ -14,6 +14,8 @@ OPT = -O0
 # Uncomment this to print intermediery results at runtime
 # DEBUG_PRINT += -DDEBUG_PRINT
 
+# Uncomment this to enable building the unit tests
+DUNIT_TEST += -DUNIT_TEST
 
 # CBOR engine
 # currently only ZCBOR is supported

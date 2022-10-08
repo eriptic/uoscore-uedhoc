@@ -26,6 +26,7 @@
 #include "common/oscore_edhoc_error.h"
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
+#include "common/unit_test.h"
 
 /**
  * @brief Extract input CoAP options into E(encrypted) and U(unprotected)
@@ -38,12 +39,12 @@
  * @return err
  *
  */
-static inline enum err e_u_options_extract(struct o_coap_packet *in_o_coap,
-					   struct o_coap_option *e_options,
-					   uint8_t *e_options_cnt,
-					   uint16_t *e_options_len,
-					   struct o_coap_option *U_options,
-					   uint8_t *U_options_cnt)
+STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
+					      struct o_coap_option *e_options,
+					      uint8_t *e_options_cnt,
+					      uint16_t *e_options_len,
+					      struct o_coap_option *U_options,
+					      uint8_t *U_options_cnt)
 {
 	enum err r = ok;
 
@@ -445,8 +446,9 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	uint8_t u_options_cnt = 0;
 
 	/* Analyze CoAP options, extract E-options and U-options */
-	TRY(e_u_options_extract(&o_coap_pkt, e_options, &e_options_cnt,
-				&e_options_len, u_options, &u_options_cnt));
+	TRY(inner_outer_option_split(&o_coap_pkt, e_options, &e_options_cnt,
+				     &e_options_len, u_options,
+				     &u_options_cnt));
 
 	/* 2. Create plaintext (code + E-options + o_coap_payload) */
 	/* Calculate complete plaintext length: 1 byte code + E-options + 1 byte 0xFF + payload */
