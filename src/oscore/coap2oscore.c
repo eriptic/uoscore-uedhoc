@@ -381,7 +381,10 @@ oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
 
 /**
  * @brief	Checks if a array of options contains a observe option
- * @param	options pointer to an array of options
+ * @param	options pointer to an array of options. This can be an array 
+ * 			containing all options of an input CoAP packet, the inner or 
+ * 			outer options of an OSCORE packet. This is because the observe 
+ * 			option is contained in all of the above collections
  * @param	options_cnt number of entries in the array
  */
 static inline bool is_observe(struct o_coap_option *options,
@@ -427,7 +430,7 @@ STATIC enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 	}
 
 	bool observe = is_observe(u_options, u_options_cnt);
-	if (is_request(&in_o_coap)) {
+	if (is_request(in_o_coap)) {
 		if (observe) {
 			out_oscore->header.code = CODE_REQ_FETCH;
 		} else {
