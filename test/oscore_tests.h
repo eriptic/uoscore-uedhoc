@@ -25,4 +25,5 @@ void t8_oscore_server_response_simple_ack(void);
 void t100_inner_outer_option_split__no_special_options(void);
 void t101_inner_outer_option_split__with_observe_notification(void);
 void t102_inner_outer_option_split__with_observe_registration(void);
+void t103_oscore_pkg_generate_request__with_observe_registration(void);
 #endif

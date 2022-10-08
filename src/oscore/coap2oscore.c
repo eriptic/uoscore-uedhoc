@@ -87,7 +87,7 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 		E or U array*/
 
 		switch (temp_option_nr) {
-		case COAP_OPTION_OBSERVE:
+		case OBSERVE:
 			/*An observe option in an a CoAP packet is transformed to an inner
 			and outer option in a OSCORE packet.*/
 
@@ -322,7 +322,7 @@ oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
 		       struct oscore_option *oscore_option)
 {
 	uint32_t dest_size;
-	oscore_option->option_number = COAP_OPTION_OSCORE;
+	oscore_option->option_number = OSCORE;
 
 	if (oscore_option->len == 0) {
 		oscore_option->value = NULL;
@@ -389,7 +389,7 @@ static inline bool is_observe(struct o_coap_option *options,
 {
 	uint8_t i;
 	for (i = 0; i < options_cnt; i++) {
-		if (options[i].option_number == COAP_OPTION_OBSERVE) {
+		if (options[i].option_number == OBSERVE) {
 			return true;
 		}
 	}
@@ -446,7 +446,7 @@ STATIC enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 	uint8_t oscore_opt_pos = u_options_cnt;
 	for (uint8_t i = 0; i < u_options_cnt; i++) {
 		/* Once found, finish the for-loop */
-		if (u_options[i].option_number > COAP_OPTION_OSCORE) {
+		if (u_options[i].option_number > OSCORE) {
 			oscore_opt_pos = i;
 			break;
 		}
@@ -566,7 +566,7 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 
 	/* Generate OSCORE option */
 	struct oscore_option oscore_option;
-	oscore_option.option_number = COAP_OPTION_OSCORE;
+	oscore_option.option_number = OSCORE;
 
 	/*
     - Only if the packet is a request the OSCORE option has a value 

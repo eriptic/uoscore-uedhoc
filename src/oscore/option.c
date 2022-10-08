@@ -18,9 +18,9 @@
 bool is_class_e(uint16_t code)
 {
 	// blacklist, because OSCORE dictates that unknown options SHALL be processed as class E
-	return code != COAP_OPTION_URI_HOST && code != COAP_OPTION_URI_PORT &&
-	       code != COAP_OPTION_OSCORE && code != COAP_OPTION_PROXY_URI &&
-	       code != COAP_OPTION_PROXY_SCHEME;
+	return code != URI_HOST && code != URI_PORT &&
+	       code != OSCORE && code != PROXY_URI &&
+	       code != PROXY_SCHEME;
 }
 
 
