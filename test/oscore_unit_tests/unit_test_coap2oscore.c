@@ -353,7 +353,7 @@ void t102_inner_outer_option_split__with_observe_registration(void)
  *          The observe option indicates registration.
  * 
  */
-void t103_oscore_pkg_generate_request__with_observe_registration(void)
+void t103_oscore_pkg_generate__request_with_observe_registration(void)
 {
 	enum err r;
 
@@ -423,12 +423,41 @@ void t103_oscore_pkg_generate_request__with_observe_registration(void)
 
 	struct o_coap_packet oscore_pkt;
 
-	r = oscore_pkg_generate(&coap_pkt, &oscore_pkt, u_options,
-				sizeof(u_options) /
-					sizeof(struct o_coap_option),
-				NULL, 0, &oscore_option);
+	struct o_coap_header expected_oscore_header = {
+		.ver = 1,
+		.type = TYPE_CON,
+		.TKL = 0,
+		.code = CODE_REQ_FETCH,
+		.MID = 0x0,
+	};
+	struct o_coap_packet expected_oscore_pkt = {
+		.header = expected_oscore_header,
+		.token = NULL,
+		.options_cnt = 3,
+		.options = { { .delta = 6,
+			       .len = sizeof(observe_val),
+			       .value = observe_val,
+			       .option_number = OBSERVE },
+			     { .delta = 3,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = OSCORE },
+			     { .delta = 26,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = PROXY_URI } },
+		.payload_len = 0,
+		.payload = NULL,
+	};
 
-	PRINTF("oscore_pkt code: %d\n", oscore_pkt.header.code);
+	r = oscore_pkg_generate(&coap_pkt, &oscore_pkt, u_options, 2, NULL, 0,
+				&oscore_option);
 
 	zassert_equal(r, ok, "Error in oscore_pkg_generate. r: %d", r);
+
+	PRINTF("coap_pkt code: %02X\n", coap_pkt.header.code);
+	PRINTF("oscore_pkt code: %02X\n", oscore_pkt.header.code);
+
+	zassert_mem_equal__(&oscore_pkt, &expected_oscore_pkt,
+			    sizeof(oscore_pkt), "oscore_pkt incorrect");
 }
