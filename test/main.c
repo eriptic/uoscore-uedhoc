@@ -138,7 +138,7 @@ void test_main(void)
 	ztest_test_suite(
 		oscore_tests,
 		ztest_unit_test(
-			t102_inner_outer_option_split__with_observe_registration));
+			t103_oscore_pkg_generate_request__with_observe_registration));
 	// ztest_test_suite(oscore_tests, ztest_unit_test(t1_oscore_client_request_response),
 	// 		 ztest_unit_test(t2_oscore_server_request_response),
 	// 		 ztest_unit_test(t3_oscore_client_request),

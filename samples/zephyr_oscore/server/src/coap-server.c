@@ -259,7 +259,7 @@ static int oscore_secured_get(struct coap_resource *resource,
 		goto end;
 	}
 
-	r = coap_packet_append_option(&response, COAP_OPTION_CONTENT_FORMAT,
+	r = coap_packet_append_option(&response, CONTENT_FORMAT,
 				      &plain_text_format,
 				      sizeof(plain_text_format));
 	if (r < 0) {
@@ -370,7 +370,7 @@ static int edhoc_post(struct coap_resource *resource,
 
 	for (p = location_path; *p; p++) {
 		r = coap_packet_append_option(
-			&response, COAP_OPTION_LOCATION_PATH, *p, strlen(*p));
+			&response, LOCATION_PATH, *p, strlen(*p));
 		if (r < 0) {
 			goto end;
 		}

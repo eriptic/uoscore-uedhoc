@@ -55,7 +55,7 @@ enum err tx(void *sock, uint8_t *data, uint32_t data_len)
 		   0);
 
 	/* Append options */
-	TRY_EXPECT(coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
+	TRY_EXPECT(coap_packet_append_option(&request, URI_PATH,
 					     path, strlen(path)),
 		   0);
 

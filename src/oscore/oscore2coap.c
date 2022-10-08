@@ -54,7 +54,7 @@ oscore_option_parser(struct o_coap_packet *in,
 		temp_kid_len = temp_options[i].len;
 
 		/* Check current option is OSCORE_option or not */
-		if (temp_option_num == COAP_OPTION_OSCORE) {
+		if (temp_option_num == OSCORE) {
 			if (temp_options[i].len == 0) {
 				/* No OSCORE option value*/
 				out->h = 0;
@@ -187,7 +187,7 @@ options_from_oscore_reorder(struct o_coap_packet *in_oscore_packet,
 		for (uint8_t i = 0; i < o_coap_opt_cnt + 1; i++) {
 			if (i < in_oscore_packet->options_cnt) {
 				if (in_oscore_packet->options[i].option_number !=
-				    COAP_OPTION_OSCORE)
+				    OSCORE)
 					temp_opt_number[j++] =
 						in_oscore_packet->options[i]
 							.option_number;
