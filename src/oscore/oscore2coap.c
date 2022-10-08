@@ -472,14 +472,7 @@ o_coap_pkg_generate(struct byte_array *decrypted_payload,
 	return ok;
 }
 
-static bool is_request(struct o_coap_packet *packet)
-{
-	if ((CODE_CLASS_MASK & packet->header.code) == REQUEST_CLASS) {
-		return true;
-	} else {
-		return false;
-	}
-}
+
 
 enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		     uint32_t *buf_out_len, bool *oscore_pkg_flag,

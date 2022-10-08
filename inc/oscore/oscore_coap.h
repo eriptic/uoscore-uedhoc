@@ -18,7 +18,8 @@
 #include "common/oscore_edhoc_error.h"
 
 #define MAX_PIV_LEN 5
-#define MAX_KID_CONTEXT_LEN 8 /*This implementation supports Context IDs up to 8 byte*/
+#define MAX_KID_CONTEXT_LEN                                                    \
+	8 /*This implementation supports Context IDs up to 8 byte*/
 #define MAX_KID_LEN 8
 #define MAX_AAD_LEN 30
 #define MAX_INFO_LEN 50
@@ -45,19 +46,19 @@
 
 #define MAX_OPTION_COUNT 20
 
+#define TYPE_CON 0x00
+#define TYPE_NON 0x01
+#define TYPE_ACK 0x02
+#define TYPE_RST 0x03
 
-#define TYPE_CON			0x00
-#define TYPE_NON			0x01
-#define TYPE_ACK			0x02
-#define TYPE_RST			0x03
-
-#define CODE_CLASS_MASK			0xe0
-#define CODE_DETAIL_MASK		0x1f
-#define CODE_EMPTY			0x00
-#define CODE_REQ_POST			0x02
-#define CODE_RESP_CHANGED		0x44
-
-#define REQUEST_CLASS 0
+#define CODE_CLASS_MASK 0xe0
+#define CODE_DETAIL_MASK 0x1f
+#define CODE_EMPTY 0x00
+#define CODE_REQ_POST 0x02
+#define CODE_REQ_FETCH 0x05
+#define CODE_RESP_CHANGED 0x44
+#define CODE_RESP_CONTENT 0x45
+#define REQUEST_CLASS 0x00
 
 /* all CoAP instances are preceeded with 'o_' to show correspondence to
  * OSCORE and prevent conflicts with networking CoAP libraries 
@@ -138,4 +139,12 @@ enum err coap2buf(struct o_coap_packet *in, uint8_t *out_byte_string,
 enum err options_into_byte_string(struct o_coap_option *options,
 				  uint8_t options_cnt,
 				  struct byte_array *out_byte_string);
+
+/**
+ * @brief	Checks if a packet is a request 
+ * @param	packet: a pointer to a CoAP/OSCORE packet
+ * @retval	true if the packet is a request else false
+ * 
+ */
+bool is_request(struct o_coap_packet *packet);
 #endif

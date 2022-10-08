@@ -354,3 +354,12 @@ enum err coap2buf(struct o_coap_packet *in, uint8_t *out_byte_string,
 		    *out_byte_string_len);
 	return ok;
 }
+
+bool is_request(struct o_coap_packet *packet)
+{
+	if ((CODE_CLASS_MASK & packet->header.code) == REQUEST_CLASS) {
+		return true;
+	} else {
+		return false;
+	}
+}
