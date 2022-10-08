@@ -138,14 +138,16 @@ void test_main(void)
 	ztest_test_suite(
 		oscore_tests,
 		ztest_unit_test(
-			t100_inner_outer_option_split__no_special_options));
+			t102_inner_outer_option_split__with_observe_registration));
 	// ztest_test_suite(oscore_tests, ztest_unit_test(t1_oscore_client_request_response),
 	// 		 ztest_unit_test(t2_oscore_server_request_response),
 	// 		 ztest_unit_test(t3_oscore_client_request),
 	// 		 ztest_unit_test(t4_oscore_server_key_derivation),
 	// 		 ztest_unit_test(t5_oscore_client_request),
 	// 		 ztest_unit_test(t6_oscore_server_key_derivation),
-	// 		 ztest_unit_test(t8_oscore_server_response_simple_ack));
+	// 		 ztest_unit_test(t8_oscore_server_response_simple_ack),
+	// ztest_unit_test(
+	// 		t100_inner_outer_option_split__no_special_options));
 
 	ztest_run_test_suite(oscore_tests);
 	// ztest_run_test_suite(exporter);

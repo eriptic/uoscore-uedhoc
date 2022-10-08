@@ -12,9 +12,9 @@ static void print_options(struct o_coap_option *opt, uint8_t opt_cnt)
 {
 	uint8_t i;
 	for (i = 0; i < opt_cnt; i++) {
-		PRINTF("delta: %d\n", opt[i].delta);
+		PRINTF("option_number: %d\n", opt[i].option_number);
 		PRINT_ARRAY("value", opt[i].value, opt[i].len);
-		PRINTF("option_number: %d\n\n", opt[i].option_number);
+		PRINTF("delta: %d\n\n", opt[i].delta);
 	}
 }
 
@@ -83,6 +83,219 @@ void t100_inner_outer_option_split__no_special_options(void)
 	struct o_coap_option expected_outer_options[] = {
 		/*Proxy-Uri (opt num 35, U)*/
 		{ .delta = 35, .len = 0, .value = NULL, .option_number = 35 }
+	};
+
+	r = inner_outer_option_split(&coap_pkt, inner_options,
+				     &inner_options_cnt, &inner_options_len,
+				     outer_options, &outer_options_cnt);
+
+	PRINT_MSG("\ninner options\n");
+	print_options(inner_options, inner_options_cnt);
+	PRINT_MSG("\nouter options\n");
+	print_options(outer_options, outer_options_cnt);
+
+	zassert_equal(r, ok, "Error in inner_outer_option_split. r: %d", r);
+
+	zassert_mem_equal__(inner_options, expected_inner_options,
+			    sizeof(expected_inner_options),
+			    "inner options incorrect");
+
+	zassert_mem_equal__(outer_options, expected_outer_options,
+			    sizeof(expected_outer_options),
+			    "inner options incorrect");
+}
+
+/**
+ * @brief   Tests the function inner_outer_option_split with Observe option 
+ *          indicating a notification. This function tests the behavior of 
+ *          the server preparing a response
+ */
+void t101_inner_outer_option_split__with_observe_notification(void)
+{
+	enum err r;
+
+	struct o_coap_header header = {
+		.ver = 1,
+		.type = TYPE_CON,
+		.TKL = 0,
+		.code = CODE_REQ_POST,
+		.MID = 0x0,
+	};
+
+	/*The Observe option value is a sequence number in notifications*/
+	uint8_t observe_val[] = { 0x12 };
+
+	struct o_coap_packet coap_pkt = {
+		.header = header,
+		.token = NULL,
+		.options_cnt = 5,
+		.options = { 
+                /*If-Match (opt num 1, E)*/
+                { .delta = 1,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = 1 },
+                /*Etag (opt num 4, E)*/
+			    { .delta = 3,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = 4 },
+                /*Observe (opt num 6, EU)*/
+			    { .delta = 2,
+			       .len = sizeof(observe_val),
+			       .value = observe_val,
+			       .option_number = 6 },
+                /*Content-Format (opt num 12, E)*/
+			    { .delta = 6,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = 12 } , 
+                /*Proxy-Uri (opt num 35, U)*/
+			    { .delta = 23,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = 35 }
+                   },
+		.payload_len = 0,
+		.payload = NULL,
+	};
+
+	struct o_coap_option inner_options[5];
+	struct o_coap_option outer_options[5];
+	uint16_t inner_options_len;
+	uint8_t inner_options_cnt;
+	uint8_t outer_options_cnt;
+
+	struct o_coap_option expected_inner_options[] = {
+		/*If-Match (opt num 1, E)*/
+		{ .delta = 1, .len = 0, .value = NULL, .option_number = 1 },
+		/*Etag (opt num 4, E)*/
+		{ .delta = 3, .len = 0, .value = NULL, .option_number = 4 },
+		/*Observe(opt num 6): The inner observe option shall have 
+        no value, see 4.1.3.5.2 in RFC8613*/
+		{ .delta = 2, .len = 0, .value = NULL, .option_number = 6 },
+		/*Content-Format (opt num 12, E)*/
+		{ .delta = 6, .len = 0, .value = NULL, .option_number = 12 }
+
+	};
+
+	struct o_coap_option expected_outer_options[] = {
+		/*Observe(opt num 6): The outer observe option may have 
+        a value as in the original coap packet, see 4.1.3.5.2 in RFC8613*/
+		{ .delta = 6,
+		  .len = sizeof(observe_val),
+		  .value = observe_val,
+		  .option_number = 6 },
+		/*Proxy-Uri (opt num 35, U)*/
+		{ .delta = 29, .len = 0, .value = NULL, .option_number = 35 }
+	};
+
+	r = inner_outer_option_split(&coap_pkt, inner_options,
+				     &inner_options_cnt, &inner_options_len,
+				     outer_options, &outer_options_cnt);
+
+	PRINT_MSG("\ninner options\n");
+	print_options(inner_options, inner_options_cnt);
+	PRINT_MSG("\nouter options\n");
+	print_options(outer_options, outer_options_cnt);
+
+	zassert_equal(r, ok, "Error in inner_outer_option_split. r: %d", r);
+
+	zassert_mem_equal__(inner_options, expected_inner_options,
+			    sizeof(expected_inner_options),
+			    "inner options incorrect");
+
+	zassert_mem_equal__(outer_options, expected_outer_options,
+			    sizeof(expected_outer_options),
+			    "inner options incorrect");
+}
+
+/**
+ * @brief   Tests the function inner_outer_option_split with Observe option 
+ *          indicating a registration. This function tests the behavior of 
+ *          the client preparing a request
+ */
+void t102_inner_outer_option_split__with_observe_registration(void)
+{
+	enum err r;
+
+	struct o_coap_header header = {
+		.ver = 1,
+		.type = TYPE_CON,
+		.TKL = 0,
+		.code = CODE_REQ_POST,
+		.MID = 0x0,
+	};
+
+	/*The Observe option value is 0x00 when indicating a registration*/
+	uint8_t observe_val[] = { 0x00 };
+
+	struct o_coap_packet coap_pkt = {
+		.header = header,
+		.token = NULL,
+		.options_cnt = 5,
+		.options = { 
+                /*If-Match (opt num 1, E)*/
+                { .delta = 1,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = 1 },
+                /*Etag (opt num 4, E)*/
+			    { .delta = 3,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = 4 },
+                /*Observe (opt num 6, EU)*/
+			    { .delta = 2,
+			       .len = sizeof(observe_val),
+			       .value = observe_val,
+			       .option_number = 6 },
+                /*Content-Format (opt num 12, E)*/
+			    { .delta = 6,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = 12 } , 
+                /*Proxy-Uri (opt num 35, U)*/
+			    { .delta = 23,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = 35 }
+                   },
+		.payload_len = 0,
+		.payload = NULL,
+	};
+
+	struct o_coap_option inner_options[5];
+	struct o_coap_option outer_options[5];
+	uint16_t inner_options_len;
+	uint8_t inner_options_cnt;
+	uint8_t outer_options_cnt;
+
+	struct o_coap_option expected_inner_options[] = {
+		/*If-Match (opt num 1, E)*/
+		{ .delta = 1, .len = 0, .value = NULL, .option_number = 1 },
+		/*Etag (opt num 4, E)*/
+		{ .delta = 3, .len = 0, .value = NULL, .option_number = 4 },
+		/*Observe(opt num 6): The inner observe option shall have 
+        the value contained in the original coap packet, see 4.1.3.5.1 in RFC8613*/
+		{ .delta = 2,
+		  .len = sizeof(observe_val),
+		  .value = observe_val,
+		  .option_number = 6 },
+		/*Content-Format (opt num 12, E)*/
+		{ .delta = 6, .len = 0, .value = NULL, .option_number = 12 }
+
+	};
+
+	struct o_coap_option expected_outer_options[] = {
+		/*Observe(opt num 6): The outer observe option must have 
+        a value as in the original coap packet, see 4.1.3.5.1 in RFC8613*/
+		{ .delta = 6,
+		  .len = sizeof(observe_val),
+		  .value = observe_val,
+		  .option_number = 6 },
+		/*Proxy-Uri (opt num 35, U)*/
+		{ .delta = 29, .len = 0, .value = NULL, .option_number = 35 }
 	};
 
 	r = inner_outer_option_split(&coap_pkt, inner_options,

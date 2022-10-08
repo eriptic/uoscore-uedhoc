@@ -40,11 +40,11 @@
  *
  */
 STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
-					      struct o_coap_option *e_options,
-					      uint8_t *e_options_cnt,
-					      uint16_t *e_options_len,
-					      struct o_coap_option *U_options,
-					      uint8_t *U_options_cnt)
+					 struct o_coap_option *e_options,
+					 uint8_t *e_options_cnt,
+					 uint16_t *e_options_len,
+					 struct o_coap_option *U_options,
+					 uint8_t *U_options_cnt)
 {
 	enum err r = ok;
 
@@ -82,15 +82,33 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 		else if (in_o_coap->options[i].len >= 243)
 			len_extra_bytes = 2;
 
-		/* check delta, whether current option U or E */
-		if (is_class_e(temp_option_nr) == 1) {
-			/* E-options, which will be copied in plaintext to be encrypted*/
+		/* process special options, see 4.1.3 in RFC8613*/
+		/* if the option does not need special processing just put it in the 
+		E or U array*/
+
+		switch (temp_option_nr) {
+		case COAP_OPTION_OBSERVE:
+			/*An observe option in an a CoAP packet is transformed to an inner
+			and outer option in a OSCORE packet.*/
+
+			/*
+			* Inner option has value NULL if notification or the original value 
+			* in the coap packet if registration/cancellation.
+			*/
 			e_options[*e_options_cnt].delta =
 				(uint16_t)(temp_option_nr -
 					   temp_E_option_delta_sum);
-			e_options[*e_options_cnt].len = temp_len;
-			e_options[*e_options_cnt].value =
-				in_o_coap->options[i].value;
+			if (is_request(in_o_coap)) {
+				/*registrations/cancellations are requests */
+				e_options[*e_options_cnt].len = temp_len;
+				e_options[*e_options_cnt].value =
+					in_o_coap->options[i].value;
+			} else {
+				/*notifications are responses*/
+				e_options[*e_options_cnt].len = 0;
+				e_options[*e_options_cnt].value = NULL;
+			}
+
 			e_options[*e_options_cnt].option_number =
 				temp_option_nr;
 
@@ -106,8 +124,10 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 				(uint16_t)((*e_options_len) + 1 +
 					   delta_extra_bytes + len_extra_bytes +
 					   temp_len);
-		} else {
-			/* U-options */
+
+			/*
+			*outer option (value as in the original coap packet
+			*/
 			U_options[*U_options_cnt].delta =
 				(uint16_t)(temp_option_nr -
 					   temp_U_option_delta_sum);
@@ -124,6 +144,56 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 
 			/* Increment E-options count */
 			(*U_options_cnt)++;
+
+			break;
+
+		default:
+			/* check delta, whether current option U or E */
+			if (is_class_e(temp_option_nr) == 1) {
+				/* E-options, which will be copied in plaintext to be encrypted*/
+				e_options[*e_options_cnt].delta =
+					(uint16_t)(temp_option_nr -
+						   temp_E_option_delta_sum);
+				e_options[*e_options_cnt].len = temp_len;
+				e_options[*e_options_cnt].value =
+					in_o_coap->options[i].value;
+				e_options[*e_options_cnt].option_number =
+					temp_option_nr;
+
+				/* Update delta sum of E-options */
+				temp_E_option_delta_sum =
+					(uint8_t)(temp_E_option_delta_sum +
+						  e_options[*e_options_cnt]
+							  .delta);
+
+				/* Increment E-options count */
+				(*e_options_cnt)++;
+				/* Add option header length and value length */
+				(*e_options_len) =
+					(uint16_t)((*e_options_len) + 1 +
+						   delta_extra_bytes +
+						   len_extra_bytes + temp_len);
+			} else {
+				/* U-options */
+				U_options[*U_options_cnt].delta =
+					(uint16_t)(temp_option_nr -
+						   temp_U_option_delta_sum);
+				U_options[*U_options_cnt].len = temp_len;
+				U_options[*U_options_cnt].value =
+					in_o_coap->options[i].value;
+				U_options[*U_options_cnt].option_number =
+					temp_option_nr;
+
+				/* Update delta sum of E-options */
+				temp_U_option_delta_sum =
+					(uint8_t)(temp_U_option_delta_sum +
+						  U_options[*U_options_cnt]
+							  .delta);
+
+				/* Increment E-options count */
+				(*U_options_cnt)++;
+			}
+			break;
 		}
 	}
 	return r;
@@ -310,6 +380,23 @@ oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
 }
 
 /**
+ * @brief	Checks if a array of options contains a observe option
+ * @param	options pointer to an array of options
+ * @param	options_cnt number of entries in the array
+ */
+static inline bool is_observe(struct o_coap_option *options,
+			      uint8_t options_cnt)
+{
+	uint8_t i;
+	for (i = 0; i < options_cnt; i++) {
+		if (options[i].option_number == COAP_OPTION_OBSERVE) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
  * @brief Generate an OSCORE packet with all needed data
  * @param in_o_coap: input CoAP packet
  * @param out_oscore: output pointer to OSCORE packet
@@ -320,13 +407,13 @@ oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
  * @return err
  *
  */
-static inline enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
-					   struct o_coap_packet *out_oscore,
-					   struct o_coap_option *u_options,
-					   uint8_t u_options_cnt,
-					   uint8_t *in_ciphertext,
-					   uint32_t in_ciphertext_len,
-					   struct oscore_option *oscore_option)
+STATIC enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
+				    struct o_coap_packet *out_oscore,
+				    struct o_coap_option *u_options,
+				    uint8_t u_options_cnt,
+				    uint8_t *in_ciphertext,
+				    uint32_t in_ciphertext_len,
+				    struct oscore_option *oscore_option)
 {
 	/* Set OSCORE header and Token*/
 	out_oscore->header.ver = in_o_coap->header.ver;
@@ -339,12 +426,19 @@ static inline enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 		out_oscore->token = in_o_coap->token;
 	}
 
-	if ((in_o_coap->header.code & CODE_CLASS_MASK) == REQUEST_CLASS) {
-		/*set code of requests to POST*/
-		out_oscore->header.code = CODE_REQ_POST;
+	bool observe = is_observe(u_options, u_options_cnt);
+	if (is_request(&in_o_coap)) {
+		if (observe) {
+			out_oscore->header.code = CODE_REQ_FETCH;
+		} else {
+			out_oscore->header.code = CODE_REQ_POST;
+		}
 	} else {
-		/*set code of responses to Changed*/
-		out_oscore->header.code = CODE_RESP_CHANGED;
+		if (observe) {
+			out_oscore->header.code = CODE_RESP_CONTENT;
+		} else {
+			out_oscore->header.code = CODE_RESP_CHANGED;
+		}
 	}
 
 	/* U-options + OSCORE option (compare oscore option number with others)
