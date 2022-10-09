@@ -19,10 +19,6 @@
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
-enum dev_type {
-	SERVER,
-	CLIENT,
-};
 
 enum derive_type {
 	KEY,
@@ -95,18 +91,5 @@ struct context {
  * @param   piv Partial IV
  */
 enum err sender_seq_num2piv(uint64_t ssn, struct byte_array *piv);
-
-/**
- * @brief   Updates runtime parameter of the context
- * @param   type of the device SERVER/CLIENT
- * @param   options pointer to an array of options
- * @param   opt_num number of options
- * @param   new_piv new PIV
- * @param   new_kid_context 
- * @param   c oscore context
- */
-enum err context_update(enum dev_type dev, struct o_coap_option *options,
-			uint16_t opt_num, struct byte_array *new_piv,
-			struct byte_array *new_kid_context, struct context *c);
 
 #endif

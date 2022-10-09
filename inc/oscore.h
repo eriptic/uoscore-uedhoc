@@ -44,7 +44,6 @@
  * small set of input parameters.
  */
 struct oscore_init_params {
-	enum dev_type dev_type;
 	/*master_secret must be provided. Currently 16 byte secrets are supported*/
 	const struct byte_array master_secret;
 	/*sender_id must be provided*/
