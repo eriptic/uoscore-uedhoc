@@ -572,10 +572,11 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	oscore_option.option_number = OSCORE;
 
 	/*
-    - Only if the packet is a request the OSCORE option has a value 
-    - Only if the packet is a request the nonce and the add need to be generated
+    * If the packet is a request or a response with an observe option:
+	*	* the OSCORE option has a value 
+    *	* nonce and the add need to be generated
     */
-	if ((CODE_CLASS_MASK & o_coap_pkt.header.code) == 0) {
+	if (is_request(&o_coap_pkt) || is_observe(u_options, u_options_cnt)) {
 		/*update the piv in the request response context*/
 		uint8_t piv_buf[MAX_PIV_LEN];
 		struct byte_array piv = {

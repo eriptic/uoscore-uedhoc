@@ -106,14 +106,6 @@ static enum err derive_recipient_key(struct common_context *cc,
 enum err oscore_context_init(struct oscore_init_params *params,
 			     struct context *c)
 {
-	if (params->dev_type == CLIENT) {
-		PRINT_MSG(
-			"\n\n\nClient context initialization****************\n");
-	} else {
-		PRINT_MSG(
-			"\n\n\nServer context initialization****************\n");
-	}
-
 	/*derive common context************************************************/
 
 	if (params->aead_alg != OSCORE_AES_CCM_16_64_128) {

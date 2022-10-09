@@ -126,9 +126,9 @@ void t101_inner_outer_option_split__with_observe_notification(void)
 
 	struct o_coap_header header = {
 		.ver = 1,
-		.type = TYPE_CON,
+		.type = TYPE_ACK,
 		.TKL = 0,
-		.code = CODE_REQ_POST,
+		.code = CODE_RESP_CONTENT,
 		.MID = 0x0,
 	};
 
@@ -172,9 +172,11 @@ void t101_inner_outer_option_split__with_observe_notification(void)
 
 	struct o_coap_option inner_options[5];
 	struct o_coap_option outer_options[5];
-	uint16_t inner_options_len;
-	uint8_t inner_options_cnt;
-	uint8_t outer_options_cnt;
+	memset(inner_options, 0, sizeof(inner_options));
+	memset(outer_options, 0, sizeof(outer_options));
+	uint16_t inner_options_len = 0;
+	uint8_t inner_options_cnt = 0;
+	uint8_t outer_options_cnt = 0;
 
 	struct o_coap_option expected_inner_options[] = {
 		/*If-Match (opt num 1, E)*/
@@ -197,6 +199,8 @@ void t101_inner_outer_option_split__with_observe_notification(void)
 		  .option_number = CONTENT_FORMAT }
 
 	};
+	uint8_t expected_inner_options_cnt =
+		sizeof(expected_inner_options) / sizeof(struct o_coap_option);
 
 	struct o_coap_option expected_outer_options[] = {
 		/*Observe(opt num 6): The outer observe option may have 
@@ -211,6 +215,8 @@ void t101_inner_outer_option_split__with_observe_notification(void)
 		  .value = NULL,
 		  .option_number = PROXY_URI }
 	};
+	uint8_t expected_outer_options_cnt =
+		sizeof(expected_outer_options) / sizeof(struct o_coap_option);
 
 	r = inner_outer_option_split(&coap_pkt, inner_options,
 				     &inner_options_cnt, &inner_options_len,
@@ -223,13 +229,27 @@ void t101_inner_outer_option_split__with_observe_notification(void)
 
 	zassert_equal(r, ok, "Error in inner_outer_option_split. r: %d", r);
 
+	zassert_equal(
+		expected_inner_options_cnt, inner_options_cnt,
+		"the count of the inner options differs from the expected one");
+
 	zassert_mem_equal__(inner_options, expected_inner_options,
 			    sizeof(expected_inner_options),
 			    "inner options incorrect");
 
+	zassert_equal(
+		expected_outer_options_cnt, outer_options_cnt,
+		"the count of the outer options differs from the expected one");
+
+	// PRINT_ARRAY("outer_options", outer_options,
+	// 	    outer_options_cnt * sizeof(struct o_coap_option));
+
+	// PRINT_ARRAY("expected_outer_options", expected_outer_options,
+	// 	    sizeof(expected_outer_options));
+
 	zassert_mem_equal__(outer_options, expected_outer_options,
 			    sizeof(expected_outer_options),
-			    "inner options incorrect");
+			    "outer options incorrect");
 }
 
 /**
@@ -289,6 +309,8 @@ void t102_inner_outer_option_split__with_observe_registration(void)
 
 	struct o_coap_option inner_options[5];
 	struct o_coap_option outer_options[5];
+	memset(inner_options, 0, sizeof(inner_options));
+	memset(outer_options, 0, sizeof(outer_options));
 	uint16_t inner_options_len;
 	uint8_t inner_options_cnt;
 	uint8_t outer_options_cnt;
@@ -423,6 +445,7 @@ void t103_oscore_pkg_generate__request_with_observe_registration(void)
 	};
 
 	struct o_coap_packet oscore_pkt;
+	memset(&oscore_pkt, 0, sizeof(oscore_pkt));
 
 	struct o_coap_header expected_oscore_header = {
 		.ver = 1,
@@ -456,8 +479,16 @@ void t103_oscore_pkg_generate__request_with_observe_registration(void)
 
 	zassert_equal(r, ok, "Error in oscore_pkg_generate. r: %d", r);
 
-	PRINTF("coap_pkt code: %02X\n", coap_pkt.header.code);
-	PRINTF("oscore_pkt code: %02X\n", oscore_pkt.header.code);
+	// PRINTF("coap_pkt code: %02X\n", coap_pkt.header.code);
+	// PRINTF("oscore_pkt code: %02X\n", oscore_pkt.header.code);
+
+	// PRINT_ARRAY("oscore_pkt", &oscore_pkt, sizeof(oscore_pkt));
+	// PRINT_ARRAY("oscore_pkt options", &oscore_pkt.options,
+	// 	    sizeof(oscore_pkt.options));
+	// PRINT_ARRAY("expected_oscore_pkt", &expected_oscore_pkt,
+	// 	    sizeof(expected_oscore_pkt));
+	// PRINT_ARRAY("expected_oscore_pkt options", &expected_oscore_pkt.options,
+	// 	    sizeof(expected_oscore_pkt.options));
 
 	zassert_mem_equal__(&oscore_pkt, &expected_oscore_pkt,
 			    sizeof(oscore_pkt), "oscore_pkt incorrect");
@@ -515,6 +546,7 @@ void t104_oscore_pkg_generate__request_with_observe_notification(void)
 	};
 
 	struct o_coap_packet oscore_pkt;
+	memset(&oscore_pkt, 0, sizeof(oscore_pkt));
 
 	struct o_coap_header expected_oscore_header = {
 		.ver = 1,

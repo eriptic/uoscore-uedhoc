@@ -16,7 +16,6 @@ void t1_oscore_client_request_response(void)
 	enum err r;
 	struct context c_client;
 	struct oscore_init_params params = {
-		.dev_type = CLIENT,
 		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
 		.master_secret.len = T1__MASTER_SECRET_LEN,
 		.sender_id.ptr = (uint8_t *)T1__SENDER_ID,
@@ -87,7 +86,6 @@ void t3_oscore_client_request(void)
 	enum err r;
 	struct context c_client;
 	struct oscore_init_params params = {
-		.dev_type = CLIENT,
 		.master_secret.ptr = (uint8_t *)T3__MASTER_SECRET,
 		.master_secret.len = T3__MASTER_SECRET_LEN,
 		.sender_id.ptr = (uint8_t *)T3__SENDER_ID,
@@ -135,7 +133,6 @@ void t5_oscore_client_request(void)
 	enum err r;
 	struct context c_client;
 	struct oscore_init_params params = {
-		.dev_type = CLIENT,
 		.master_secret.ptr = (uint8_t *)T5__MASTER_SECRET,
 		.master_secret.len = T5__MASTER_SECRET_LEN,
 		.sender_id.ptr = (uint8_t *)T5__SENDER_ID,
@@ -183,7 +180,6 @@ void t2_oscore_server_request_response(void)
 	enum err r;
 	struct context c_server;
 	struct oscore_init_params params_server = {
-		.dev_type = SERVER,
 		.master_secret.ptr = (uint8_t *)T2__MASTER_SECRET,
 		.master_secret.len = T2__MASTER_SECRET_LEN,
 		.sender_id.ptr = (uint8_t *)T2__SENDER_ID,
@@ -233,7 +229,6 @@ void t4_oscore_server_key_derivation(void)
 	enum err r;
 	struct context c_server;
 	struct oscore_init_params params_server = {
-		.dev_type = SERVER,
 		.master_secret.ptr = (uint8_t *)T4__MASTER_SECRET,
 		.master_secret.len = T4__MASTER_SECRET_LEN,
 		.sender_id.ptr = (uint8_t *)T4__SENDER_ID,
@@ -274,7 +269,6 @@ void t6_oscore_server_key_derivation(void)
 	enum err r;
 	struct context c_server;
 	struct oscore_init_params params_server = {
-		.dev_type = SERVER,
 		.master_secret.ptr = (uint8_t *)T6__MASTER_SECRET,
 		.master_secret.len = T6__MASTER_SECRET_LEN,
 		.sender_id.ptr = (uint8_t *)T6__SENDER_ID,
@@ -315,7 +309,6 @@ void t8_oscore_server_response_simple_ack(void)
 	enum err r;
 	struct context context;
 	struct oscore_init_params params = {
-		.dev_type = SERVER,
 		.master_secret.ptr = (uint8_t *)T7__MASTER_SECRET,
 		.master_secret.len = T7__MASTER_SECRET_LEN,
 		.sender_id.ptr = (uint8_t *)T7__SENDER_ID,
@@ -347,4 +340,14 @@ void t8_oscore_server_response_simple_ack(void)
 			    "coap2oscore failed");
 
 	zassert_equal(buf_oscore_len, T8__COAP_ACK_LEN, "coap2oscore failed");
+}
+
+
+/**
+ * @brief	This function test the behavior of a server receiving an observe 
+ * 			registration in a request and preparing two consecutive 
+ * 			notifications.
+ */ 
+void t9_oscore_server_registration_two_notifications(void){
+
 }

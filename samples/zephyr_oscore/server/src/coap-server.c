@@ -583,7 +583,6 @@ void main(void)
 
 #ifdef OSCORE_PSK
 	struct oscore_init_params params = {
-		.dev_type = SERVER,
 		.master_secret.ptr = MASTER_SECRET,
 		.master_secret.len = MASTER_SECRET_LEN,
 		.sender_id.ptr = SENDER_ID,
