@@ -6,6 +6,11 @@
 
 #include "oscore_test_vectors.h"
 
+#include "oscore/oscore_coap.h"
+#include "oscore/option.h"
+
+#include "common/print_util.h"
+
 /**
  * Test 1:
  * - Client Key derivation with master salt see RFC8613 Appendix C.1.1
@@ -342,12 +347,145 @@ void t8_oscore_server_response_simple_ack(void)
 	zassert_equal(buf_oscore_len, T8__COAP_ACK_LEN, "coap2oscore failed");
 }
 
-
 /**
- * @brief	This function test the behavior of a server receiving an observe 
- * 			registration in a request and preparing two consecutive 
- * 			notifications.
- */ 
-void t9_oscore_server_registration_two_notifications(void){
+ * @brief	This function test the behavior of a server and a client a typical 
+ * 			observe exchange as depicted:
+ * 
+ *			client					server
+ *			---------				---------
+ *				|						|
+ *				|------registration---->|
+ *				|						|
+ *				|<-----notification1----|
+ *				|<-----notification2----|
+ *				|						|
+ *				|------cancellation---->|
+ * 
+ * 			See as well Appendix A.1. in RFC7641 
+ */
+void t9_oscore_client_server_registration_two_notifications_cancellation(void)
+{
+	/*
+	 *
+	 * Initialize contexts for the client and server
+	 * 
+	 */
+	enum err r;
+	struct context c_client;
+	struct oscore_init_params params_client = {
+		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
+		.master_secret.len = T1__MASTER_SECRET_LEN,
+		.sender_id.ptr = (uint8_t *)T1__SENDER_ID,
+		.sender_id.len = T1__SENDER_ID_LEN,
+		.recipient_id.ptr = (uint8_t *)T1__RECIPIENT_ID,
+		.recipient_id.len = T1__RECIPIENT_ID_LEN,
+		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
+		.master_salt.len = T1__MASTER_SALT_LEN,
+		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
+		.id_context.len = T1__ID_CONTEXT_LEN,
+		.aead_alg = OSCORE_AES_CCM_16_64_128,
+		.hkdf = OSCORE_SHA_256,
+	};
+	r = oscore_context_init(&params_client, &c_client);
+	zassert_equal(r, ok, "Error in oscore_context_init for client");
 
+	struct context c_server;
+	struct oscore_init_params params_server = {
+		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
+		.master_secret.len = T1__MASTER_SECRET_LEN,
+		.recipient_id.ptr = (uint8_t *)T1__SENDER_ID,
+		.recipient_id.len = T1__SENDER_ID_LEN,
+		.sender_id.ptr = (uint8_t *)T1__RECIPIENT_ID,
+		.sender_id.len = T1__RECIPIENT_ID_LEN,
+		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
+		.master_salt.len = T1__MASTER_SALT_LEN,
+		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
+		.id_context.len = T1__ID_CONTEXT_LEN,
+		.aead_alg = OSCORE_AES_CCM_16_64_128,
+		.hkdf = OSCORE_SHA_256,
+	};
+	r = oscore_context_init(&params_server, &c_server);
+	zassert_equal(r, ok, "Error in oscore_context_init for server");
+
+	/*
+	 *
+	 *test the registration (first request)
+	 *
+	 */
+	uint8_t observe_val[] = { 0x00 }; /*0x00 indicates registration*/
+	uint8_t uri_path_val[] = { 't', 'e', 'm', 'p', 'e', 'r',
+				   'a', 't', 'u', 'r', 'e' };
+	uint8_t token[] = { 0x4a };
+	uint8_t ser_coap_pkt_registration[40];
+	uint32_t ser_coap_pkt_registration_len =
+		sizeof(ser_coap_pkt_registration);
+	uint8_t ser_oscore_pkt_registration[40];
+	uint32_t ser_oscore_pkt_registration_len =
+		sizeof(ser_oscore_pkt_registration);
+	memset(ser_coap_pkt_registration, 0, ser_coap_pkt_registration_len);
+	memset(ser_oscore_pkt_registration, 0, ser_oscore_pkt_registration_len);
+
+	struct o_coap_packet coap_pkt_registration = {
+		.header = {
+			.ver = 1,
+			.type = TYPE_CON,
+			.TKL = 1,
+			.code = CODE_REQ_GET,
+			.MID = 0x0
+		},
+		.token = token,
+		.options_cnt = 2,
+		.options = { 
+			    { .delta = 6,
+			       .len = sizeof(observe_val),
+			       .value = observe_val,
+			       .option_number = OBSERVE },
+				{ .delta = 5,
+			       .len = sizeof(uri_path_val),
+			       .value = uri_path_val,
+			       .option_number = URI_PATH},/*E, opt num 11*/
+                   },
+		.payload_len = 0,
+		.payload = NULL,
+	};
+
+	r = coap2buf(&coap_pkt_registration, ser_coap_pkt_registration,
+		     &ser_coap_pkt_registration_len);
+	zassert_equal(
+		r, ok,
+		"Error in coap2buf during registration packet serialization!");
+
+	PRINT_ARRAY("CoAP observe registration", ser_coap_pkt_registration,
+		    ser_coap_pkt_registration_len);
+
+	r = coap2oscore(ser_coap_pkt_registration,
+			ser_coap_pkt_registration_len,
+			ser_oscore_pkt_registration,
+			&ser_oscore_pkt_registration_len, &c_client);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	PRINT_ARRAY("OSCORE observe registration", ser_oscore_pkt_registration,
+		    ser_oscore_pkt_registration_len);
+
+	uint8_t ser_conv_coap_pkt_registration[40];
+	uint32_t ser_conv_coap_pkt_registration_len =
+		sizeof(ser_conv_coap_pkt_registration);
+	bool oscore_flag = false;
+	r = oscore2coap(ser_oscore_pkt_registration,
+			ser_oscore_pkt_registration_len,
+			ser_conv_coap_pkt_registration,
+			&ser_conv_coap_pkt_registration_len, &oscore_flag,
+			&c_server);
+
+	zassert_equal(r, ok, "Error in oscore2coap!");
+
+	PRINT_ARRAY("Converted CoAP observe registration",
+		    ser_conv_coap_pkt_registration,
+		    ser_conv_coap_pkt_registration_len);
+
+	/*
+	 *
+	 *test the first notification (first response)
+	 *
+	 */
 }

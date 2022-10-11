@@ -160,115 +160,59 @@ static inline enum err payload_decrypt(struct context *c,
 
 /**
  * @brief Reorder E-options and other U-options, and update their delta, and combine them all to normal CoAP packet
- * @param in_oscore_packet: input OSCORE, which contains U-options
+ * @param oscore_pkt: input OSCORE, which contains U-options
  * @param E_options: input pointer to E-options array
  * @param E_options_cnt: count number of input E-options
  * @param out: output pointer to CoAP packet, which will have all reordered options
  * @return ok or error code
  */
 static inline enum err
-options_from_oscore_reorder(struct o_coap_packet *in_oscore_packet,
+options_from_oscore_reorder(struct o_coap_packet *oscore_pkt,
 			    struct o_coap_option *E_options,
 			    uint8_t E_options_cnt, struct o_coap_packet *out)
 {
 	uint16_t temp_delta_sum = 0;
-	uint8_t temp_opt_cnt =
-		(uint8_t)(in_oscore_packet->options_cnt + E_options_cnt);
-	uint8_t o_coap_opt_cnt = (uint8_t)(temp_opt_cnt - 1);
 
-	/* Get all option numbers */
-	if (o_coap_opt_cnt > 0) {
-		TRY(check_buffer_size(MAX_OPTION_COUNT, o_coap_opt_cnt));
-		uint8_t temp_opt_number[MAX_OPTION_COUNT];
-		memset(temp_opt_number, 0, o_coap_opt_cnt);
+	/*the maximum amount of options for the CoAP packet 
+	is the amount of all options -1 (for the OSCORE option)*/
+	uint8_t max_coap_opt_cnt =
+		(uint8_t)(oscore_pkt->options_cnt + E_options_cnt - 1);
 
-		/* Get all option numbers but discard OSCORE option */
-		uint8_t j = 0;
-		for (uint8_t i = 0; i < o_coap_opt_cnt + 1; i++) {
-			if (i < in_oscore_packet->options_cnt) {
-				if (in_oscore_packet->options[i].option_number !=
-				    OSCORE)
-					temp_opt_number[j++] =
-						in_oscore_packet->options[i]
-							.option_number;
-			} else {
-				temp_opt_number[j++] =
-					E_options[i -
-						  in_oscore_packet->options_cnt]
-						.option_number;
-			}
+	TRY(check_buffer_size(out->options_cnt, max_coap_opt_cnt));
+	out->options_cnt = 0;
+
+	/*Get the all outer options. Discard OSCORE and outer OBSERVE */
+	for (uint8_t i = 0; i < oscore_pkt->options_cnt; i++) {
+		if ((oscore_pkt->options[i].option_number != OSCORE) &&
+		    (oscore_pkt->options[i].option_number != OBSERVE)) {
+			out->options[out->options_cnt++] =
+				oscore_pkt->options[i];
 		}
-
-		/* Reorder the option numbers from minimum to maximum */
-		// uint8_t min_opt_number;
-		for (uint8_t i = 0; i < o_coap_opt_cnt; i++) {
-			uint8_t ipp = (uint8_t)(i + 1);
-			for (uint8_t k = ipp; k < o_coap_opt_cnt; k++) {
-				if (temp_opt_number[i] > temp_opt_number[k]) {
-					uint8_t temp;
-					temp = temp_opt_number[i];
-					temp_opt_number[i] = temp_opt_number[k];
-					temp_opt_number[k] = temp;
-				}
-			}
-		}
-
-		/* Reset output CoAP options count */
-		out->options_cnt = 0;
-
-		/* Copy all U-options and E-options in increasing number sequence*/
-		uint8_t U_opt_idx = 0;
-		uint8_t E_opt_idx = 0;
-		for (uint8_t i = 0; i < o_coap_opt_cnt; i++) {
-			if (temp_opt_number[i] ==
-			    in_oscore_packet->options[U_opt_idx].option_number) {
-				out->options[out->options_cnt].delta =
-					(uint16_t)(in_oscore_packet
-							   ->options[U_opt_idx]
-							   .option_number -
-						   temp_delta_sum);
-				out->options[out->options_cnt].len =
-					in_oscore_packet->options[U_opt_idx].len;
-				out->options[out->options_cnt].option_number =
-					in_oscore_packet->options[U_opt_idx]
-						.option_number;
-				out->options[out->options_cnt].value =
-					in_oscore_packet->options[U_opt_idx]
-						.value;
-
-				temp_delta_sum =
-					(uint16_t)(temp_delta_sum +
-						   out->options[out->options_cnt]
-							   .delta);
-				out->options_cnt++;
-				U_opt_idx++;
-				continue;
-			} else if (temp_opt_number[i] ==
-				   E_options[E_opt_idx].option_number) {
-				out->options[out->options_cnt].delta =
-					(uint16_t)(E_options[E_opt_idx]
-							   .option_number -
-						   temp_delta_sum);
-				out->options[out->options_cnt].len =
-					E_options[E_opt_idx].len;
-				out->options[out->options_cnt].option_number =
-					E_options[E_opt_idx].option_number;
-				out->options[out->options_cnt].value =
-					E_options[E_opt_idx].value;
-
-				temp_delta_sum =
-					(uint16_t)(temp_delta_sum +
-						   out->options[out->options_cnt]
-							   .delta);
-				out->options_cnt++;
-				E_opt_idx++;
-				continue;
-			}
-		}
-	} else {
-		/* No any options! */
-		out->options_cnt = 0;
 	}
+
+	/*Get the inner options.*/
+	for (uint8_t i = 0; i < E_options_cnt; i++) {
+		out->options[out->options_cnt++] = E_options[i];
+	}
+
+	uint16_t delta = 0;
+	/* Order the options starting with minimum option number to maximum */
+	for (uint8_t i = 0; i < out->options_cnt; i++) {
+		uint8_t ipp = (uint8_t)(i + 1);
+		for (uint8_t k = ipp; k < out->options_cnt; k++) {
+			if (out->options[i].option_number >
+			    out->options[k].option_number) {
+				struct o_coap_option tmp;
+				tmp = out->options[i];
+				out->options[i] = out->options[k];
+				out->options[k] = tmp;
+			}
+		}
+		/*update the delta*/
+		out->options[i].delta = out->options[i].option_number - delta;
+		delta = out->options[i].option_number;
+	}
+
 	return ok;
 }
 
@@ -423,14 +367,13 @@ static inline enum err oscore_decrypted_payload_parser(
 /**
  * @brief Generate CoAP packet from OSCORE packet
  * @param decrypted_payload: decrypted OSCORE payload, which contains code, E-options and original unprotected CoAP payload
- * @param in_oscore_packet:  input OSCORE packet
+ * @param oscore_pkt:  input OSCORE packet
  * @param out: pointer to output CoAP packet
  * @return
  */
-static inline enum err
-o_coap_pkg_generate(struct byte_array *decrypted_payload,
-		    struct o_coap_packet *in_oscore_packet,
-		    struct o_coap_packet *out)
+static inline enum err o_coap_pkg_generate(struct byte_array *decrypted_payload,
+					   struct o_coap_packet *oscore_pkt,
+					   struct o_coap_packet *out)
 {
 	uint8_t code = 0;
 	struct byte_array unprotected_o_coap_payload = {
@@ -447,17 +390,17 @@ o_coap_pkg_generate(struct byte_array *decrypted_payload,
 
 	/* Copy each items from OSCORE packet to CoAP packet */
 	/* Header */
-	out->header.ver = in_oscore_packet->header.ver;
-	out->header.type = in_oscore_packet->header.type;
-	out->header.TKL = in_oscore_packet->header.TKL;
+	out->header.ver = oscore_pkt->header.ver;
+	out->header.type = oscore_pkt->header.type;
+	out->header.TKL = oscore_pkt->header.TKL;
 	out->header.code = code;
-	out->header.MID = in_oscore_packet->header.MID;
+	out->header.MID = oscore_pkt->header.MID;
 
 	/* Token */
-	if (in_oscore_packet->header.TKL == 0)
+	if (oscore_pkt->header.TKL == 0)
 		out->token = NULL;
 	else
-		out->token = in_oscore_packet->token;
+		out->token = oscore_pkt->token;
 
 	/* Payload */
 	out->payload_len = unprotected_o_coap_payload.len;
@@ -467,12 +410,10 @@ o_coap_pkg_generate(struct byte_array *decrypted_payload,
 		out->payload = unprotected_o_coap_payload.ptr;
 
 	/* reorder all options, and copy it to output coap packet */
-	TRY(options_from_oscore_reorder(in_oscore_packet, E_options,
-					E_options_cnt, out));
+	TRY(options_from_oscore_reorder(oscore_pkt, E_options, E_options_cnt,
+					out));
 	return ok;
 }
-
-
 
 enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		     uint32_t *buf_out_len, bool *oscore_pkg_flag,

@@ -54,6 +54,7 @@
 #define CODE_CLASS_MASK 0xe0
 #define CODE_DETAIL_MASK 0x1f
 #define CODE_EMPTY 0x00
+#define CODE_REQ_GET 0x01
 #define CODE_REQ_POST 0x02
 #define CODE_REQ_FETCH 0x05
 #define CODE_RESP_CHANGED 0x44
