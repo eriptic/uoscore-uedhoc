@@ -19,6 +19,7 @@ void t2_oscore_server_request_response(void);
 void t4_oscore_server_key_derivation(void);
 void t6_oscore_server_key_derivation(void);
 void t8_oscore_server_response_simple_ack(void);
+void t9_oscore_client_server_registration_two_notifications_cancellation(void);
 
 
 /*unit tests*/

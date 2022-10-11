@@ -101,7 +101,7 @@ enum err oscore_cose_encrypt(struct byte_array *in_plaintext, uint8_t *out_ciphe
 		.ptr = aad_bytes,
 	};
 	TRY(create_enc_structure(sender_aad, &aad));
-	PRINT_ARRAY("add enc structure", aad.ptr, aad.len);
+	PRINT_ARRAY("aad enc structure", aad.ptr, aad.len);
 
 	struct byte_array tag = {
 		.len = 8,
