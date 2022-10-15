@@ -60,6 +60,7 @@ int main()
 	uint8_t buf_oscore[256];
 	uint32_t buf_oscore_len = sizeof(buf_oscore);
 	bool oscore_flag;
+	int sockfd;
 
 #ifdef USE_IPV4
 	struct sockaddr_in servaddr;
@@ -68,7 +69,7 @@ int main()
 	memset(&client_addr, 0, sizeof(client_addr));
 	const char IPV4_SERVADDR[] = { "127.0.0.1" };
 	err = sock_init(SOCK_SERVER, IPV4_SERVADDR, IPv4, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), &sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);
@@ -82,7 +83,7 @@ int main()
 	memset(&client_addr, 0, sizeof(client_addr));
 	const char IPV6_SERVADDR[] = { "::1" };
 	err = sock_init(SOCK_SERVER, IPV6_SERVADDR, IPv6, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), &sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);

@@ -35,12 +35,13 @@ int main()
 	err r;
 	int err;
 	char buffer[MAXLINE];
+	int sockfd;
 
 #ifdef USE_IPV4
 	struct sockaddr_in servaddr;
 	const char IPV4_SERVADDR[] = { "127.0.0.1" };
 	err = sock_init(SOCK_CLIENT, IPV4_SERVADDR, IPv4, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), &sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);
@@ -51,7 +52,7 @@ int main()
 	struct sockaddr_in6 servaddr;
 	const char IPV6_SERVADDR[] = { "::1" };
 	err = sock_init(SOCK_CLIENT, IPV6_SERVADDR, IPv6, &servaddr,
-			sizeof(servaddr));
+			sizeof(servaddr), &sockfd);
 	if (err < 0) {
 		printf("error during socket initialization (error code: %d)",
 		       err);
