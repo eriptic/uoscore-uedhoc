@@ -53,7 +53,7 @@ static inline enum err th2_input_encode(uint8_t *hash_msg1,
 	th2._th2_G_Y.len = g_y_len;
 
 	/*Encode C_R as int or byte*/
-	if (c_r_len == 1 && ((0x00 <= c_r[0] && c_r[0] < 0x18) ||
+	if (c_r_len == 1 && (c_r[0] < 0x18 ||
 			     (0x1F < c_r[0] && c_r[0] <= 0x37))) {
 		th2._th2_C_R_choice = _th2_C_R_int;
 		TRY(decode_int(c_r, 1, &th2._th2_C_R_int));
@@ -87,17 +87,22 @@ static inline enum err th2_input_encode(uint8_t *hash_msg1,
 static enum err th34_input_encode(uint8_t *th23, uint32_t th23_len,
 				  uint8_t *plaintext_23,
 				  uint32_t plaintext_23_len,
+				  uint8_t *cred,
+				  uint32_t cred_len,
 				  uint8_t *th34_input, uint32_t *th34_input_len)
 {
 	TRY(check_buffer_size(*th34_input_len, th23_len + 2));
 
 	uint32_t th23_encoded_len = *th34_input_len;
 	TRY(encode_byte_string(th23, th23_len, th34_input, &th23_encoded_len));
-	TRY(_memcpy_s(th34_input + th23_encoded_len,
-		      *th34_input_len - th23_encoded_len, plaintext_23,
-		      plaintext_23_len));
-
-	*th34_input_len = th23_encoded_len + plaintext_23_len;
+    
+	TRY(_memcpy_s(th34_input + th23_encoded_len, *th34_input_len - th23_encoded_len - cred_len,
+                  plaintext_23, plaintext_23_len));
+    
+	TRY(_memcpy_s(th34_input + th23_encoded_len + plaintext_23_len,
+                  *th34_input_len - th23_encoded_len - plaintext_23_len, cred, cred_len));
+    
+	*th34_input_len = th23_encoded_len + plaintext_23_len + cred_len;
 
 	PRINT_ARRAY("Input to calculate TH_3/TH_4 (CBOR Sequence)", th34_input,
 		    *th34_input_len);
@@ -118,17 +123,19 @@ static enum err th34_input_encode(uint8_t *th23, uint32_t th23_len,
  * @param th34 the result
  * @return enum err 
  */
-static enum err th34_calculate(enum hash_alg alg, uint8_t *th23,
-			       uint32_t th23_len, uint8_t *plaintext_23,
-			       uint32_t plaintext_23_len, uint8_t *th34)
+static enum err th34_calculate(enum hash_alg alg, 
+					uint8_t *th23, uint32_t th23_len, 
+					uint8_t *plaintext_23, uint32_t plaintext_23_len, 
+					uint8_t *cred, uint32_t cred_len, 
+					uint8_t *th34)
 {
 	uint32_t th34_input_len =
-		th23_len + plaintext_23_len + ENCODING_OVERHEAD;
+		th23_len + plaintext_23_len + cred_len + ENCODING_OVERHEAD;
 	TRY(check_buffer_size(TH34_INPUT_DEFAULT_SIZE, th34_input_len));
 	uint8_t th34_input[TH34_INPUT_DEFAULT_SIZE];
 
 	TRY(th34_input_encode(th23, th23_len, plaintext_23, plaintext_23_len,
-			      th34_input, &th34_input_len));
+			      cred, cred_len, th34_input, &th34_input_len));
 	TRY(hash(alg, th34_input, th34_input_len, th34));
 	PRINT_ARRAY("TH34", th34, HASH_DEFAULT_SIZE);
 	return ok;
@@ -153,16 +160,18 @@ enum err th2_calculate(enum hash_alg alg, uint8_t *msg1, uint32_t msg1_len,
 
 enum err th3_calculate(enum hash_alg alg, uint8_t *th2, uint32_t th2_len,
 		       uint8_t *plaintext_2, uint32_t plaintext_2_len,
+			   uint8_t *cred_r, uint32_t cred_r_len,
 		       uint8_t *th3)
 {
 	return th34_calculate(alg, th2, th2_len, plaintext_2, plaintext_2_len,
-			      th3);
+				  cred_r, cred_r_len, th3);
 }
 
 enum err th4_calculate(enum hash_alg alg, uint8_t *th3, uint32_t th3_len,
 		       uint8_t *plaintext_3, uint32_t plaintext_3_len,
+			   uint8_t *cred_i, uint32_t cred_i_len,
 		       uint8_t *th4)
 {
-	return th34_calculate(alg, th3, th3_len, plaintext_3, plaintext_3_len,
-			      th4);
+	return th34_calculate(alg, th3, th3_len, plaintext_3, plaintext_3_len, 
+				  cred_i, cred_i_len, th4);
 }

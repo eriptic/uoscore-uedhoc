@@ -7,8 +7,8 @@ import json
 import binascii
 
 in_out_path = "../test_vectors/"
-in_file = "edhoc_test_vectors_p256_v15.json"
-out_file = "edhoc_test_vectors_p256_v15.h"
+in_file = "edhoc_test_vectors_p256_v16.json"
+out_file = "edhoc_test_vectors_p256_v16.h"
 
 
 HEADER = "/*This is an automatically generated file!*/\n\n"
