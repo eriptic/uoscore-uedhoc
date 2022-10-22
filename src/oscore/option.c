@@ -18,12 +18,9 @@
 bool is_class_e(uint16_t code)
 {
 	// blacklist, because OSCORE dictates that unknown options SHALL be processed as class E
-	return code != URI_HOST && code != URI_PORT &&
-	       code != OSCORE && code != PROXY_URI &&
-	       code != PROXY_SCHEME;
+	return code != URI_HOST && code != URI_PORT && code != OSCORE &&
+	       code != PROXY_URI && code != PROXY_SCHEME;
 }
-
-
 
 bool option_belongs_to_class(uint16_t option_num, enum option_class class)
 {
@@ -78,13 +75,12 @@ enum err encode_options(struct o_coap_option *options, uint16_t opt_num,
 			enum option_class class, uint8_t *out,
 			uint32_t out_buf_len)
 {
-
 	uint32_t index = 0;
 	uint16_t skipped_delta = 0;
 	for (int i = 0; i < opt_num; i++) {
 		// skip options which aren't of requested class
 		uint16_t delta = (uint16_t)(options[i].delta + skipped_delta);
-		
+
 		if (!option_belongs_to_class(delta, class)) {
 			skipped_delta =
 				(uint16_t)(skipped_delta + options[i].delta);
@@ -133,4 +129,25 @@ enum err encode_options(struct o_coap_option *options, uint16_t opt_num,
 		index += length;
 	}
 	return ok;
+}
+
+bool is_observe(struct o_coap_option *options, uint8_t options_cnt)
+{
+	for (uint8_t i = 0; i < options_cnt; i++) {
+		if (options[i].option_number == OBSERVE) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool is_observe_registration(struct o_coap_option *options, uint8_t options_cnt)
+{
+	for (uint8_t i = 0; i < options_cnt; i++) {
+		if (options[i].option_number == OBSERVE &&
+		    *options[i].value == 0 && options[i].len == 1) {
+			return true;
+		}
+	}
+	return false;
 }

@@ -108,4 +108,22 @@ enum err encode_options(struct o_coap_option *options, uint16_t opt_num,
 			enum option_class class, uint8_t *out,
 			uint32_t out_buf_len);
 
+/**
+ * @brief	Checks if an array of options contains a observe option
+ * @param	options pointer to an array of options. This can be an array 
+ * 			containing all options of an input CoAP packet, the inner or 
+ * 			outer options of an OSCORE packet. This is because the observe 
+ * 			option is contained in all of the above collections
+ * @param	options_cnt number of entries in the array
+ */
+bool is_observe(struct o_coap_option *options, uint8_t options_cnt);
+
+/**
+ * @brief	Checks if an array of options contains a observe option that 
+ * 			indicates registration
+ * @param	options pointer to an array of options. 
+ * @param	options_cnt number of entries in the array
+ */
+bool is_observe_registration(struct o_coap_option *options,
+			     uint8_t options_cnt);
 #endif

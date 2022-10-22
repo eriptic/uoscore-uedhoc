@@ -65,6 +65,7 @@ enum err {
 	len_extra_byte_error = 216,
 	not_valid_input_packet = 218,
 	oscore_replay_window_protection_error = 219,
+	oscore_replay_notification_protection_error = 220,
 
 };
 

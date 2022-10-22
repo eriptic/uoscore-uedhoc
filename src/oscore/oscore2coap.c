@@ -139,13 +139,14 @@ oscore_option_parser(struct o_coap_packet *in,
 }
 
 /**
- * @brief Decrypt the OSCORE payload (ciphertext)
+ * @brief 	Decrypt the OSCORE payload (ciphertext)
+ * @param 	c pointer to a security context
  * @param out_plaintext: output plaintext
- * @param received_piv_kid_context: received PIV, KID and KID context, will be used to calculate AEAD nonce and AAD
  * @param oscore_packet: complete OSCORE packet which contains the ciphertext to be decrypted
  * @return void
  */
 static inline enum err payload_decrypt(struct context *c,
+				       struct byte_array *aad,
 				       struct byte_array *out_plaintext,
 				       struct o_coap_packet *oscore_packet)
 {
@@ -154,8 +155,7 @@ static inline enum err payload_decrypt(struct context *c,
 		.ptr = oscore_packet->payload,
 	};
 	return oscore_cose_decrypt(&oscore_ciphertext, out_plaintext,
-				   &c->rrc.nonce, &c->rrc.aad,
-				   &c->rc.recipient_key);
+				   &c->rrc.nonce, aad, &c->rc.recipient_key);
 }
 
 /**
@@ -171,7 +171,7 @@ options_from_oscore_reorder(struct o_coap_packet *oscore_pkt,
 			    struct o_coap_option *E_options,
 			    uint8_t E_options_cnt, struct o_coap_packet *out)
 {
-	uint16_t temp_delta_sum = 0;
+	// uint16_t temp_delta_sum = 0;
 
 	/*the maximum amount of options for the CoAP packet 
 	is the amount of all options -1 (for the OSCORE option)*/
@@ -409,6 +409,7 @@ static inline enum err o_coap_pkg_generate(struct byte_array *decrypted_payload,
 	else
 		out->payload = unprotected_o_coap_payload.ptr;
 
+	out->options_cnt = sizeof(out->options);
 	/* reorder all options, and copy it to output coap packet */
 	TRY(options_from_oscore_reorder(oscore_pkt, E_options, E_options_cnt,
 					out));
@@ -438,73 +439,82 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 	TRY(oscore_option_parser(&oscore_packet, &oscore_option,
 				 oscore_pkg_flag));
 
-	/* If the incoming packet is OSCORE packet -- analyze and and decrypt it. */
-	if (*oscore_pkg_flag) {
-		/*In requests the OSCORE packet contains at least a KID = sender ID 
+	/* return if the incoming oscore packet is not OSCORE */
+	if (!*oscore_pkg_flag) {
+		return ok;
+	}
+
+	/*In requests the OSCORE packet contains at least a KID = sender ID 
         and eventually sender sequence number*/
-		if (is_request(&oscore_packet)) {
-			/*Check that the recipient context c->rc has a  Recipient ID that
+	if (is_request(&oscore_packet)) {
+		/*Check that the recipient context c->rc has a  Recipient ID that
 			 matches the received with the oscore option KID (Sender ID).
 			 If this is not true return an error which indicates the caller
 			 application to tray another context. This is useful when the caller
 			 app doesn't know in advance to which context an incoming packet 
              belongs.*/
-			if (!array_equals(&c->rc.recipient_id,
-					  &oscore_option.kid)) {
-				return oscore_kid_recipient_id_mismatch;
-			}
+		if (!array_equals(&c->rc.recipient_id, &oscore_option.kid)) {
+			return oscore_kid_recipient_id_mismatch;
+		}
 
 #ifndef DISABLE_OSCORE_SN_CHECK
-			/*check is the packet is replayed*/
-			if (!server_is_sequence_number_valid(
-				    *oscore_option.piv.ptr,
-				    &c->rc.replay_window)) {
-				return oscore_replay_window_protection_error;
-			}
+		/*check is the packet is replayed*/
+		if (!server_is_sequence_number_valid(*oscore_option.piv.ptr,
+						     &c->rc.replay_window)) {
+			return oscore_replay_window_protection_error;
+		}
 #endif
 
-			/*calculate nonce*/
+		/*calculate nonce*/
+		TRY(create_nonce(&oscore_option.kid, &oscore_option.piv,
+				 &c->cc.common_iv, &c->rrc.nonce));
+
+		TRY(update_request_piv_request_kid(c, &oscore_option.piv,
+						   &oscore_option.kid, true));
+	} else if (is_observe(oscore_packet.options,
+			      oscore_packet.options_cnt)) {
+		/*we are here if we have a observe notification (a response)*/
+
+		/*check if this is not a replayed notification*/
+
+		/*calculate the nonce if PIV is contained in the OSCORE option*/
+		if (oscore_option.piv.len != 0) {
 			TRY(create_nonce(&oscore_option.kid, &oscore_option.piv,
 					 &c->cc.common_iv, &c->rrc.nonce));
-
-			/*compute aad*/
-			//for now there are no I options defined
-			// TODO update this to support eventual I Options
-			TRY(create_aad(NULL, 0, c->cc.aead_alg,
-				       &oscore_option.kid, &oscore_option.piv,
-				       &c->rrc.aad));
 		}
-
-		/* Setup buffer for the plaintext. The plaintext is shorter than the ciphertext because of the authentication tag*/
-		uint32_t plaintext_bytes_len =
-			oscore_packet.payload_len - AUTH_TAG_LEN;
-		TRY(check_buffer_size(MAX_PLAINTEXT_LEN, plaintext_bytes_len));
-		uint8_t plaintext_bytes[MAX_PLAINTEXT_LEN];
-		struct byte_array plaintext = {
-			.len = plaintext_bytes_len,
-			.ptr = plaintext_bytes,
-		};
-
-		/* Decrypt payload */
-		r = payload_decrypt(c, &plaintext, &oscore_packet);
-		if (r == ok) {
-			/*update the replay window after the decryption*/
-			if (is_request(&oscore_packet)) {
-				server_replay_window_update(
-					*oscore_option.piv.ptr,
-					&c->rc.replay_window);
-			}
-		} else {
-			return r;
-		}
-
-		/* Generate corresponding CoAP packet */
-		struct o_coap_packet o_coap_packet;
-		TRY(o_coap_pkg_generate(&plaintext, &oscore_packet,
-					&o_coap_packet));
-
-		/*Convert to byte string*/
-		r = coap2buf(&o_coap_packet, buf_out, buf_out_len);
 	}
-	return r;
+
+	/* Setup buffer for the plaintext. The plaintext is shorter than the ciphertext because of the authentication tag*/
+	uint32_t plaintext_bytes_len = oscore_packet.payload_len - AUTH_TAG_LEN;
+	TRY(check_buffer_size(MAX_PLAINTEXT_LEN, plaintext_bytes_len));
+	uint8_t plaintext_bytes[MAX_PLAINTEXT_LEN];
+	struct byte_array plaintext = {
+		.len = plaintext_bytes_len,
+		.ptr = plaintext_bytes,
+	};
+
+	/*compute AAD*/
+	uint8_t aad_buf[MAX_AAD_LEN];
+	struct byte_array aad = BYTE_ARRAY_INIT(aad_buf, sizeof(aad_buf));
+	TRY(create_aad(NULL, 0, c->cc.aead_alg, &c->rrc.request_kid,
+		       &c->rrc.request_piv, &aad));
+
+	/* Decrypt payload */
+	r = payload_decrypt(c, &aad, &plaintext, &oscore_packet);
+	if (r == ok) {
+		/*update the replay window after the decryption*/
+		if (is_request(&oscore_packet)) {
+			server_replay_window_update(*oscore_option.piv.ptr,
+						    &c->rc.replay_window);
+		}
+	} else {
+		return r;
+	}
+
+	/* Generate corresponding CoAP packet */
+	struct o_coap_packet o_coap_packet;
+	TRY(o_coap_pkg_generate(&plaintext, &oscore_packet, &o_coap_packet));
+
+	/*Convert to byte string*/
+	return coap2buf(&o_coap_packet, buf_out, buf_out_len);
 }

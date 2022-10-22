@@ -16,6 +16,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "oscore_edhoc_error.h"
+
 /* Array with pointer and length.*/
 struct byte_array {
 	uint32_t len;
@@ -28,15 +30,14 @@ extern struct byte_array EMPTY_ARRAY;
 /* Null Array with len=0 and a null pointer.*/
 extern struct byte_array NULL_ARRAY;
 
-/**
- * @brief Initializes a variable of type byte_array
- * 
- * @param buf buffer containing the data
- * @param buf_len the lenhgt of the buffer
- * @param byte_array the byte_array variable to be initialized
- */
-void byte_array_init(uint8_t *buf, uint32_t buf_len,
-		     struct byte_array *byte_array);
+// /**
+//  * @brief Initializes a variable of type byte_array
+//  *
+//  * @param buf buffer containing the data
+//  * @param buf_len the length of the buffer
+//  * @retval the initialized byte_array variable
+//  */
+// struct byte_array byte_array_init(uint8_t *buf, uint32_t buf_len);
 
 /**
  * @brief   Compares if the given two arrays have an equal content.
@@ -48,5 +49,9 @@ void byte_array_init(uint8_t *buf, uint32_t buf_len,
  */
 bool array_equals(const struct byte_array *left,
 		  const struct byte_array *right);
+
+enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src);
+
+#define BYTE_ARRAY_INIT(PTR, SIZE) { .ptr = PTR, .len = SIZE };
 
 #endif

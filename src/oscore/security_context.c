@@ -129,6 +129,7 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	TRY(derive_common_iv(&c->cc));
 
 	/*derive Recipient Context*********************************************/
+	c->rc.notification_num_initialized = false;
 	server_replay_window_init(&c->rc.replay_window);
 	c->rc.recipient_id.len = params->recipient_id.len;
 	c->rc.recipient_id.ptr = c->rc.recipient_id_buf;
@@ -146,11 +147,25 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	c->sc.sender_seq_num = 0;
 
 	/*set up the request response context**********************************/
+	// TODO use here byte_array_init
 	c->rrc.nonce.len = sizeof(c->rrc.nonce_buf);
 	c->rrc.nonce.ptr = c->rrc.nonce_buf;
+	c->rrc.request_kid.len = sizeof(c->rrc.request_kid_buf);
+	c->rrc.request_kid.ptr = c->rrc.request_kid_buf;
+	c->rrc.request_piv.len = sizeof(c->rrc.request_piv_buf);
+	c->rrc.request_piv.ptr = c->rrc.request_piv_buf;
 
-	c->rrc.aad.len = sizeof(c->rrc.aad_buf);
-	c->rrc.aad.ptr = c->rrc.aad_buf;
+	return ok;
+}
+
+enum err update_request_piv_request_kid(struct context *c,
+					struct byte_array *piv,
+					struct byte_array *kid, bool is_request)
+{
+	if (is_request) {
+		TRY(byte_array_cpy(&c->rrc.request_kid, kid));
+		TRY(byte_array_cpy(&c->rrc.request_piv, piv));
+	}
 	return ok;
 }
 

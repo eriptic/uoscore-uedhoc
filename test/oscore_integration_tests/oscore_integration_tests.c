@@ -1,5 +1,7 @@
 
 #include <stdio.h>
+#include <netinet/in.h>
+
 #include <zephyr/zephyr.h>
 #include <zephyr/ztest.h>
 #include "oscore.h"
@@ -412,6 +414,7 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 	 *test the registration (first request)
 	 *
 	 */
+	PRINT_MSG("\n\n |------registration---->| \n\n");
 	uint8_t observe_val[] = { 0x00 }; /*0x00 indicates registration*/
 	uint8_t uri_path_val[] = { 't', 'e', 'm', 'p', 'e', 'r',
 				   'a', 't', 'u', 'r', 'e' };
@@ -419,11 +422,10 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 	uint8_t ser_coap_pkt_registration[40];
 	uint32_t ser_coap_pkt_registration_len =
 		sizeof(ser_coap_pkt_registration);
-	uint8_t ser_oscore_pkt_registration[40];
-	uint32_t ser_oscore_pkt_registration_len =
-		sizeof(ser_oscore_pkt_registration);
+	uint8_t ser_oscore_pkt[40];
+	uint32_t ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
 	memset(ser_coap_pkt_registration, 0, ser_coap_pkt_registration_len);
-	memset(ser_oscore_pkt_registration, 0, ser_oscore_pkt_registration_len);
+	memset(ser_oscore_pkt, 0, ser_oscore_pkt_len);
 
 	struct o_coap_packet coap_pkt_registration = {
 		.header = {
@@ -459,33 +461,87 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 		    ser_coap_pkt_registration_len);
 
 	r = coap2oscore(ser_coap_pkt_registration,
-			ser_coap_pkt_registration_len,
-			ser_oscore_pkt_registration,
-			&ser_oscore_pkt_registration_len, &c_client);
+			ser_coap_pkt_registration_len, ser_oscore_pkt,
+			&ser_oscore_pkt_len, &c_client);
 	zassert_equal(r, ok, "Error in coap2oscore!");
 
-	PRINT_ARRAY("OSCORE observe registration", ser_oscore_pkt_registration,
-		    ser_oscore_pkt_registration_len);
+	PRINT_ARRAY("OSCORE observe registration", ser_oscore_pkt,
+		    ser_oscore_pkt_len);
 
-	uint8_t ser_conv_coap_pkt_registration[40];
-	uint32_t ser_conv_coap_pkt_registration_len =
-		sizeof(ser_conv_coap_pkt_registration);
+	uint8_t ser_conv_coap_pkt[40];
+	uint32_t ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
 	bool oscore_flag = false;
-	r = oscore2coap(ser_oscore_pkt_registration,
-			ser_oscore_pkt_registration_len,
-			ser_conv_coap_pkt_registration,
-			&ser_conv_coap_pkt_registration_len, &oscore_flag,
-			&c_server);
+	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
+			&ser_conv_coap_pkt_len, &oscore_flag, &c_server);
 
 	zassert_equal(r, ok, "Error in oscore2coap!");
 
-	PRINT_ARRAY("Converted CoAP observe registration",
-		    ser_conv_coap_pkt_registration,
-		    ser_conv_coap_pkt_registration_len);
+	PRINT_ARRAY("Converted CoAP observe registration", ser_conv_coap_pkt,
+		    ser_conv_coap_pkt_len);
 
 	/*
 	 *
 	 *test the first notification (first response)
 	 *
 	 */
+
+	PRINT_MSG("\n\n |<-----notification1----| \n\n");
+
+	uint8_t ser_coap_pkt_notification1[40];
+	uint32_t ser_coap_pkt_notification1_len =
+		sizeof(ser_coap_pkt_notification1);
+	uint8_t ser_oscore_pkt_notification1[40];
+	uint32_t ser_oscore_pkt_notification1_len =
+		sizeof(ser_oscore_pkt_notification1);
+	memset(ser_coap_pkt_notification1, 0, ser_coap_pkt_notification1_len);
+	memset(ser_oscore_pkt_notification1, 0,
+	       ser_oscore_pkt_notification1_len);
+
+	/*RFC7641: To provide an order among notifications for the client, the server
+   	sets the value of the Observe Option in each notification to the 24
+   	least significant bits of a strictly increasing sequence number.*/
+	uint32_t observe_sequence_number = 0;
+	uint32_t val = htonl(observe_sequence_number++);
+	struct o_coap_packet coap_pkt_notification1 = {
+		.header = { .ver = 1,
+			    .type = TYPE_ACK,
+			    .TKL = 1,
+			    .code = CODE_RESP_CONTENT,
+			    .MID = 0x0 },
+		.token = token,
+		.options_cnt = 1,
+		.options = { { .delta = 6,
+			       .len = 3, //take only the lower 24 bit
+			       .value =
+				       (uint8_t *)&val, //convert to network byte order
+			       .option_number = OBSERVE } },
+		.payload_len = 0,
+		.payload = NULL,
+	};
+
+	r = coap2buf(&coap_pkt_notification1, ser_coap_pkt_notification1,
+		     &ser_coap_pkt_notification1_len);
+	zassert_equal(
+		r, ok,
+		"Error in coap2buf during notification1 packet serialization!");
+
+	PRINT_ARRAY("CoAP observe notification1", ser_coap_pkt_notification1,
+		    ser_coap_pkt_notification1_len);
+
+	r = coap2oscore(ser_coap_pkt_notification1,
+			ser_coap_pkt_notification1_len, ser_oscore_pkt,
+			&ser_oscore_pkt_len, &c_server);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	PRINT_ARRAY("OSCORE observe notification1", ser_oscore_pkt,
+		    ser_oscore_pkt_len);
+
+	ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
+	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
+			&ser_conv_coap_pkt_len, &oscore_flag, &c_client);
+
+	zassert_equal(r, ok, "Error in oscore2coap!");
+
+	PRINT_ARRAY("Converted CoAP observe notification", ser_conv_coap_pkt,
+		    ser_conv_coap_pkt_len);
 }
