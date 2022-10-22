@@ -9,6 +9,7 @@
 #include "common/oscore_edhoc_error.h"
 #include "common/print_util.h"
 
+//TODO: move this function in the print util and eventually replace by a macro
 static void print_options(struct o_coap_option *opt, uint8_t opt_cnt)
 {
 	uint8_t i;

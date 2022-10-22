@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "oscore/replay_protection.h"
+#include "common/memcpy_s.h"
 
 #define WINDOW_SIZE OSCORE_SERVER_REPLAY_WINDOW_SIZE
 
@@ -32,7 +33,8 @@ enum err server_replay_window_init(server_replay_window_t *replay_window)
 		return wrong_parameter;
 	}
 
-	memset(replay_window->window, 0, WINDOW_SIZE * sizeof(replay_window->window[0]));
+	memset(replay_window->window, 0,
+	       WINDOW_SIZE * sizeof(replay_window->window[0]));
 	replay_window->seq_num_zero_received = false;
 	return ok;
 }
@@ -79,8 +81,8 @@ bool server_is_sequence_number_valid(uint64_t seq_number,
 
 	/* replay window uses zeros for unused entries, so in case of sequence number is 0, a little logic is needed */
 	if (0 == seq_number) {
-		if ((!replay_window->seq_num_zero_received) && (0 == replay_window->window[0]))
-		{
+		if ((!replay_window->seq_num_zero_received) &&
+		    (0 == replay_window->window[0])) {
 			return true;
 		}
 		return false;
@@ -129,3 +131,26 @@ bool server_replay_window_update(uint64_t seq_number,
 	server_replay_window_insert(seq_number, replay_window, index);
 	return true;
 }
+
+// enum err replay_protection_notification(struct context *c, uint8_t *piv,
+// 					uint32_t piv_len)
+// {
+// 	//convert PIV to uint64_t
+// 	uint64_t tmp = 0;
+// 	for (uint8_t i = 0; i < piv_len; i++) {
+// 		tmp += (uint64_t)piv[i] << 8 * i;
+// 	}
+
+// 	if (c->rc.notification_num_initialized) {
+// 		if (c->rc.notification_num > tmp){
+// 			return oscore_replay_notification_protection_error;
+// 		}
+// 	}
+// }
+
+// enum err notification_number_update(struct context *c, uint8_t *piv,
+// 				    uint32_t piv_len)
+// {
+// 	TRY(_memcpy_s((uint8_t *)&c->rc.notification_num,
+// 		      sizeof(c->rc.notification_num), piv, piv_len));
+// }

@@ -10,6 +10,8 @@
 */
 
 #include "common/byte_array.h"
+#include "common/memcpy_s.h"
+#include "common/oscore_edhoc_error.h"
 
 uint8_t EMPTY_STRING[] = { "" };
 struct byte_array EMPTY_ARRAY = {
@@ -22,11 +24,20 @@ struct byte_array NULL_ARRAY = {
 	.ptr = NULL,
 };
 
-void byte_array_init(uint8_t *buf, uint32_t buf_len,
-		     struct byte_array *byte_array)
+// struct byte_array byte_array_init(uint8_t *buf, uint32_t buf_len)
+// {
+// 	return
+// 	{
+// 		.len = buf_len;
+// 		.ptr = buf;
+// 	};
+// }
+
+enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src)
 {
-	byte_array->len = buf_len;
-	byte_array->ptr = buf;
+	TRY(_memcpy_s(dest->ptr, dest->len, src->ptr, src->len));
+	dest->len = src->len;
+	return ok;
 }
 
 bool array_equals(const struct byte_array *left, const struct byte_array *right)

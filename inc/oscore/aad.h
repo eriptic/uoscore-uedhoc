@@ -32,7 +32,8 @@
  * @return err
  */
 enum err create_aad(struct o_coap_option *options, uint16_t opt_num,
-		       enum AEAD_algorithm aead_alg, struct byte_array *kid,
-		       struct byte_array *piv, struct byte_array *out);
+		    enum AEAD_algorithm aead_alg,
+		    struct byte_array *request_kid,
+		    struct byte_array *request_piv, struct byte_array *out);
 
 #endif

@@ -35,6 +35,9 @@ enum err create_aad(struct o_coap_option *options, uint16_t opt_num,
 	aad_array._aad_array_request_piv.value = piv->ptr;
 	aad_array._aad_array_request_piv.len = piv->len;
 
+	PRINT_ARRAY("request_piv", piv->ptr, piv->len);
+	PRINT_ARRAY("request_kid", kid->ptr, kid->len);
+
 	/* options */
 	uint32_t encoded_opt_i_len =
 		encoded_option_len(options, opt_num, CLASS_I);
@@ -55,7 +58,7 @@ enum err create_aad(struct o_coap_option *options, uint16_t opt_num,
 					 &payload_len_out),
 		   true);
 
-	out->len = (uint32_t) payload_len_out;
+	out->len = (uint32_t)payload_len_out;
 	PRINT_ARRAY("AAD", out->ptr, out->len);
 	return ok;
 }

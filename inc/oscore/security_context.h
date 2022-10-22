@@ -19,7 +19,6 @@
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
-
 enum derive_type {
 	KEY,
 	IV,
@@ -55,6 +54,8 @@ struct recipient_context {
 	uint8_t recipient_key_buf[RECIPIENT_KEY_LEN_];
 	uint8_t recipient_id_buf[RECIPIENT_ID_BUFF_LEN];
 	server_replay_window_t replay_window;
+	uint64_t notification_num;
+	bool notification_num_initialized;
 };
 
 /*request-response context contains parameters that need to persists between
@@ -63,17 +64,11 @@ struct req_resp_context {
 	struct byte_array nonce;
 	uint8_t nonce_buf[NONCE_LEN];
 
-	struct byte_array aad;
-	uint8_t aad_buf[MAX_AAD_LEN];
+	struct byte_array request_kid;
+	uint8_t request_kid_buf[MAX_KID_LEN];
 
-	// struct byte_array piv;
-	// uint8_t piv_buf[MAX_PIV_LEN];
-
-	// struct byte_array kid_context;
-	// uint8_t kid_context_buf[MAX_KID_CONTEXT_LEN];
-
-	// struct byte_array kid;
-	// uint8_t kid_buf[MAX_KID_LEN];
+	struct byte_array request_piv;
+	uint8_t request_piv_buf[MAX_PIV_LEN];
 };
 
 /* Context struct containing all contexts*/
@@ -91,5 +86,10 @@ struct context {
  * @param   piv Partial IV
  */
 enum err sender_seq_num2piv(uint64_t ssn, struct byte_array *piv);
+
+enum err update_request_piv_request_kid(struct context *c,
+					struct byte_array *piv,
+					struct byte_array *kid,
+					bool is_request);
 
 #endif

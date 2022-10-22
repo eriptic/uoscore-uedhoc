@@ -103,10 +103,19 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 				e_options[*e_options_cnt].len = temp_len;
 				e_options[*e_options_cnt].value =
 					in_o_coap->options[i].value;
+
+				/* Add option header length and value length */
+				(*e_options_len) =
+					(uint16_t)((*e_options_len) + 1 +
+						   delta_extra_bytes +
+						   len_extra_bytes + temp_len);
 			} else {
 				/*notifications are responses*/
 				e_options[*e_options_cnt].len = 0;
 				e_options[*e_options_cnt].value = NULL;
+
+				/* since the option value has length 0, we add 1 for the option header which is always there */
+				(*e_options_len)++;
 			}
 
 			e_options[*e_options_cnt].option_number =
@@ -119,11 +128,6 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 
 			/* Increment E-options count */
 			(*e_options_cnt)++;
-			/* Add option header length and value length */
-			(*e_options_len) =
-				(uint16_t)((*e_options_len) + 1 +
-					   delta_extra_bytes + len_extra_bytes +
-					   temp_len);
 
 			/*
 			*outer option (value as in the original coap packet
@@ -268,14 +272,16 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
  * @return  err
  *
  */
+// TODO use byte_array for out_ciphertext
 static inline enum err plaintext_encrypt(struct context *c,
+					 struct byte_array *aad,
 					 struct byte_array *in_plaintext,
 					 uint8_t *out_ciphertext,
 					 uint32_t out_ciphertext_len)
 {
 	return oscore_cose_encrypt(in_plaintext, out_ciphertext,
-				   out_ciphertext_len, &c->rrc.nonce,
-				   &c->rrc.aad, &c->sc.sender_key);
+				   out_ciphertext_len, &c->rrc.nonce, aad,
+				   &c->sc.sender_key);
 }
 
 /**
@@ -377,26 +383,6 @@ oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
 	PRINT_ARRAY("OSCORE option value", oscore_option->value,
 		    oscore_option->len);
 	return ok;
-}
-
-/**
- * @brief	Checks if a array of options contains a observe option
- * @param	options pointer to an array of options. This can be an array 
- * 			containing all options of an input CoAP packet, the inner or 
- * 			outer options of an OSCORE packet. This is because the observe 
- * 			option is contained in all of the above collections
- * @param	options_cnt number of entries in the array
- */
-static inline bool is_observe(struct o_coap_option *options,
-			      uint8_t options_cnt)
-{
-	uint8_t i;
-	for (i = 0; i < options_cnt; i++) {
-		if (options[i].option_number == OBSERVE) {
-			return true;
-		}
-	}
-	return false;
 }
 
 /**
@@ -556,7 +542,6 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	}
 
 	/* Setup buffer for plaintext */
-
 	TRY(check_buffer_size(MAX_PLAINTEXT_LEN, plaintext_len));
 	uint8_t plaintext_bytes[MAX_PLAINTEXT_LEN];
 	struct byte_array plaintext = {
@@ -574,28 +559,25 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	/*
     * If the packet is a request or a response with an observe option:
 	*	* the OSCORE option has a value 
-    *	* nonce and the add need to be generated
+    *	* nonce needs to be generated
     */
-	if (is_request(&o_coap_pkt) || is_observe(u_options, u_options_cnt)) {
+	bool request = is_request(&o_coap_pkt);
+	if (request || is_observe(u_options, u_options_cnt)) {
 		/*update the piv in the request response context*/
 		uint8_t piv_buf[MAX_PIV_LEN];
 		struct byte_array piv = {
 			.len = sizeof(piv_buf),
 			.ptr = piv_buf,
 		};
-
 		TRY(sender_seq_num2piv(c->sc.sender_seq_num++, &piv));
+		TRY(update_request_piv_request_kid(c, &piv, &c->sc.sender_id,
+						   request));
 
-		/*calculate nonce*/
+		/*compute nonce*/
 		TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,
 				 &c->rrc.nonce));
 
-		/*compute aad*/
-		TRY(create_aad((struct o_coap_option *)&o_coap_pkt.options,
-			       o_coap_pkt.options_cnt, c->cc.aead_alg,
-			       &c->sc.sender_id, &piv, &c->rrc.aad));
-
-		/*calculate the OSCORE option value*/
+		/*compute the OSCORE option value*/
 		oscore_option.len = get_oscore_opt_val_len(
 			&piv, &c->sc.sender_id, &c->cc.id_context);
 		if (oscore_option.len > OSCORE_OPT_VALUE_LEN) {
@@ -610,12 +592,18 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 		oscore_option.value = NULL;
 	}
 
+	/*compute AAD*/
+	uint8_t aad_buf[MAX_AAD_LEN];
+	struct byte_array aad = BYTE_ARRAY_INIT(aad_buf, sizeof(aad_buf));
+	TRY(create_aad(NULL, 0, c->cc.aead_alg, &c->rrc.request_kid,
+		       &c->rrc.request_piv, &aad));
+
 	/*3. Encrypt the created plaintext*/
 	uint32_t ciphertext_len = plaintext.len + AUTH_TAG_LEN;
 	TRY(check_buffer_size(MAX_CIPHERTEXT_LEN, ciphertext_len));
 	uint8_t ciphertext[MAX_CIPHERTEXT_LEN];
 
-	TRY(plaintext_encrypt(c, &plaintext, (uint8_t *)&ciphertext,
+	TRY(plaintext_encrypt(c, &aad, &plaintext, (uint8_t *)&ciphertext,
 			      ciphertext_len));
 
 	/*create an OSCORE packet*/
