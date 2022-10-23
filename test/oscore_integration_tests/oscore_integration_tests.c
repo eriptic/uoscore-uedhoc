@@ -41,7 +41,7 @@ void t1_oscore_client_request_response(void)
 
 	zassert_equal(r, ok, "Error in oscore_context_init");
 
-	/* 
+	/*
     required only for the test vector.
     during normal operation the sender sequence number is
     increased automatically after every sending
@@ -52,7 +52,6 @@ void t1_oscore_client_request_response(void)
 	uint32_t buf_oscore_len = sizeof(buf_oscore);
 	uint8_t buf_coap[256];
 	uint32_t buf_coap_len = sizeof(buf_coap);
-	bool flag = false;
 
 	/*test converting the request*/
 	r = coap2oscore((uint8_t *)T1__COAP_REQ, T1__COAP_REQ_LEN,
@@ -77,7 +76,7 @@ void t1_oscore_client_request_response(void)
 	/*test concerting the response*/
 
 	r = oscore2coap((uint8_t *)T1__OSCORE_RESP, T1__OSCORE_RESP_LEN,
-			(uint8_t *)&buf_coap, &buf_coap_len, &flag, &c_client);
+			(uint8_t *)&buf_coap, &buf_coap_len, &c_client);
 	zassert_equal(r, ok, "Error in coap2oscore!");
 	zassert_mem_equal__(&buf_coap, T1__COAP_RESPONSE, T1__COAP_RESPONSE_LEN,
 			    "coap2oscore failed");
@@ -111,7 +110,7 @@ void t3_oscore_client_request(void)
 
 	zassert_equal(r, ok, "Error in oscore_context_init");
 
-	/* 
+	/*
     required only for the test vector.
     during normal operation the sender sequence number is
     increased automatically after every sending
@@ -158,7 +157,7 @@ void t5_oscore_client_request(void)
 
 	zassert_equal(r, ok, "Error in oscore_context_init");
 
-	/* 
+	/*
     required only for the test vector.
     during normal operation the sender sequence number is
     increased automatically after every sending
@@ -205,16 +204,17 @@ void t2_oscore_server_request_response(void)
 
 	zassert_equal(r, ok, "Error in oscore_context_init");
 
+	/*we test here the regular behavior not the behaviour after reboot*/
+	c_server.rrc.reboot = false;
+
 	/*Test decrypting of an incoming request*/
 	uint8_t buf_coap[256];
 	uint32_t buf_coap_len = sizeof(buf_coap);
-	bool oscore_present_flag = false;
 
 	r = oscore2coap((uint8_t *)T2__OSCORE_REQ, T2__OSCORE_REQ_LEN, buf_coap,
-			&buf_coap_len, &oscore_present_flag, &c_server);
+			&buf_coap_len, &c_server);
 
-	zassert_equal(r, ok, "Error in oscore2coap!");
-	zassert_true(oscore_present_flag, "The packet is not OSCORE packet");
+	zassert_equal(r, ok, "Error in oscore2coap! Error code: %d", r);
 	zassert_mem_equal__(&buf_coap, T2__COAP_REQ, buf_coap_len,
 			    "oscore2coap failed");
 
@@ -350,9 +350,9 @@ void t8_oscore_server_response_simple_ack(void)
 }
 
 /**
- * @brief	This function test the behavior of a server and a client a typical 
+ * @brief	This function test the behavior of a server and a client a typical
  * 			observe exchange as depicted:
- * 
+ *
  *			client					server
  *			---------				---------
  *				|						|
@@ -362,15 +362,15 @@ void t8_oscore_server_response_simple_ack(void)
  *				|<-----notification2----|
  *				|						|
  *				|------cancellation---->|
- * 
- * 			See as well Appendix A.1. in RFC7641 
+ *
+ * 			See as well Appendix A.1. in RFC7641
  */
 void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 {
 	/*
 	 *
 	 * Initialize contexts for the client and server
-	 * 
+	 *
 	 */
 	enum err r;
 	struct context c_client;
@@ -437,7 +437,7 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 		},
 		.token = token,
 		.options_cnt = 2,
-		.options = { 
+		.options = {
 			    { .delta = 6,
 			       .len = sizeof(observe_val),
 			       .value = observe_val,
@@ -470,9 +470,9 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 
 	uint8_t ser_conv_coap_pkt[40];
 	uint32_t ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
-	bool oscore_flag = false;
+
 	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
-			&ser_conv_coap_pkt_len, &oscore_flag, &c_server);
+			&ser_conv_coap_pkt_len, &c_server);
 
 	zassert_equal(r, ok, "Error in oscore2coap!");
 
@@ -538,7 +538,7 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 
 	ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
 	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
-			&ser_conv_coap_pkt_len, &oscore_flag, &c_client);
+			&ser_conv_coap_pkt_len, &c_client);
 
 	zassert_equal(r, ok, "Error in oscore2coap!");
 
