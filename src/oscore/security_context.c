@@ -38,12 +38,7 @@
 static enum err derive(struct common_context *cc, struct byte_array *id,
 		       enum derive_type type, struct byte_array *out)
 {
-	uint8_t info_bytes[MAX_INFO_LEN];
-	struct byte_array info = {
-		.len = sizeof(info_bytes),
-		.ptr = info_bytes,
-	};
-
+	BYTE_ARRAY_NEW(info, MAX_INFO_LEN, MAX_INFO_LEN);
 	TRY(oscore_create_hkdf_info(id, &cc->id_context, cc->aead_alg, type,
 				    &info));
 

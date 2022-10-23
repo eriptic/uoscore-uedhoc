@@ -486,12 +486,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 
 	/* Setup buffer for the plaintext. The plaintext is shorter than the ciphertext because of the authentication tag*/
 	uint32_t plaintext_bytes_len = oscore_packet.payload_len - AUTH_TAG_LEN;
-	TRY(check_buffer_size(MAX_PLAINTEXT_LEN, plaintext_bytes_len));
-	uint8_t plaintext_bytes[MAX_PLAINTEXT_LEN];
-	struct byte_array plaintext = {
-		.len = plaintext_bytes_len,
-		.ptr = plaintext_bytes,
-	};
+	BYTE_ARRAY_NEW(plaintext, MAX_PLAINTEXT_LEN, plaintext_bytes_len);
 
 	/*compute AAD*/
 	uint8_t aad_buf[MAX_AAD_LEN];

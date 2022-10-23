@@ -38,13 +38,15 @@ static enum err create_enc_structure(struct byte_array *external_aad,
 	struct oscore_enc_structure enc_structure;
 
 	uint8_t context[] = { "Encrypt0" };
-    enc_structure._oscore_enc_structure_context.value = context;
-    enc_structure._oscore_enc_structure_context.len =
+	enc_structure._oscore_enc_structure_context.value = context;
+	enc_structure._oscore_enc_structure_context.len =
 		(uint32_t)strlen((char *)context);
-    enc_structure._oscore_enc_structure_protected.value = NULL;
-    enc_structure._oscore_enc_structure_protected.len = 0;
-    enc_structure._oscore_enc_structure_external_aad.value = external_aad->ptr;
-    enc_structure._oscore_enc_structure_external_aad.len = external_aad->len;
+	enc_structure._oscore_enc_structure_protected.value = NULL;
+	enc_structure._oscore_enc_structure_protected.len = 0;
+	enc_structure._oscore_enc_structure_external_aad.value =
+		external_aad->ptr;
+	enc_structure._oscore_enc_structure_external_aad.len =
+		external_aad->len;
 
 	size_t payload_len_out = 0;
 	success_encoding = cbor_encode_oscore_enc_structure(
@@ -53,29 +55,23 @@ static enum err create_enc_structure(struct byte_array *external_aad,
 	if (!success_encoding) {
 		return cbor_encoding_error;
 	}
-	out->len = (uint32_t) payload_len_out;
+	out->len = (uint32_t)payload_len_out;
 	return ok;
 }
 
 enum err oscore_cose_decrypt(struct byte_array *in_ciphertext,
-		      struct byte_array *out_plaintext,
-		      struct byte_array *nonce,
-		      struct byte_array *recipient_aad, struct byte_array *key)
+			     struct byte_array *out_plaintext,
+			     struct byte_array *nonce,
+			     struct byte_array *recipient_aad,
+			     struct byte_array *key)
 {
 	/* get enc_structure */
 	uint32_t aad_len = recipient_aad->len + ENCRYPT0_ENCODING_OVERHEAD;
-	TRY(check_buffer_size(MAX_AAD_LEN, aad_len));
-	uint8_t aad_bytes[MAX_AAD_LEN];
-	struct byte_array aad = {
-		.len = aad_len,
-		.ptr = aad_bytes,
-	};
+	BYTE_ARRAY_NEW(aad, MAX_AAD_LEN, aad_len);
 	TRY(create_enc_structure(recipient_aad, &aad));
 	PRINT_ARRAY("AAD encoded", aad.ptr, aad.len);
-
-	struct byte_array tag = {
-		.len = 8, .ptr = in_ciphertext->ptr + in_ciphertext->len - 8
-	};
+	struct byte_array tag = BYTE_ARRAY_INIT(
+		(in_ciphertext->ptr + in_ciphertext->len - 8), 8);
 
 	PRINT_ARRAY("Ciphertext", in_ciphertext->ptr, in_ciphertext->len);
 
@@ -88,25 +84,20 @@ enum err oscore_cose_decrypt(struct byte_array *in_ciphertext,
 	return ok;
 }
 
-enum err oscore_cose_encrypt(struct byte_array *in_plaintext, uint8_t *out_ciphertext,
-		      uint32_t out_ciphertext_len, struct byte_array *nonce,
-		      struct byte_array *sender_aad, struct byte_array *key)
+enum err
+oscore_cose_encrypt(struct byte_array *in_plaintext, uint8_t *out_ciphertext,
+		    uint32_t out_ciphertext_len, struct byte_array *nonce,
+		    struct byte_array *sender_aad, struct byte_array *key)
 {
 	/* get enc_structure  */
 	uint32_t aad_len = sender_aad->len + ENCRYPT0_ENCODING_OVERHEAD;
-	TRY(check_buffer_size(MAX_AAD_LEN, aad_len));
-	uint8_t aad_bytes[MAX_AAD_LEN];
-	struct byte_array aad = {
-		.len = aad_len,
-		.ptr = aad_bytes,
-	};
+	BYTE_ARRAY_NEW(aad, MAX_AAD_LEN, aad_len);
+
 	TRY(create_enc_structure(sender_aad, &aad));
 	PRINT_ARRAY("aad enc structure", aad.ptr, aad.len);
 
-	struct byte_array tag = {
-		.len = 8,
-		.ptr = out_ciphertext + in_plaintext->len,
-	};
+	struct byte_array tag =
+		BYTE_ARRAY_INIT(out_ciphertext + in_plaintext->len, 8);
 
 	TRY(aead(ENCRYPT, in_plaintext->ptr, in_plaintext->len, key->ptr,
 		 key->len, nonce->ptr, nonce->len, aad.ptr, aad.len,

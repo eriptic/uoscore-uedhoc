@@ -224,29 +224,23 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
 
 	/* Calculate the maximal length of all options, i.e. all options 
 	have two bytes extra delta and length */
-	uint16_t temp_opt_bytes_len = 0;
-	for (uint8_t i = 0; i < E_options_cnt; i++)
-		temp_opt_bytes_len = (uint16_t)(temp_opt_bytes_len + 1 + 2 + 2 +
-						E_options[i].len);
+	uint16_t e_opt_serial_len = 0;
+	for (uint8_t i = 0; i < E_options_cnt; i++) {
+		e_opt_serial_len = (uint16_t)(e_opt_serial_len + 1 + 2 + 2 +
+					      E_options[i].len);
+	}
 	/* Setup buffer */
-	TRY(check_buffer_size(E_OPTIONS_BUFF_MAX_LEN, temp_opt_bytes_len));
-	uint8_t temp_opt_bytes[E_OPTIONS_BUFF_MAX_LEN];
-	memset(temp_opt_bytes, 0, temp_opt_bytes_len);
-	struct byte_array E_option_byte_string = {
-		.len = temp_opt_bytes_len,
-		.ptr = temp_opt_bytes,
-	};
+	BYTE_ARRAY_NEW(e_opt_serial, E_OPTIONS_BUFF_MAX_LEN, e_opt_serial_len);
 
 	/* Convert all E-options structure to byte string, and copy it to 
 	output*/
-	TRY(options_into_byte_string(E_options, E_options_cnt,
-				     &E_option_byte_string));
+	TRY(options_into_byte_string(E_options, E_options_cnt, &e_opt_serial));
 
 	uint32_t dest_size = (plaintext->len - (uint32_t)(temp_plaintext_ptr +
 							  1 - plaintext->ptr));
-	TRY(_memcpy_s(++temp_plaintext_ptr, dest_size, temp_opt_bytes,
-		      E_option_byte_string.len));
-	temp_plaintext_ptr += E_option_byte_string.len;
+	TRY(_memcpy_s(++temp_plaintext_ptr, dest_size, e_opt_serial.ptr,
+		      e_opt_serial.len));
+	temp_plaintext_ptr += e_opt_serial.len;
 
 	/* Add payload to plaintext*/
 	if (in_o_coap->payload_len != 0) {
@@ -542,12 +536,7 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	}
 
 	/* Setup buffer for plaintext */
-	TRY(check_buffer_size(MAX_PLAINTEXT_LEN, plaintext_len));
-	uint8_t plaintext_bytes[MAX_PLAINTEXT_LEN];
-	struct byte_array plaintext = {
-		.len = plaintext_len,
-		.ptr = plaintext_bytes,
-	};
+	BYTE_ARRAY_NEW(plaintext, MAX_PLAINTEXT_LEN, plaintext_len);
 
 	/* Combine code, E-options and payload of CoAP to plaintext */
 	TRY(plaintext_setup(&o_coap_pkt, e_options, e_options_cnt, &plaintext));
@@ -563,12 +552,7 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
     */
 	bool request = is_request(&o_coap_pkt);
 	if (request || is_observe(u_options, u_options_cnt)) {
-		/*update the piv in the request response context*/
-		uint8_t piv_buf[MAX_PIV_LEN];
-		struct byte_array piv = {
-			.len = sizeof(piv_buf),
-			.ptr = piv_buf,
-		};
+		BYTE_ARRAY_NEW(piv, MAX_PIV_LEN, MAX_PIV_LEN);
 		TRY(sender_seq_num2piv(c->sc.sender_seq_num++, &piv));
 		TRY(update_request_piv_request_kid(c, &piv, &c->sc.sender_id,
 						   request));
@@ -592,9 +576,7 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 		oscore_option.value = NULL;
 	}
 
-	/*compute AAD*/
-	uint8_t aad_buf[MAX_AAD_LEN];
-	struct byte_array aad = BYTE_ARRAY_INIT(aad_buf, sizeof(aad_buf));
+	BYTE_ARRAY_NEW(aad, MAX_AAD_LEN, MAX_AAD_LEN);
 	TRY(create_aad(NULL, 0, c->cc.aead_alg, &c->rrc.request_kid,
 		       &c->rrc.request_piv, &aad));
 
