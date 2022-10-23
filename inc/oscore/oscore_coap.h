@@ -41,6 +41,7 @@
 #define COMP_OSCORE_OPT_PIV_N_MASK 0x07
 #define COMP_OSCORE_OPT_PIV_N_OFFSET 0
 
+#define ECHO_OPT_VALUE_LEN 12 /*see RFC9175 Appendix A.2*/
 #define OSCORE_OPT_VALUE_LEN                                                   \
 	(2 + MAX_PIV_LEN + MAX_KID_CONTEXT_LEN + MAX_KID_LEN)
 

@@ -142,14 +142,15 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	c->sc.sender_seq_num = 0;
 
 	/*set up the request response context**********************************/
-	// TODO use here byte_array_init
 	c->rrc.nonce.len = sizeof(c->rrc.nonce_buf);
 	c->rrc.nonce.ptr = c->rrc.nonce_buf;
 	c->rrc.request_kid.len = sizeof(c->rrc.request_kid_buf);
 	c->rrc.request_kid.ptr = c->rrc.request_kid_buf;
 	c->rrc.request_piv.len = sizeof(c->rrc.request_piv_buf);
 	c->rrc.request_piv.ptr = c->rrc.request_piv_buf;
-
+	c->rrc.echo_opt_val.len = sizeof(c->rrc.echo_opt_val_buf);
+	c->rrc.echo_opt_val.ptr = c->rrc.echo_opt_val_buf;
+	c->rrc.reboot = true;
 	return ok;
 }
 

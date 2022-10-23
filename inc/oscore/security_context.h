@@ -69,6 +69,11 @@ struct req_resp_context {
 
 	struct byte_array request_piv;
 	uint8_t request_piv_buf[MAX_PIV_LEN];
+
+	struct byte_array echo_opt_val;
+	uint8_t echo_opt_val_buf[ECHO_OPT_VALUE_LEN];
+
+	bool reboot;
 };
 
 /* Context struct containing all contexts*/

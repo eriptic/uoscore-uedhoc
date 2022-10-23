@@ -551,11 +551,20 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
     *	* nonce needs to be generated
     */
 	bool request = is_request(&o_coap_pkt);
-	if (request || is_observe(u_options, u_options_cnt)) {
+	if (request || is_observe(u_options, u_options_cnt) || c->rrc.reboot) {
 		BYTE_ARRAY_NEW(piv, MAX_PIV_LEN, MAX_PIV_LEN);
 		TRY(sender_seq_num2piv(c->sc.sender_seq_num++, &piv));
+
+		/*in case of request update request_piv and request_kid*/
 		TRY(update_request_piv_request_kid(c, &piv, &c->sc.sender_id,
 						   request));
+
+		/*in case of first response after reboot save ECHO option*/
+		if (c->rrc.reboot) {
+			TRY(cache_echo_val(&c->rrc.echo_opt_val, e_options,
+					   e_options_cnt));
+			c->rrc.reboot = false;
+		}
 
 		/*compute nonce*/
 		TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,

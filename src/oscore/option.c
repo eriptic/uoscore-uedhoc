@@ -151,3 +151,16 @@ bool is_observe_registration(struct o_coap_option *options, uint8_t options_cnt)
 	}
 	return false;
 }
+
+enum err cache_echo_val(struct byte_array *dest, struct o_coap_option *options,
+			uint8_t options_cnt)
+{
+	for (uint8_t i = 0; i < options_cnt; i++) {
+		if (options[i].option_number == ECHO) {
+			TRY(_memcpy_s(dest->ptr, dest->len, options[i].value,
+				      options[i].len));
+			return ok;
+		}
+	}
+	return required_echo_option_not_provided;
+}

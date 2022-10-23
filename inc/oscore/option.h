@@ -40,6 +40,7 @@ enum o_num {
 	PROXY_URI = 35,
 	PROXY_SCHEME = 39,
 	SIZE1 = 60,
+	ECHO = 252,
 };
 
 enum option_class {
@@ -126,4 +127,7 @@ bool is_observe(struct o_coap_option *options, uint8_t options_cnt);
  */
 bool is_observe_registration(struct o_coap_option *options,
 			     uint8_t options_cnt);
+
+enum err cache_echo_val(struct byte_array *dest, struct o_coap_option *options,
+			uint8_t options_cnt);
 #endif
