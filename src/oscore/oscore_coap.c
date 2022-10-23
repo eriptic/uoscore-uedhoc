@@ -21,7 +21,7 @@
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
 
-#define OPTION_PAYLOAD_MARKER  (0xFF)
+#define OPTION_PAYLOAD_MARKER (0xFF)
 
 enum err options_into_byte_string(struct o_coap_option *options,
 				  uint8_t options_cnt,
@@ -112,7 +112,7 @@ enum err options_into_byte_string(struct o_coap_option *options,
 				out_byte_string_capacity -
 				(uint32_t)(temp_ptr - out_byte_string->ptr);
 			TRY(_memcpy_s(temp_ptr, dest_size, options[i].value,
-					options[i].len));
+				      options[i].len));
 
 			temp_ptr += options[i].len;
 		}
@@ -138,7 +138,7 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 	uint8_t temp_option_len = 0;
 	uint8_t temp_option_number = 0;
 
-	if(0 == in_data_len) {
+	if (0 == in_data_len) {
 		out->payload_len = 0;
 		out->payload = NULL;
 		out->options_cnt = 0;
@@ -148,12 +148,12 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 	/* Go through the in_data to find out how many options are there */
 	uint16_t i = 0;
 	while (i < in_data_len) {
-		if(OPTION_PAYLOAD_MARKER == in_data[i]) {
-			if((in_data_len - i) < 2) {
+		if (OPTION_PAYLOAD_MARKER == in_data[i]) {
+			if ((in_data_len - i) < 2) {
 				return not_valid_input_packet;
 			}
 			i++;
-			out->payload_len = ( uint32_t ) in_data_len - i;
+			out->payload_len = (uint32_t)in_data_len - i;
 			out->payload = &in_data[i];
 			return ok;
 		}
@@ -231,8 +231,7 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 		temp_options_ptr += temp_option_len;
 		if (MAX_OPTION_COUNT > temp_options_count) {
 			temp_options_count++;
-		}
-		else {
+		} else {
 			return not_valid_input_packet;
 		}
 		out->options_cnt = temp_options_count;
@@ -277,7 +276,7 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
 		tmp_p += out->header.TKL;
 		payload_len -= out->header.TKL;
 	}
-	TRY(buf2options(tmp_p, ( uint16_t ) payload_len, out));
+	TRY(buf2options(tmp_p, (uint16_t)payload_len, out));
 
 	return ok;
 }
@@ -309,18 +308,13 @@ enum err coap2buf(struct o_coap_packet *in, uint8_t *out_byte_string,
 	}
 
 	/* Calculate the maximal length of all options, i.e. all options have two bytes extra delta and length*/
-	uint32_t temp_opt_bytes_len = 0;
-	for (uint8_t i = 0; i < in->options_cnt; i++)
+	uint32_t opt_bytes_len = 0;
+	for (uint8_t i = 0; i < in->options_cnt; i++) {
 		//todo use macro instead of 5
-		temp_opt_bytes_len += (uint32_t)5 + in->options[i].len;
-	TRY(check_buffer_size(MAX_COAP_OPTIONS_LEN, temp_opt_bytes_len));
-	uint8_t temp_opt_bytes[MAX_COAP_OPTIONS_LEN];
-	memset(temp_opt_bytes, 0, temp_opt_bytes_len);
+		opt_bytes_len += (uint32_t)5 + in->options[i].len;
+	}
 
-	struct byte_array option_byte_string = {
-		.len = temp_opt_bytes_len,
-		.ptr = temp_opt_bytes,
-	};
+	BYTE_ARRAY_NEW(option_byte_string, MAX_COAP_OPTIONS_LEN, opt_bytes_len);
 
 	/* Convert all OSCORE U-options structure into byte string*/
 	TRY(options_into_byte_string(in->options, in->options_cnt,
@@ -330,7 +324,7 @@ enum err coap2buf(struct o_coap_packet *in, uint8_t *out_byte_string,
 
 	uint32_t dest_size = *out_byte_string_len -
 			     (uint32_t)(temp_out_ptr - out_byte_string);
-	TRY(_memcpy_s(temp_out_ptr, dest_size, temp_opt_bytes,
+	TRY(_memcpy_s(temp_out_ptr, dest_size, option_byte_string.ptr,
 		      option_byte_string.len));
 
 	temp_out_ptr += option_byte_string.len;

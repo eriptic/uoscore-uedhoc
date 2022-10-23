@@ -24,14 +24,6 @@ struct byte_array NULL_ARRAY = {
 	.ptr = NULL,
 };
 
-// struct byte_array byte_array_init(uint8_t *buf, uint32_t buf_len)
-// {
-// 	return
-// 	{
-// 		.len = buf_len;
-// 		.ptr = buf;
-// 	};
-// }
 
 enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src)
 {

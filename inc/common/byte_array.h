@@ -52,6 +52,21 @@ bool array_equals(const struct byte_array *left,
 
 enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src);
 
+/**
+ * @brief   Sets the pointer and the length of a byte_array variable to a given array
+*/
 #define BYTE_ARRAY_INIT(PTR, SIZE) { .ptr = PTR, .len = SIZE };
+
+/**
+ * @brief   Creates a variable of type byte_array.
+ *          In addition a buffer is created to hold the date.
+ *          Before the creation of the buffer it is checked if the size of the 
+ *          buffer (BUF_SIZE) will be sufficient for the size of the byte_array 
+ *          (SIZE). 
+*/
+#define BYTE_ARRAY_NEW(NAME, BUF_SIZE, SIZE)                                   \
+	TRY(check_buffer_size(BUF_SIZE, SIZE));                                \
+	uint8_t NAME##_buf[BUF_SIZE];                                          \
+	struct byte_array NAME = BYTE_ARRAY_INIT(NAME##_buf, SIZE);
 
 #endif
