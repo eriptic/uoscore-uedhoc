@@ -130,4 +130,23 @@ bool is_observe_registration(struct o_coap_option *options,
 
 enum err cache_echo_val(struct byte_array *dest, struct o_coap_option *options,
 			uint8_t options_cnt);
+
+enum err echo_val_is_fresh(struct byte_array *cache_val,
+			   struct byte_array *decrypted_payload);
+
+/**
+ * @brief Parse the decrypted OSCORE payload into code, E-options and original unprotected CoAP payload
+ * @param in_payload: input decrypted payload
+ * @param out_code: pointer to code number of the request
+ * @param out_E_options: output pointer to an array of E-options
+ * @param E_options_cnt: count number of E-options
+ * @param out_o_coap_payload: output pointer original unprotected CoAP payload
+ * @return  err
+ */
+enum err oscore_decrypted_payload_parser(struct byte_array *in_payload,
+					 uint8_t *out_code,
+					 struct o_coap_option *out_E_options,
+					 uint8_t *E_options_cnt,
+					 struct byte_array *out_o_coap_payload);
+
 #endif

@@ -74,6 +74,7 @@ struct req_resp_context {
 	uint8_t echo_opt_val_buf[ECHO_OPT_VALUE_LEN];
 
 	bool reboot;
+	bool second_req_expected;
 };
 
 /* Context struct containing all contexts*/

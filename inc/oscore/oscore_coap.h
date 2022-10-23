@@ -62,6 +62,7 @@
 #define CODE_RESP_CONTENT 0x45
 #define REQUEST_CLASS 0x00
 
+#define OPTION_PAYLOAD_MARKER 0xFF
 /* all CoAP instances are preceeded with 'o_' to show correspondence to
  * OSCORE and prevent conflicts with networking CoAP libraries 
  */

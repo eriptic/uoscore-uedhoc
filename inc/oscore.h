@@ -23,21 +23,28 @@
 #include "common/print_util.h"
 
 #ifndef OSCORE_MAX_PLAINTEXT_LEN
-    #define OSCORE_E_OPTIONS_LEN 40
-    #define OSCORE_COAP_PAYLOAD_LEN 1024
-    /* OSCORE plaintext includes CoAP frame with CoAP payload */
-    #define OSCORE_MAX_PLAINTEXT_LEN (OSCORE_COAP_PAYLOAD_LEN + OSCORE_E_OPTIONS_LEN)
+#define OSCORE_E_OPTIONS_LEN 40
+#define OSCORE_COAP_PAYLOAD_LEN 1024
+/* OSCORE plaintext includes CoAP frame with CoAP payload */
+#define OSCORE_MAX_PLAINTEXT_LEN                                               \
+	(OSCORE_COAP_PAYLOAD_LEN + OSCORE_E_OPTIONS_LEN)
 #endif
 
-#define MAX_PLAINTEXT_LEN        OSCORE_MAX_PLAINTEXT_LEN
-#define MAX_CIPHERTEXT_LEN       (MAX_PLAINTEXT_LEN + AUTH_TAG_LEN)
+#define MAX_PLAINTEXT_LEN OSCORE_MAX_PLAINTEXT_LEN
+#define MAX_CIPHERTEXT_LEN (MAX_PLAINTEXT_LEN + AUTH_TAG_LEN)
 #ifndef E_OPTIONS_BUFF_MAX_LEN
-    #define E_OPTIONS_BUFF_MAX_LEN    255      /* Maximal length of buffer with all encrypted CoAP options. */
+#define E_OPTIONS_BUFF_MAX_LEN                                                 \
+	255 /* Maximal length of buffer with all encrypted CoAP options. */
 #endif
 #ifndef I_OPTIONS_BUFF_MAX_LEN
-    #define I_OPTIONS_BUFF_MAX_LEN    255      /* Maximal length of buffer with all not encrypted CoAP options. */
+#define I_OPTIONS_BUFF_MAX_LEN                                                 \
+	255 /* Maximal length of buffer with all not encrypted CoAP options. */
 #endif
-#define MAX_COAP_OPTIONS_LEN     ((E_OPTIONS_BUFF_MAX_LEN > I_OPTIONS_BUFF_MAX_LEN) ? E_OPTIONS_BUFF_MAX_LEN : I_OPTIONS_BUFF_MAX_LEN)
+#define MAX_COAP_OPTIONS_LEN                                                   \
+	((E_OPTIONS_BUFF_MAX_LEN > I_OPTIONS_BUFF_MAX_LEN) ?                   \
+		 E_OPTIONS_BUFF_MAX_LEN :                                      \
+		 I_OPTIONS_BUFF_MAX_LEN)
+
 
 /**
  * Each endpoint derives the parameters in the security context from a
@@ -85,14 +92,13 @@ enum err oscore_context_init(struct oscore_init_params *params,
  * @param 	buf_out when a OSCORE packet is found and decrypted the 
  * 		resulting CoAP is saved in buf_out
  * @param 	buf_out_len length of the CoAP packet
- * @param	oscore_pkg_flag true if the received packet was OSOCRE, if the 
- * 		packet was CoAP false
+ * @param	flag  indicates if the 
  * @param 	c pointer to a security context
  * @param 	oscore_pkg indicates if an incoming packet is OSCORE
  * @return	err
  */
 enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
-		     uint32_t *buf_out_len, bool *oscore_pkg_flag,
+		     uint32_t *buf_out_len,
 		     struct context *c);
 
 /**

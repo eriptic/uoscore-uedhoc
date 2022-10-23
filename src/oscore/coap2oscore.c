@@ -560,7 +560,7 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 						   request));
 
 		/*in case of first response after reboot save ECHO option*/
-		if (c->rrc.reboot) {
+		if (c->rrc.reboot && !request) {
 			TRY(cache_echo_val(&c->rrc.echo_opt_val, e_options,
 					   e_options_cnt));
 			c->rrc.reboot = false;

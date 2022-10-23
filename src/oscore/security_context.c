@@ -151,6 +151,7 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	c->rrc.echo_opt_val.len = sizeof(c->rrc.echo_opt_val_buf);
 	c->rrc.echo_opt_val.ptr = c->rrc.echo_opt_val_buf;
 	c->rrc.reboot = true;
+	c->rrc.second_req_expected = false;
 	return ok;
 }
 

@@ -52,6 +52,8 @@ enum err {
 	suites_i_list_to_long = 121,
 
 	/*OSCORE specific errors*/
+	not_oscore_pkt = 200,
+	first_request_after_reboot = 201,
 	oscore_unknown_hkdf = 202,
 	oscore_invalid_algorithm_aead = 204,
 	oscore_invalid_algorithm_hkdf = 205,
@@ -66,8 +68,8 @@ enum err {
 	not_valid_input_packet = 218,
 	oscore_replay_window_protection_error = 219,
 	oscore_replay_notification_protection_error = 220,
-	required_echo_option_not_provided = 221,
-
+	no_echo_option = 221,
+	echo_val_replied = 222,
 };
 
 /*This macro checks if a function returns an error and if so it propages 
