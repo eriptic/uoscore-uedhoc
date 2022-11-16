@@ -61,11 +61,12 @@ oscore_option_parser(struct o_coap_packet *in,
 				out->h = 0;
 				out->k = 0;
 				out->n = 0;
-				//				out->KID_len = 0;
-				//				out->KIDC_len = 0;
-				//				out->PIV = NULL;
-				//				out->KID = NULL;
-				//				out->KID_context = NULL;
+				out->piv.ptr = NULL;
+				out->piv.len = 0;
+				out->kid.ptr = NULL;
+				out->kid.len = 0;
+				out->kid_context.ptr = NULL;
+				out->kid_context.len = 0;
 			} else {
 				/* Get address of current option value*/
 				temp_current_option_value_ptr =
@@ -318,7 +319,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 			return first_request_after_reboot;
 		}
 
-		/*check is the packet is replayed*/
+		/*check if the packet is replayed*/
 		if (!c->rrc.second_req_expected) {
 			PRINT_MSG("Is the message replied?\n");
 			if (!server_is_sequence_number_valid(
@@ -345,12 +346,12 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		TRY(payload_decrypt(c, &aad, &plaintext, &oscore_packet));
 
 		if (c->rrc.second_req_expected) {
-			/*if this is a second request after reboot it should have an ECHO 
-		option for proving freshness*/
+			/*if this is a second request after reboot it should have an ECHO option for proving freshness*/
 			TRY(echo_val_is_fresh(&c->rrc.echo_opt_val,
 					      &plaintext));
 			/*reinitialize replay window*/
-			//TODO
+			TRY(server_replay_window_reinit(*oscore_option.piv.ptr,
+							&c->rc.replay_window));
 			c->rrc.second_req_expected = false;
 		} else {
 			server_replay_window_update(*oscore_option.piv.ptr,
@@ -364,7 +365,35 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		if (oscore_option.piv.len != 0) {
 			if (is_observe(oscore_packet.options,
 				       oscore_packet.options_cnt)) {
-				//TODO
+				PRINT_MSG(
+					"Observe notification with PIV received\n");
+
+				TRY(replay_protection_check_notification(
+					c->rc.notification_num,
+					c->rc.notification_num_initialized,
+					&oscore_option.piv));
+
+				TRY(create_nonce(
+					&oscore_option.kid, &oscore_option.piv,
+					&c->cc.common_iv, &c->rrc.nonce));
+
+				/*compute AAD*/
+				uint8_t aad_buf[MAX_AAD_LEN];
+				struct byte_array aad = BYTE_ARRAY_INIT(
+					aad_buf, sizeof(aad_buf));
+				TRY(create_aad(NULL, 0, c->cc.aead_alg,
+					       &c->rrc.request_kid,
+					       &c->rrc.request_piv, &aad));
+
+				/* Decrypt payload */
+				TRY(payload_decrypt(c, &aad, &plaintext,
+						    &oscore_packet));
+
+				/*update replay protection value in context*/
+				TRY(notification_number_update(
+					&c->rc.notification_num,
+					&c->rc.notification_num_initialized,
+					&oscore_option.piv));
 			} else {
 				TRY(create_nonce(
 					&oscore_option.kid, &oscore_option.piv,
@@ -385,46 +414,24 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		} else {
 			if (is_observe(oscore_packet.options,
 				       oscore_packet.options_cnt)) {
-				//TODO
+				PRINT_MSG(
+					"Observe notification without PIV received\n");
+				//TODO add handling here
 			} else {
-				//TODO
+				/*compute AAD*/
+				uint8_t aad_buf[MAX_AAD_LEN];
+				struct byte_array aad = BYTE_ARRAY_INIT(
+					aad_buf, sizeof(aad_buf));
+				TRY(create_aad(NULL, 0, c->cc.aead_alg,
+					       &c->rrc.request_kid,
+					       &c->rrc.request_piv, &aad));
+
+				/* Decrypt payload */
+				TRY(payload_decrypt(c, &aad, &plaintext,
+						    &oscore_packet));
 			}
 		}
 	}
-
-	// } else if (is_observe(oscore_packet.options,
-	// 		      oscore_packet.options_cnt)) {
-	// 	/*we are here if we have a observe notification (a response)*/
-
-	// 	/*check if this is not a replayed notification*/
-
-	// 	/*calculate the nonce if PIV is contained in the OSCORE option*/
-	// 	if (oscore_option.piv.len != 0) {
-	// 		TRY(create_nonce(&oscore_option.kid, &oscore_option.piv,
-	// 				 &c->cc.common_iv, &c->rrc.nonce));
-	// 	}
-	// }
-
-	// /*compute AAD*/
-	// uint8_t aad_buf[MAX_AAD_LEN];
-	// struct byte_array aad = BYTE_ARRAY_INIT(aad_buf, sizeof(aad_buf));
-	// TRY(create_aad(NULL, 0, c->cc.aead_alg, &c->rrc.request_kid,
-	// 	       &c->rrc.request_piv, &aad));
-
-	// /* Decrypt payload */
-	// TRY(payload_decrypt(c, &aad, &plaintext, &oscore_packet));
-
-	// if (c->rrc.second_req_expected) {
-	// 	/*if this is a second request after reboot it should have an ECHO
-	// 	option for proving freshness*/
-	// 	TRY(echo_val_is_fresh(&c->rrc.echo_opt_val, &plaintext));
-	// 	/*reinitialize replay window*/
-	// 	//TODO
-	// 	c->rrc.second_req_expected = false;
-	// } else if (is_request(&oscore_packet)) {
-	// 	server_replay_window_update(*oscore_option.piv.ptr,
-	// 				    &c->rc.replay_window);
-	// }
 
 	/* Generate corresponding CoAP packet */
 	struct o_coap_packet o_coap_packet;

@@ -137,7 +137,8 @@ void test_main(void)
 
 	ztest_test_suite(
 		oscore_tests,
-		ztest_unit_test(t10_oscore_client_server_after_reboot));
+		ztest_unit_test(
+			t9_oscore_client_server_registration_two_notifications_cancellation));
 	// ztest_test_suite(
 	// 	oscore_tests,
 	// 	ztest_unit_test(t1_oscore_client_request_response),

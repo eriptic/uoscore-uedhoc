@@ -21,8 +21,6 @@
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
 
-#define OPTION_PAYLOAD_MARKER (0xFF)
-
 enum err options_into_byte_string(struct o_coap_option *options,
 				  uint8_t options_cnt,
 				  struct byte_array *out_byte_string)

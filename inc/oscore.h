@@ -22,6 +22,10 @@
 #include "common/oscore_edhoc_error.h"
 #include "common/print_util.h"
 
+/*see Appendix B.1.1.*/
+#define K_SSN_NVM_STORE_INTERVAL 5
+#define F_NVM_MAX_WRITE_FAILURE 0
+
 #ifndef OSCORE_MAX_PLAINTEXT_LEN
 #define OSCORE_E_OPTIONS_LEN 40
 #define OSCORE_COAP_PAYLOAD_LEN 1024
@@ -45,7 +49,6 @@
 		 E_OPTIONS_BUFF_MAX_LEN :                                      \
 		 I_OPTIONS_BUFF_MAX_LEN)
 
-
 /**
  * Each endpoint derives the parameters in the security context from a
  * small set of input parameters.
@@ -67,6 +70,9 @@ struct oscore_init_params {
 	const enum AEAD_algorithm aead_alg;
 	/*kdf is optional (default HKDF-SHA-256)*/
 	const enum hkdf hkdf;
+	/*True if the combination of master secret and master salt are unique at 
+	every boot of the device, e.g., they are computed with EDHOC*/
+	const bool fresh_master_secret_salt;
 };
 
 /**
@@ -98,8 +104,7 @@ enum err oscore_context_init(struct oscore_init_params *params,
  * @return	err
  */
 enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
-		     uint32_t *buf_out_len,
-		     struct context *c);
+		     uint32_t *buf_out_len, struct context *c);
 
 /**
  *@brief 	Converts a CoAP packet to OSCORE packet

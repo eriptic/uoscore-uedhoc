@@ -3,6 +3,7 @@
 
 #include "oscore/replay_protection.h"
 #include "common/memcpy_s.h"
+#include "common/byte_array.h"
 
 #define WINDOW_SIZE OSCORE_SERVER_REPLAY_WINDOW_SIZE
 
@@ -132,25 +133,30 @@ bool server_replay_window_update(uint64_t seq_number,
 	return true;
 }
 
-// enum err replay_protection_notification(struct context *c, uint8_t *piv,
-// 					uint32_t piv_len)
-// {
-// 	//convert PIV to uint64_t
-// 	uint64_t tmp = 0;
-// 	for (uint8_t i = 0; i < piv_len; i++) {
-// 		tmp += (uint64_t)piv[i] << 8 * i;
-// 	}
+enum err replay_protection_check_notification(uint64_t notification_num,
+					      bool notification_num_initialized,
+					      struct byte_array *piv)
+{
+	//convert PIV to uint64_t
+	uint64_t tmp = 0;
+	for (uint8_t i = 0; i < piv->len; i++) {
+		tmp += (uint64_t)piv->ptr[i] << 8 * i;
+	}
 
-// 	if (c->rc.notification_num_initialized) {
-// 		if (c->rc.notification_num > tmp){
-// 			return oscore_replay_notification_protection_error;
-// 		}
-// 	}
-// }
+	if (notification_num_initialized) {
+		if (notification_num > tmp) {
+			return oscore_replay_notification_protection_error;
+		}
+	}
+	return ok;
+}
 
-// enum err notification_number_update(struct context *c, uint8_t *piv,
-// 				    uint32_t piv_len)
-// {
-// 	TRY(_memcpy_s((uint8_t *)&c->rc.notification_num,
-// 		      sizeof(c->rc.notification_num), piv, piv_len));
-// }
+enum err notification_number_update(uint64_t *notification_num,
+				    bool *notification_num_initialized,
+				    struct byte_array *piv)
+{
+	TRY(_memcpy_s((uint8_t *)notification_num, sizeof(*notification_num),
+		      piv->ptr, piv->len));
+	*notification_num_initialized = true;
+	return ok;
+}
