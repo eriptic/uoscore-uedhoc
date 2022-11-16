@@ -35,6 +35,7 @@ void t1_oscore_client_request_response(void)
 		.id_context.len = T1__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = true,
 	};
 
 	r = oscore_context_init(&params, &c_client);
@@ -104,6 +105,7 @@ void t3_oscore_client_request(void)
 		.id_context.len = T3__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = true,
 	};
 
 	r = oscore_context_init(&params, &c_client);
@@ -151,6 +153,7 @@ void t5_oscore_client_request(void)
 		.id_context.len = T5__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = true,
 	};
 
 	r = oscore_context_init(&params, &c_client);
@@ -198,6 +201,7 @@ void t2_oscore_server_request_response(void)
 		.id_context.len = T2__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = true,
 	};
 
 	r = oscore_context_init(&params_server, &c_server);
@@ -248,6 +252,7 @@ void t4_oscore_server_key_derivation(void)
 		.id_context.len = T4__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = true,
 	};
 
 	r = oscore_context_init(&params_server, &c_server);
@@ -288,6 +293,7 @@ void t6_oscore_server_key_derivation(void)
 		.id_context.len = T6__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = true,
 	};
 
 	r = oscore_context_init(&params_server, &c_server);
@@ -328,6 +334,7 @@ void t8_oscore_server_response_simple_ack(void)
 		.id_context.len = T7__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = true,
 	};
 
 	r = oscore_context_init(&params, &context);
@@ -387,6 +394,7 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 		.id_context.len = T1__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = true,
 	};
 	r = oscore_context_init(&params_client, &c_client);
 	zassert_equal(r, ok, "Error in oscore_context_init for client");
@@ -405,6 +413,7 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 		.id_context.len = T1__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = true,
 	};
 	r = oscore_context_init(&params_server, &c_server);
 	zassert_equal(r, ok, "Error in oscore_context_init for server");
@@ -555,11 +564,9 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
  *			    ---------			        		---------
  *					|                                   |
  *					|------request--------------------->|
- *					|              		            	|
  *					|<-----response with ECHO option----|
+ *					|              		            	|
  *					|------request with ECHO option---->|
- *					|                                   |
- *					|------request--------------------->|
  * 					|<-----response---------------------|
  *
  * 			See as RFC8613 Appendix B1.2 and RFC9175
@@ -586,6 +593,7 @@ void t10_oscore_client_server_after_reboot(void)
 		.id_context.len = T1__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = true,
 	};
 	r = oscore_context_init(&params_client, &c_client);
 	zassert_equal(r, ok, "Error in oscore_context_init for client");
@@ -604,6 +612,7 @@ void t10_oscore_client_server_after_reboot(void)
 		.id_context.len = T1__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = true,
 	};
 	r = oscore_context_init(&params_server, &c_server);
 	zassert_equal(r, ok, "Error in oscore_context_init for server");
@@ -619,7 +628,7 @@ void t10_oscore_client_server_after_reboot(void)
 	uint8_t token[] = { 0x4a };
 	uint8_t ser_coap_pkt_req1[40];
 	uint32_t ser_coap_pkt_req1_len = sizeof(ser_coap_pkt_req1);
-	uint8_t ser_oscore_pkt[40];
+	uint8_t ser_oscore_pkt[60];
 	uint32_t ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
 	memset(ser_coap_pkt_req1, 0, ser_coap_pkt_req1_len);
 	memset(ser_oscore_pkt, 0, ser_oscore_pkt_len);
@@ -656,7 +665,7 @@ void t10_oscore_client_server_after_reboot(void)
 
 	PRINT_ARRAY("OSCORE req1", ser_oscore_pkt, ser_oscore_pkt_len);
 
-	uint8_t ser_conv_coap_pkt[40];
+	uint8_t ser_conv_coap_pkt[60];
 	uint32_t ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
 
 	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
@@ -700,12 +709,26 @@ void t10_oscore_client_server_after_reboot(void)
 	r = coap2oscore(ser_coap_pkt_resp1, ser_coap_pkt_resp1_len,
 			ser_oscore_pkt, &ser_oscore_pkt_len, &c_server);
 	zassert_equal(r, ok, "Error in coap2oscore!");
+	const uint8_t EXPECTED_OSCORE[] = { 0x61, 0x44, 0x00, 0x00, 0x4A, 0x93,
+					    0x09, 0x00, 0x01, 0xFF, 0x89, 0x5F,
+					    0xA4, 0xEC, 0xFF, 0xE9, 0xDB, 0x50,
+					    0x07, 0xD8, 0xC2, 0x7C, 0x33, 0xDC,
+					    0x37, 0x9B, 0x51, 0x32, 0x61, 0x7F,
+					    0xD5, 0xB2, 0xB6, 0xB7 };
+	zassert_mem_equal__(ser_oscore_pkt, EXPECTED_OSCORE,
+			    sizeof(EXPECTED_OSCORE), "coap2oscore failed");
 
 	ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
 	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
 			&ser_conv_coap_pkt_len, &c_client);
 
 	zassert_equal(r, ok, "Error in oscore2coap!");
+	const uint8_t EXPECTED_COAP[] = { 0x61, 0x81, 0x00, 0x00, 0x4A,
+					  0xEC, 0xFF, 0xEF, 0x00, 0x01,
+					  0x02, 0x03, 0x04, 0x05, 0x06,
+					  0x07, 0x08, 0x09, 0x10, 0x11 };
+	zassert_mem_equal__(ser_conv_coap_pkt, EXPECTED_COAP,
+			    sizeof(EXPECTED_COAP), "oscore2coap failed");
 
 	/*
 	 *
@@ -714,7 +737,7 @@ void t10_oscore_client_server_after_reboot(void)
 	 */
 	PRINT_MSG("\n\n |------ Request with ECHO option---->| \n\n");
 	token[0] = 0x4b;
-	uint8_t ser_coap_pkt_req2[40];
+	uint8_t ser_coap_pkt_req2[60];
 	uint32_t ser_coap_pkt_req2_len = sizeof(ser_coap_pkt_req2);
 	memset(ser_coap_pkt_req2, 0, ser_coap_pkt_req2_len);
 	ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
@@ -729,12 +752,18 @@ void t10_oscore_client_server_after_reboot(void)
 			.MID = 0x0
 		},
 		.token = token,
-		.options_cnt = 1,
+		.options_cnt = 2,
 		.options = {
-                        { .delta = 252,
-                        .len = sizeof(echo_opt_val),
-                        .value = echo_opt_val,
-                        .option_number = ECHO},/*E, opt num 252*/
+					    { 
+							.delta = 11,
+                        	.len = sizeof(uri_path_val),
+                        	.value = uri_path_val,
+                        	.option_number = URI_PATH},/*E, opt num 11*/
+                        { 
+							.delta = 241,
+                        	.len = sizeof(echo_opt_val),
+                        	.value = echo_opt_val,
+                        	.option_number = ECHO},/*ECHO, opt num 252*/
                    },
 		.payload_len = 0,
 		.payload = NULL,
@@ -749,6 +778,15 @@ void t10_oscore_client_server_after_reboot(void)
 	r = coap2oscore(ser_coap_pkt_req2, ser_coap_pkt_req2_len,
 			ser_oscore_pkt, &ser_oscore_pkt_len, &c_client);
 	zassert_equal(r, ok, "Error in coap2oscore!");
+	const uint8_t EXPECTED_OSCORE1[] = {
+		0x41, 0x02, 0x00, 0x00, 0x4B, 0x92, 0x09, 0x01, 0xFF,
+		0x19, 0x4F, 0x30, 0x46, 0xD9, 0xC0, 0xA3, 0x38, 0x20,
+		0xC1, 0xF0, 0x5E, 0x5C, 0x52, 0xC9, 0xCB, 0x8C, 0x73,
+		0x3D, 0xAF, 0xA8, 0x39, 0x41, 0xDA, 0x72, 0x4B, 0x54,
+		0x02, 0xB4, 0xB0, 0xB9, 0xB3, 0x60, 0x18, 0x7B
+	};
+	zassert_mem_equal__(ser_oscore_pkt, EXPECTED_OSCORE1,
+			    sizeof(EXPECTED_OSCORE1), "coap2oscore failed");
 
 	PRINT_ARRAY("OSCORE req2", ser_oscore_pkt, ser_oscore_pkt_len);
 
@@ -758,4 +796,60 @@ void t10_oscore_client_server_after_reboot(void)
 			&ser_conv_coap_pkt_len, &c_server);
 
 	zassert_equal(r, 0, "Error in oscore2coap!");
+	const uint8_t EXPECTED_COAP1[] = { 0x41, 0x01, 0x00, 0x00, 0x4B, 0xBB,
+					   0x74, 0x65, 0x6D, 0x70, 0x65, 0x72,
+					   0x61, 0x74, 0x75, 0x72, 0x65, 0xDC,
+					   0xE4, 0x00, 0x01, 0x02, 0x03, 0x04,
+					   0x05, 0x06, 0x07, 0x08, 0x09, 0x10,
+					   0x11 };
+	zassert_mem_equal__(ser_conv_coap_pkt, EXPECTED_COAP1,
+			    sizeof(EXPECTED_COAP1), "oscore2coap failed");
+
+	/*
+	 * 
+	 * Normal response
+	 * 
+	 */
+	PRINT_MSG("\n\n |<------response2 ----| \n\n");
+	uint8_t ser_coap_pkt_resp2[40];
+	uint32_t ser_coap_pkt_resp2_len = sizeof(ser_coap_pkt_resp2);
+	ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
+	uint8_t payload[] = { 0xde, 0xad, 0xbe, 0xaf };
+
+	struct o_coap_packet coap_pkt_resp2 = {
+		.header = { .ver = 1,
+			    .type = TYPE_ACK,
+			    .TKL = 1,
+			    .code = CODE_RESP_CONTENT,
+			    .MID = 0x0 },
+		.token = token,
+		.options_cnt = 0,
+		.options = {},
+		.payload_len = sizeof(payload),
+		.payload = payload,
+	};
+
+	r = coap2buf(&coap_pkt_resp2, ser_coap_pkt_resp2,
+		     &ser_coap_pkt_resp2_len);
+	zassert_equal(r, ok,
+		      "Error in coap2buf during req2 packet serialization!");
+	r = coap2oscore(ser_coap_pkt_resp2, ser_coap_pkt_resp2_len,
+			ser_oscore_pkt, &ser_oscore_pkt_len, &c_server);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+	const uint8_t EXPECTED_OSCORE2[] = { 0x61, 0x44, 0x00, 0x00, 0x4B, 0x90,
+					     0xFF, 0x47, 0x43, 0xA4, 0xED, 0xAC,
+					     0xDB, 0xFF, 0x8F, 0xE2, 0xA0, 0x5A,
+					     0xE7, 0xCA, 0xD7 };
+	zassert_mem_equal__(ser_oscore_pkt, EXPECTED_OSCORE2,
+			    sizeof(EXPECTED_OSCORE2), "coap2oscore failed");
+
+	ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
+	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
+			&ser_conv_coap_pkt_len, &c_client);
+
+	zassert_equal(r, ok, "Error in oscore2coap!");
+	const uint8_t EXPECTED_COAP2[] = { 0x61, 0x45, 0x00, 0x00, 0x4B,
+					   0xFF, 0xDE, 0xAD, 0xBE, 0xAF };
+	zassert_mem_equal__(ser_conv_coap_pkt, EXPECTED_COAP2,
+			    sizeof(EXPECTED_COAP2), "oscore2coap failed");
 }

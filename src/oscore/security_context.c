@@ -20,6 +20,7 @@
 #include "oscore/oscore_coap.h"
 #include "oscore/oscore_hkdf_info.h"
 #include "oscore/security_context.h"
+#include "oscore/nvm.h"
 
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"
@@ -139,7 +140,7 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	c->sc.sender_key.len = sizeof(c->sc.sender_key_buf);
 	c->sc.sender_key.ptr = c->sc.sender_key_buf;
 	TRY(derive_sender_key(&c->cc, &c->sc));
-	c->sc.sender_seq_num = 0;
+	TRY(ssn_init(params->fresh_master_secret_salt, c));
 
 	/*set up the request response context**********************************/
 	c->rrc.nonce.len = sizeof(c->rrc.nonce_buf);
