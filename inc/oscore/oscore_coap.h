@@ -17,6 +17,7 @@
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
+#define MAX_TOKEN_LEN 8
 #define MAX_PIV_LEN 5
 #define MAX_KID_CONTEXT_LEN                                                    \
 	8 /*This implementation supports Context IDs up to 8 byte*/
@@ -60,6 +61,7 @@
 #define CODE_REQ_FETCH 0x05
 #define CODE_RESP_CHANGED 0x44
 #define CODE_RESP_CONTENT 0x45
+#define CODE_RESP_UNAUTHORIZED 0x81
 #define REQUEST_CLASS 0x00
 
 #define OPTION_PAYLOAD_MARKER 0xFF

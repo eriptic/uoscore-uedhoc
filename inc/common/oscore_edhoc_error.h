@@ -55,6 +55,7 @@ enum err {
 	not_oscore_pkt = 200,
 	first_request_after_reboot = 201,
 	oscore_unknown_hkdf = 202,
+	token_mismatch = 203,
 	oscore_invalid_algorithm_aead = 204,
 	oscore_invalid_algorithm_hkdf = 205,
 	oscore_kid_recipient_id_mismatch = 206,
@@ -69,7 +70,7 @@ enum err {
 	oscore_replay_window_protection_error = 219,
 	oscore_replay_notification_protection_error = 220,
 	no_echo_option = 221,
-	echo_val_replied = 222,
+	echo_val_mismatch = 222,
 };
 
 /*This macro checks if a function returns an error and if so it propages 

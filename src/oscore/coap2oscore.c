@@ -545,45 +545,109 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	struct oscore_option oscore_option;
 	oscore_option.option_number = OSCORE;
 
-	/*
-    * If the packet is a request or a response with an observe option:
-	*	* the OSCORE option has a value 
-    *	* nonce needs to be generated
-    */
 	bool request = is_request(&o_coap_pkt);
-	if (request || is_observe(u_options, u_options_cnt) || c->rrc.reboot) {
-		BYTE_ARRAY_NEW(piv, MAX_PIV_LEN, MAX_PIV_LEN);
+	BYTE_ARRAY_NEW(piv, MAX_PIV_LEN, MAX_PIV_LEN);
+	if (request) {
+		/*a client prepares a request*/
 		TRY(sender_seq_num2piv(c->sc.sender_seq_num++, &piv));
-
-		/*in case of request update request_piv and request_kid*/
 		TRY(update_request_piv_request_kid(c, &piv, &c->sc.sender_id,
 						   request));
+		TRY(cache_request_token(&c->rrc.token_request,
+					o_coap_pkt.header.TKL, o_coap_pkt.token,
+					request));
 
-		/*in case of first response after reboot save ECHO option*/
-		if (c->rrc.reboot && !request) {
-			TRY(cache_echo_val(&c->rrc.echo_opt_val, e_options,
-					   e_options_cnt));
-			c->rrc.reboot = false;
-		}
-
-		/*compute nonce*/
 		TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,
 				 &c->rrc.nonce));
 
 		/*compute the OSCORE option value*/
 		oscore_option.len = get_oscore_opt_val_len(
 			&piv, &c->sc.sender_id, &c->cc.id_context);
-		if (oscore_option.len > OSCORE_OPT_VALUE_LEN) {
-			return oscore_valuelen_to_long_error;
-		}
-
+		TRY(check_buffer_size(OSCORE_OPT_VALUE_LEN, oscore_option.len));
 		oscore_option.value = oscore_option.buf;
 		TRY(oscore_option_generate(&piv, &c->sc.sender_id,
 					   &c->cc.id_context, &oscore_option));
+
+	} else if (c->rrc.second_req_expected) {
+		/* A server prepares a response to first request after reboot.*/
+		TRY(cache_echo_val(&c->rrc.echo_opt_val, e_options,
+				   e_options_cnt));
+
+		/*Note that even if this is a response the the server
+		 MUST use its Partial IV when generating the AEAD nonce and MUST
+		 include the Partial IV in the response, see Appendix B.1.2*/
+		TRY(sender_seq_num2piv(c->sc.sender_seq_num++, &piv));
+
+		TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,
+				 &c->rrc.nonce));
+
+		/*compute the OSCORE option value*/
+		oscore_option.len = get_oscore_opt_val_len(
+			&piv, &c->sc.sender_id, &c->cc.id_context);
+		TRY(check_buffer_size(OSCORE_OPT_VALUE_LEN, oscore_option.len));
+		oscore_option.value = oscore_option.buf;
+		TRY(oscore_option_generate(&piv, &c->sc.sender_id,
+					   &c->cc.id_context, &oscore_option));
+	} else if (is_observe(u_options, u_options_cnt)) {
+		/*A server prepares a notification (response) to a observe registration.
+		 However not the first response*/
+		TRY(sender_seq_num2piv(c->sc.sender_seq_num++, &piv));
+
+		TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,
+				 &c->rrc.nonce));
+
+		/*compute the OSCORE option value*/
+		oscore_option.len = get_oscore_opt_val_len(
+			&piv, &c->sc.sender_id, &c->cc.id_context);
+		TRY(check_buffer_size(OSCORE_OPT_VALUE_LEN, oscore_option.len));
+		oscore_option.value = oscore_option.buf;
+		TRY(oscore_option_generate(&piv, &c->sc.sender_id,
+					   &c->cc.id_context, &oscore_option));
+
 	} else {
+		/* A server prepares a response to a regular request. 
+		However not the first response.*/
 		oscore_option.len = 0;
 		oscore_option.value = NULL;
 	}
+
+	// if (request || is_observe(u_options, u_options_cnt) ||
+	//     c->rrc.second_req_expected) {
+	// 	BYTE_ARRAY_NEW(piv, MAX_PIV_LEN, MAX_PIV_LEN);
+	// 	TRY(sender_seq_num2piv(c->sc.sender_seq_num++, &piv));
+
+	// 	/*in case of request update request_piv and request_kid*/
+	// 	TRY(update_request_piv_request_kid(c, &piv, &c->sc.sender_id,
+	// 					   request));
+	// 	/*in case of request cache the token */
+	// 	TRY(cache_request_token(&c->rrc.token_request,
+	// 				o_coap_pkt.header.TKL,
+	// 				o_coap_pkt.token, request));
+
+	// 	/*in case of first response after reboot save ECHO option*/
+	// 	if (c->rrc.second_req_expected && !request) {
+	// 		TRY(cache_echo_val(&c->rrc.echo_opt_val, e_options,
+	// 				   e_options_cnt));
+	// 		c->rrc.reboot = false;
+	// 	}
+
+	// 	/*compute nonce*/
+	// 	TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,
+	// 			 &c->rrc.nonce));
+
+	// 	/*compute the OSCORE option value*/
+	// 	oscore_option.len = get_oscore_opt_val_len(
+	// 		&piv, &c->sc.sender_id, &c->cc.id_context);
+	// 	if (oscore_option.len > OSCORE_OPT_VALUE_LEN) {
+	// 		return oscore_valuelen_to_long_error;
+	// 	}
+
+	// 	oscore_option.value = oscore_option.buf;
+	// 	TRY(oscore_option_generate(&piv, &c->sc.sender_id,
+	// 				   &c->cc.id_context, &oscore_option));
+	// } else {
+	// 	oscore_option.len = 0;
+	// 	oscore_option.value = NULL;
+	// }
 
 	BYTE_ARRAY_NEW(aad, MAX_AAD_LEN, MAX_AAD_LEN);
 	TRY(create_aad(NULL, 0, c->cc.aead_alg, &c->rrc.request_kid,

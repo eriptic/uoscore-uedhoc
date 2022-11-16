@@ -350,7 +350,7 @@ void t8_oscore_server_response_simple_ack(void)
 }
 
 /**
- * @brief	This function test the behavior of a server and a client a typical
+ * @brief	This function test the behavior of a server and a client in a typical
  * 			observe exchange as depicted:
  *
  *			client					server
@@ -408,6 +408,8 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 	};
 	r = oscore_context_init(&params_server, &c_server);
 	zassert_equal(r, ok, "Error in oscore_context_init for server");
+	/*we test the general case not the case after reboot*/
+	c_server.rrc.reboot = false;
 
 	/*
 	 *
@@ -544,4 +546,216 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 
 	PRINT_ARRAY("Converted CoAP observe notification", ser_conv_coap_pkt,
 		    ser_conv_coap_pkt_len);
+}
+
+/**
+ * @brief	This function test the behavior of a server and a client after reboot:
+ *
+ *			    client				 				 server
+ *			    ---------			        		---------
+ *					|                                   |
+ *					|------request--------------------->|
+ *					|              		            	|
+ *					|<-----response with ECHO option----|
+ *					|------request with ECHO option---->|
+ *					|                                   |
+ *					|------request--------------------->|
+ * 					|<-----response---------------------|
+ *
+ * 			See as RFC8613 Appendix B1.2 and RFC9175
+ */
+void t10_oscore_client_server_after_reboot(void)
+{
+	/*
+	 *
+	 * Initialize contexts for the client and server
+	 *
+	 */
+	enum err r;
+	struct context c_client;
+	struct oscore_init_params params_client = {
+		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
+		.master_secret.len = T1__MASTER_SECRET_LEN,
+		.sender_id.ptr = (uint8_t *)T1__SENDER_ID,
+		.sender_id.len = T1__SENDER_ID_LEN,
+		.recipient_id.ptr = (uint8_t *)T1__RECIPIENT_ID,
+		.recipient_id.len = T1__RECIPIENT_ID_LEN,
+		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
+		.master_salt.len = T1__MASTER_SALT_LEN,
+		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
+		.id_context.len = T1__ID_CONTEXT_LEN,
+		.aead_alg = OSCORE_AES_CCM_16_64_128,
+		.hkdf = OSCORE_SHA_256,
+	};
+	r = oscore_context_init(&params_client, &c_client);
+	zassert_equal(r, ok, "Error in oscore_context_init for client");
+
+	struct context c_server;
+	struct oscore_init_params params_server = {
+		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
+		.master_secret.len = T1__MASTER_SECRET_LEN,
+		.recipient_id.ptr = (uint8_t *)T1__SENDER_ID,
+		.recipient_id.len = T1__SENDER_ID_LEN,
+		.sender_id.ptr = (uint8_t *)T1__RECIPIENT_ID,
+		.sender_id.len = T1__RECIPIENT_ID_LEN,
+		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
+		.master_salt.len = T1__MASTER_SALT_LEN,
+		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
+		.id_context.len = T1__ID_CONTEXT_LEN,
+		.aead_alg = OSCORE_AES_CCM_16_64_128,
+		.hkdf = OSCORE_SHA_256,
+	};
+	r = oscore_context_init(&params_server, &c_server);
+	zassert_equal(r, ok, "Error in oscore_context_init for server");
+
+	/*
+	 *
+	 * First request
+	 *
+	 */
+	PRINT_MSG("\n\n |------ first request---->| \n\n");
+	uint8_t uri_path_val[] = { 't', 'e', 'm', 'p', 'e', 'r',
+				   'a', 't', 'u', 'r', 'e' };
+	uint8_t token[] = { 0x4a };
+	uint8_t ser_coap_pkt_req1[40];
+	uint32_t ser_coap_pkt_req1_len = sizeof(ser_coap_pkt_req1);
+	uint8_t ser_oscore_pkt[40];
+	uint32_t ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
+	memset(ser_coap_pkt_req1, 0, ser_coap_pkt_req1_len);
+	memset(ser_oscore_pkt, 0, ser_oscore_pkt_len);
+
+	struct o_coap_packet coap_pkt_req1 = {
+		.header = {
+			.ver = 1,
+			.type = TYPE_CON,
+			.TKL = 1,
+			.code = CODE_REQ_GET,
+			.MID = 0x0
+		},
+		.token = token,
+		.options_cnt = 1,
+		.options = {
+                        { .delta = 11,
+                        .len = sizeof(uri_path_val),
+                        .value = uri_path_val,
+                        .option_number = URI_PATH},/*E, opt num 11*/
+                   },
+		.payload_len = 0,
+		.payload = NULL,
+	};
+
+	r = coap2buf(&coap_pkt_req1, ser_coap_pkt_req1, &ser_coap_pkt_req1_len);
+	zassert_equal(r, ok,
+		      "Error in coap2buf during req1 packet serialization!");
+
+	PRINT_ARRAY("CoAP  req1", ser_coap_pkt_req1, ser_coap_pkt_req1_len);
+
+	r = coap2oscore(ser_coap_pkt_req1, ser_coap_pkt_req1_len,
+			ser_oscore_pkt, &ser_oscore_pkt_len, &c_client);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	PRINT_ARRAY("OSCORE req1", ser_oscore_pkt, ser_oscore_pkt_len);
+
+	uint8_t ser_conv_coap_pkt[40];
+	uint32_t ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
+
+	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
+			&ser_conv_coap_pkt_len, &c_server);
+
+	zassert_equal(r, first_request_after_reboot, "Error in oscore2coap!");
+
+	/*
+	*
+	* Response with ECHO option
+	*
+	*
+	*/
+	PRINT_MSG("\n\n |<------response1 with ECHO option----| \n\n");
+	uint8_t ser_coap_pkt_resp1[40];
+	uint32_t ser_coap_pkt_resp1_len = sizeof(ser_coap_pkt_resp1);
+	ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
+	uint8_t echo_opt_val[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+				   0x06, 0x07, 0x08, 0x09, 0x10, 0x11 };
+
+	struct o_coap_packet coap_pkt_resp1 = {
+		.header = { .ver = 1,
+			    .type = TYPE_ACK,
+			    .TKL = 1,
+			    .code = CODE_RESP_UNAUTHORIZED,
+			    .MID = 0x0 },
+		.token = token,
+		.options_cnt = 1,
+		.options = { { .delta = 252,
+			       .len = sizeof(echo_opt_val),
+			       .value = echo_opt_val,
+			       .option_number = ECHO } },
+		.payload_len = 0,
+		.payload = NULL,
+	};
+
+	r = coap2buf(&coap_pkt_resp1, ser_coap_pkt_resp1,
+		     &ser_coap_pkt_resp1_len);
+	zassert_equal(r, ok,
+		      "Error in coap2buf during req1 packet serialization!");
+	r = coap2oscore(ser_coap_pkt_resp1, ser_coap_pkt_resp1_len,
+			ser_oscore_pkt, &ser_oscore_pkt_len, &c_server);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
+	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
+			&ser_conv_coap_pkt_len, &c_client);
+
+	zassert_equal(r, ok, "Error in oscore2coap!");
+
+	/*
+	 *
+	 * Request with ECHO option
+	 *
+	 */
+	PRINT_MSG("\n\n |------ Request with ECHO option---->| \n\n");
+	token[0] = 0x4b;
+	uint8_t ser_coap_pkt_req2[40];
+	uint32_t ser_coap_pkt_req2_len = sizeof(ser_coap_pkt_req2);
+	memset(ser_coap_pkt_req2, 0, ser_coap_pkt_req2_len);
+	ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
+	memset(ser_oscore_pkt, 0, ser_oscore_pkt_len);
+
+	struct o_coap_packet coap_pkt_req2 = {
+		.header = {
+			.ver = 1,
+			.type = TYPE_CON,
+			.TKL = 1,
+			.code = CODE_REQ_GET,
+			.MID = 0x0
+		},
+		.token = token,
+		.options_cnt = 1,
+		.options = {
+                        { .delta = 252,
+                        .len = sizeof(echo_opt_val),
+                        .value = echo_opt_val,
+                        .option_number = ECHO},/*E, opt num 252*/
+                   },
+		.payload_len = 0,
+		.payload = NULL,
+	};
+
+	r = coap2buf(&coap_pkt_req2, ser_coap_pkt_req2, &ser_coap_pkt_req2_len);
+	zassert_equal(r, ok,
+		      "Error in coap2buf during req1 packet serialization!");
+
+	PRINT_ARRAY("CoAP  req2", ser_coap_pkt_req2, ser_coap_pkt_req2_len);
+
+	r = coap2oscore(ser_coap_pkt_req2, ser_coap_pkt_req2_len,
+			ser_oscore_pkt, &ser_oscore_pkt_len, &c_client);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	PRINT_ARRAY("OSCORE req2", ser_oscore_pkt, ser_oscore_pkt_len);
+
+	ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
+
+	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
+			&ser_conv_coap_pkt_len, &c_server);
+
+	zassert_equal(r, 0, "Error in oscore2coap!");
 }

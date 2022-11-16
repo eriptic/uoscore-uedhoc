@@ -158,6 +158,7 @@ enum err cache_echo_val(struct byte_array *dest, struct o_coap_option *options,
 {
 	for (uint8_t i = 0; i < options_cnt; i++) {
 		if (options[i].option_number == ECHO) {
+			PRINT_MSG("Caching the ECHO value!\n");
 			TRY(_memcpy_s(dest->ptr, dest->len, options[i].value,
 				      options[i].len));
 			return ok;
@@ -334,11 +335,12 @@ enum err echo_val_is_fresh(struct byte_array *cache_val,
 	for (uint8_t i = 0; i < E_options_cnt; i++) {
 		if (E_options[i].option_number == ECHO) {
 			if (cache_val->len == E_options[i].len &&
-			    !memcmp(E_options[i].value, cache_val->ptr,
-				    cache_val->len)) {
+			    0 == memcmp(E_options[i].value, cache_val->ptr,
+					cache_val->len)) {
+				PRINT_MSG("ECHO option check -- OK\n");
 				return ok;
 			} else {
-				return echo_val_replied;
+				return echo_val_mismatch;
 			}
 		}
 	}
