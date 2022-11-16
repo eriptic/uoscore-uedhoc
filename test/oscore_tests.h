@@ -20,7 +20,7 @@ void t4_oscore_server_key_derivation(void);
 void t6_oscore_server_key_derivation(void);
 void t8_oscore_server_response_simple_ack(void);
 void t9_oscore_client_server_registration_two_notifications_cancellation(void);
-
+void t10_oscore_client_server_after_reboot(void);
 
 /*unit tests*/
 void t100_inner_outer_option_split__no_special_options(void);

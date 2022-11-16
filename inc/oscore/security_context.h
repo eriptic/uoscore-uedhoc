@@ -73,6 +73,9 @@ struct req_resp_context {
 	struct byte_array echo_opt_val;
 	uint8_t echo_opt_val_buf[ECHO_OPT_VALUE_LEN];
 
+	struct byte_array token_request;
+	uint8_t token_request_bug[MAX_TOKEN_LEN];
+
 	bool reboot;
 	bool second_req_expected;
 };
@@ -98,4 +101,9 @@ enum err update_request_piv_request_kid(struct context *c,
 					struct byte_array *kid,
 					bool is_request);
 
+enum err cache_request_token(struct byte_array *dest_token, uint8_t tkl,
+			     uint8_t *token, bool is_request);
+
+enum err verify_token(struct byte_array *cached_token, uint8_t tkl,
+		      uint8_t *token);
 #endif
