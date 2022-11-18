@@ -550,8 +550,9 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	BYTE_ARRAY_NEW(piv, MAX_PIV_LEN, MAX_PIV_LEN);
 	if (request) {
 		/*a client prepares a request*/
-		TRY(ssn_store_in_nvm(c));
-		TRY(sender_seq_num2piv(c->sc.sender_seq_num++, &piv));
+		TRY(ssn_store_in_nvm(&c->sc.sender_id, c->sc.ssn,
+				     c->sc.ssn_in_nvm));
+		TRY(ssn2piv(c->sc.ssn++, &piv));
 
 		TRY(update_request_piv_request_kid(c, &piv, &c->sc.sender_id,
 						   request));
@@ -575,11 +576,12 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 		TRY(cache_echo_val(&c->rrc.echo_opt_val, e_options,
 				   e_options_cnt));
 
-		/*Note that even if this is a response the the server
+		/*Note that even if this is a response the server
 		 MUST use its Partial IV when generating the AEAD nonce and MUST
 		 include the Partial IV in the response, see Appendix B.1.2*/
-		TRY(ssn_store_in_nvm(c));
-		TRY(sender_seq_num2piv(c->sc.sender_seq_num++, &piv));
+		TRY(ssn_store_in_nvm(&c->sc.sender_id, c->sc.ssn,
+				     c->sc.ssn_in_nvm));
+		TRY(ssn2piv(c->sc.ssn++, &piv));
 
 		TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,
 				 &c->rrc.nonce));
@@ -594,8 +596,9 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	} else if (is_observe(u_options, u_options_cnt)) {
 		/*A server prepares a notification (response) to a observe registration.
 		 However not the first response*/
-		TRY(ssn_store_in_nvm(c));
-		TRY(sender_seq_num2piv(c->sc.sender_seq_num++, &piv));
+		TRY(ssn_store_in_nvm(&c->sc.sender_id, c->sc.ssn,
+				     c->sc.ssn_in_nvm));
+		TRY(ssn2piv(c->sc.ssn++, &piv));
 
 		TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,
 				 &c->rrc.nonce));

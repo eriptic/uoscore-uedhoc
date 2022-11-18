@@ -412,24 +412,17 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 						    &oscore_packet));
 			}
 		} else {
-			if (is_observe(oscore_packet.options,
-				       oscore_packet.options_cnt)) {
-				PRINT_MSG(
-					"Observe notification without PIV received\n");
-				//TODO add handling here
-			} else {
-				/*compute AAD*/
-				uint8_t aad_buf[MAX_AAD_LEN];
-				struct byte_array aad = BYTE_ARRAY_INIT(
-					aad_buf, sizeof(aad_buf));
-				TRY(create_aad(NULL, 0, c->cc.aead_alg,
-					       &c->rrc.request_kid,
-					       &c->rrc.request_piv, &aad));
+			/*compute AAD*/
+			uint8_t aad_buf[MAX_AAD_LEN];
+			struct byte_array aad =
+				BYTE_ARRAY_INIT(aad_buf, sizeof(aad_buf));
+			TRY(create_aad(NULL, 0, c->cc.aead_alg,
+				       &c->rrc.request_kid, &c->rrc.request_piv,
+				       &aad));
 
-				/* Decrypt payload */
-				TRY(payload_decrypt(c, &aad, &plaintext,
-						    &oscore_packet));
-			}
+			/* Decrypt payload */
+			TRY(payload_decrypt(c, &aad, &plaintext,
+					    &oscore_packet));
 		}
 	}
 
