@@ -8,7 +8,11 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
+#ifndef OSCORE_TEST_VECTORS_H
+#define OSCORE_TEST_VECTORS_H
+
 #include "oscore.h"
+
 
 /**
  * Test 1:
@@ -355,3 +359,5 @@ uint8_t T8__MASTER_SALT_LEN = sizeof(T2__MASTER_SALT);
 /*Simple ACK message (code 0=EMPTY, type 2=ACK, no payload).*/
 const uint8_t T8__COAP_ACK[] = { 0x60, 0x00, 0x45, 0x69 };
 uint8_t T8__COAP_ACK_LEN = sizeof(T8__COAP_ACK);
+
+#endif

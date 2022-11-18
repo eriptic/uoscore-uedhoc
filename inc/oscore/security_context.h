@@ -44,7 +44,8 @@ struct sender_context {
 	uint8_t sender_id_buf[7];
 	struct byte_array sender_key;
 	uint8_t sender_key_buf[SENDER_KEY_LEN_];
-	uint64_t sender_seq_num;
+	uint64_t ssn;
+	bool ssn_in_nvm;
 };
 
 /* Recipient Context used to decrypt inbound messages */
@@ -94,7 +95,7 @@ struct context {
  * @param   ssn the sender sequence number
  * @param   piv Partial IV
  */
-enum err sender_seq_num2piv(uint64_t ssn, struct byte_array *piv);
+enum err ssn2piv(uint64_t ssn, struct byte_array *piv);
 
 enum err update_request_piv_request_kid(struct context *c,
 					struct byte_array *piv,

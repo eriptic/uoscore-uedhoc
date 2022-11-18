@@ -35,7 +35,7 @@ void t1_oscore_client_request_response(void)
 		.id_context.len = T1__ID_CONTEXT_LEN,
 		.aead_alg = OSCORE_AES_CCM_16_64_128,
 		.hkdf = OSCORE_SHA_256,
-		.fresh_master_secret_salt = true,
+		.fresh_master_secret_salt = false,
 	};
 
 	r = oscore_context_init(&params, &c_client);
@@ -47,7 +47,7 @@ void t1_oscore_client_request_response(void)
     during normal operation the sender sequence number is
     increased automatically after every sending
     */
-	c_client.sc.sender_seq_num = 20;
+	//c_client.sc.ssn = 20;
 
 	uint8_t buf_oscore[256];
 	uint32_t buf_oscore_len = sizeof(buf_oscore);
@@ -117,7 +117,7 @@ void t3_oscore_client_request(void)
     during normal operation the sender sequence number is
     increased automatically after every sending
     */
-	c_client.sc.sender_seq_num = 20;
+	c_client.sc.ssn = 20;
 
 	uint8_t buf_oscore[256];
 	uint32_t buf_oscore_len = sizeof(buf_oscore);
@@ -165,7 +165,7 @@ void t5_oscore_client_request(void)
     during normal operation the sender sequence number is
     increased automatically after every sending
     */
-	c_client.sc.sender_seq_num = 20;
+	c_client.sc.ssn = 20;
 
 	uint8_t buf_oscore[256];
 	uint32_t buf_oscore_len = sizeof(buf_oscore);
@@ -360,15 +360,14 @@ void t8_oscore_server_response_simple_ack(void)
  * @brief	This function test the behavior of a server and a client in a typical
  * 			observe exchange as depicted:
  *
- *			client					server
- *			---------				---------
- *				|						|
- *				|------registration---->|
- *				|						|
- *				|<-----notification1----|
- *				|<-----notification2----|
- *				|						|
- *				|------cancellation---->|
+ *			client							server
+ *			---------						---------
+ *				|								|
+ *				|------registration------------>|
+ *				|								|
+ *				|<-----notification1------------|
+ * rejected msg	| x---replayed notification1----|
+ *				|								|
  *
  * 			See as well Appendix A.1. in RFC7641
  */
@@ -475,6 +474,15 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 			ser_coap_pkt_registration_len, ser_oscore_pkt,
 			&ser_oscore_pkt_len, &c_client);
 	zassert_equal(r, ok, "Error in coap2oscore!");
+	uint8_t EXPECTED_OSCORE_REGISTRATION[] = {
+		0x41, 0x05, 0x00, 0x00, 0x4A, 0x61, 0x00, 0x32, 0x09,
+		0x00, 0xFF, 0xAE, 0x58, 0x5E, 0x2E, 0x65, 0x89, 0x40,
+		0xE6, 0xDB, 0xF4, 0xB7, 0x08, 0xB7, 0x93, 0x37, 0x03,
+		0x41, 0x1E, 0x50, 0x8E, 0xEA, 0x79, 0x70
+	};
+	zassert_mem_equal__(&ser_oscore_pkt, EXPECTED_OSCORE_REGISTRATION,
+			    sizeof(EXPECTED_OSCORE_REGISTRATION),
+			    "coap2oscore failed");
 
 	PRINT_ARRAY("OSCORE observe registration", ser_oscore_pkt,
 		    ser_oscore_pkt_len);
@@ -484,8 +492,10 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 
 	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
 			&ser_conv_coap_pkt_len, &c_server);
-
 	zassert_equal(r, ok, "Error in oscore2coap!");
+	/*check if we recovered the coap packet that the client sent*/
+	zassert_mem_equal__(ser_coap_pkt_registration, ser_conv_coap_pkt,
+			    ser_conv_coap_pkt_len, "oscore2coap failed");
 
 	PRINT_ARRAY("Converted CoAP observe registration", ser_conv_coap_pkt,
 		    ser_conv_coap_pkt_len);
@@ -543,6 +553,14 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 			ser_coap_pkt_notification1_len, ser_oscore_pkt,
 			&ser_oscore_pkt_len, &c_server);
 	zassert_equal(r, ok, "Error in coap2oscore!");
+	uint8_t EXPECTED_OSCORE_NOTIFICATION1[] = {
+		0x61, 0x45, 0x00, 0x00, 0x4A, 0x63, 0x00, 0x00,
+		0x00, 0x33, 0x09, 0x00, 0x01, 0xFF, 0x4D, 0xD3,
+		0x4F, 0x59, 0x4E, 0x54, 0x7B, 0x25, 0x0E, 0x1B
+	};
+	zassert_mem_equal__(&ser_oscore_pkt, EXPECTED_OSCORE_NOTIFICATION1,
+			    sizeof(EXPECTED_OSCORE_NOTIFICATION1),
+			    "coap2oscore failed");
 
 	PRINT_ARRAY("OSCORE observe notification1", ser_oscore_pkt,
 		    ser_oscore_pkt_len);
@@ -552,13 +570,26 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
 			&ser_conv_coap_pkt_len, &c_client);
 
 	zassert_equal(r, ok, "Error in oscore2coap!");
+	uint8_t EXPECTED_CONVERTED_COAP[] = {
+		0x61, 0x45, 0x00, 0x00, 0x4A, 0x60
+	};
+	zassert_mem_equal__(&ser_conv_coap_pkt, EXPECTED_CONVERTED_COAP,
+			    sizeof(EXPECTED_CONVERTED_COAP),
+			    "oscore2coap failed");
 
 	PRINT_ARRAY("Converted CoAP observe notification", ser_conv_coap_pkt,
 		    ser_conv_coap_pkt_len);
+
+	/*try replay notification 1*/
+	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
+			&ser_conv_coap_pkt_len, &c_client);
+	zassert_equal(r, oscore_replay_notification_protection_error,
+		      "Error in oscore2coap!");
 }
 
 /**
- * @brief	This function test the behavior of a server and a client after reboot:
+ * @brief	This function test the behavior of a server and a client after 
+ * 			reboot and the rejection of a replayed request
  *
  *			    client				 				 server
  *			    ---------			        		---------
@@ -568,6 +599,9 @@ void t9_oscore_client_server_registration_two_notifications_cancellation(void)
  *					|              		            	|
  *					|------request with ECHO option---->|
  * 					|<-----response---------------------|
+ * 					|									|
+ * 					|------request--------------------->|
+ * 					|------replayed request----------X	| rejected message
  *
  * 			See as RFC8613 Appendix B1.2 and RFC9175
  */
@@ -680,6 +714,16 @@ void t10_oscore_client_server_after_reboot(void)
 	*
 	*/
 	PRINT_MSG("\n\n |<------response1 with ECHO option----| \n\n");
+
+	/*Test first the rejection of CoAP packets without an echo option*/
+	PRINT_MSG(
+		"Try first supplying a CoAP message without an ECHO option\n");
+	uint8_t COAP_PKT_WITHOUT_ECHO[] = { 0x61, 0x81, 0x00, 0x00, 0x4A };
+	r = coap2oscore(COAP_PKT_WITHOUT_ECHO, sizeof(COAP_PKT_WITHOUT_ECHO),
+			ser_oscore_pkt, &ser_oscore_pkt_len, &c_server);
+	zassert_equal(r, no_echo_option, "Error in coap2oscore!");
+
+	/* do it now the correct way -- with ECHO option*/
 	uint8_t ser_coap_pkt_resp1[40];
 	uint32_t ser_coap_pkt_resp1_len = sizeof(ser_coap_pkt_resp1);
 	ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
@@ -852,4 +896,65 @@ void t10_oscore_client_server_after_reboot(void)
 					   0xFF, 0xDE, 0xAD, 0xBE, 0xAF };
 	zassert_mem_equal__(ser_conv_coap_pkt, EXPECTED_COAP2,
 			    sizeof(EXPECTED_COAP2), "oscore2coap failed");
+
+	/*
+	 * 
+	 * Test replay protection on the server side 
+	 * 
+	 * 
+	*/
+	PRINT_MSG(
+		"\n\n |------ regular request (to be replayed later)---->| \n\n");
+	token[0] = 0x4a;
+	uint8_t ser_coap_pkt_req3[40];
+	uint32_t ser_coap_pkt_req3_len = sizeof(ser_coap_pkt_req3);
+	ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
+	memset(ser_coap_pkt_req3, 0, ser_coap_pkt_req3_len);
+	memset(ser_oscore_pkt, 0, ser_oscore_pkt_len);
+
+	struct o_coap_packet coap_pkt_req3 = {
+		.header = {
+			.ver = 1,
+			.type = TYPE_CON,
+			.TKL = 1,
+			.code = CODE_REQ_GET,
+			.MID = 0x0
+		},
+		.token = token,
+		.options_cnt = 1,
+		.options = {
+                        { .delta = 11,
+                        .len = sizeof(uri_path_val),
+                        .value = uri_path_val,
+                        .option_number = URI_PATH},/*E, opt num 11*/
+                   },
+		.payload_len = 0,
+		.payload = NULL,
+	};
+
+	r = coap2buf(&coap_pkt_req3, ser_coap_pkt_req3, &ser_coap_pkt_req3_len);
+	zassert_equal(r, ok,
+		      "Error in coap2buf during req1 packet serialization!");
+
+	PRINT_ARRAY("CoAP  req1", ser_coap_pkt_req3, ser_coap_pkt_req3_len);
+
+	r = coap2oscore(ser_coap_pkt_req3, ser_coap_pkt_req3_len,
+			ser_oscore_pkt, &ser_oscore_pkt_len, &c_client);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	PRINT_ARRAY("OSCORE req3", ser_oscore_pkt, ser_oscore_pkt_len);
+
+	ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
+
+	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
+			&ser_conv_coap_pkt_len, &c_server);
+
+	zassert_equal(r, ok, "Error in oscore2coap!");
+
+	/*try to replay the request*/
+	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
+			&ser_conv_coap_pkt_len, &c_server);
+
+	zassert_equal(r, oscore_replay_window_protection_error,
+		      "Error in oscore2coap!");
 }

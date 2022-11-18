@@ -144,7 +144,8 @@ enum err replay_protection_check_notification(uint64_t notification_num,
 	}
 
 	if (notification_num_initialized) {
-		if (notification_num > tmp) {
+		if (notification_num >= tmp) {
+			PRINT_MSG("Replayed notification detected!\n");
 			return oscore_replay_notification_protection_error;
 		}
 	}

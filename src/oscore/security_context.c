@@ -139,8 +139,9 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	c->sc.sender_id = params->sender_id;
 	c->sc.sender_key.len = sizeof(c->sc.sender_key_buf);
 	c->sc.sender_key.ptr = c->sc.sender_key_buf;
+	c->sc.ssn_in_nvm = !params->fresh_master_secret_salt;
+	TRY(ssn_init(&c->sc.sender_id, &c->sc.ssn, c->sc.ssn_in_nvm));
 	TRY(derive_sender_key(&c->cc, &c->sc));
-	TRY(ssn_init(params->fresh_master_secret_salt, c));
 
 	/*set up the request response context**********************************/
 	c->rrc.nonce.len = sizeof(c->rrc.nonce_buf);
@@ -192,7 +193,7 @@ enum err update_request_piv_request_kid(struct context *c,
 }
 
 //todo: how big is piv? 5 byte= 40 bit -> in that case the sender sequence number needs to loop at the value of 2^40 -1 !!! -> uint8_t is sufficient for the sender sequence number.
-enum err sender_seq_num2piv(uint64_t ssn, struct byte_array *piv)
+enum err ssn2piv(uint64_t ssn, struct byte_array *piv)
 {
 	uint8_t *p = (uint8_t *)&ssn;
 

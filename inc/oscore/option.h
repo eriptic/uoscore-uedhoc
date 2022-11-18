@@ -58,15 +58,6 @@ enum option_class {
 bool is_class_e(uint16_t code);
 
 /**
- * @brief Checks if an option belongs to a certain class
- * 
- * @param option_num the option number
- * @return true if the option belongs to a given class
- * @return false if the option does not belong to a given class
- */
-bool option_belongs_to_class(uint16_t option_num, enum option_class class);
-
-/**
  * @brief   Parses the passed options until the payload marker of end of 
  *          array and writes them into @a out.
  *          Returns the number of parsed options and writes the number of 
@@ -118,15 +109,6 @@ enum err encode_options(struct o_coap_option *options, uint16_t opt_num,
  * @param	options_cnt number of entries in the array
  */
 bool is_observe(struct o_coap_option *options, uint8_t options_cnt);
-
-/**
- * @brief	Checks if an array of options contains a observe option that 
- * 			indicates registration
- * @param	options pointer to an array of options. 
- * @param	options_cnt number of entries in the array
- */
-bool is_observe_registration(struct o_coap_option *options,
-			     uint8_t options_cnt);
 
 enum err cache_echo_val(struct byte_array *dest, struct o_coap_option *options,
 			uint8_t options_cnt);

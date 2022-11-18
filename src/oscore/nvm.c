@@ -15,46 +15,60 @@
 #include "common/oscore_edhoc_error.h"
 #include "common/print_util.h"
 
-enum err WEAK nvm_write_ssn(struct context *c)
+/**
+ * @brief   When the same OSCORE master secret and salt are reused through
+ * 			several reboots of the device, e.g., no fresh shared secret is
+ * 			derived through EDHOC (or some other method) the Sender Sequence 
+ * 			Number MUST be stored periodically in NVM. 
+ * @param	sender_id the user may use the sender_id as a key in a table in 
+ * 			NVM holding SSNs for different sender contexts. 
+ * @param	ssn the ssn to be written in NVM
+ * @retval	ok or error code if the retrieving the SSN was not possible.
+ */
+enum err WEAK nvm_write_ssn(const struct byte_array *sender_id, uint64_t ssn)
 {
 #warning "The nvm_write_ssn() function MUST be overwritten by user!!!\n"
 
 	return ok;
 }
 
-enum err ssn_store_in_nvm(struct context *c)
-{
-	if (0 == c->sc.sender_seq_num % K_SSN_NVM_STORE_INTERVAL) {
-		TRY(nvm_write_ssn(c));
-	}
-	return ok;
-}
-
 /**
- * @brief   When the same OSCORE master secret is reused through several 
- *          reboots of the device, i.e., no fresh shared secret is derived 
- *          through EDHOC (or some other method) the Sender Sequence Number 
- *          MUST be restored from NVM at each reboot in order to prevent 
- *          reusing the same nonce vor encrypting different plain texts. 
- * 
- * 
-*/
-enum err WEAK nvm_read_ssn(struct context *c)
+ * @brief   When the same OSCORE master secret and salt are reused through
+ * 			several reboots of the device, e.g., no fresh shared secret is
+ * 			derived through EDHOC (or some other method) the Sender Sequence 
+ * 			Number MUST be restored from NVM at each reboot in order to prevent 
+ *          reusing the same nonce for encrypting different plain texts. 
+ * @param	c the complete context. The user must use the context for 
+ * 			retrieving the corrsponding sender sequence number from NVM. 
+ * 			The retrievd value must be written in c->sc.ssn.
+ * @retval	ok or error code if the retrieving the SSN was not possible.
+ */
+enum err WEAK nvm_read_ssn(const struct byte_array *sender_id, uint64_t *ssn)
 {
 #warning "The nvm_read_ssn() function MUST be overwritten by user!!!\n"
-
+	*ssn = 0;
 	return ok;
 }
 
-enum err ssn_init(bool fresh_master_secret_salt, struct context *c)
+enum err ssn_store_in_nvm(const struct byte_array *sender_id, uint64_t ssn,
+			  bool ssn_in_nvm)
 {
-	if (fresh_master_secret_salt) {
-		c->sc.sender_seq_num = 0;
-	} else {
-		TRY(nvm_read_ssn(c));
-		c->sc.sender_seq_num +=
-			K_SSN_NVM_STORE_INTERVAL + F_NVM_MAX_WRITE_FAILURE;
+	if (ssn_in_nvm && (0 == ssn % K_SSN_NVM_STORE_INTERVAL)) {
+		TRY(nvm_write_ssn(sender_id, ssn));
 	}
-	PRINTF("SSN initialized. SSN = %llu\n", c->sc.sender_seq_num);
+	return ok;
+}
+
+enum err ssn_init(const struct byte_array *sender_id, uint64_t *ssn,
+		  bool ssn_in_nvm)
+{
+	if (!ssn_in_nvm) {
+		*ssn = 0;
+		PRINTF("SSN initialized not from NMV. SSN = %llu\n", *ssn);
+	} else {
+		TRY(nvm_read_ssn(sender_id, ssn));
+		*ssn += K_SSN_NVM_STORE_INTERVAL + F_NVM_MAX_WRITE_FAILURE;
+		PRINTF("SSN initialized from NMV. SSN = %llu\n", *ssn);
+	}
 	return ok;
 }

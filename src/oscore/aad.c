@@ -38,16 +38,13 @@ enum err create_aad(struct o_coap_option *options, uint16_t opt_num,
 	PRINT_ARRAY("request_piv", piv->ptr, piv->len);
 	PRINT_ARRAY("request_kid", kid->ptr, kid->len);
 
-	/* options */
-	uint32_t encoded_opt_i_len =
-		encoded_option_len(options, opt_num, CLASS_I);
-	BYTE_ARRAY_NEW(opts_i, I_OPTIONS_BUFF_MAX_LEN, encoded_opt_i_len);
-
-	TRY(encode_options(options, opt_num, CLASS_I, &opts_i.ptr[0],
-			   encoded_opt_i_len));
-
-	aad_array._aad_array_options.len = opts_i.len;
-	aad_array._aad_array_options.value = opts_i.ptr;
+	/*
+	 * Currently there are no I options defined.
+	 * If at some later time I options are defined this implementation 
+	 * must  be extended here. 
+	 */
+	aad_array._aad_array_options.len = 0;
+	aad_array._aad_array_options.value = NULL;
 
 	size_t payload_len_out;
 	TRY_EXPECT(cbor_encode_aad_array(out->ptr, out->len, &aad_array,
