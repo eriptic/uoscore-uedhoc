@@ -138,7 +138,7 @@ void test_main(void)
 	// ztest_test_suite(
 	// 	oscore_tests,
 	// 	ztest_unit_test(
-	// 		t9_oscore_client_server_registration_two_notifications_cancellation));
+	// 		t9_oscore_client_server_observe));
 	ztest_test_suite(
 		oscore_tests,
 		ztest_unit_test(t1_oscore_client_request_response),
@@ -149,7 +149,7 @@ void test_main(void)
 		ztest_unit_test(t6_oscore_server_key_derivation),
 		ztest_unit_test(t8_oscore_server_response_simple_ack),
 		ztest_unit_test(
-			t9_oscore_client_server_registration_two_notifications_cancellation),
+			t9_oscore_client_server_observe),
 		ztest_unit_test(t10_oscore_client_server_after_reboot),
 		ztest_unit_test(
 			t100_inner_outer_option_split__no_special_options),

@@ -371,7 +371,7 @@ void t8_oscore_server_response_simple_ack(void)
  *
  * 			See as well Appendix A.1. in RFC7641
  */
-void t9_oscore_client_server_registration_two_notifications_cancellation(void)
+void t9_oscore_client_server_observe(void)
 {
 	/*
 	 *
