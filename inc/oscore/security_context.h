@@ -90,21 +90,42 @@ struct context {
 };
 
 /**
- * @brief   converts the sender sequence number (uint64_t) to 
+ * @brief   Converts the sender sequence number (uint64_t) to 
  *          piv (byte string of maximum 5 byte) 
  * @param   ssn the sender sequence number
  * @param   piv Partial IV
  */
 enum err ssn2piv(uint64_t ssn, struct byte_array *piv);
 
+/**
+ * @brief	Updates the request_piv and the request_kid
+ * @param	c the context
+ * @param	piv	the new PIV
+ * @param 	kid the new KID
+ * @retval 	error code
+*/
 enum err update_request_piv_request_kid(struct context *c,
 					struct byte_array *piv,
-					struct byte_array *kid,
-					bool is_request);
+					struct byte_array *kid);
 
+/**
+ * @brief	Saves the token contained in a request	
+ * @param	dest_token destination
+ * @param	tkl length of the token
+ * @param 	token pointer to the token
+ * @retval	error code	
+*/
 enum err cache_request_token(struct byte_array *dest_token, uint8_t tkl,
-			     uint8_t *token, bool is_request);
+			     uint8_t *token);
 
+/**
+ * @brief	Verifies that the token in the received response has the token of 
+ * 			the previously send request
+ * @param	cached_token the previously saved token
+ * @param	tkl length of the token
+ * @param 	token pointer to the token
+ * @retval	error code	
+*/
 enum err verify_token(struct byte_array *cached_token, uint8_t tkl,
 		      uint8_t *token);
 #endif

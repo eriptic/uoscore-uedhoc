@@ -17,6 +17,7 @@
 #include <stdint.h>
 
 #include "oscore_edhoc_error.h"
+#include "memcpy_s.h"
 
 /* Array with pointer and length.*/
 struct byte_array {
@@ -29,15 +30,6 @@ extern struct byte_array EMPTY_ARRAY;
 
 /* Null Array with len=0 and a null pointer.*/
 extern struct byte_array NULL_ARRAY;
-
-// /**
-//  * @brief Initializes a variable of type byte_array
-//  *
-//  * @param buf buffer containing the data
-//  * @param buf_len the length of the buffer
-//  * @retval the initialized byte_array variable
-//  */
-// struct byte_array byte_array_init(uint8_t *buf, uint32_t buf_len);
 
 /**
  * @brief   Compares if the given two arrays have an equal content.

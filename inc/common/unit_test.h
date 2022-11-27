@@ -1,7 +1,18 @@
+/*
+   Copyright (c) 2022 Eriptic Technologies. See the COPYRIGHT
+   file at the top-level directory of this distribution.
 
+   Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+   http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+   <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+   option. This file may not be copied, modified, or distributed
+   except according to those terms.
+*/
 
 #ifndef UNIT_TEST_H
 #define UNIT_TEST_H
+
+#include "byte_array.h"
 
 /*when UNIT_TEST is defined all static functions are not static anymore and 
 can be used in unit test files.*/
@@ -19,8 +30,8 @@ enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 			     struct o_coap_packet *out_oscore,
 			     struct o_coap_option *u_options,
-			     uint8_t u_options_cnt, uint8_t *in_ciphertext,
-			     uint32_t in_ciphertext_len,
+			     uint8_t u_options_cnt,
+			     struct byte_array *in_ciphertext,
 			     struct oscore_option *oscore_option);
 
 #else

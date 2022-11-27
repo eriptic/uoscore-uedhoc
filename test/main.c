@@ -127,11 +127,11 @@ void test_main(void)
 {
 	/* EDHOC testvector tests  */
 
-	// ztest_test_suite(exporter, ztest_unit_test(test_exporter));
-	// ztest_test_suite(
-	// 	initiator_responder_interaction,
-	// 	ztest_unit_test(test_initiator_responder_interaction1),
-	// 	ztest_unit_test(test_initiator_responder_interaction2));
+	ztest_test_suite(exporter, ztest_unit_test(test_exporter));
+	ztest_test_suite(
+		initiator_responder_interaction,
+		ztest_unit_test(test_initiator_responder_interaction1),
+		ztest_unit_test(test_initiator_responder_interaction2));
 
 	/* OSCORE test-vector tests */
 
@@ -163,8 +163,8 @@ void test_main(void)
 			t104_oscore_pkg_generate__request_with_observe_notification));
 
 	ztest_run_test_suite(oscore_tests);
-	// ztest_run_test_suite(exporter);
-	// ztest_run_test_suite(initiator_responder_interaction);
+	ztest_run_test_suite(exporter);
+	ztest_run_test_suite(initiator_responder_interaction);
 
 	run_replay_protection_tests();
 }

@@ -267,16 +267,13 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
  * @return  err
  *
  */
-// TODO use byte_array for out_ciphertext
 static inline enum err plaintext_encrypt(struct context *c,
 					 struct byte_array *aad,
 					 struct byte_array *in_plaintext,
-					 uint8_t *out_ciphertext,
-					 uint32_t out_ciphertext_len)
+					 struct byte_array *out_ciphertext)
 {
-	return oscore_cose_encrypt(in_plaintext, out_ciphertext,
-				   out_ciphertext_len, &c->rrc.nonce, aad,
-				   &c->sc.sender_key);
+	return oscore_cose_encrypt(in_plaintext, out_ciphertext, &c->rrc.nonce,
+				   aad, &c->sc.sender_key);
 }
 
 /**
@@ -395,8 +392,7 @@ STATIC enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 				    struct o_coap_packet *out_oscore,
 				    struct o_coap_option *u_options,
 				    uint8_t u_options_cnt,
-				    uint8_t *in_ciphertext,
-				    uint32_t in_ciphertext_len,
+				    struct byte_array *in_ciphertext,
 				    struct oscore_option *oscore_option)
 {
 	/* Set OSCORE header and Token*/
@@ -470,8 +466,8 @@ STATIC enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 	}
 
 	/* Protected Payload */
-	out_oscore->payload_len = in_ciphertext_len;
-	out_oscore->payload = in_ciphertext;
+	out_oscore->payload_len = in_ciphertext->len;
+	out_oscore->payload = in_ciphertext->ptr;
 	return ok;
 }
 
@@ -554,11 +550,9 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 				     c->sc.ssn_in_nvm));
 		TRY(ssn2piv(c->sc.ssn++, &piv));
 
-		TRY(update_request_piv_request_kid(c, &piv, &c->sc.sender_id,
-						   request));
+		TRY(update_request_piv_request_kid(c, &piv, &c->sc.sender_id));
 		TRY(cache_request_token(&c->rrc.token_request,
-					o_coap_pkt.header.TKL, o_coap_pkt.token,
-					request));
+					o_coap_pkt.header.TKL, o_coap_pkt.token));
 
 		TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,
 				 &c->rrc.nonce));
@@ -623,18 +617,14 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 		       &c->rrc.request_piv, &aad));
 
 	/*3. Encrypt the created plaintext*/
-	uint32_t ciphertext_len = plaintext.len + AUTH_TAG_LEN;
-	TRY(check_buffer_size(MAX_CIPHERTEXT_LEN, ciphertext_len));
-	uint8_t ciphertext[MAX_CIPHERTEXT_LEN];
-
-	TRY(plaintext_encrypt(c, &aad, &plaintext, (uint8_t *)&ciphertext,
-			      ciphertext_len));
+	BYTE_ARRAY_NEW(ciphertext, MAX_CIPHERTEXT_LEN,
+		       plaintext.len + AUTH_TAG_LEN);
+	TRY(plaintext_encrypt(c, &aad, &plaintext, &ciphertext));
 
 	/*create an OSCORE packet*/
 	struct o_coap_packet oscore_pkt;
 	TRY(oscore_pkg_generate(&o_coap_pkt, &oscore_pkt, u_options,
-				u_options_cnt, (uint8_t *)&ciphertext,
-				ciphertext_len, &oscore_option));
+				u_options_cnt, &ciphertext, &oscore_option));
 
 	/*convert the oscore pkg to byte string*/
 	return coap2buf(&oscore_pkt, buf_oscore, buf_oscore_len);

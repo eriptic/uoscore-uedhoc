@@ -62,17 +62,6 @@ enum err server_replay_window_reinit(uint64_t current_sequence_number,
 	return ok;
 }
 
-enum err server_replay_window_get_last_number(
-	uint64_t *seq_number, const server_replay_window_t *replay_window)
-{
-	if ((NULL == replay_window) || (NULL == seq_number)) {
-		return wrong_parameter;
-	}
-
-	*seq_number = replay_window->window[WINDOW_SIZE - 1];
-	return ok;
-}
-
 bool server_is_sequence_number_valid(uint64_t seq_number,
 				     server_replay_window_t *replay_window)
 {

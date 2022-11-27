@@ -309,7 +309,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		}
 
 		TRY(update_request_piv_request_kid(c, &oscore_option.piv,
-						   &oscore_option.kid, true));
+						   &oscore_option.kid));
 
 		/*first request after reboot*/
 		if (c->rrc.reboot) {
