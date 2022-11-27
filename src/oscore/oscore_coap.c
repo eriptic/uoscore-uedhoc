@@ -16,6 +16,7 @@
 #include "oscore.h"
 
 #include "oscore/oscore_coap.h"
+#include "oscore/option.h"
 
 #include "common/oscore_edhoc_error.h"
 #include "common/memcpy_s.h"
@@ -308,8 +309,7 @@ enum err coap2buf(struct o_coap_packet *in, uint8_t *out_byte_string,
 	/* Calculate the maximal length of all options, i.e. all options have two bytes extra delta and length*/
 	uint32_t opt_bytes_len = 0;
 	for (uint8_t i = 0; i < in->options_cnt; i++) {
-		//todo use macro instead of 5
-		opt_bytes_len += (uint32_t)5 + in->options[i].len;
+		opt_bytes_len += OPT_SERIAL_OVERHEAD + in->options[i].len;
 	}
 
 	BYTE_ARRAY_NEW(option_byte_string, MAX_COAP_OPTIONS_LEN, opt_bytes_len);

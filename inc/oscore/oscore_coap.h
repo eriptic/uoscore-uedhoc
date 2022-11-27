@@ -117,8 +117,8 @@ struct piv_kid_context {
 
 /**
  * @brief   Covert a byte array to a OSCORE/CoAP struct
- * @param   in: pointer input message packet, in byte string format
- * @param   out: pointer to output OSCORE packet
+ * @param   in: pointer to an input message packet, in byte string format
+ * @param   out: pointer to an output OSCORE packet
  * @return  err
  */
 enum err buf2coap(struct byte_array *in, struct o_coap_packet *out);

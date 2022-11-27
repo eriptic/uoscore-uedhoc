@@ -24,9 +24,8 @@
  *          I Options will be included)
  * @param   opt_num Number of options
  * @param   aead_alg AEAD Algorithm to use
- * @param   kid KID parameter. This should be the Recipient ID.
- * @param   piv PIV parameter. This should be the request sender 
- *          sequence number.
+ * @param   request_kid in the request
+ * @param   request_piv in the request
  * @param   out out-array. Must have the exact length as 
  *          provided by `aad_length`.
  * @return err

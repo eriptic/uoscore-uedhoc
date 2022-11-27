@@ -8,8 +8,9 @@
 #include "common/unit_test.h"
 #include "common/oscore_edhoc_error.h"
 #include "common/print_util.h"
+#include "common/byte_array.h"
 
-//TODO: move this function in the print util and eventually replace by a macro
+/* Use this function for debugging to print an array of options*/
 static void print_options(struct o_coap_option *opt, uint8_t opt_cnt)
 {
 	uint8_t i;
@@ -488,8 +489,9 @@ void t103_oscore_pkg_generate__request_with_observe_registration(void)
 		.payload = NULL,
 	};
 
-	r = oscore_pkg_generate(&coap_pkt, &oscore_pkt, u_options, 2, NULL, 0,
-				&oscore_option);
+	struct byte_array no_ciphertext = { .ptr = NULL, .len = 0 };
+	r = oscore_pkg_generate(&coap_pkt, &oscore_pkt, u_options, 2,
+				&no_ciphertext, &oscore_option);
 
 	zassert_equal(r, ok, "Error in oscore_pkg_generate. r: %d", r);
 
@@ -584,9 +586,9 @@ void t104_oscore_pkg_generate__request_with_observe_notification(void)
 		.payload_len = 0,
 		.payload = NULL,
 	};
-
+	struct byte_array no_ciphertext = { .ptr = NULL, .len = 0 };
 	r = oscore_pkg_generate(&coap_pkt, &oscore_pkt, u_options,
-				u_options_len, NULL, 0, &oscore_option);
+				u_options_len, &no_ciphertext, &oscore_option);
 
 	zassert_equal(r, ok, "Error in oscore_pkg_generate. r: %d", r);
 

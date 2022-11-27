@@ -160,13 +160,11 @@ enum err oscore_context_init(struct oscore_init_params *params,
 }
 
 enum err cache_request_token(struct byte_array *dest_token, uint8_t tkl,
-			     uint8_t *token, bool request)
+			     uint8_t *token)
 {
-	if (request) {
-		memset(dest_token->ptr, 0, MAX_TOKEN_LEN);
-		TRY(_memcpy_s(dest_token->ptr, MAX_TOKEN_LEN, token, tkl));
-		dest_token->len = tkl;
-	}
+	memset(dest_token->ptr, 0, MAX_TOKEN_LEN);
+	TRY(_memcpy_s(dest_token->ptr, MAX_TOKEN_LEN, token, tkl));
+	dest_token->len = tkl;
 	return ok;
 }
 
@@ -183,21 +181,17 @@ enum err verify_token(struct byte_array *cached_token, uint8_t tkl,
 
 enum err update_request_piv_request_kid(struct context *c,
 					struct byte_array *piv,
-					struct byte_array *kid, bool is_request)
+					struct byte_array *kid)
 {
-	if (is_request) {
-		TRY(byte_array_cpy(&c->rrc.request_kid, kid));
-		TRY(byte_array_cpy(&c->rrc.request_piv, piv));
-	}
+	TRY(byte_array_cpy(&c->rrc.request_kid, kid));
+	TRY(byte_array_cpy(&c->rrc.request_piv, piv));
 	return ok;
 }
 
-//todo: how big is piv? 5 byte= 40 bit -> in that case the sender sequence number needs to loop at the value of 2^40 -1 !!! -> uint8_t is sufficient for the sender sequence number.
 enum err ssn2piv(uint64_t ssn, struct byte_array *piv)
 {
 	uint8_t *p = (uint8_t *)&ssn;
 
-	//todo here we can start at 4?
 	for (int8_t i = 7; i >= 0; i--) {
 		if (*(p + i) > 0) {
 			TRY(_memcpy_s(piv->ptr, MAX_PIV_LEN, p,

@@ -19,6 +19,8 @@
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
+#define	OPT_SERIAL_OVERHEAD 5
+
 enum o_num {
 	IF_MATCH = 1,
 	URI_HOST = 3,
@@ -110,9 +112,26 @@ enum err encode_options(struct o_coap_option *options, uint16_t opt_num,
  */
 bool is_observe(struct o_coap_option *options, uint8_t options_cnt);
 
+/**
+ * @brief	Saves an ECHO option value to be compared later with an ECHO value 
+ * 			received from the client.
+ * @param	dest location to save the ECHO value
+ * @param	options	E options
+ * @param	options_cnt the number of the options
+ * @retval	error code
+ * 
+*/
 enum err cache_echo_val(struct byte_array *dest, struct o_coap_option *options,
 			uint8_t options_cnt);
 
+/**
+ * @brief	Checks if an ECHO value is fresh. It takes a decrypted payload and 
+ * 			search in it for an ECHO option. If such is find it compares it 
+ * 			to the cached one.
+ * @param	cache_value previously saved ECHO value
+ * @param	decrypted_payload the decrypted payload of the message
+ * @retval	error code
+*/
 enum err echo_val_is_fresh(struct byte_array *cache_val,
 			   struct byte_array *decrypted_payload);
 

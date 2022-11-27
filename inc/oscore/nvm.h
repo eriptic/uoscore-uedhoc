@@ -21,7 +21,7 @@
  *          right store location.
  * @param   ssn the value to be stored
  * @param   ssn_in_nvm indicates if it is necessary to store the SSN
- * @retval  ok or error code
+ * @retval  error code
 */
 enum err ssn_store_in_nvm(const struct byte_array *sender_id, uint64_t ssn,
 			  bool ssn_in_nvm);
@@ -31,7 +31,7 @@ enum err ssn_store_in_nvm(const struct byte_array *sender_id, uint64_t ssn,
  *          right store slot in NVM.
  * @param   ssn the value to initialized
  * @param   ssn_in_nvm indicates if the value needs to be retrievd from SSN
- * @retval  ok or error code
+ * @retval  error code
 */
 enum err ssn_init(const struct byte_array *sender_id, uint64_t *ssn,
 		  bool ssn_in_nvm);

@@ -96,45 +96,6 @@ static void server_replay_reinit_test(void)
 }
 
 /**
- * @brief Test reading last sequence number from replay window.
- */
-static void server_replay_get_sequence_number_test(void)
-{
-	static const server_replay_window_t test_window_1 = {
-		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6 },
-		false
-	};
-
-	static const server_replay_window_t test_window_2 = {
-		{ 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
-		  111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
-		  122, 123, 124, 125, 126, 127, 128, 129, 130, 131 },
-		false
-	};
-
-	uint64_t seq_num;
-	enum err result;
-
-	result = server_replay_window_get_last_number(NULL, NULL);
-	zassert_equal(wrong_parameter, result, "");
-
-	result = server_replay_window_get_last_number(&seq_num, NULL);
-	zassert_equal(wrong_parameter, result, "");
-
-	result = server_replay_window_get_last_number(NULL, &test_window_1);
-	zassert_equal(wrong_parameter, result, "");
-
-	result = server_replay_window_get_last_number(&seq_num, &test_window_1);
-	zassert_equal(ok, result, "");
-	zassert_equal(6, seq_num, "");
-
-	result = server_replay_window_get_last_number(&seq_num, &test_window_2);
-	zassert_equal(ok, result, "");
-	zassert_equal(131, seq_num, "");
-}
-
-/**
  * @brief Test replay window check for various sequence numbers - this case represents beginning of the communication.
  */
 static void server_replay_check_at_start_test(void)
@@ -360,16 +321,14 @@ static void server_replay_standard_scenario_test(void)
 
 void run_replay_protection_tests(void)
 {
-	ztest_test_suite(
-		oscore_replay_protection,
-		ztest_unit_test(server_replay_init_test),
-		ztest_unit_test(server_replay_reinit_test),
-		ztest_unit_test(server_replay_get_sequence_number_test),
-		ztest_unit_test(server_replay_check_at_start_test),
-		ztest_unit_test(server_replay_check_in_progress_test),
-		ztest_unit_test(server_replay_insert_zero_test),
-		ztest_unit_test(server_replay_insert_test),
-		ztest_unit_test(server_replay_standard_scenario_test));
+	ztest_test_suite(oscore_replay_protection,
+			 ztest_unit_test(server_replay_init_test),
+			 ztest_unit_test(server_replay_reinit_test),
+			 ztest_unit_test(server_replay_check_at_start_test),
+			 ztest_unit_test(server_replay_check_in_progress_test),
+			 ztest_unit_test(server_replay_insert_zero_test),
+			 ztest_unit_test(server_replay_insert_test),
+			 ztest_unit_test(server_replay_standard_scenario_test));
 
 	ztest_run_test_suite(oscore_replay_protection);
 }
