@@ -65,18 +65,17 @@ modify setting in include/psa/crypto_config.h
 #endif
 
 #ifdef MBEDTLS
-#define TRY_EXPECT_PSA(x, expected_result, key_id, err_code)                         \
-	do {                                                                         \
-		int retval = (int)(x);                                               \
-		if ((expected_result) != retval) {                                   \
-			if (PSA_KEY_HANDLE_INIT != (key_id)) {                       \
-				psa_destroy_key(key_id);                             \
-			}                                                            \
-			PRINTF(RED                                                   \
-			       "Runtime error: %s error code %d at %s:%d\n\n" RESET, \
-			       #x, retval, __FILE__, __LINE__);                      \
-			return err_code;                                             \
-		}                                                                    \
+#define TRY_EXPECT_PSA(x, expected_result, key_id, err_code)                   \
+	do {                                                                   \
+		int retval = (int)(x);                                         \
+		if ((expected_result) != retval) {                             \
+			if (PSA_KEY_HANDLE_INIT != (key_id)) {                 \
+				psa_destroy_key(key_id);                       \
+			}                                                      \
+			handle_external_runtime_error(retval, __FILE__,        \
+						      __LINE__);               \
+			return err_code;                                       \
+		}                                                              \
 	} while (0)
 
 /**
@@ -169,32 +168,43 @@ cleanup:
 #endif
 
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
-static bool aead_mock_args_match_predefined(
-		struct edhoc_mock_aead_in_out *predefined,
-		const uint8_t *key, const uint16_t key_len,
-		uint8_t *nonce, const uint16_t nonce_len,
-		const uint8_t *aad, const uint16_t aad_len,
-		uint8_t *tag, const uint16_t tag_len)
+static bool
+aead_mock_args_match_predefined(struct edhoc_mock_aead_in_out *predefined,
+				const uint8_t *key, const uint16_t key_len,
+				uint8_t *nonce, const uint16_t nonce_len,
+				const uint8_t *aad, const uint16_t aad_len,
+				uint8_t *tag, const uint16_t tag_len)
 {
-	return array_equals(&predefined->key, &(struct byte_array){.ptr=(void*)key, .len=key_len})
-			&& array_equals(&predefined->nonce, &(struct byte_array){.ptr=nonce, .len=nonce_len})
-			&& array_equals(&predefined->aad, &(struct byte_array){.ptr=(void*)aad, .len=aad_len})
-			&& array_equals(&predefined->tag,  &(struct byte_array){.ptr=tag, .len=tag_len});
+	return array_equals(&predefined->key,
+			    &(struct byte_array){ .ptr = (void *)key,
+						  .len = key_len }) &&
+	       array_equals(&predefined->nonce,
+			    &(struct byte_array){ .ptr = nonce,
+						  .len = nonce_len }) &&
+	       array_equals(&predefined->aad,
+			    &(struct byte_array){ .ptr = (void *)aad,
+						  .len = aad_len }) &&
+	       array_equals(&predefined->tag,
+			    &(struct byte_array){ .ptr = tag, .len = tag_len });
 }
-#endif// EDHOC_MOCK_CRYPTO_WRAPPER
+#endif // EDHOC_MOCK_CRYPTO_WRAPPER
 
-enum err WEAK
-aead(enum aes_operation op, const uint8_t *in, const uint32_t in_len,
-     const uint8_t *key, const uint32_t key_len, uint8_t *nonce,
-     const uint32_t nonce_len, const uint8_t *aad, const uint32_t aad_len,
-     uint8_t *out, const uint32_t out_len, uint8_t *tag, const uint32_t tag_len)
+enum err WEAK aead(enum aes_operation op, const uint8_t *in,
+		   const uint32_t in_len, const uint8_t *key,
+		   const uint32_t key_len, uint8_t *nonce,
+		   const uint32_t nonce_len, const uint8_t *aad,
+		   const uint32_t aad_len, uint8_t *out, const uint32_t out_len,
+		   uint8_t *tag, const uint32_t tag_len)
 {
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
-	for(uint32_t i=0; i < edhoc_crypto_mock_cb.aead_in_out_count; i++) {
-		struct edhoc_mock_aead_in_out *predefined_in_out = edhoc_crypto_mock_cb.aead_in_out + i;
-		if(aead_mock_args_match_predefined(
-				predefined_in_out, key, key_len, nonce, nonce_len, aad, aad_len, tag, tag_len)) {
-			memcpy(out, predefined_in_out->out.ptr, predefined_in_out->out.len);
+	for (uint32_t i = 0; i < edhoc_crypto_mock_cb.aead_in_out_count; i++) {
+		struct edhoc_mock_aead_in_out *predefined_in_out =
+			edhoc_crypto_mock_cb.aead_in_out + i;
+		if (aead_mock_args_match_predefined(
+			    predefined_in_out, key, key_len, nonce, nonce_len,
+			    aad, aad_len, tag, tag_len)) {
+			memcpy(out, predefined_in_out->out.ptr,
+			       predefined_in_out->out.len);
 			return ok;
 		}
 	}
@@ -263,28 +273,37 @@ aead(enum aes_operation op, const uint8_t *in, const uint32_t in_len,
 }
 
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
-static bool sign_mock_args_match_predefined(
-		struct edhoc_mock_sign_in_out *predefined,
-		 const uint8_t *sk, const size_t sk_len,
-		 const uint8_t *pk, const size_t pk_len,
-		 const uint8_t *msg, const size_t msg_len)
+static bool
+sign_mock_args_match_predefined(struct edhoc_mock_sign_in_out *predefined,
+				const uint8_t *sk, const size_t sk_len,
+				const uint8_t *pk, const size_t pk_len,
+				const uint8_t *msg, const size_t msg_len)
 {
-	return array_equals(&predefined->sk,  &(struct byte_array){.len = sk_len,  .ptr = (void*)sk})
-			&& array_equals(&predefined->pk,  &(struct byte_array){.len = pk_len,  .ptr = (void*)pk})
-			&& array_equals(&predefined->msg, &(struct byte_array){.len = msg_len, .ptr = (void*)msg});
+	return array_equals(&predefined->sk,
+			    &(struct byte_array){ .len = sk_len,
+						  .ptr = (void *)sk }) &&
+	       array_equals(&predefined->pk,
+			    &(struct byte_array){ .len = pk_len,
+						  .ptr = (void *)pk }) &&
+	       array_equals(&predefined->msg,
+			    &(struct byte_array){ .len = msg_len,
+						  .ptr = (void *)msg });
 }
-#endif// EDHOC_MOCK_CRYPTO_WRAPPER
+#endif // EDHOC_MOCK_CRYPTO_WRAPPER
 
-enum err WEAK
-sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
-     const uint8_t *pk, const uint8_t *msg, const uint32_t msg_len,
-     uint8_t *out)
+enum err WEAK sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
+		   const uint8_t *pk, const uint8_t *msg,
+		   const uint32_t msg_len, uint8_t *out)
 {
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
-	for(uint32_t i=0; i < edhoc_crypto_mock_cb.sign_in_out_count; i++) {
-		struct edhoc_mock_sign_in_out *predefined_in_out = edhoc_crypto_mock_cb.sign_in_out + i;
-		if(sign_mock_args_match_predefined(predefined_in_out, sk, sk_len, pk, PK_DEFAULT_SIZE, msg, msg_len)){
-			memcpy(out, predefined_in_out->out.ptr, predefined_in_out->out.len);
+	for (uint32_t i = 0; i < edhoc_crypto_mock_cb.sign_in_out_count; i++) {
+		struct edhoc_mock_sign_in_out *predefined_in_out =
+			edhoc_crypto_mock_cb.sign_in_out + i;
+		if (sign_mock_args_match_predefined(predefined_in_out, sk,
+						    sk_len, pk, PK_DEFAULT_SIZE,
+						    msg, msg_len)) {
+			memcpy(out, predefined_in_out->out.ptr,
+			       predefined_in_out->out.len);
 			return ok;
 		}
 	}
@@ -339,10 +358,10 @@ sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
 	return unsupported_ecdh_curve;
 }
 
-enum err WEAK
-verify(enum sign_alg alg, const uint8_t *pk, const uint32_t pk_len,
-       const uint8_t *msg, const uint32_t msg_len, const uint8_t *sgn,
-       const uint32_t sgn_len, bool *result)
+enum err WEAK verify(enum sign_alg alg, const uint8_t *pk,
+		     const uint32_t pk_len, const uint8_t *msg,
+		     const uint32_t msg_len, const uint8_t *sgn,
+		     const uint32_t sgn_len, bool *result)
 {
 	if (alg == EdDSA) {
 #ifdef COMPACT25519
@@ -395,9 +414,9 @@ verify(enum sign_alg alg, const uint8_t *pk, const uint32_t pk_len,
 	return crypto_operation_not_implemented;
 }
 
-enum err WEAK
-hkdf_extract(enum hash_alg alg, const uint8_t *salt, uint32_t salt_len,
-	     uint8_t *ikm, uint32_t ikm_len, uint8_t *out)
+enum err WEAK hkdf_extract(enum hash_alg alg, const uint8_t *salt,
+			   uint32_t salt_len, uint8_t *ikm, uint32_t ikm_len,
+			   uint8_t *out)
 {
 	/*"Note that [RFC5869] specifies that if the salt is not provided, 
 	it is set to a string of zeros.  For implementation purposes, not providing the salt is the same as setting the salt to the empty byte 
@@ -455,10 +474,10 @@ hkdf_extract(enum hash_alg alg, const uint8_t *salt, uint32_t salt_len,
 	return ok;
 }
 
-enum err WEAK
-hkdf_expand(enum hash_alg alg, const uint8_t *prk, const uint32_t prk_len,
-	    const uint8_t *info, const uint32_t info_len, uint8_t *out,
-	    uint32_t out_len)
+enum err WEAK hkdf_expand(enum hash_alg alg, const uint8_t *prk,
+			  const uint32_t prk_len, const uint8_t *info,
+			  const uint32_t info_len, uint8_t *out,
+			  uint32_t out_len)
 {
 	if (alg != SHA_256) {
 		return crypto_operation_not_implemented;
@@ -538,9 +557,9 @@ hkdf_expand(enum hash_alg alg, const uint8_t *prk, const uint32_t prk_len,
 	return ok;
 }
 
-enum err WEAK
-hkdf_sha_256(struct byte_array *master_secret, struct byte_array *master_salt,
-	     struct byte_array *info, struct byte_array *out)
+enum err WEAK hkdf_sha_256(struct byte_array *master_secret,
+			   struct byte_array *master_salt,
+			   struct byte_array *info, struct byte_array *out)
 {
 	uint8_t prk[HASH_DEFAULT_SIZE];
 	TRY(hkdf_extract(SHA_256, master_salt->ptr, master_salt->len,
@@ -551,10 +570,10 @@ hkdf_sha_256(struct byte_array *master_secret, struct byte_array *master_salt,
 	return ok;
 }
 
-enum err WEAK
-shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
-		     const uint32_t sk_len, const uint8_t *pk,
-		     const uint32_t pk_len, uint8_t *shared_secret)
+enum err WEAK shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
+				   const uint32_t sk_len, const uint8_t *pk,
+				   const uint32_t pk_len,
+				   uint8_t *shared_secret)
 {
 	if (alg == X25519) {
 #ifdef COMPACT25519
@@ -641,9 +660,8 @@ shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 	return crypto_operation_not_implemented;
 }
 
-enum err WEAK
-ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk,
-		     uint32_t *pk_size)
+enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
+				   uint8_t *sk, uint8_t *pk, uint32_t *pk_size)
 {
 	if (alg == X25519) {
 #ifdef COMPACT25519
@@ -713,7 +731,8 @@ ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk,
 		TRY_EXPECT_PSA(public_key_len, P_256_PUB_KEY_UNCOMPRESSED_SIZE,
 			       key_id, unexpected_result_from_ext_lib);
 		/* Prepare output format - only x parameter */
-		memcpy(pk, (pub_key_uncompressed + 1), P_256_PUB_KEY_X_CORD_SIZE);
+		memcpy(pk, (pub_key_uncompressed + 1),
+		       P_256_PUB_KEY_X_CORD_SIZE);
 		TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
 		*pk_size = P_256_PUB_KEY_X_CORD_SIZE;
 #endif
@@ -723,8 +742,8 @@ ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk,
 	return ok;
 }
 
-enum err WEAK
-hash(enum hash_alg alg, const uint8_t *in, const uint32_t in_len, uint8_t *out)
+enum err WEAK hash(enum hash_alg alg, const uint8_t *in, const uint32_t in_len,
+		   uint8_t *out)
 {
 	if (alg == SHA_256) {
 #ifdef TINYCRYPT

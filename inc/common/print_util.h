@@ -18,7 +18,10 @@
  *@brief prints an array for debug pourposes 
  */
 void print_array(const uint8_t *in_data, uint32_t in_len);
-
+void handle_runtime_error(int error_code, const char *file_name,
+			  const int line);
+void handle_external_runtime_error(int error_code, const char *file_name,
+				   const int line);
 #ifdef DEBUG_PRINT
 #define PRINT_ARRAY(msg, a, a_len)                                             \
 	printf(msg);                                                           \

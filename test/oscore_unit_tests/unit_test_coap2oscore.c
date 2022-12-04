@@ -69,6 +69,8 @@ void t100_inner_outer_option_split__no_special_options(void)
 
 	struct o_coap_option inner_options[5];
 	struct o_coap_option outer_options[5];
+	memset(inner_options, 0, sizeof(inner_options));
+	memset(outer_options, 0, sizeof(outer_options));
 	uint16_t inner_options_len = 0;
 	uint8_t inner_options_cnt = 0;
 	uint8_t outer_options_cnt = 0;

@@ -13,6 +13,18 @@
 #include <stdio.h>
 
 #include "common/print_util.h"
+#include "common/oscore_edhoc_error.h"
+
+#ifdef DEBUG_PRINT
+#define RED "\x1B[31m"
+#define RESET "\033[0m"
+static const char *transport_deinit_message =
+	RESET "Transport deinitialized at %s:%d\n\n";
+static const char *runtime_error_message =
+	RED "Runtime error: code %d at %s:%d\n\n" RESET;
+static const char *external_runtime_error_message =
+	RED "External lib runtime error: code %d at %s:%d\n\n" RESET;
+#endif
 
 void print_array(const uint8_t *in_data, uint32_t in_len)
 {
@@ -24,4 +36,31 @@ void print_array(const uint8_t *in_data, uint32_t in_len)
 			printf("%02X ", in_data[i]);
 	}
 	printf("\n");
+}
+
+void handle_runtime_error(int error_code, const char *file_name, const int line)
+{
+	(void)error_code;
+	(void)file_name;
+	(void)line;
+
+#ifdef DEBUG_PRINT
+	if (transport_deinitialized == error_code) {
+		PRINTF(transport_deinit_message, file_name, line);
+	} else {
+		PRINTF(runtime_error_message, error_code, file_name, line);
+	}
+#endif
+}
+
+void handle_external_runtime_error(int error_code, const char *file_name,
+				   const int line)
+{
+	(void)error_code;
+	(void)file_name;
+	(void)line;
+
+#ifdef DEBUG_PRINT
+	PRINTF(external_runtime_error_message, error_code, file_name, line);
+#endif
 }

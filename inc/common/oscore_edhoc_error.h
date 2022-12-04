@@ -13,9 +13,6 @@
 #define ERROR_H
 #include "print_util.h"
 
-#define RED "\x1B[31m"
-#define RESET "\033[0m"
-
 /* All possible errors that EDHOC and OSCORE can have */
 enum err {
 	/*common errors*/
@@ -73,34 +70,26 @@ enum err {
 	echo_val_mismatch = 222,
 };
 
-/*This macro checks if a function returns an error and if so it propages 
+/*This macro checks if a function returns an error and if so it propagates 
 	the error to the caller function*/
-#define TRY(x)                                                                       \
-	do {                                                                         \
-		enum err retval = (x);                                               \
-		if (transport_deinitialized == retval) {                             \
-			PRINTF(RESET "Transport deinitialized at %s:%d\n\n",         \
-			       __FILE__, __LINE__);                                  \
-			return retval;                                               \
-		}                                                                    \
-		if (ok != retval) {                                                  \
-			PRINTF(RED                                                   \
-			       "Runtime error: %s error code %d at %s:%d\n\n" RESET, \
-			       #x, retval, __FILE__, __LINE__);                      \
-			return retval;                                               \
-		}                                                                    \
+#define TRY(x)                                                                 \
+	do {                                                                   \
+		enum err retval = (x);                                         \
+		if (ok != retval) {                                            \
+			handle_runtime_error(retval, __FILE__, __LINE__);      \
+			return retval;                                         \
+		}                                                              \
 	} while (0)
 
 /* This macro checks if a function belonging to an external library returns an expected result or an error. If an error is returned the macro returns unexpected_result_from_ext_lib. */
-#define TRY_EXPECT(x, expected_result)                                               \
-	do {                                                                         \
-		int retval = (x);                                                    \
-		if (retval != expected_result) {                                     \
-			PRINTF(RED                                                   \
-			       "Runtime error: %s error code %d at %s:%d\n\n" RESET, \
-			       #x, retval, __FILE__, __LINE__);                      \
-			return unexpected_result_from_ext_lib;                       \
-		}                                                                    \
+#define TRY_EXPECT(x, expected_result)                                         \
+	do {                                                                   \
+		int retval = (x);                                              \
+		if (retval != expected_result) {                               \
+			handle_external_runtime_error(retval, __FILE__,        \
+						      __LINE__);               \
+			return unexpected_result_from_ext_lib;                 \
+		}                                                              \
 	} while (0)
 
 #endif
