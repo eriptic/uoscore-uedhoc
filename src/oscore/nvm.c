@@ -23,7 +23,7 @@
  * @param	sender_id the user may use the sender_id as a key in a table in 
  * 			NVM holding SSNs for different sender contexts. 
  * @param	ssn the ssn to be written in NVM
- * @retval	ok or error code if the retrieving the SSN was not possible.
+ * @retval	ok or error code if storing the SSN was not possible.
  */
 enum err WEAK nvm_write_ssn(const struct byte_array *sender_id, uint64_t ssn)
 {
@@ -36,11 +36,10 @@ enum err WEAK nvm_write_ssn(const struct byte_array *sender_id, uint64_t ssn)
  * @brief   When the same OSCORE master secret and salt are reused through
  * 			several reboots of the device, e.g., no fresh shared secret is
  * 			derived through EDHOC (or some other method) the Sender Sequence 
- * 			Number MUST be restored from NVM at each reboot in order to prevent 
- *          reusing the same nonce for encrypting different plain texts. 
- * @param	c the complete context. The user must use the context for 
- * 			retrieving the corrsponding sender sequence number from NVM. 
- * 			The retrievd value must be written in c->sc.ssn.
+ * 			Number MUST be restored from NVM at each reboot. 
+ * @param	sender_id the user may use the sender_id as a key in a table in 
+ * 			NVM holding SSNs for different sender contexts. 
+ * @param	ssn the ssn to be read out from NVM
  * @retval	ok or error code if the retrieving the SSN was not possible.
  */
 enum err WEAK nvm_read_ssn(const struct byte_array *sender_id, uint64_t *ssn)
