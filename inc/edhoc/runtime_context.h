@@ -16,14 +16,9 @@
 #include "edhoc.h"
 
 struct runtime_context {
-	uint8_t msg1[MSG_1_DEFAULT_SIZE];
-	uint32_t msg1_len;
-	uint8_t msg2[MSG_2_DEFAULT_SIZE];
-	uint32_t msg2_len;
-	uint8_t msg3[MSG_3_DEFAULT_SIZE];
-	uint32_t msg3_len;
-	uint8_t msg4[MSG_4_DEFAULT_SIZE];
-	uint32_t msg4_len;
+	uint8_t msg1_hash[HASH_DEFAULT_SIZE];
+	uint8_t msg[MSG_MAX_SIZE];
+	uint32_t msg_len;
 	struct suite suite;
 	/*initiator specific*/
 	uint8_t th4[HASH_DEFAULT_SIZE];

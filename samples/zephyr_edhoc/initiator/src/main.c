@@ -131,10 +131,6 @@ void main(void)
 	uint8_t PRK_out[PRK_DEFAULT_SIZE];
 	uint8_t err_msg[ERR_MSG_DEFAULT_SIZE];
 	uint32_t err_msg_len = sizeof(err_msg);
-	uint8_t ad_2[AD_DEFAULT_SIZE];
-	uint32_t ad_2_len = sizeof(ad_2);
-	uint8_t ad_4[AD_DEFAULT_SIZE];
-	uint32_t ad_4_len = sizeof(ad_2);
 
 	/* test vector inputs */
 	const uint8_t TEST_VEC_NUM = 2;
@@ -187,7 +183,7 @@ void main(void)
 
 	start_coap_client(&sockfd);
 	edhoc_initiator_run(&c_i, &cred_r, cred_num, err_msg, &err_msg_len,
-			    ad_2, &ad_2_len, ad_4, &ad_4_len, PRK_out,
+				NULL, NULL, NULL, NULL, PRK_out,
 			    sizeof(PRK_out), tx, rx);
 
 	PRINT_ARRAY("PRK_out", PRK_out, sizeof(PRK_out));

@@ -138,7 +138,10 @@ enum err plaintext_split(uint8_t *ptxt, const uint32_t ptxt_len,
 			      (uint32_t)p._plaintext_AD_x.len));
 		*ad_len = (uint32_t)p._plaintext_AD_x.len;
 	} else {
-		*ad_len = 0;
+		if(ad_len)
+		{
+			*ad_len = 0;
+		}
 	}
 
 	return ok;

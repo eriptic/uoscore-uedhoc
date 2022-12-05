@@ -199,7 +199,7 @@ static inline enum err msg2_encode(const uint8_t *g_y, uint32_t g_y_len,
 enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 		  uint8_t *ead_1, uint32_t *ead_1_len, uint8_t *c_i_bytes, uint32_t *c_i_bytes_len)
 {
-	PRINT_ARRAY("message_1 (CBOR Sequence)", rc->msg1, rc->msg1_len);
+	PRINT_ARRAY("message_1 (CBOR Sequence)", rc->msg, rc->msg_len);
 
 	enum method_type method = INITIATOR_SK_RESPONDER_SK;
 	uint8_t suites_i[SUITES_MAX];
@@ -209,8 +209,8 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	uint8_t c_i[C_I_DEFAULT_SIZE];
 	uint32_t c_i_len = sizeof(c_i);
 
-	TRY(msg1_parse(rc->msg1, rc->msg1_len, &method, suites_i, &suites_i_len,
-		       g_x, &g_x_len, c_i, &c_i_len, ead_1, ead_1_len));
+	TRY(msg1_parse(rc->msg, rc->msg_len, &method, suites_i, &suites_i_len,
+			       g_x, &g_x_len, c_i, &c_i_len, ead_1, ead_1_len));
 
 	if ((NULL != c_i_bytes) && (NULL != c_i_bytes_len)) {
 		TRY(_memcpy_s(c_i_bytes, *c_i_bytes_len, c_i, c_i_len));
@@ -240,7 +240,8 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	uint8_t th2[HASH_DEFAULT_SIZE];
 	uint32_t th2_len = get_hash_len(rc->suite.edhoc_hash);
 	TRY(check_buffer_size(HASH_DEFAULT_SIZE, th2_len));
-	TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1, rc->msg1_len,
+	TRY(hash(rc->suite.edhoc_hash, rc->msg, rc->msg_len, rc->msg1_hash));
+	TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1_hash,
 			  c->g_y.ptr, c->g_y.len, c->c_r.ptr, c->c_r.len, th2));
 
 	/*calculate the DH shared secret*/
@@ -284,10 +285,13 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 			   th2, th2_len, ciphertext_2, &ciphertext_2_len,
 			   plaintext_2, &plaintext_2_len));
 
+	/* Clear the message buffer. */
+	memset(rc->msg, 0, rc->msg_len);
+	rc->msg_len = sizeof(rc->msg);
 	/*message 2 create*/
 	TRY(msg2_encode(c->g_y.ptr, c->g_y.len, c->c_r.ptr, c->c_r.len,
-			ciphertext_2, ciphertext_2_len, rc->msg2,
-			&rc->msg2_len));
+				ciphertext_2, ciphertext_2_len, rc->msg,
+				&rc->msg_len));
 
 	TRY(th3_calculate(rc->suite.edhoc_hash, th2, th2_len, plaintext_2,
 			  plaintext_2_len, c->cred_r.ptr, c->cred_r.len, rc->th3));
@@ -314,7 +318,7 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	// 	*err_msg_len = msg3_len;
 	// 	return error_message_received;
 	// }
-	TRY(decode_byte_string(rc->msg3, rc->msg3_len, ciphertext_3,
+	TRY(decode_byte_string(rc->msg, rc->msg_len, ciphertext_3,
 			       &ciphertext_3_len));
 	PRINT_ARRAY("CIPHERTEXT_3", ciphertext_3, ciphertext_3_len);
 
@@ -379,6 +383,7 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	return ok;
 }
 
+#ifdef EDHOC_MESSAGE_4_SUPPORTED
 enum err msg4_gen(struct edhoc_responder_context *c, struct runtime_context *rc)
 {
 	/*Ciphertext 4 calculate*/
@@ -392,12 +397,13 @@ enum err msg4_gen(struct edhoc_responder_context *c, struct runtime_context *rc)
 			   rc->prk_4e3m_len, rc->th4, rc->th4_len, ciphertext_4,
 			   &ciphertext_4_len, plaintext_4, &plaintext_4_len));
 
-	TRY(encode_byte_string(ciphertext_4, ciphertext_4_len, rc->msg4,
-			       &rc->msg4_len));
+	TRY(encode_byte_string(ciphertext_4, ciphertext_4_len, rc->msg,
+			       &rc->msg_len));
 
-	PRINT_ARRAY("Message 4 ", rc->msg4, rc->msg4_len);
+	PRINT_ARRAY("Message 4 ", rc->msg, rc->msg_len);
 	return ok;
 }
+#endif // EDHOC_MESSAGE_4_SUPPORTED
 
 enum err edhoc_responder_run_extended(
 	struct edhoc_responder_context *c,
@@ -414,25 +420,29 @@ enum err edhoc_responder_run_extended(
 	runtime_context_init(&rc);
 
 	PRINT_MSG("waiting to receive message 1...\n");
-	TRY(rx(c->sock, rc.msg1, &rc.msg1_len));
-	if (MSG_1_DEFAULT_SIZE < rc.msg1_len) {
+
+	memset(rc.msg, 0, rc.msg_len);
+	TRY(rx(c->sock, rc.msg, &rc.msg_len));
+	if (MSG_MAX_SIZE < rc.msg_len) {
 		return error_message_received;
 	}
 	TRY(msg2_gen(c, &rc, ead_1, ead_1_len, c_i_bytes, c_i_bytes_len));
-	TRY(tx(c->sock, rc.msg2, rc.msg2_len));
+	TRY(tx(c->sock, rc.msg, rc.msg_len));
+	memset(rc.msg, 0, rc.msg_len);
 
 	PRINT_MSG("waiting to receive message 3...\n");
-	TRY(rx(c->sock, rc.msg3, &rc.msg3_len));
-	if (MSG_3_DEFAULT_SIZE < rc.msg3_len) {
-		return error_message_received;
+	TRY(rx(c->sock, rc.msg, &rc.msg_len));
+	if (MSG_MAX_SIZE < rc.msg_len) {
+			return error_message_received;
 	}
 	TRY(msg3_process(c, &rc, cred_i_array, num_cred_i, ead_3, ead_3_len,
 			 prk_out, prk_out_len, client_pub_key, client_pub_key_size));
+#ifdef EDHOC_MESSAGE_4_SUPPORTED
 	if (c->msg4) {
 		TRY(msg4_gen(c, &rc));
-		TRY(tx(c->sock, rc.msg4, rc.msg4_len));
+		TRY(tx(c->sock, rc.msg, rc.msg_len));
 	}
-
+#endif // EDHOC_MESSAGE_4_SUPPORTED
 	return ok;
 }
 
