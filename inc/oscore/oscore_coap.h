@@ -141,7 +141,7 @@ enum err coap2buf(struct o_coap_packet *in, uint8_t *out_byte_string,
  * @return  err
  *
  */
-enum err options_into_byte_string(struct o_coap_option *options,
+enum err options2buf(struct o_coap_option *options,
 				  uint8_t options_cnt,
 				  struct byte_array *out_byte_string);
 
@@ -152,4 +152,11 @@ enum err options_into_byte_string(struct o_coap_option *options,
  * 
  */
 bool is_request(struct o_coap_packet *packet);
+
+/**
+ * @brief	Returns the number of extra bytes needed wen encoding an option.
+ * @param	delta_or_len option delta or option len depending on the use case
+ * @retval	The needed extra bytes  
+*/
+uint8_t opt_extra_bytes(uint16_t delta_or_len);
 #endif

@@ -18,12 +18,15 @@
 #ifdef DEBUG_PRINT
 #define RED "\x1B[31m"
 #define RESET "\033[0m"
-static const char *transport_deinit_message =
-	RESET "Transport deinitialized at %s:%d\n\n";
-static const char *runtime_error_message =
-	RED "Runtime error: code %d at %s:%d\n\n" RESET;
-static const char *external_runtime_error_message =
-	RED "External lib runtime error: code %d at %s:%d\n\n" RESET;
+static const char transport_deinit_message[] = {
+	RESET "Transport reinitialized at %s:%d\n\n"
+};
+static const char runtime_error_message[] = {
+	RED "Runtime error: code %d at %s:%d\n\n" RESET
+};
+static const char external_runtime_error_message[] = {
+	RED "External lib runtime error: code %d at %s:%d\n\n" RESET
+};
 #endif
 
 void print_array(const uint8_t *in_data, uint32_t in_len)

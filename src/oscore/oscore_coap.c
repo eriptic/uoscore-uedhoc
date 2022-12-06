@@ -22,81 +22,77 @@
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
 
-enum err options_into_byte_string(struct o_coap_option *options,
-				  uint8_t options_cnt,
-				  struct byte_array *out_byte_string)
+uint8_t opt_extra_bytes(uint16_t delta_or_len)
+{
+	if (delta_or_len < 13) {
+		return 0;
+	}
+
+	if (delta_or_len < 269) {
+		return 1;
+	}
+
+	return 2;
+}
+
+enum err options2buf(struct o_coap_option *options, uint8_t options_cnt,
+		     struct byte_array *out_byte_string)
 {
 	uint8_t delta_extra_byte = 0;
 	uint8_t len_extra_byte = 0;
 	uint8_t *temp_ptr = out_byte_string->ptr;
+	uint8_t *header_byte;
 
 	/* Reset length */
 	uint32_t out_byte_string_capacity = out_byte_string->len;
 	out_byte_string->len = 0;
 
 	for (uint8_t i = 0; i < options_cnt; i++) {
-		delta_extra_byte = 0;
-		len_extra_byte = 0;
+		delta_extra_byte = opt_extra_bytes(options[i].delta);
+		len_extra_byte = opt_extra_bytes(options[i].len);
 
-		/* Special cases for delta and length*/
-		if (options[i].delta < 13 && options[i].len < 13)
-			*(temp_ptr) = (uint8_t)(options[i].delta << 4) |
-				      (uint8_t)(options[i].len);
-		else {
-			if (options[i].delta >= 13 && options[i].delta < 243)
-				delta_extra_byte = 1;
-			else if (options[i].delta >= 243)
-				delta_extra_byte = 2;
+		header_byte = temp_ptr;
 
-			if (options[i].len >= 13 && options[i].len < 243)
-				len_extra_byte = 1;
-			else if (options[i].len >= 243)
-				len_extra_byte = 2;
+		switch (delta_extra_byte) {
+		case 0:
+			*(header_byte) = (uint8_t)(options[i].delta << 4);
+			break;
+		case 1:
+			*(header_byte) = (uint8_t)(13 << 4);
+			*(temp_ptr + 1) = (uint8_t)(options[i].delta - 13);
+			break;
+		case 2:
+			*(header_byte) = (uint8_t)(14 << 4);
+			uint16_t temp_delta =
+				(uint16_t)(options[i].delta - 269);
+			*(temp_ptr + 1) = (uint8_t)((temp_delta & 0xFF00) >> 8);
+			*(temp_ptr + 2) = (uint8_t)((temp_delta & 0x00FF) >> 0);
+			break;
+		default:
+			return delta_extra_byte_error;
+			break;
+		}
 
-			switch (delta_extra_byte) {
-			case 0:
-				*(temp_ptr) = (uint8_t)(options[i].delta << 4);
-				break;
-			case 1:
-				*(temp_ptr) = (uint8_t)(13 << 4);
-				*(temp_ptr + 1) =
-					(uint8_t)(options[i].delta - 13);
-				break;
-			case 2:
-				*(temp_ptr) = (uint8_t)(14 << 4);
-				uint16_t temp_delta =
-					(uint16_t)(options[i].delta - 269);
-				*(temp_ptr + 1) =
-					(uint8_t)((temp_delta & 0xFF00) >> 8);
-				*(temp_ptr + 2) =
-					(uint8_t)((temp_delta & 0x00FF) >> 0);
-				break;
-			default:
-				return delta_extra_byte_error;
-				break;
-			}
-			switch (len_extra_byte) {
-			case 0:
-				*(temp_ptr) |= (uint8_t)(options[i].len);
-				break;
-			case 1:
-				*(temp_ptr) |= 13;
-				*(temp_ptr + delta_extra_byte + 1) =
-					(uint8_t)(options[i].len - 13);
-				break;
-			case 2:
-				*(temp_ptr) |= 14;
-				uint16_t temp_len =
-					(uint16_t)(options[i].len - 269);
-				*(temp_ptr + delta_extra_byte + 1) =
-					(uint8_t)((temp_len & 0xFF00) >> 8);
-				*(temp_ptr + delta_extra_byte + 2) =
-					(uint8_t)((temp_len & 0x00FF) >> 0);
-				break;
-			default:
-				return len_extra_byte_error;
-				break;
-			}
+		switch (len_extra_byte) {
+		case 0:
+			*(header_byte) |= (uint8_t)(options[i].len);
+			break;
+		case 1:
+			*(header_byte) |= 13;
+			*(temp_ptr + delta_extra_byte + 1) =
+				(uint8_t)(options[i].len - 13);
+			break;
+		case 2:
+			*(header_byte) |= 14;
+			uint16_t temp_len = (uint16_t)(options[i].len - 269);
+			*(temp_ptr + delta_extra_byte + 1) =
+				(uint8_t)((temp_len & 0xFF00) >> 8);
+			*(temp_ptr + delta_extra_byte + 2) =
+				(uint8_t)((temp_len & 0x00FF) >> 0);
+			break;
+		default:
+			return len_extra_byte_error;
+			break;
 		}
 
 		/* Move to the position, where option value begins */
@@ -315,8 +311,7 @@ enum err coap2buf(struct o_coap_packet *in, uint8_t *out_byte_string,
 	BYTE_ARRAY_NEW(option_byte_string, MAX_COAP_OPTIONS_LEN, opt_bytes_len);
 
 	/* Convert all OSCORE U-options structure into byte string*/
-	TRY(options_into_byte_string(in->options, in->options_cnt,
-				     &option_byte_string));
+	TRY(options2buf(in->options, in->options_cnt, &option_byte_string));
 
 	/* Copy options byte string into output*/
 

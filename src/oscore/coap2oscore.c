@@ -56,32 +56,19 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 	uint8_t temp_len = 0;
 	uint8_t temp_E_option_delta_sum = 0;
 	uint8_t temp_U_option_delta_sum = 0;
-	uint8_t delta_extra_bytes = 0;
-	uint8_t len_extra_bytes = 0;
 
 	if (MAX_OPTION_COUNT < in_o_coap->options_cnt) {
 		return not_valid_input_packet;
 	}
 
 	for (uint8_t i = 0; i < in_o_coap->options_cnt; i++) {
-		delta_extra_bytes = 0;
-		len_extra_bytes = 0;
+		uint8_t extra_bytes =
+			opt_extra_bytes(in_o_coap->options[i].delta) +
+			opt_extra_bytes(in_o_coap->options[i].len);
 
 		temp_option_nr =
 			(uint8_t)(temp_option_nr + in_o_coap->options[i].delta);
 		temp_len = in_o_coap->options[i].len;
-
-		/* Calculate extra byte length of option delta and option length */
-		if (in_o_coap->options[i].delta > 13 &&
-		    in_o_coap->options[i].delta < 243)
-			delta_extra_bytes = 1;
-		else if (in_o_coap->options[i].delta >= 243)
-			delta_extra_bytes = 2;
-		if (in_o_coap->options[i].len > 13 &&
-		    in_o_coap->options[i].len < 243)
-			len_extra_bytes = 1;
-		else if (in_o_coap->options[i].len >= 243)
-			len_extra_bytes = 2;
 
 		/* process special options, see 4.1.3 in RFC8613*/
 		/* if the option does not need special processing just put it in the 
@@ -108,8 +95,7 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 				/* Add option header length and value length */
 				(*e_options_len) =
 					(uint16_t)((*e_options_len) + 1 +
-						   delta_extra_bytes +
-						   len_extra_bytes + temp_len);
+						   extra_bytes + temp_len);
 			} else {
 				/*notifications are responses*/
 				e_options[*e_options_cnt].len = 0;
@@ -176,8 +162,7 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 				/* Add option header length and value length */
 				(*e_options_len) =
 					(uint16_t)((*e_options_len) + 1 +
-						   delta_extra_bytes +
-						   len_extra_bytes + temp_len);
+						   extra_bytes + temp_len);
 			} else {
 				/* U-options */
 				U_options[*U_options_cnt].delta =
@@ -235,7 +220,7 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
 
 	/* Convert all E-options structure to byte string, and copy it to 
 	output*/
-	TRY(options_into_byte_string(E_options, E_options_cnt, &e_opt_serial));
+	TRY(options2buf(E_options, E_options_cnt, &e_opt_serial));
 
 	uint32_t dest_size = (plaintext->len - (uint32_t)(temp_plaintext_ptr +
 							  1 - plaintext->ptr));
@@ -552,7 +537,8 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 
 		TRY(update_request_piv_request_kid(c, &piv, &c->sc.sender_id));
 		TRY(cache_request_token(&c->rrc.token_request,
-					o_coap_pkt.header.TKL, o_coap_pkt.token));
+					o_coap_pkt.header.TKL,
+					o_coap_pkt.token));
 
 		TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,
 				 &c->rrc.nonce));
