@@ -28,6 +28,7 @@ extern "C" {
 #include "cantcoap.h"
 
 #define USE_IPV4
+#define ECHO_OPT_NUM 252
 
 struct context c_client;
 
@@ -235,16 +236,13 @@ int main()
 	char buffer[MAXLINE];
 
 	/*construct a CoAP packet*/
-	uint16_t mid1 = 256, mid2 = 0;
+	uint16_t mid1 = 256;
 	uint32_t token = 0;
 	int32_t n;
-	bool oscore_flag = false;
-	CoapPDU *unprotected_pdu = new CoapPDU();
 	CoapPDU *protected_pdu = new CoapPDU();
 
 	/*OSCORE contex initialization*/
 	oscore_init_params params = {
-		CLIENT,
 		sizeof(oscore_master_secret),
 		oscore_master_secret,
 		T1__SENDER_ID_LEN,
@@ -257,99 +255,94 @@ int main()
 		oscore_master_salt,
 		OSCORE_AES_CCM_16_64_128,
 		OSCORE_SHA_256,
+		true,
 	};
 	TRY(oscore_context_init(&params, &c_client));
 
 	uint8_t buf_oscore[256];
-	uint32_t buf_oscore_len = sizeof(buf_oscore);
 	uint8_t coap_rx_buf[256];
-	uint32_t coap_rx_buf_len = 0;
 	CoapPDU *recvPDU;
-	bool request_secure_resource = true;
 	uint8_t request_payload[] = { "This is some payload" };
+	bool first_response = true;
+	bool second_request = false;
+	uint8_t echo_opt_val[12];
 
 	while (1) {
-		if (request_secure_resource) {
-			/* send OSCORE request*/
-			request_secure_resource = false;
-			protected_pdu->reset();
-			protected_pdu->setVersion(1);
-			protected_pdu->setType(CoapPDU::COAP_CONFIRMABLE);
-			protected_pdu->setCode(CoapPDU::COAP_GET);
-			protected_pdu->setToken((uint8_t *)&(++token),
-						sizeof(token));
-			protected_pdu->setURI((char *)"tv1", 3);
-			protected_pdu->setMessageID(mid1++);
-			protected_pdu->setPayload(request_payload,
-						  sizeof(request_payload));
+		uint32_t buf_oscore_len = sizeof(buf_oscore);
+		uint32_t coap_rx_buf_len = sizeof(coap_rx_buf);
 
-			if (protected_pdu->validate()) {
-				printf("\n=================================================\n");
-				printf("CoAP message to be protected with OSOCRE\n");
-				protected_pdu->printHuman();
-			}
+		/* send OSCORE request*/
+		protected_pdu->reset();
+		protected_pdu->setVersion(1);
+		protected_pdu->setType(CoapPDU::COAP_CONFIRMABLE);
+		protected_pdu->setCode(CoapPDU::COAP_GET);
+		protected_pdu->setToken((uint8_t *)&(++token), sizeof(token));
+		protected_pdu->setURI((char *)"tv1", 3);
+		protected_pdu->setMessageID(mid1++);
+		if (second_request) {
+			protected_pdu->addOption(ECHO_OPT_NUM,
+						 sizeof(echo_opt_val),
+						 echo_opt_val);
+			second_request = false;
+		}
+		protected_pdu->setPayload(request_payload,
+					  sizeof(request_payload));
 
-			TRY(coap2oscore(protected_pdu->getPDUPointer(),
-					(uint16_t)protected_pdu->getPDULength(),
-					buf_oscore, &buf_oscore_len,
-					&c_client));
+		if (protected_pdu->validate()) {
+			printf("\n=================================================\n");
+			printf("CoAP message to be protected with OSOCRE\n");
+			protected_pdu->printHuman();
+		}
 
-			send(sockfd, buf_oscore, buf_oscore_len, 0);
-			/* receive */
-			n = recv(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL);
+		enum err r =
+			coap2oscore(protected_pdu->getPDUPointer(),
+				    (uint16_t)protected_pdu->getPDULength(),
+				    buf_oscore, &buf_oscore_len, &c_client);
+		if (r != ok) {
+			printf("Error in coap2oscore (Error code %d)!\n", r);
+		}
 
-			if (n < 0) {
-				printf("no response received\n");
-			} else {
-				TRY(oscore2coap((uint8_t *)buffer, n,
-						coap_rx_buf, &coap_rx_buf_len,
-						&oscore_flag, &c_client));
+		send(sockfd, buf_oscore, buf_oscore_len, 0);
 
-				recvPDU = new CoapPDU((uint8_t *)coap_rx_buf,
-						      coap_rx_buf_len);
-				if (recvPDU->validate()) {
-					printf("\n===================================================\n");
-					printf("OSCORE message received and converted to CoAP:\n");
-					recvPDU->printHuman();
-				}
-			}
-
+		/* receive */
+		n = recv(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL);
+		if (n < 0) {
+			printf("no response received\n");
 		} else {
-			/* send CoAP request*/
-			request_secure_resource = true;
-			unprotected_pdu->reset();
-			unprotected_pdu->setVersion(1);
-			unprotected_pdu->setType(CoapPDU::COAP_CONFIRMABLE);
-			unprotected_pdu->setCode(CoapPDU::COAP_GET);
-			unprotected_pdu->setToken((uint8_t *)&(++token),
-						  sizeof(token));
-			unprotected_pdu->setURI((char *)"tv2", 3);
-			unprotected_pdu->setMessageID(mid2++);
-			unprotected_pdu->setPayload(request_payload,
-						    sizeof(request_payload));
+			r = oscore2coap((uint8_t *)buffer, n, coap_rx_buf,
+					&coap_rx_buf_len, &c_client);
 
-			if (unprotected_pdu->validate()) {
-				printf("\n=================================================\n");
-				printf("Unprotected CoAP message\n");
-				unprotected_pdu->printHuman();
+			if (r != ok) {
+				printf("Error in oscore2coap (Error code %d)!\n",
+				       r);
+			}
+			recvPDU = new CoapPDU((uint8_t *)coap_rx_buf,
+					      coap_rx_buf_len);
+			if (recvPDU->validate()) {
+				printf("\n=============================================\n");
+				printf("Response CoAP message\n");
+				recvPDU->printHuman();
 			}
 
-			send(sockfd, unprotected_pdu->getPDUPointer(),
-			     unprotected_pdu->getPDULength(), 0);
-			/* receive */
-			n = recv(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL);
-
-			if (n < 0) {
-				printf("no response received\n");
-			} else {
-				recvPDU = new CoapPDU((uint8_t *)buffer, n);
-				if (recvPDU->validate()) {
-					printf("\n=============================================\n");
-					printf("Unprotected CoAP response message\n");
-					recvPDU->printHuman();
+			if (first_response) {
+				first_response = false;
+				CoapPDU::CoapOption *opts =
+					recvPDU->getOptions();
+				int num_opts = recvPDU->getNumOptions();
+				for (int i = 0; i < num_opts; i++) {
+					if (opts[i].optionNumber ==
+					    ECHO_OPT_NUM) {
+						printf("A response to the first request is received, which contains an ECHO option\n");
+						memcpy(echo_opt_val,
+						       opts[i].optionValuePointer,
+						       opts[i].optionValueLength);
+						second_request = true;
+						break;
+					}
 				}
 			}
 		}
+
 		/*wait 5 sec before sending the next packet*/
 		sleep(5);
 	}
