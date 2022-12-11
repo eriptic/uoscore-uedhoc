@@ -41,8 +41,12 @@ static void deserialization_test(uint8_t *in_data, uint16_t in_data_len,
 				 uint32_t options_len_in_byte)
 {
 	struct o_coap_packet coap_pkt;
+	struct byte_array d = BYTE_ARRAY_INIT(in_data, in_data_len);
+	enum err r =
+		options_deserialize(&d,
+				    (struct o_coap_option *)&coap_pkt.options,
+				    &coap_pkt.options_cnt, &coap_pkt.payload);
 
-	enum err r = options_deserialize(in_data, in_data_len, &coap_pkt);
 	zassert_equal(r, ok, "Error in options_deserialize. r: %d", r);
 
 	for (uint8_t i = 0; i < coap_pkt.options_cnt; i++) {

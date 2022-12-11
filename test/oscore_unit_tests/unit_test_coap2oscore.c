@@ -63,8 +63,8 @@ void t100_inner_outer_option_split__no_special_options(void)
 			       .value = NULL,
 			       .option_number = PROXY_URI }
                    },
-		.payload_len = 0,
-		.payload = NULL,
+		.payload.len = 0,
+		.payload.ptr = NULL,
 	};
 
 	struct o_coap_option inner_options[5];
@@ -170,8 +170,8 @@ void t101_inner_outer_option_split__with_observe_notification(void)
 			       .value = NULL,
 			       .option_number = PROXY_URI }
                    },
-		.payload_len = 0,
-		.payload = NULL,
+		.payload.len = 0,
+		.payload.ptr = NULL,
 	};
 
 	struct o_coap_option inner_options[5];
@@ -309,8 +309,8 @@ void t102_inner_outer_option_split__with_observe_registration(void)
 			       .value = NULL,
 			       .option_number = PROXY_URI }
                    },
-		.payload_len = 0,
-		.payload = NULL,
+		.payload.len = 0,
+		.payload.ptr = NULL,
 	};
 
 	struct o_coap_option inner_options[5];
@@ -439,8 +439,8 @@ void t103_oscore_pkg_generate__request_with_observe_registration(void)
 			       .value = NULL,
 			       .option_number = PROXY_URI }
                    },
-		.payload_len = 0,
-		.payload = NULL,
+		.payload.len = 0,
+		.payload.ptr = NULL,
 	};
 
 	struct o_coap_option u_options[] = {
@@ -487,8 +487,8 @@ void t103_oscore_pkg_generate__request_with_observe_registration(void)
 			       .len = 0,
 			       .value = NULL,
 			       .option_number = PROXY_URI } },
-		.payload_len = 0,
-		.payload = NULL,
+		.payload.len = 0,
+		.payload.ptr = NULL,
 	};
 
 	struct byte_array no_ciphertext = { .ptr = NULL, .len = 0 };
@@ -544,8 +544,8 @@ void t104_oscore_pkg_generate__request_with_observe_notification(void)
 			       .value = observe_val,
 			       .option_number = OBSERVE },
                    },
-		.payload_len = 0,
-		.payload = NULL,
+		.payload.len = 0,
+		.payload.ptr = NULL,
 	};
 
 	struct o_coap_option u_options[] = {
@@ -585,8 +585,8 @@ void t104_oscore_pkg_generate__request_with_observe_notification(void)
 			       .len = 0,
 			       .value = NULL,
 			       .option_number = OSCORE } },
-		.payload_len = 0,
-		.payload = NULL,
+		.payload.len = 0,
+		.payload.ptr = NULL,
 	};
 	struct byte_array no_ciphertext = { .ptr = NULL, .len = 0 };
 	r = oscore_pkg_generate(&coap_pkt, &oscore_pkt, u_options,

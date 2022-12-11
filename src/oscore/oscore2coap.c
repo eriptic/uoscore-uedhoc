@@ -152,11 +152,7 @@ static inline enum err payload_decrypt(struct context *c,
 				       struct byte_array *out_plaintext,
 				       struct o_coap_packet *oscore_packet)
 {
-	struct byte_array oscore_ciphertext = {
-		.len = oscore_packet->payload_len,
-		.ptr = oscore_packet->payload,
-	};
-	return oscore_cose_decrypt(&oscore_ciphertext, out_plaintext,
+	return oscore_cose_decrypt(&oscore_packet->payload, out_plaintext,
 				   &c->rrc.nonce, aad, &c->rc.recipient_key);
 }
 
@@ -257,13 +253,13 @@ static inline enum err o_coap_pkg_generate(struct byte_array *decrypted_payload,
 		out->token = oscore_pkt->token;
 
 	/* Payload */
-	out->payload_len = unprotected_o_coap_payload.len;
+	out->payload.len = unprotected_o_coap_payload.len;
 	if (unprotected_o_coap_payload.len == 0)
-		out->payload = NULL;
+		out->payload.ptr = NULL;
 	else
-		out->payload = unprotected_o_coap_payload.ptr;
+		out->payload.ptr = unprotected_o_coap_payload.ptr;
 
-	out->options_cnt = sizeof(out->options);
+	out->options_cnt = (uint8_t)sizeof(out->options);
 	/* reorder all options, and copy it to output coap packet */
 	TRY(options_from_oscore_reorder(oscore_pkt, E_options, E_options_cnt,
 					out));
@@ -292,7 +288,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 
 	/* Setup buffer for the plaintext. The plaintext is shorter than the 
 	ciphertext because of the authentication tag*/
-	uint32_t plaintext_bytes_len = oscore_packet.payload_len - AUTH_TAG_LEN;
+	uint32_t plaintext_bytes_len = oscore_packet.payload.len - AUTH_TAG_LEN;
 	BYTE_ARRAY_NEW(plaintext, MAX_PLAINTEXT_LEN, plaintext_bytes_len);
 
 	/*In requests the OSCORE packet contains at least a KID = sender ID 

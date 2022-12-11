@@ -457,8 +457,8 @@ void t9_oscore_client_server_observe(void)
 			       .value = uri_path_val,
 			       .option_number = URI_PATH},/*E, opt num 11*/
                    },
-		.payload_len = 0,
-		.payload = NULL,
+		.payload.len = 0,
+		.payload.ptr = NULL,
 	};
 
 	r = coap2buf(&coap_pkt_registration, ser_coap_pkt_registration,
@@ -536,8 +536,8 @@ void t9_oscore_client_server_observe(void)
 			       .value =
 				       (uint8_t *)&val, //convert to network byte order
 			       .option_number = OBSERVE } },
-		.payload_len = 0,
-		.payload = NULL,
+		.payload.len = 0,
+		.payload.ptr = NULL,
 	};
 
 	r = coap2buf(&coap_pkt_notification1, ser_coap_pkt_notification1,
@@ -683,8 +683,8 @@ void t10_oscore_client_server_after_reboot(void)
                         .value = uri_path_val,
                         .option_number = URI_PATH},/*E, opt num 11*/
                    },
-		.payload_len = 0,
-		.payload = NULL,
+		.payload.len = 0,
+		.payload.ptr = NULL,
 	};
 
 	r = coap2buf(&coap_pkt_req1, ser_coap_pkt_req1, &ser_coap_pkt_req1_len);
@@ -742,8 +742,8 @@ void t10_oscore_client_server_after_reboot(void)
 			       .len = sizeof(echo_opt_val),
 			       .value = echo_opt_val,
 			       .option_number = ECHO } },
-		.payload_len = 0,
-		.payload = NULL,
+		.payload.len = 0,
+		.payload.ptr = NULL,
 	};
 
 	r = coap2buf(&coap_pkt_resp1, ser_coap_pkt_resp1,
@@ -809,8 +809,8 @@ void t10_oscore_client_server_after_reboot(void)
                         	.value = echo_opt_val,
                         	.option_number = ECHO},/*ECHO, opt num 252*/
                    },
-		.payload_len = 0,
-		.payload = NULL,
+		.payload.len = 0,
+		.payload.ptr = NULL,
 	};
 
 	r = coap2buf(&coap_pkt_req2, ser_coap_pkt_req2, &ser_coap_pkt_req2_len);
@@ -869,8 +869,8 @@ void t10_oscore_client_server_after_reboot(void)
 		.token = token,
 		.options_cnt = 0,
 		.options = {},
-		.payload_len = sizeof(payload),
-		.payload = payload,
+		.payload.len = sizeof(payload),
+		.payload.ptr = payload,
 	};
 
 	r = coap2buf(&coap_pkt_resp2, ser_coap_pkt_resp2,
@@ -928,8 +928,8 @@ void t10_oscore_client_server_after_reboot(void)
                         .value = uri_path_val,
                         .option_number = URI_PATH},/*E, opt num 11*/
                    },
-		.payload_len = 0,
-		.payload = NULL,
+		.payload.len = 0,
+		.payload.ptr = NULL,
 	};
 
 	r = coap2buf(&coap_pkt_req3, ser_coap_pkt_req3, &ser_coap_pkt_req3_len);

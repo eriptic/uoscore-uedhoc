@@ -229,14 +229,14 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
 	temp_plaintext_ptr += e_opt_serial.len;
 
 	/* Add payload to plaintext*/
-	if (in_o_coap->payload_len != 0) {
+	if (in_o_coap->payload.len != 0) {
 		/* An extra byte 0xFF before payload*/
 		*temp_plaintext_ptr = 0xff;
 
 		dest_size = (plaintext->len - (uint32_t)(temp_plaintext_ptr +
 							 1 - plaintext->ptr));
 		TRY(_memcpy_s(++temp_plaintext_ptr, dest_size,
-			      in_o_coap->payload, in_o_coap->payload_len));
+			      in_o_coap->payload.ptr, in_o_coap->payload.len));
 	}
 	PRINT_ARRAY("Plain text", plaintext->ptr, plaintext->len);
 	return ok;
@@ -451,8 +451,8 @@ STATIC enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 	}
 
 	/* Protected Payload */
-	out_oscore->payload_len = in_ciphertext->len;
-	out_oscore->payload = in_ciphertext->ptr;
+	out_oscore->payload.len = in_ciphertext->len;
+	out_oscore->payload.ptr = in_ciphertext->ptr;
 	return ok;
 }
 
@@ -513,8 +513,8 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	/* Calculate complete plaintext length: 1 byte code + E-options + 1 byte 0xFF + payload */
 	plaintext_len = (uint32_t)(1 + e_options_len);
 
-	if (o_coap_pkt.payload_len) {
-		plaintext_len = plaintext_len + 1 + o_coap_pkt.payload_len;
+	if (o_coap_pkt.payload.len) {
+		plaintext_len = plaintext_len + 1 + o_coap_pkt.payload.len;
 	}
 
 	/* Setup buffer for plaintext */

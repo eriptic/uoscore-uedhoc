@@ -109,41 +109,34 @@ enum err options_serialize(struct o_coap_option *options, uint8_t options_cnt,
 	return ok;
 }
 
-/**
- * @brief Parse incoming options byte string into options structure
- * @param in_data: pointer to input data in byte string format
- * @param in_data_len: length of input byte string
- * @param out_options: pointer to output options structure array
- * @param out_options_count: count number of output options
- * @return  err
- */
-STATIC enum err options_deserialize(uint8_t *in_data, uint16_t in_data_len,
-				    struct o_coap_packet *out)
+enum err options_deserialize(struct byte_array *in_data,
+			     struct o_coap_option *opt, uint8_t *opt_cnt,
+			     struct byte_array *payload)
 {
-	uint8_t *temp_options_ptr = in_data;
+	uint8_t *temp_options_ptr = in_data->ptr;
 	uint8_t temp_options_count = 0;
 	uint8_t temp_option_header_len = 0;
 	uint16_t temp_option_delta = 0;
 	uint16_t temp_option_len = 0;
 	uint16_t temp_option_number = 0;
 
-	if (0 == in_data_len) {
-		out->payload_len = 0;
-		out->payload = NULL;
-		out->options_cnt = 0;
+	if (0 == in_data->len) {
+		payload->len = 0;
+		payload->ptr = NULL;
+		*opt_cnt = 0;
 		return ok;
 	}
 
 	/* Go through the in_data to find out how many options are there */
 	uint16_t i = 0;
-	while (i < in_data_len) {
-		if (OPTION_PAYLOAD_MARKER == in_data[i]) {
-			if ((in_data_len - i) < 2) {
+	while (i < in_data->len) {
+		if (OPTION_PAYLOAD_MARKER == in_data->ptr[i]) {
+			if ((in_data->len - i) < 2) {
 				return not_valid_input_packet;
 			}
 			i++;
-			out->payload_len = (uint32_t)in_data_len - i;
-			out->payload = &in_data[i];
+			payload->len = (uint32_t)in_data->len - i;
+			payload->ptr = &in_data->ptr[i];
 			return ok;
 		}
 
@@ -192,7 +185,7 @@ STATIC enum err options_deserialize(uint8_t *in_data, uint16_t in_data_len,
 				(uint8_t)(temp_option_header_len + 2);
 			temp_option_len =
 				(uint16_t)(((*temp_options_ptr) << 8) |
-					  (*(temp_options_ptr + 1) + 269));
+					   (*(temp_options_ptr + 1) + 269));
 			temp_options_ptr += 2;
 			break;
 		case 15:
@@ -205,15 +198,13 @@ STATIC enum err options_deserialize(uint8_t *in_data, uint16_t in_data_len,
 
 		temp_option_number = temp_option_number + temp_option_delta;
 		/* Update in output options */
-		out->options[temp_options_count].delta = temp_option_delta;
-		out->options[temp_options_count].len = temp_option_len;
-		out->options[temp_options_count].option_number =
-			temp_option_number;
+		opt[temp_options_count].delta = temp_option_delta;
+		opt[temp_options_count].len = temp_option_len;
+		opt[temp_options_count].option_number = temp_option_number;
 		if (temp_option_len == 0)
-			out->options[temp_options_count].value = NULL;
+			opt[temp_options_count].value = NULL;
 		else
-			out->options[temp_options_count].value =
-				temp_options_ptr;
+			opt[temp_options_count].value = temp_options_ptr;
 
 		/* Update parameters*/
 		i = (uint16_t)(i + temp_option_header_len + temp_option_len);
@@ -223,7 +214,7 @@ STATIC enum err options_deserialize(uint8_t *in_data, uint16_t in_data_len,
 		} else {
 			return not_valid_input_packet;
 		}
-		out->options_cnt = temp_options_count;
+		*opt_cnt = temp_options_count;
 	}
 	return ok;
 }
@@ -265,7 +256,10 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
 		tmp_p += out->header.TKL;
 		payload_len -= out->header.TKL;
 	}
-	TRY(options_deserialize(tmp_p, (uint16_t)payload_len, out));
+	struct byte_array remaining_bytes = BYTE_ARRAY_INIT(tmp_p, payload_len);
+	TRY(options_deserialize(&remaining_bytes,
+				(struct o_coap_option *)&out->options,
+				&out->options_cnt, &out->payload));
 
 	return ok;
 }
@@ -318,18 +312,18 @@ enum err coap2buf(struct o_coap_packet *in, uint8_t *out_byte_string,
 	temp_out_ptr += option_byte_string.len;
 
 	/* Payload */
-	if (in->payload_len != 0) {
-		*temp_out_ptr = 0xFF;
+	if (in->payload.len != 0) {
+		*temp_out_ptr = OPTION_PAYLOAD_MARKER;
 
 		dest_size = *out_byte_string_len -
 			    (uint32_t)(temp_out_ptr + 1 - out_byte_string);
-		TRY(_memcpy_s(++temp_out_ptr, dest_size, in->payload,
-			      in->payload_len));
+		TRY(_memcpy_s(++temp_out_ptr, dest_size, in->payload.ptr,
+			      in->payload.len));
 	}
 	*out_byte_string_len =
 		(uint32_t)4 + in->header.TKL + option_byte_string.len;
-	if (in->payload_len) {
-		*out_byte_string_len += 1 + in->payload_len;
+	if (in->payload.len) {
+		*out_byte_string_len += 1 + in->payload.len;
 	}
 
 	PRINT_ARRAY("Byte string of the converted packet", out_byte_string,

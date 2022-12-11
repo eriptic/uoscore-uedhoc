@@ -96,8 +96,7 @@ struct o_coap_packet {
 	uint8_t *token;
 	uint8_t options_cnt;
 	struct o_coap_option options[MAX_OPTION_COUNT];
-	uint32_t payload_len;
-	uint8_t *payload;
+	struct byte_array payload;
 };
 
 struct compressed_oscore_option {
@@ -145,10 +144,21 @@ enum err options_serialize(struct o_coap_option *options, uint8_t options_cnt,
 			   struct byte_array *out_byte_string);
 
 /**
+ * @brief Deserializes a byte string containing options and eventually a payload
+ * @param in_data: input data
+ * @param opt: pointer to output options structure array
+ * @param opt_cnt: count number of output options
+ * @param payload: payload 
+ * @return  err
+ */
+enum err options_deserialize(struct byte_array *in_data,
+			     struct o_coap_option *opt, uint8_t *opt_cnt,
+			     struct byte_array *payload);
+
+/**
  * @brief	Checks if a packet is a request 
  * @param	packet: a pointer to a CoAP/OSCORE packet
  * @retval	true if the packet is a request else false
- * 
  */
 bool is_request(struct o_coap_packet *packet);
 
