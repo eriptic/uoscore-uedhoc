@@ -169,14 +169,12 @@ options_from_oscore_reorder(struct o_coap_packet *oscore_pkt,
 			    struct o_coap_option *E_options,
 			    uint8_t E_options_cnt, struct o_coap_packet *out)
 {
-	// uint16_t temp_delta_sum = 0;
-
 	/*the maximum amount of options for the CoAP packet 
 	is the amount of all options -1 (for the OSCORE option)*/
 	uint8_t max_coap_opt_cnt =
 		(uint8_t)(oscore_pkt->options_cnt + E_options_cnt - 1);
 
-	TRY(check_buffer_size(out->options_cnt, max_coap_opt_cnt));
+	TRY(check_buffer_size(MAX_OPTION_COUNT, max_coap_opt_cnt));
 	out->options_cnt = 0;
 
 	/*Get the all outer options. Discard OSCORE and outer OBSERVE */
@@ -226,11 +224,8 @@ static inline enum err o_coap_pkg_generate(struct byte_array *decrypted_payload,
 					   struct o_coap_packet *out)
 {
 	uint8_t code = 0;
-	struct byte_array unprotected_o_coap_payload = {
-		.len = 0,
-		.ptr = NULL,
-	};
-	struct o_coap_option E_options[10];
+	struct byte_array unprotected_o_coap_payload = BYTE_ARRAY_INIT(NULL, 0);
+	struct o_coap_option E_options[MAX_E_OPTION_COUNT];
 	uint8_t E_options_cnt = 0;
 
 	/* Parse decrypted payload: code + options + unprotected CoAP payload*/
@@ -247,19 +242,19 @@ static inline enum err o_coap_pkg_generate(struct byte_array *decrypted_payload,
 	out->header.MID = oscore_pkt->header.MID;
 
 	/* Token */
-	if (oscore_pkt->header.TKL == 0)
+	if (oscore_pkt->header.TKL == 0) {
 		out->token = NULL;
-	else
+	} else {
 		out->token = oscore_pkt->token;
-
+	}
 	/* Payload */
 	out->payload.len = unprotected_o_coap_payload.len;
-	if (unprotected_o_coap_payload.len == 0)
+	if (unprotected_o_coap_payload.len == 0) {
 		out->payload.ptr = NULL;
-	else
+	} else {
 		out->payload.ptr = unprotected_o_coap_payload.ptr;
+	}
 
-	out->options_cnt = (uint8_t)sizeof(out->options);
 	/* reorder all options, and copy it to output coap packet */
 	TRY(options_from_oscore_reorder(oscore_pkt, E_options, E_options_cnt,
 					out));

@@ -46,8 +46,6 @@
 #define OSCORE_OPT_VALUE_LEN                                                   \
 	(2 + MAX_PIV_LEN + MAX_KID_CONTEXT_LEN + MAX_KID_LEN)
 
-#define MAX_OPTION_COUNT 20
-
 #define TYPE_CON 0x00
 #define TYPE_NON 0x01
 #define TYPE_ACK 0x02
@@ -65,6 +63,10 @@
 #define REQUEST_CLASS 0x00
 
 #define OPTION_PAYLOAD_MARKER 0xFF
+
+#define MAX_OPTION_COUNT 20
+#define MAX_E_OPTION_COUNT 10
+
 /* all CoAP instances are preceeded with 'o_' to show correspondence to
  * OSCORE and prevent conflicts with networking CoAP libraries 
  */
