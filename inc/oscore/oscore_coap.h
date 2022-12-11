@@ -78,9 +78,9 @@ struct o_coap_header {
 
 struct o_coap_option {
 	uint16_t delta;
-	uint8_t len;
+	uint16_t len;
 	uint8_t *value;
-	uint8_t option_number;
+	uint16_t option_number;
 };
 
 struct oscore_option {
@@ -88,7 +88,7 @@ struct oscore_option {
 	uint8_t len;
 	uint8_t *value;
 	uint8_t buf[OSCORE_OPT_VALUE_LEN];
-	uint8_t option_number;
+	uint16_t option_number;
 };
 
 struct o_coap_packet {
@@ -141,9 +141,8 @@ enum err coap2buf(struct o_coap_packet *in, uint8_t *out_byte_string,
  * @return  err
  *
  */
-enum err options2buf(struct o_coap_option *options,
-				  uint8_t options_cnt,
-				  struct byte_array *out_byte_string);
+enum err options_serialize(struct o_coap_option *options, uint8_t options_cnt,
+			   struct byte_array *out_byte_string);
 
 /**
  * @brief	Checks if a packet is a request 

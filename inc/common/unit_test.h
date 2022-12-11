@@ -14,6 +14,8 @@
 
 #include "byte_array.h"
 
+#include "oscore/oscore_coap.h"
+
 /*when UNIT_TEST is defined all static functions are not static anymore and 
 can be used in unit test files.*/
 #if UNIT_TEST
@@ -34,6 +36,8 @@ enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 			     struct byte_array *in_ciphertext,
 			     struct oscore_option *oscore_option);
 
+enum err options_deserialize(uint8_t *in_data, uint16_t in_data_len,
+			     struct o_coap_packet *out);
 #else
 #define STATIC static
 #endif

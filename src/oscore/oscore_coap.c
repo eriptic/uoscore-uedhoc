@@ -21,6 +21,7 @@
 #include "common/oscore_edhoc_error.h"
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
+#include "common/unit_test.h"
 
 uint8_t opt_extra_bytes(uint16_t delta_or_len)
 {
@@ -35,23 +36,24 @@ uint8_t opt_extra_bytes(uint16_t delta_or_len)
 	return 2;
 }
 
-enum err options2buf(struct o_coap_option *options, uint8_t options_cnt,
-		     struct byte_array *out_byte_string)
+enum err options_serialize(struct o_coap_option *options, uint8_t options_cnt,
+			   struct byte_array *out)
 {
 	uint8_t delta_extra_byte = 0;
 	uint8_t len_extra_byte = 0;
-	uint8_t *temp_ptr = out_byte_string->ptr;
+	uint8_t *temp_ptr = out->ptr;
 	uint8_t *header_byte;
 
 	/* Reset length */
-	uint32_t out_byte_string_capacity = out_byte_string->len;
-	out_byte_string->len = 0;
+	uint32_t out_capacity = out->len;
+	out->len = 0;
 
 	for (uint8_t i = 0; i < options_cnt; i++) {
 		delta_extra_byte = opt_extra_bytes(options[i].delta);
 		len_extra_byte = opt_extra_bytes(options[i].len);
 
 		header_byte = temp_ptr;
+		*header_byte = 0;
 
 		switch (delta_extra_byte) {
 		case 0:
@@ -67,9 +69,6 @@ enum err options2buf(struct o_coap_option *options, uint8_t options_cnt,
 				(uint16_t)(options[i].delta - 269);
 			*(temp_ptr + 1) = (uint8_t)((temp_delta & 0xFF00) >> 8);
 			*(temp_ptr + 2) = (uint8_t)((temp_delta & 0x00FF) >> 0);
-			break;
-		default:
-			return delta_extra_byte_error;
 			break;
 		}
 
@@ -90,22 +89,17 @@ enum err options2buf(struct o_coap_option *options, uint8_t options_cnt,
 			*(temp_ptr + delta_extra_byte + 2) =
 				(uint8_t)((temp_len & 0x00FF) >> 0);
 			break;
-		default:
-			return len_extra_byte_error;
-			break;
 		}
 
 		/* Move to the position, where option value begins */
 		temp_ptr += 1 + delta_extra_byte + len_extra_byte;
 		/* Add length of current option*/
-		out_byte_string->len =
-			(uint32_t)(out_byte_string->len + 1 + delta_extra_byte +
-				   len_extra_byte + options[i].len);
+		out->len = (uint32_t)(out->len + 1 + delta_extra_byte +
+				      len_extra_byte + options[i].len);
 		/* Copy the byte string of current option into output*/
 		if (0 != options[i].len) {
 			uint32_t dest_size =
-				out_byte_string_capacity -
-				(uint32_t)(temp_ptr - out_byte_string->ptr);
+				out_capacity - (uint32_t)(temp_ptr - out->ptr);
 			TRY(_memcpy_s(temp_ptr, dest_size, options[i].value,
 				      options[i].len));
 
@@ -123,15 +117,15 @@ enum err options2buf(struct o_coap_option *options, uint8_t options_cnt,
  * @param out_options_count: count number of output options
  * @return  err
  */
-static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
-				   struct o_coap_packet *out)
+STATIC enum err options_deserialize(uint8_t *in_data, uint16_t in_data_len,
+				    struct o_coap_packet *out)
 {
 	uint8_t *temp_options_ptr = in_data;
 	uint8_t temp_options_count = 0;
 	uint8_t temp_option_header_len = 0;
-	uint8_t temp_option_delta = 0;
-	uint8_t temp_option_len = 0;
-	uint8_t temp_option_number = 0;
+	uint16_t temp_option_delta = 0;
+	uint16_t temp_option_len = 0;
+	uint16_t temp_option_number = 0;
 
 	if (0 == in_data_len) {
 		out->payload_len = 0;
@@ -172,8 +166,9 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 2);
 			temp_option_delta =
-				(uint8_t)(((*temp_options_ptr) << 8) |
-					  (*(temp_options_ptr + 1) + 269));
+				(uint16_t)(((*temp_options_ptr) << 8) |
+					   *(temp_options_ptr + 1)) +
+				269;
 			temp_options_ptr += 2;
 			break;
 		case 15:
@@ -196,7 +191,7 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 			temp_option_header_len =
 				(uint8_t)(temp_option_header_len + 2);
 			temp_option_len =
-				(uint8_t)(((*temp_options_ptr) << 8) |
+				(uint16_t)(((*temp_options_ptr) << 8) |
 					  (*(temp_options_ptr + 1) + 269));
 			temp_options_ptr += 2;
 			break;
@@ -208,8 +203,7 @@ static inline enum err buf2options(uint8_t *in_data, uint16_t in_data_len,
 			break;
 		}
 
-		temp_option_number =
-			(uint8_t)(temp_option_number + temp_option_delta);
+		temp_option_number = temp_option_number + temp_option_delta;
 		/* Update in output options */
 		out->options[temp_options_count].delta = temp_option_delta;
 		out->options[temp_options_count].len = temp_option_len;
@@ -271,7 +265,7 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
 		tmp_p += out->header.TKL;
 		payload_len -= out->header.TKL;
 	}
-	TRY(buf2options(tmp_p, (uint16_t)payload_len, out));
+	TRY(options_deserialize(tmp_p, (uint16_t)payload_len, out));
 
 	return ok;
 }
@@ -311,7 +305,8 @@ enum err coap2buf(struct o_coap_packet *in, uint8_t *out_byte_string,
 	BYTE_ARRAY_NEW(option_byte_string, MAX_COAP_OPTIONS_LEN, opt_bytes_len);
 
 	/* Convert all OSCORE U-options structure into byte string*/
-	TRY(options2buf(in->options, in->options_cnt, &option_byte_string));
+	TRY(options_serialize(in->options, in->options_cnt,
+			      &option_byte_string));
 
 	/* Copy options byte string into output*/
 

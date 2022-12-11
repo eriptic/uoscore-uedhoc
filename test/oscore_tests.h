@@ -28,4 +28,5 @@ void t101_inner_outer_option_split__with_observe_notification(void);
 void t102_inner_outer_option_split__with_observe_registration(void);
 void t103_oscore_pkg_generate__request_with_observe_registration(void);
 void t104_oscore_pkg_generate__request_with_observe_notification(void);
+void t200_options_serialize_deserialize(void);
 #endif

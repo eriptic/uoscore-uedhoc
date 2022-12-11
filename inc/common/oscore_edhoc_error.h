@@ -61,8 +61,6 @@ enum err {
 	oscore_inpkt_invalid_option_delta = 210,
 	oscore_inpkt_invalid_optionlen = 211,
 	oscore_inpkt_invalid_piv = 212,
-	delta_extra_byte_error = 215,
-	len_extra_byte_error = 216,
 	not_valid_input_packet = 218,
 	oscore_replay_window_protection_error = 219,
 	oscore_replay_notification_protection_error = 220,

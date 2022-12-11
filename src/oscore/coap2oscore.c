@@ -53,7 +53,7 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 	*e_options_len = 0;
 
 	uint8_t temp_option_nr = 0;
-	uint8_t temp_len = 0;
+	uint16_t temp_len = 0;
 	uint8_t temp_E_option_delta_sum = 0;
 	uint8_t temp_U_option_delta_sum = 0;
 
@@ -220,7 +220,7 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
 
 	/* Convert all E-options structure to byte string, and copy it to 
 	output*/
-	TRY(options2buf(E_options, E_options_cnt, &e_opt_serial));
+	TRY(options_serialize(E_options, E_options_cnt, &e_opt_serial));
 
 	uint32_t dest_size = (plaintext->len - (uint32_t)(temp_plaintext_ptr +
 							  1 - plaintext->ptr));

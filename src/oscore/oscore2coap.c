@@ -44,9 +44,9 @@ oscore_option_parser(struct o_coap_packet *in,
 {
 	uint8_t temp_option_count = in->options_cnt;
 	struct o_coap_option *temp_options = in->options;
-	uint8_t temp_option_num = 0;
+	uint16_t temp_option_num = 0;
 	uint8_t *temp_current_option_value_ptr;
-	uint8_t temp_kid_len = 0;
+	uint16_t temp_kid_len = 0;
 
 	enum err r = not_oscore_pkt;
 

@@ -2,13 +2,13 @@
 #include <zephyr/zephyr.h>
 #include <zephyr/ztest.h>
 
-#include "oscore/oscore_coap.h"
-#include "oscore/option.h"
-
 #include "common/unit_test.h"
 #include "common/oscore_edhoc_error.h"
 #include "common/print_util.h"
 #include "common/byte_array.h"
+
+#include "oscore/oscore_coap.h"
+#include "oscore/option.h"
 
 /* Use this function for debugging to print an array of options*/
 static void print_options(struct o_coap_option *opt, uint8_t opt_cnt)
