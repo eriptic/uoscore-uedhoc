@@ -128,7 +128,7 @@ enum err replay_protection_check_notification(uint64_t notification_num,
 {
 	//convert PIV to uint64_t
 	uint64_t tmp = 0;
-	for (uint8_t i = 0; i < piv->len; i++) {
+	for (size_t i = 0; i < piv->len; i++) {
 		tmp += (uint64_t)piv->ptr[i] << 8 * i;
 	}
 

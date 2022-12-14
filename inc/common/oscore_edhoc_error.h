@@ -24,6 +24,7 @@ enum err {
 	crypto_operation_not_implemented = 5,
 	/*indicates that transport layer is not initialized*/
 	transport_deinitialized = 6,
+	not_implemented = 7,
 
 	/*EDHOC specifc errors*/
 	/*todo implement error messages*/
