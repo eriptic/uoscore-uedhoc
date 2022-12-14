@@ -177,7 +177,7 @@ options_from_oscore_reorder(struct o_coap_packet *oscore_pkt,
 	TRY(check_buffer_size(MAX_OPTION_COUNT, max_coap_opt_cnt));
 	out->options_cnt = 0;
 
-	/*Get the all outer options. Discard OSCORE and outer OBSERVE */
+	/*Get the all outer options. Discard OSCORE and outer OBSERVE as specified in 8.2 and 8.4 */
 	for (uint8_t i = 0; i < oscore_pkt->options_cnt; i++) {
 		if ((oscore_pkt->options[i].option_number != OSCORE) &&
 		    (oscore_pkt->options[i].option_number != OBSERVE)) {
@@ -238,7 +238,7 @@ static inline enum err o_coap_pkg_generate(struct byte_array *decrypted_payload,
 	out->header.ver = oscore_pkt->header.ver;
 	out->header.type = oscore_pkt->header.type;
 	out->header.TKL = oscore_pkt->header.TKL;
-	out->header.code = code;
+	out->header.code = code; //decrypted code must be used, see 8.2 p.7
 	out->header.MID = oscore_pkt->header.MID;
 
 	/* Token */
@@ -312,14 +312,12 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 
 		/*check if the packet is replayed*/
 		if (!c->rrc.second_req_expected) {
-			PRINT_MSG("Is the message replied?\n");
 			if (!server_is_sequence_number_valid(
 				    *oscore_option.piv.ptr,
 				    &c->rc.replay_window)) {
-				PRINT_MSG("Yes, the message is replied!\n");
+				PRINT_MSG("Replayed message detected!\n");
 				return oscore_replay_window_protection_error;
 			}
-			PRINT_MSG("No, the message is not replied!\n");
 		}
 
 		/*calculate nonce*/
@@ -349,6 +347,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 						    &c->rc.replay_window);
 		}
 	} else {
+		/* received any kind of response */
 		TRY(verify_token(&c->rrc.token_request,
 				 oscore_packet.header.TKL,
 				 oscore_packet.token));
@@ -386,6 +385,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 					&c->rc.notification_num_initialized,
 					&oscore_option.piv));
 			} else {
+				/* typically the first response after server reset, containing its own PIV and ECHO option as a freshness challange for the client */
 				TRY(create_nonce(
 					&oscore_option.kid, &oscore_option.piv,
 					&c->cc.common_iv, &c->rrc.nonce));
@@ -403,6 +403,8 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 						    &oscore_packet));
 			}
 		} else {
+			/* regular response does not have PIV field, and rcc.nonce from the request is used to decrypt the packet */
+
 			/*compute AAD*/
 			uint8_t aad_buf[MAX_AAD_LEN];
 			struct byte_array aad =

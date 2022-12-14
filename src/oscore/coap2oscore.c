@@ -593,11 +593,17 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 
 	} else {
 		/* A server prepares a response to a regular request. 
-		However not the first response.*/
+		However not the first response.
+		- PIV (and rrc.nonce) from the request is used
+		- KID usage don't apply as the library doesn't support group communication
+		- KID context usage don't apply, as the library use Appendix B.1 instead of B.2.
+		For more details, see 8.3 and the following hyperlinks. */
 		oscore_option.len = 0;
 		oscore_option.value = NULL;
 	}
 
+	/* AAD shares the same format for both requests and responses, yet request_kid and request_piv are only needed for responses.
+	For more details, see 5.4. */
 	BYTE_ARRAY_NEW(aad, MAX_AAD_LEN, MAX_AAD_LEN);
 	TRY(create_aad(NULL, 0, c->cc.aead_alg, &c->rrc.request_kid,
 		       &c->rrc.request_piv, &aad));

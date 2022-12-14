@@ -581,6 +581,7 @@ void t9_oscore_client_server_observe(void)
 		    ser_conv_coap_pkt_len);
 
 	/*try replay notification 1*/
+	PRINT_MSG("Try to replay previous notification\n");
 	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
 			&ser_conv_coap_pkt_len, &c_client);
 	zassert_equal(r, oscore_replay_notification_protection_error,

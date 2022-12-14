@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "oscore/replay_protection.h"
+#include "oscore/security_context.h"
 #include "common/memcpy_s.h"
 #include "common/byte_array.h"
 
@@ -126,14 +127,11 @@ enum err replay_protection_check_notification(uint64_t notification_num,
 					      bool notification_num_initialized,
 					      struct byte_array *piv)
 {
-	//convert PIV to uint64_t
-	uint64_t tmp = 0;
-	for (uint8_t i = 0; i < piv->len; i++) {
-		tmp += (uint64_t)piv->ptr[i] << 8 * i;
-	}
+	uint64_t ssn;
+	TRY(piv2ssn(piv, &ssn));
 
 	if (notification_num_initialized) {
-		if (notification_num >= tmp) {
+		if (notification_num >= ssn) {
 			PRINT_MSG("Replayed notification detected!\n");
 			return oscore_replay_notification_protection_error;
 		}

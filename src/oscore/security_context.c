@@ -209,3 +209,17 @@ enum err ssn2piv(uint64_t ssn, struct byte_array *piv)
 	PRINT_ARRAY("PIV", piv->ptr, piv->len);
 	return ok;
 }
+
+enum err piv2ssn(struct byte_array *piv, uint64_t *ssn)
+{
+	if ( (NULL == ssn) || (NULL == piv) )
+	{
+		return wrong_parameter;
+	}
+	uint64_t result = 0;
+	for (size_t pos = 0; pos < piv->len; pos++) {
+		result += (uint64_t)(piv->ptr[pos]) << (8 * pos);
+	}
+	*ssn = result;
+	return ok;
+}
