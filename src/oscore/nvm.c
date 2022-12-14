@@ -22,10 +22,12 @@
  * 			Number MUST be stored periodically in NVM. 
  * @param	sender_id the user may use the sender_id as a key in a table in 
  * 			NVM holding SSNs for different sender contexts. 
+ * @param   id_context id of the context. To be used as an additional key 
  * @param	ssn the ssn to be written in NVM
  * @retval	ok or error code if storing the SSN was not possible.
  */
-enum err WEAK nvm_write_ssn(const struct byte_array *sender_id, uint64_t ssn)
+enum err WEAK nvm_write_ssn(const struct byte_array *sender_id,
+			    const struct byte_array *id_context, uint64_t ssn)
 {
 #warning "The nvm_write_ssn() function MUST be overwritten by user!!!\n"
 
@@ -39,10 +41,12 @@ enum err WEAK nvm_write_ssn(const struct byte_array *sender_id, uint64_t ssn)
  * 			Number MUST be restored from NVM at each reboot. 
  * @param	sender_id the user may use the sender_id as a key in a table in 
  * 			NVM holding SSNs for different sender contexts. 
+ * @param   id_context id of the context. To be used as an additional key 
  * @param	ssn the ssn to be read out from NVM
  * @retval	ok or error code if the retrieving the SSN was not possible.
  */
-enum err WEAK nvm_read_ssn(const struct byte_array *sender_id, uint64_t *ssn)
+enum err WEAK nvm_read_ssn(const struct byte_array *sender_id,
+			   const struct byte_array *id_context, uint64_t *ssn)
 {
 #warning "The nvm_read_ssn() function MUST be overwritten by user!!!\n"
 	*ssn = 0;
@@ -54,7 +58,7 @@ enum err ssn_store_in_nvm(const struct byte_array *sender_id,
 			  bool ssn_in_nvm)
 {
 	if (ssn_in_nvm && (0 == ssn % K_SSN_NVM_STORE_INTERVAL)) {
-		TRY(nvm_write_ssn(sender_id, ssn));
+		TRY(nvm_write_ssn(sender_id, id_context, ssn));
 	}
 	return ok;
 }
@@ -65,11 +69,11 @@ enum err ssn_init(const struct byte_array *sender_id,
 {
 	if (!ssn_in_nvm) {
 		*ssn = 0;
-		PRINTF("SSN initialized not from NMV. SSN = %llu\n", *ssn);
+		PRINTF("SSN initialized not from NMV. SSN = %lu\n", *ssn);
 	} else {
-		TRY(nvm_read_ssn(sender_id, ssn));
+		TRY(nvm_read_ssn(sender_id, id_context, ssn));
 		*ssn += K_SSN_NVM_STORE_INTERVAL + F_NVM_MAX_WRITE_FAILURE;
-		PRINTF("SSN initialized from NMV. SSN = %llu\n", *ssn);
+		PRINTF("SSN initialized from NMV. SSN = %lu\n", *ssn);
 	}
 	return ok;
 }
