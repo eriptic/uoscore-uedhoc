@@ -186,16 +186,6 @@ int main()
 
 	TRY_EXPECT(start_coap_server(&sockfd), 0);
 
-#ifdef USE_RANDOM_EPHEMERAL_DH_KEY
-	uint32_t seed;
-	uint8_t G_Y_random[32];
-	uint8_t Y_random[32];
-	c_r.g_y.ptr = G_Y_random;
-	c_r.g_y.len = sizeof(G_Y_random);
-	c_r.y.ptr = Y_random;
-	c_r.y.len = sizeof(Y_random);
-#endif
-
 	c_r.msg4 = true;
 	c_r.sock = &sockfd;
 	c_r.c_r.ptr = (uint8_t *)test_vectors[vec_num_i].c_r;
@@ -236,6 +226,16 @@ int main()
 	cred_i.ca_pk.len = test_vectors[vec_num_i].ca_i_pk_len;
 	cred_i.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_i_pk;
 
+#ifdef USE_RANDOM_EPHEMERAL_DH_KEY
+	uint32_t seed;
+	uint8_t G_Y_random[32];
+	uint8_t Y_random[32];
+	c_r.g_y.ptr = G_Y_random;
+	c_r.g_y.len = sizeof(G_Y_random);
+	c_r.y.ptr = Y_random;
+	c_r.y.len = sizeof(Y_random);
+#endif
+
 	while (1) {
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY
 		/*create ephemeral DH keys from seed*/
@@ -248,12 +248,18 @@ int main()
 		fclose(fp);
 		PRINT_ARRAY("seed", (uint8_t *)&seed, seed_len);
 
-		TRY(ephemeral_dh_key_gen(X25519, seed, Y_random, G_Y_random,
+		TRY(ephemeral_dh_key_gen(P256, seed, Y_random, G_Y_random,
 					 &G_Y_random_len));
 		PRINT_ARRAY("secret ephemeral DH key", c_r.g_y.ptr,
 			    c_r.g_y.len);
 		PRINT_ARRAY("public ephemeral DH key", c_r.y.ptr, c_r.y.len);
 #endif
+
+#ifdef TINYCRYPT
+		/* Register RNG function */
+		uECC_set_rng(default_CSPRNG);
+#endif
+
 		TRY(edhoc_responder_run(&c_r, &cred_i, cred_num, err_msg,
 					&err_msg_len, (uint8_t *)&ad_1,
 					&ad_1_len, (uint8_t *)&ad_3, &ad_3_len,

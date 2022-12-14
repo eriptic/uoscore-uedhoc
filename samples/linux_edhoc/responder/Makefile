@@ -10,14 +10,17 @@
 # in order to rebuild the uoscore-uedhoc.a and responder application call: 
 # make oscore_edhoc; make
 
+include ../../../makefile_config.mk
+
 # toolchain
-CXX = g++
-CC = gcc
-SZ = size
-MAKE = make
+CXX ?= g++
+CC ?= gcc
+SZ ?= size
+MAKE ?= make
 
 # target
 TARGET = responder
+
 
 # build path
 BUILD_DIR = build
@@ -47,13 +50,25 @@ CPP_SOURCES += ../../../externals/cantcoap/cantcoap.cpp
 # rename files avaible with the same name in diferent libraries
 # todo clean up this
 $(shell mv ../../../externals/compact25519/src/c25519/sha512.c ../../../externals/compact25519/src/c25519/_sha512.c )
+$(shell mv ../../../externals/tinycrypt/lib/source/sha256.c ../../../externals/tinycrypt/lib/source/tc_sha256.c )
 
 C_SOURCES += src/_entropy.c
 C_SOURCES += $(wildcard ../../common/*.c)
 C_SOURCES += $(wildcard ../../../externals/zcbor/src/*.c)
-C_SOURCES += $(wildcard ../../../externals/mbedtls/library/*.c)
+
+# Crypto engine dependent source files
+ifeq ($(findstring COMPACT25519,$(CRYPTO_ENGINE)),COMPACT25519) 
 C_SOURCES += $(wildcard ../../../externals/compact25519/src/c25519/*.c)
 C_SOURCES += $(wildcard ../../../externals/compact25519/src/*.c)
+endif
+
+ifeq ($(findstring TINYCRYPT,$(CRYPTO_ENGINE)),TINYCRYPT)
+C_SOURCES += $(wildcard ../../../externals/tinycrypt/lib/source/*.c)
+endif
+ 
+ifeq ($(findstring MBEDTLS,$(CRYPTO_ENGINE)),MBEDTLS)
+C_SOURCES += $(wildcard ../../../externals/mbedtls/library/*.c)
+endif
 
 # C includes
 C_INCLUDES += -I../../../inc/ 
@@ -61,28 +76,48 @@ C_INCLUDES += -I../../common/
 C_INCLUDES += -I../../../test_vectors/ 
 C_INCLUDES += -I../../../externals/cantcoap/ 
 C_INCLUDES += -I../../../externals/zcbor/include 
+
+# Crypto engine dependent includes
+ifeq ($(findstring COMPACT25519,$(CRYPTO_ENGINE)),COMPACT25519) 
+C_INCLUDES += -I../../../externals/compact25519/src/c25519/ 
+C_INCLUDES += -I../../../externals/compact25519/src/ 
+endif
+
+ifeq ($(findstring TINYCRYPT,$(CRYPTO_ENGINE)),TINYCRYPT)
+C_INCLUDES += -I../../../externals/tinycrypt/lib/include
+endif
+ 
+ifeq ($(findstring MBEDTLS,$(CRYPTO_ENGINE)),MBEDTLS)
 C_INCLUDES += -I../../../externals/mbedtls/library 
 C_INCLUDES += -I../../../externals/mbedtls/include 
 C_INCLUDES += -I../../../externals/mbedtls/include/mbedtls 
 C_INCLUDES += -I../../../externals/mbedtls/include/psa 
-C_INCLUDES += -I../../../externals/compact25519/src/
-C_INCLUDES += -I../../../externals/compact25519/src/c25519
+endif
 
 # C defines
 # make PRINT_ARRAY macro usable in the main file
 C_DEFS += -DDEBUG_PRINT
+
+C_DEFS += $(ENV_DEFS)
 
 # Linked libraries
 LD_LIBRARY_PATH += -L$(USOCORE_UEDHOC_BUILD_PATH)
 
 LDFLAGS += $(LD_LIBRARY_PATH)
 LDFLAGS += -luoscore-uedhoc
+LDFLAGS += -lstdc++
 LDFLAGS += $(ARCH) 
 ##########################################
 # CFLAGS
 ##########################################
 #general c flags
-CFLAGS +=  $(ARCH) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall
+CFLAGS += \
+    $(ARCH) \
+	$(C_DEFS) \
+	$(C_INCLUDES) \
+	$(OPT) \
+	-Wall \
+	-fstack-usage
 CXXFLAGS += $(ARCH) $(C_DEFS) $(C_INCLUDES) $(OPT)
 
 # have dubug information
@@ -104,9 +139,9 @@ CXXFLAGS += -DLINUX_SOCKETS
 
 # use AddressSanitizer to find memory bugs
 # comment this out for better speed
-#CFLAGS += -fsanitize=address -fno-omit-frame-pointer
-#CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
-#LDFLAGS += -fsanitize=address -static-libasan
+CFLAGS += -fsanitize=address -fno-omit-frame-pointer
+CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
+LDFLAGS += -fsanitize=address -static-libasan
 
 ###########################################
 # default action: build all
@@ -125,7 +160,7 @@ $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR)
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
-	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET): $(OBJECTS) Makefile $(USOCORE_UEDHOC_PATH)/Makefile
 	$(MAKE) -C $(USOCORE_UEDHOC_PATH)

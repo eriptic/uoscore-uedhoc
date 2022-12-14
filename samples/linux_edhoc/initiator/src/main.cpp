@@ -205,7 +205,7 @@ int main()
 	PRINT_ARRAY("seed", (uint8_t *)&seed, seed_len);
 
 	/*create ephemeral DH keys from seed*/
-	TRY(ephemeral_dh_key_gen(X25519, seed, X_random, G_X_random,
+	TRY(ephemeral_dh_key_gen(P256, seed, X_random, G_X_random,
 				 &G_X_random_len));
 	c_i.g_x.ptr = G_X_random;
 	c_i.g_x.len = sizeof(G_X_random);
@@ -214,6 +214,11 @@ int main()
 	PRINT_ARRAY("secret ephemeral DH key", c_i.g_x.ptr, c_i.g_x.len);
 	PRINT_ARRAY("public ephemeral DH key", c_i.x.ptr, c_i.x.len);
 
+#endif
+
+#ifdef TINYCRYPT
+	/* Register RNG function */
+	uECC_set_rng(default_CSPRNG);
 #endif
 
 	TRY_EXPECT(start_coap_client(&sockfd), 0);

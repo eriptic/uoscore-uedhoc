@@ -10,11 +10,13 @@
 # in order to rebuild the uoscore-uedhoc.a and client application call: 
 # make oscore_edhoc; make
 
+include ../../../makefile_config.mk
+
 # toolchain
-CXX = g++
-CC = gcc
-SZ = size
-MAKE = make
+CXX ?= g++
+CC ?= gcc
+SZ ?= size
+MAKE ?= make
 
 # target
 TARGET = initiator_client
@@ -51,9 +53,20 @@ $(shell mv ../../../externals/compact25519/src/c25519/sha512.c ../../../external
 C_SOURCES += src/_entropy.c
 C_SOURCES += $(wildcard ../../common/*.c)
 C_SOURCES += $(wildcard ../../../externals/zcbor/src/*.c)
-C_SOURCES += $(wildcard ../../../externals/mbedtls/library/*.c)
+
+# Crypto engine dependent source files
+ifeq ($(findstring COMPACT25519,$(CRYPTO_ENGINE)),COMPACT25519) 
 C_SOURCES += $(wildcard ../../../externals/compact25519/src/c25519/*.c)
 C_SOURCES += $(wildcard ../../../externals/compact25519/src/*.c)
+endif
+
+ifeq ($(findstring TINYCRYPT,$(CRYPTO_ENGINE)),TINYCRYPT)
+C_SOURCES += $(wildcard ../../../externals/tinycrypt/lib/source/*.c)
+endif
+ 
+ifeq ($(findstring MBEDTLS,$(CRYPTO_ENGINE)),MBEDTLS)
+C_SOURCES += $(wildcard ../../../externals/mbedtls/library/*.c)
+endif
 
 # C includes
 C_INCLUDES += -I../../../inc/ 
@@ -61,12 +74,23 @@ C_INCLUDES += -I../../common/
 C_INCLUDES += -I../../../test_vectors/ 
 C_INCLUDES += -I../../../externals/cantcoap/ 
 C_INCLUDES += -I../../../externals/zcbor/include 
+
+# Crypto engine dependent includes
+ifeq ($(findstring COMPACT25519,$(CRYPTO_ENGINE)),COMPACT25519) 
+C_INCLUDES += -I../../../externals/compact25519/src/c25519/ 
+C_INCLUDES += -I../../../externals/compact25519/src/ 
+endif
+
+ifeq ($(findstring TINYCRYPT,$(CRYPTO_ENGINE)),TINYCRYPT)
+C_INCLUDES += -I../../../externals/tinycrypt/lib/include
+endif
+ 
+ifeq ($(findstring MBEDTLS,$(CRYPTO_ENGINE)),MBEDTLS)
 C_INCLUDES += -I../../../externals/mbedtls/library 
 C_INCLUDES += -I../../../externals/mbedtls/include 
 C_INCLUDES += -I../../../externals/mbedtls/include/mbedtls 
 C_INCLUDES += -I../../../externals/mbedtls/include/psa 
-C_INCLUDES += -I../../../externals/compact25519/src/
-C_INCLUDES += -I../../../externals/compact25519/src/c25519
+endif
 
 
 # C defines
