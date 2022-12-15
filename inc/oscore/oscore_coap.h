@@ -110,12 +110,6 @@ struct compressed_oscore_option {
 	struct byte_array kid;
 };
 
-struct piv_kid_context {
-	struct byte_array partial_iv;
-	struct byte_array kid;
-	struct byte_array kid_context;
-};
-
 /**
  * @brief   Covert a byte array to a OSCORE/CoAP struct
  * @param   in: pointer to an input message packet, in byte string format

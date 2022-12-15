@@ -56,7 +56,7 @@ struct recipient_context {
 	uint8_t recipient_id_buf[RECIPIENT_ID_BUFF_LEN];
 	server_replay_window_t replay_window;
 	uint64_t notification_num;
-	bool notification_num_initialized;
+	bool notification_num_initialized; /* this is only used to skip the first notification check after the reboot */
 };
 
 /*request-response context contains parameters that need to persists between
@@ -96,6 +96,14 @@ struct context {
  * @param   piv Partial IV
  */
 enum err ssn2piv(uint64_t ssn, struct byte_array *piv);
+
+/**
+ * @brief Converts PIV (byte string of maximum 5 bytes) to 
+ *        Sender Sequence Number (uint64_t)
+ * @param piv Partial IV
+ * @param ssn Sender Sequence Number
+ */
+enum err piv2ssn(struct byte_array *piv, uint64_t *ssn);
 
 /**
  * @brief	Updates the request_piv and the request_kid
