@@ -83,9 +83,8 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			* Inner option has value NULL if notification or the original value 
 			* in the coap packet if registration/cancellation.
 			*/
-			e_options[*e_options_cnt].delta =
-				(uint16_t)(temp_option_nr -
-					   temp_E_option_delta_sum);
+			e_options[*e_options_cnt].delta = (uint16_t)(
+				temp_option_nr - temp_E_option_delta_sum);
 			if (is_request(in_o_coap)) {
 				/*registrations/cancellations are requests */
 				e_options[*e_options_cnt].len = temp_len;
@@ -119,9 +118,8 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			/*
 			*outer option (value as in the original coap packet
 			*/
-			U_options[*U_options_cnt].delta =
-				(uint16_t)(temp_option_nr -
-					   temp_U_option_delta_sum);
+			U_options[*U_options_cnt].delta = (uint16_t)(
+				temp_option_nr - temp_U_option_delta_sum);
 			U_options[*U_options_cnt].len = temp_len;
 			U_options[*U_options_cnt].value =
 				in_o_coap->options[i].value;
@@ -152,10 +150,9 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 					temp_option_nr;
 
 				/* Update delta sum of E-options */
-				temp_E_option_delta_sum =
-					(uint8_t)(temp_E_option_delta_sum +
-						  e_options[*e_options_cnt]
-							  .delta);
+				temp_E_option_delta_sum = (uint8_t)(
+					temp_E_option_delta_sum +
+					e_options[*e_options_cnt].delta);
 
 				/* Increment E-options count */
 				(*e_options_cnt)++;
@@ -175,10 +172,9 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 					temp_option_nr;
 
 				/* Update delta sum of E-options */
-				temp_U_option_delta_sum =
-					(uint8_t)(temp_U_option_delta_sum +
-						  U_options[*U_options_cnt]
-							  .delta);
+				temp_U_option_delta_sum = (uint8_t)(
+					temp_U_option_delta_sum +
+					U_options[*U_options_cnt].delta);
 
 				/* Increment E-options count */
 				(*U_options_cnt)++;
@@ -243,54 +239,29 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
 }
 
 /**
- * @brief   Encrypt incoming plaintext
- * @param   c OSCORE context
- * @param   in_o_coap: input CoAP packet, which will be used to calculate AAD
- *          (additional authentication data)
- * @param   in_plaintext: input plaintext that will be encrypted
- * @param   out_ciphertext: output ciphertext, which contains the encrypted data
- * @return  err
- *
- */
-static inline enum err plaintext_encrypt(struct context *c,
-					 struct byte_array *aad,
-					 struct byte_array *in_plaintext,
-					 struct byte_array *out_ciphertext)
-{
-	return oscore_cose_encrypt(in_plaintext, out_ciphertext, &c->rrc.nonce,
-				   aad, &c->sc.sender_key);
-}
-
-/**
  * @brief   OSCORE option value length
- * @param   piv set to the sender sequence number in requests or NULL in 
- *          responses
- * @param   kid set to Sender ID in requests or NULL in responses
- * @param   kid_context set to ID context in request when present. If not present or a response set to NULL
+ * @param   piv_len length of the PIV array
+ * @param   kid_len length of the KID array
+ * @param   kid_context_len length of the KID context array
  * @return  length of the OSCORE option value
  */
-static inline uint8_t get_oscore_opt_val_len(struct byte_array *piv,
-					     struct byte_array *kid,
-					     struct byte_array *kid_context)
+static inline size_t get_oscore_opt_val_len(size_t piv_len, size_t kid_len,
+					    size_t kid_context_len)
 {
-	uint8_t l;
-	l = (uint8_t)(piv->len + kid_context->len + kid->len);
-	if (l) {
-		/*if any of piv, kit_context or kit is present 1 byte for the flags is reserved */
-		l++;
+	size_t length = piv_len + kid_len + kid_context_len;
+	if (length) {
+		/*if any of piv, kid_context or kid is present 1 byte for the flags is reserved */
+		length++;
 	}
-	if (kid_context->len) {
-		/*if kit_context is present one byte is reserved for the s field*/
-		l++;
+	if (kid_context_len) {
+		/*if kid_context is present one byte is reserved for the s field*/
+		length++;
 	}
-	return l;
+	return length;
 }
 
 /**
- * @brief   Generate an OSCORE option. The oscore option value length must 
- *          be calculated before this function is called and set in 
- *          oscore_option.len. In addition oscore_option.val pointer should
- *          be set to a buffer with length oscore_option.len. 
+ * @brief   Generate an OSCORE option.
  * @param   piv set to the trimmed sender sequence number in requests or NULL 
  *          in responses
  * @param   kid set to Sender ID in requests or NULL in responses
@@ -304,8 +275,17 @@ oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
 		       struct byte_array *kid_context,
 		       struct oscore_option *oscore_option)
 {
-	uint32_t dest_size;
+	size_t piv_len = (NULL == piv) ? 0 : piv->len;
+	size_t kid_len = (NULL == kid) ? 0 : kid->len;
+	size_t kid_context_len = (NULL == kid_context) ? 0 : kid_context->len;
+
 	oscore_option->option_number = OSCORE;
+	oscore_option->len = (uint8_t)get_oscore_opt_val_len(piv_len, kid_len,
+							     kid_context_len);
+	TRY(check_buffer_size(OSCORE_OPT_VALUE_LEN, oscore_option->len));
+	oscore_option->value = oscore_option->buf;
+
+	uint32_t dest_size;
 
 	if (oscore_option->len == 0) {
 		oscore_option->value = NULL;
@@ -314,30 +294,30 @@ oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
 
 		uint8_t *temp_ptr = oscore_option->value;
 
-		if (piv->len != 0) {
+		if (piv_len != 0) {
 			/* Set header bits of PIV */
 			oscore_option->value[0] =
 				(uint8_t)(oscore_option->value[0] | piv->len);
 			/* copy PIV (sender sequence) */
 
-			dest_size = (uint32_t)(oscore_option->len -
-					       (temp_ptr + 1 -
-						oscore_option->value));
+			dest_size = (uint32_t)(
+				oscore_option->len -
+				(temp_ptr + 1 - oscore_option->value));
 			TRY(_memcpy_s(++temp_ptr, dest_size, piv->ptr,
 				      piv->len));
 
 			temp_ptr += piv->len;
 		}
 
-		if (kid_context->len != 0) {
+		if (kid_context_len != 0) {
 			/* Set header flag bit of KID context */
 			oscore_option->value[0] |= COMP_OSCORE_OPT_KIDC_H_MASK;
 			/* Copy length and context value */
 			*temp_ptr = (uint8_t)(kid_context->len);
 
-			dest_size = (uint32_t)(oscore_option->len -
-					       (temp_ptr + 1 -
-						oscore_option->value));
+			dest_size = (uint32_t)(
+				oscore_option->len -
+				(temp_ptr + 1 - oscore_option->value));
 			TRY(_memcpy_s(++temp_ptr, dest_size, kid_context->ptr,
 				      kid_context->len));
 
@@ -348,7 +328,7 @@ oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
 		/* The KID header flag is set always in requests */
 		/* This function is not called in responses */
 		oscore_option->value[0] |= COMP_OSCORE_OPT_KID_K_MASK;
-		if (kid->len != 0) {
+		if (kid_len != 0) {
 			/* Copy KID */
 			dest_size =
 				(uint32_t)(oscore_option->len -
@@ -457,6 +437,90 @@ STATIC enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 }
 
 /**
+ * @brief Wrapper function with common operations for encrypting the payload.
+ *        These operations are shared in all possible scenarios.
+ *        For more info, see RFC8616 8.1 and 8.3.
+ * 
+ * @param plaintext Input plaintext to be encrypted.
+ * @param ciphertext Output encrypted payload for the OSCORE packet.
+ * @param c Security context.
+ * @param oscore_option Output OSCORE option.
+ * @param is_request True if the packet is request and needs special handling while generating AAD.
+ * @param use_new_piv True for cases when new PIV/nonce should be generated.
+ * @return enum err 
+ */
+static enum err encrypt_wrapper(struct byte_array *plaintext,
+				struct byte_array *ciphertext,
+				struct context *c,
+				struct oscore_option *oscore_option,
+				bool is_request, bool use_new_piv)
+{
+	BYTE_ARRAY_NEW(new_piv, MAX_PIV_LEN, MAX_PIV_LEN);
+	BYTE_ARRAY_NEW(new_nonce, NONCE_LEN, NONCE_LEN);
+	struct byte_array *piv = NULL;
+	struct byte_array *kid = NULL;
+	struct byte_array *kid_context = NULL;
+	struct byte_array *nonce;
+
+	if (use_new_piv) {
+		/* Generate new PIV and nonce if needed. */
+		TRY(ssn_store_in_nvm(&c->sc.sender_id, &c->cc.id_context,
+				     c->sc.ssn, c->sc.ssn_in_nvm));
+		TRY(ssn2piv(c->sc.ssn, &new_piv));
+		c->sc.ssn++;
+		TRY(create_nonce(&c->sc.sender_id, &new_piv, &c->cc.common_iv,
+				 &new_nonce));
+
+		nonce = &new_nonce;
+		piv = &new_piv;
+		kid = &c->sc.sender_id;
+		kid_context = &c->cc.id_context;
+	} else {
+		/* Regular response:
+		- PIV is not present
+		- KID usage don't apply as the library doesn't support group communication
+		- KID context usage don't apply, as the library use Appendix B.1 instead of B.2.
+		- rrc.nonce from the request is used
+		For more details, see 8.3 and the following hyperlinks. */
+		nonce = &c->rrc.nonce;
+	}
+
+	/* Generate OSCORE option based on selected values. */
+	TRY(oscore_option_generate(piv, kid, kid_context, oscore_option));
+
+	/* Set proper arrays for AAD
+	   for responses, use stored values of the corresponding request;
+	   for requests, use current values of PIV and Sender ID. */
+	struct byte_array *request_piv = &c->rrc.request_piv;
+	struct byte_array *request_kid = &c->rrc.request_kid;
+	if (is_request) {
+		request_piv = piv;
+		request_kid = kid;
+	}
+
+	/* AAD shares the same format for both requests and responses, 
+	   yet request_kid and request_piv fields are only used by responses.
+	   For more details, see 5.4. */
+	BYTE_ARRAY_NEW(aad, MAX_AAD_LEN, MAX_AAD_LEN);
+	TRY(create_aad(NULL, 0, c->cc.aead_alg, request_kid, request_piv,
+		       &aad));
+
+	/* Encrypt the plaintext */
+	TRY(oscore_cose_encrypt(plaintext, ciphertext, nonce, &aad,
+				&c->sc.sender_key));
+
+	/* Update rrc fields only after successful encryption (for handling future responses). */
+	if (is_request) {
+		TRY(update_request_piv_request_kid(c, piv, kid));
+	}
+	if (use_new_piv) {
+		TRY(byte_array_cpy(&c->rrc.nonce, nonce, NONCE_LEN));
+	}
+
+	return ok;
+}
+
+/**
  *@brief 	Converts a CoAP packet to OSCORE packet
  *@note		For messaging layer packets (simple ACK with no payload, code 0.00),
  *			encryption is dismissed and raw input buffer is copied, 
@@ -523,33 +587,23 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	/* Combine code, E-options and payload of CoAP to plaintext */
 	TRY(plaintext_setup(&o_coap_pkt, e_options, e_options_cnt, &plaintext));
 
-	/* Generate OSCORE option */
-	struct oscore_option oscore_option;
-	oscore_option.option_number = OSCORE;
+	/* Generate ciphertext array */
+	BYTE_ARRAY_NEW(ciphertext, MAX_CIPHERTEXT_LEN,
+		       plaintext.len + AUTH_TAG_LEN);
 
+	struct oscore_option oscore_option;
 	bool request = is_request(&o_coap_pkt);
-	BYTE_ARRAY_NEW(piv, MAX_PIV_LEN, MAX_PIV_LEN);
 	if (request) {
 		/*a client prepares a request*/
-		TRY(ssn_store_in_nvm(&c->sc.sender_id, &c->cc.id_context,
-				     c->sc.ssn, c->sc.ssn_in_nvm));
-		TRY(ssn2piv(c->sc.ssn++, &piv));
 
-		TRY(update_request_piv_request_kid(c, &piv, &c->sc.sender_id));
+		/* Encrypt data using new PIV/nonce */
+		TRY(encrypt_wrapper(&plaintext, &ciphertext, c, &oscore_option,
+				    request, true));
+
+		/* Store request token for handling future responses. */
 		TRY(cache_request_token(&c->rrc.token_request,
 					o_coap_pkt.header.TKL,
 					o_coap_pkt.token));
-
-		TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,
-				 &c->rrc.nonce));
-
-		/*compute the OSCORE option value*/
-		oscore_option.len = get_oscore_opt_val_len(
-			&piv, &c->sc.sender_id, &c->cc.id_context);
-		TRY(check_buffer_size(OSCORE_OPT_VALUE_LEN, oscore_option.len));
-		oscore_option.value = oscore_option.buf;
-		TRY(oscore_option_generate(&piv, &c->sc.sender_id,
-					   &c->cc.id_context, &oscore_option));
 
 	} else if (c->rrc.second_req_expected) {
 		/* A server prepares a response to first request after reboot.*/
@@ -559,59 +613,25 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 		/*Note that even if this is a response the server
 		 MUST use its Partial IV when generating the AEAD nonce and MUST
 		 include the Partial IV in the response, see Appendix B.1.2*/
-		TRY(ssn_store_in_nvm(&c->sc.sender_id, &c->cc.id_context,
-				     c->sc.ssn, c->sc.ssn_in_nvm));
-		TRY(ssn2piv(c->sc.ssn++, &piv));
+		TRY(encrypt_wrapper(&plaintext, &ciphertext, c, &oscore_option,
+				    request, true));
 
-		TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,
-				 &c->rrc.nonce));
-
-		/*compute the OSCORE option value*/
-		oscore_option.len = get_oscore_opt_val_len(
-			&piv, &c->sc.sender_id, &c->cc.id_context);
-		TRY(check_buffer_size(OSCORE_OPT_VALUE_LEN, oscore_option.len));
-		oscore_option.value = oscore_option.buf;
-		TRY(oscore_option_generate(&piv, &c->sc.sender_id,
-					   &c->cc.id_context, &oscore_option));
 	} else if (is_observe(u_options, u_options_cnt)) {
 		/*A server prepares a notification (response) to a observe registration.
 		 However not the first response*/
-		TRY(ssn_store_in_nvm(&c->sc.sender_id, &c->cc.id_context,
-				     c->sc.ssn, c->sc.ssn_in_nvm));
-		TRY(ssn2piv(c->sc.ssn++, &piv));
 
-		TRY(create_nonce(&c->sc.sender_id, &piv, &c->cc.common_iv,
-				 &c->rrc.nonce));
-
-		/*compute the OSCORE option value*/
-		oscore_option.len = get_oscore_opt_val_len(
-			&piv, &c->sc.sender_id, &c->cc.id_context);
-		TRY(check_buffer_size(OSCORE_OPT_VALUE_LEN, oscore_option.len));
-		oscore_option.value = oscore_option.buf;
-		TRY(oscore_option_generate(&piv, &c->sc.sender_id,
-					   &c->cc.id_context, &oscore_option));
+		/* Encrypt data using new PIV/nonce */
+		TRY(encrypt_wrapper(&plaintext, &ciphertext, c, &oscore_option,
+				    request, true));
 
 	} else {
 		/* A server prepares a response to a regular request. 
-		However not the first response.
-		- PIV (and rrc.nonce) from the request is used
-		- KID usage don't apply as the library doesn't support group communication
-		- KID context usage don't apply, as the library use Appendix B.1 instead of B.2.
-		For more details, see 8.3 and the following hyperlinks. */
-		oscore_option.len = 0;
-		oscore_option.value = NULL;
+		However not the first response. */
+
+		/* Encrypt data using corresponding request nonce. */
+		TRY(encrypt_wrapper(&plaintext, &ciphertext, c, &oscore_option,
+				    request, false));
 	}
-
-	/* AAD shares the same format for both requests and responses, yet request_kid and request_piv are only needed for responses.
-	For more details, see 5.4. */
-	BYTE_ARRAY_NEW(aad, MAX_AAD_LEN, MAX_AAD_LEN);
-	TRY(create_aad(NULL, 0, c->cc.aead_alg, &c->rrc.request_kid,
-		       &c->rrc.request_piv, &aad));
-
-	/*3. Encrypt the created plaintext*/
-	BYTE_ARRAY_NEW(ciphertext, MAX_CIPHERTEXT_LEN,
-		       plaintext.len + AUTH_TAG_LEN);
-	TRY(plaintext_encrypt(c, &aad, &plaintext, &ciphertext));
 
 	/*create an OSCORE packet*/
 	struct o_coap_packet oscore_pkt;

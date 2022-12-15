@@ -116,10 +116,9 @@ oscore_option_parser(struct o_coap_packet *in,
 						++temp_current_option_value_ptr;
 					temp_current_option_value_ptr +=
 						out->kid_context.len;
-					temp_kid_len =
-						(uint8_t)(temp_kid_len -
-							  (out->kid_context.len +
-							   1));
+					temp_kid_len = (uint8_t)(
+						temp_kid_len -
+						(out->kid_context.len + 1));
 				}
 
 				/* Get KID */
@@ -138,22 +137,6 @@ oscore_option_parser(struct o_coap_packet *in,
 	}
 
 	return r;
-}
-
-/**
- * @brief 	Decrypt the OSCORE payload (ciphertext)
- * @param 	c pointer to a security context
- * @param out_plaintext: output plaintext
- * @param oscore_packet: complete OSCORE packet which contains the ciphertext to be decrypted
- * @return void
- */
-static inline enum err payload_decrypt(struct context *c,
-				       struct byte_array *aad,
-				       struct byte_array *out_plaintext,
-				       struct o_coap_packet *oscore_packet)
-{
-	return oscore_cose_decrypt(&oscore_packet->payload, out_plaintext,
-				   &c->rrc.nonce, aad, &c->rc.recipient_key);
 }
 
 /**
@@ -261,6 +244,56 @@ static inline enum err o_coap_pkg_generate(struct byte_array *decrypted_payload,
 	return ok;
 }
 
+/**
+ * @brief Wrapper function with common operations for decrypting the payload.
+ *        These operations are shared in all possible scenarios.
+ *        For more info, see RFC8616 8.2 and 8.4.
+ * 
+ * @param ciphertext Input encrypted payload.
+ * @param plaintext Output decrypted payload.
+ * @param c Security context.
+ * @param new_nonce_oscore_option Input OSCORE option from the packet.
+ *        Use proper pointer for cases when new nonce are generated, or
+ *        NULL if data from corresponding request should be used.
+ * @return enum err 
+ */
+static enum err
+decrypt_wrapper(struct byte_array *ciphertext, struct byte_array *plaintext,
+		struct context *c,
+		struct compressed_oscore_option *new_nonce_oscore_option)
+{
+	BYTE_ARRAY_NEW(new_nonce, NONCE_LEN, NONCE_LEN);
+	struct byte_array *nonce;
+
+	/* Calculate new nonce from oscore option - only if required by the usecase.
+	   If not, nonce from the corresponding request (rcc.nonce) is used. */
+	if (NULL != new_nonce_oscore_option) {
+		TRY(create_nonce(&new_nonce_oscore_option->kid,
+				 &new_nonce_oscore_option->piv,
+				 &c->cc.common_iv, &new_nonce));
+		nonce = &new_nonce;
+	} else {
+		nonce = &c->rrc.nonce;
+	}
+
+	/* compute AAD */
+	uint8_t aad_buf[MAX_AAD_LEN];
+	struct byte_array aad = BYTE_ARRAY_INIT(aad_buf, sizeof(aad_buf));
+	TRY(create_aad(NULL, 0, c->cc.aead_alg, &c->rrc.request_kid,
+		       &c->rrc.request_piv, &aad));
+
+	/* Decrypt the ciphertext */
+	TRY(oscore_cose_decrypt(ciphertext, plaintext, nonce, &aad,
+				&c->rc.recipient_key));
+
+	/* Update nonce only after successful decryption (for handling future responses) */
+	if (NULL != new_nonce_oscore_option) {
+		TRY(byte_array_cpy(&c->rrc.nonce, nonce, NONCE_LEN));
+	}
+
+	return ok;
+}
+
 enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		     uint32_t *buf_out_len, struct context *c)
 {
@@ -281,9 +314,12 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 	/* Check if the packet is OSCORE packet and if so parse the OSCORE option */
 	TRY(oscore_option_parser(&oscore_packet, &oscore_option));
 
+	/* Encrypted packet payload */
+	struct byte_array *ciphertext = &oscore_packet.payload;
+
 	/* Setup buffer for the plaintext. The plaintext is shorter than the 
 	ciphertext because of the authentication tag*/
-	uint32_t plaintext_bytes_len = oscore_packet.payload.len - AUTH_TAG_LEN;
+	uint32_t plaintext_bytes_len = ciphertext->len - AUTH_TAG_LEN;
 	BYTE_ARRAY_NEW(plaintext, MAX_PLAINTEXT_LEN, plaintext_bytes_len);
 
 	/*In requests the OSCORE packet contains at least a KID = sender ID 
@@ -320,19 +356,8 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 			}
 		}
 
-		/*calculate nonce*/
-		TRY(create_nonce(&oscore_option.kid, &oscore_option.piv,
-				 &c->cc.common_iv, &c->rrc.nonce));
-
-		/*compute AAD*/
-		uint8_t aad_buf[MAX_AAD_LEN];
-		struct byte_array aad =
-			BYTE_ARRAY_INIT(aad_buf, sizeof(aad_buf));
-		TRY(create_aad(NULL, 0, c->cc.aead_alg, &c->rrc.request_kid,
-			       &c->rrc.request_piv, &aad));
-
-		/* Decrypt payload */
-		TRY(payload_decrypt(c, &aad, &plaintext, &oscore_packet));
+		/* Decrypt packet using new nonce based on the packet */
+		TRY(decrypt_wrapper(ciphertext, &plaintext, c, &oscore_option));
 
 		if (c->rrc.second_req_expected) {
 			/*if this is a second request after reboot it should have an ECHO option for proving freshness*/
@@ -363,21 +388,9 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 					c->rc.notification_num_initialized,
 					&oscore_option.piv));
 
-				TRY(create_nonce(
-					&oscore_option.kid, &oscore_option.piv,
-					&c->cc.common_iv, &c->rrc.nonce));
-
-				/*compute AAD*/
-				uint8_t aad_buf[MAX_AAD_LEN];
-				struct byte_array aad = BYTE_ARRAY_INIT(
-					aad_buf, sizeof(aad_buf));
-				TRY(create_aad(NULL, 0, c->cc.aead_alg,
-					       &c->rrc.request_kid,
-					       &c->rrc.request_piv, &aad));
-
-				/* Decrypt payload */
-				TRY(payload_decrypt(c, &aad, &plaintext,
-						    &oscore_packet));
+				/* Decrypt packet using new nonce based on the packet */
+				TRY(decrypt_wrapper(ciphertext, &plaintext, c,
+						    &oscore_option));
 
 				/*update replay protection value in context*/
 				TRY(notification_number_update(
@@ -386,36 +399,12 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 					&oscore_option.piv));
 			} else {
 				/* typically the first response after server reset, containing its own PIV and ECHO option as a freshness challange for the client */
-				TRY(create_nonce(
-					&oscore_option.kid, &oscore_option.piv,
-					&c->cc.common_iv, &c->rrc.nonce));
-
-				/*compute AAD*/
-				uint8_t aad_buf[MAX_AAD_LEN];
-				struct byte_array aad = BYTE_ARRAY_INIT(
-					aad_buf, sizeof(aad_buf));
-				TRY(create_aad(NULL, 0, c->cc.aead_alg,
-					       &c->rrc.request_kid,
-					       &c->rrc.request_piv, &aad));
-
-				/* Decrypt payload */
-				TRY(payload_decrypt(c, &aad, &plaintext,
-						    &oscore_packet));
+				TRY(decrypt_wrapper(ciphertext, &plaintext, c,
+						    &oscore_option));
 			}
 		} else {
 			/* regular response does not have PIV field, and rcc.nonce from the request is used to decrypt the packet */
-
-			/*compute AAD*/
-			uint8_t aad_buf[MAX_AAD_LEN];
-			struct byte_array aad =
-				BYTE_ARRAY_INIT(aad_buf, sizeof(aad_buf));
-			TRY(create_aad(NULL, 0, c->cc.aead_alg,
-				       &c->rrc.request_kid, &c->rrc.request_piv,
-				       &aad));
-
-			/* Decrypt payload */
-			TRY(payload_decrypt(c, &aad, &plaintext,
-					    &oscore_packet));
+			TRY(decrypt_wrapper(ciphertext, &plaintext, c, NULL));
 		}
 	}
 

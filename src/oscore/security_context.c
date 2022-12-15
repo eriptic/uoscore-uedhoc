@@ -184,8 +184,8 @@ enum err update_request_piv_request_kid(struct context *c,
 					struct byte_array *piv,
 					struct byte_array *kid)
 {
-	TRY(byte_array_cpy(&c->rrc.request_kid, kid));
-	TRY(byte_array_cpy(&c->rrc.request_piv, piv));
+	TRY(byte_array_cpy(&c->rrc.request_kid, kid, MAX_KID_LEN));
+	TRY(byte_array_cpy(&c->rrc.request_piv, piv, MAX_PIV_LEN));
 	return ok;
 }
 
