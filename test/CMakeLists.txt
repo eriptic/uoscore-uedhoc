@@ -10,6 +10,7 @@ FILE(GLOB app_sources
   edhoc_integration_tests/*.c
   oscore_integration_tests/*.c
   oscore_unit_tests/*.c
+  mocks/*.c
   ../externals/zcbor/src/*.c
   ../externals/compact25519/src/c25519/*.c
   ../externals/compact25519/src/*.c

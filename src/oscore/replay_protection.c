@@ -130,6 +130,7 @@ enum err replay_protection_check_notification(uint64_t notification_num,
 	uint64_t ssn;
 	TRY(piv2ssn(piv, &ssn));
 
+
 	if (notification_num_initialized) {
 		if (notification_num >= ssn) {
 			PRINT_MSG("Replayed notification detected!\n");

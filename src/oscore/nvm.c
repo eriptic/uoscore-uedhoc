@@ -15,42 +15,19 @@
 #include "common/oscore_edhoc_error.h"
 #include "common/print_util.h"
 
-/**
- * @brief   When the same OSCORE master secret and salt are reused through
- * 			several reboots of the device, e.g., no fresh shared secret is
- * 			derived through EDHOC (or some other method) the Sender Sequence 
- * 			Number MUST be stored periodically in NVM. 
- * @param	sender_id the user may use the sender_id as a key in a table in 
- * 			NVM holding SSNs for different sender contexts. 
- * @param   id_context id of the context. To be used as an additional key 
- * @param	ssn the ssn to be written in NVM
- * @retval	ok or error code if storing the SSN was not possible.
- */
 enum err WEAK nvm_write_ssn(const struct byte_array *sender_id,
 			    const struct byte_array *id_context, uint64_t ssn)
 {
-#warning "The nvm_write_ssn() function MUST be overwritten by user!!!\n"
-
-	return ok;
+	PRINTF("The nvm_write_ssn() function MUST be overwritten by user!!!\n");
+	return not_implemented;
 }
 
-/**
- * @brief   When the same OSCORE master secret and salt are reused through
- * 			several reboots of the device, e.g., no fresh shared secret is
- * 			derived through EDHOC (or some other method) the Sender Sequence 
- * 			Number MUST be restored from NVM at each reboot. 
- * @param	sender_id the user may use the sender_id as a key in a table in 
- * 			NVM holding SSNs for different sender contexts. 
- * @param   id_context id of the context. To be used as an additional key 
- * @param	ssn the ssn to be read out from NVM
- * @retval	ok or error code if the retrieving the SSN was not possible.
- */
 enum err WEAK nvm_read_ssn(const struct byte_array *sender_id,
 			   const struct byte_array *id_context, uint64_t *ssn)
 {
-#warning "The nvm_read_ssn() function MUST be overwritten by user!!!\n"
+	PRINTF("The nvm_read_ssn() function MUST be overwritten by user!!!\n");
 	*ssn = 0;
-	return ok;
+	return not_implemented;
 }
 
 enum err ssn_store_in_nvm(const struct byte_array *sender_id,
