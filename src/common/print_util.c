@@ -19,7 +19,7 @@
 #define RED "\x1B[31m"
 #define RESET "\033[0m"
 static const char transport_deinit_message[] = {
-	RESET "Transport reinitialized at %s:%d\n\n"
+	RESET "Transport deinitialized at %s:%d\n\n"
 };
 static const char runtime_error_message[] = {
 	RED "Runtime error: code %d at %s:%d\n\n" RESET

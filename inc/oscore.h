@@ -17,6 +17,7 @@
 
 #include "oscore/security_context.h"
 #include "oscore/supported_algorithm.h"
+#include "oscore/nvm.h"
 
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
@@ -29,8 +30,13 @@
  * storing interval on the SSN. Those values may need to be adjusted by 
  * the user, see Appendix B.1.1.
  */
+#ifndef K_SSN_NVM_STORE_INTERVAL
 #define K_SSN_NVM_STORE_INTERVAL 10
+#endif
+
+#ifndef F_NVM_MAX_WRITE_FAILURE
 #define F_NVM_MAX_WRITE_FAILURE 10
+#endif
 
 #ifndef OSCORE_MAX_PLAINTEXT_LEN
 #define OSCORE_E_OPTIONS_LEN 40
