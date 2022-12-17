@@ -8,6 +8,7 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
+#include <inttypes.h>
 
 #include "edhoc.h"
 #include "oscore.h"
@@ -46,11 +47,11 @@ enum err ssn_init(const struct byte_array *sender_id,
 {
 	if (!ssn_in_nvm) {
 		*ssn = 0;
-		PRINTF("SSN initialized not from NMV. SSN = %lu\n", *ssn);
+		PRINTF("SSN initialized not from NMV. SSN = %" PRIu64 "\n", *ssn);
 	} else {
 		TRY(nvm_read_ssn(sender_id, id_context, ssn));
 		*ssn += K_SSN_NVM_STORE_INTERVAL + F_NVM_MAX_WRITE_FAILURE;
-		PRINTF("SSN initialized from NMV. SSN = %lu\n", *ssn);
+		PRINTF("SSN initialized from NMV. SSN = %" PRIu64 "\n", *ssn);
 	}
 	return ok;
 }

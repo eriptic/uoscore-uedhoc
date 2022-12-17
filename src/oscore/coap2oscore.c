@@ -245,10 +245,10 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
  * @param   kid_context_len length of the KID context array
  * @return  length of the OSCORE option value
  */
-static inline size_t get_oscore_opt_val_len(size_t piv_len, size_t kid_len,
-					    size_t kid_context_len)
+static inline uint32_t get_oscore_opt_val_len(uint32_t piv_len, uint32_t kid_len,
+					    uint32_t kid_context_len)
 {
-	size_t length = piv_len + kid_len + kid_context_len;
+	uint32_t length = piv_len + kid_len + kid_context_len;
 	if (length) {
 		/*if any of piv, kid_context or kid is present 1 byte for the flags is reserved */
 		length++;
@@ -275,9 +275,9 @@ oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
 		       struct byte_array *kid_context,
 		       struct oscore_option *oscore_option)
 {
-	size_t piv_len = (NULL == piv) ? 0 : piv->len;
-	size_t kid_len = (NULL == kid) ? 0 : kid->len;
-	size_t kid_context_len = (NULL == kid_context) ? 0 : kid_context->len;
+	uint32_t piv_len = (NULL == piv) ? 0 : piv->len;
+	uint32_t kid_len = (NULL == kid) ? 0 : kid->len;
+	uint32_t kid_context_len = (NULL == kid_context) ? 0 : kid_context->len;
 
 	oscore_option->option_number = OSCORE;
 	oscore_option->len = (uint8_t)get_oscore_opt_val_len(piv_len, kid_len,

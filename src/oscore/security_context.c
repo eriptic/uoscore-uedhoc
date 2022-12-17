@@ -217,7 +217,7 @@ enum err piv2ssn(struct byte_array *piv, uint64_t *ssn)
 		return wrong_parameter;
 	}
 	uint64_t result = 0;
-	for (size_t pos = 0; pos < piv->len; pos++) {
+	for (uint32_t pos = 0; pos < piv->len; pos++) {
 		result += (uint64_t)(piv->ptr[pos]) << (8 * pos);
 	}
 	*ssn = result;
