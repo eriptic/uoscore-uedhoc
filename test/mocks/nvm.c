@@ -6,7 +6,7 @@ enum err nvm_write_ssn(const struct byte_array *sender_id,
     (void)sender_id;
     (void)id_context;
     (void)ssn;
-    PRINTF("NVM write mock\n");
+    PRINT_MSG("NVM write mock\n");
     return ok;
 }
 
@@ -15,7 +15,7 @@ enum err nvm_read_ssn(const struct byte_array *sender_id,
 {
     (void)sender_id;
     (void)id_context;
-    PRINTF("NVM read mock\n");
+    PRINT_MSG("NVM read mock\n");
     *ssn = 0;
     return ok;
 }

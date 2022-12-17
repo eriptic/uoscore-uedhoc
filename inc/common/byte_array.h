@@ -42,7 +42,7 @@ extern struct byte_array NULL_ARRAY;
 bool array_equals(const struct byte_array *left,
 		  const struct byte_array *right);
 
-enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src);
+enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src, const size_t dest_max_len);
 
 /**
  * @brief   Sets the pointer and the length of a byte_array variable to a given array

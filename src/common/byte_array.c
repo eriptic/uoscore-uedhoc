@@ -25,9 +25,9 @@ struct byte_array NULL_ARRAY = {
 };
 
 
-enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src)
+enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src, const size_t dest_max_len)
 {
-	TRY(_memcpy_s(dest->ptr, dest->len, src->ptr, src->len));
+	TRY(_memcpy_s(dest->ptr, dest_max_len, src->ptr, src->len));
 	dest->len = src->len;
 	return ok;
 }

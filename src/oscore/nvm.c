@@ -18,14 +18,14 @@
 enum err WEAK nvm_write_ssn(const struct byte_array *sender_id,
 			    const struct byte_array *id_context, uint64_t ssn)
 {
-	PRINTF("The nvm_write_ssn() function MUST be overwritten by user!!!\n");
+	PRINT_MSG("The nvm_write_ssn() function MUST be overwritten by user!!!\n");
 	return not_implemented;
 }
 
 enum err WEAK nvm_read_ssn(const struct byte_array *sender_id,
 			   const struct byte_array *id_context, uint64_t *ssn)
 {
-	PRINTF("The nvm_read_ssn() function MUST be overwritten by user!!!\n");
+	PRINT_MSG("The nvm_read_ssn() function MUST be overwritten by user!!!\n");
 	*ssn = 0;
 	return not_implemented;
 }
