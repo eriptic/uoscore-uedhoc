@@ -51,7 +51,6 @@ jobs:
 # native_posix (0x68)
       - name: Build native_posix
         run: |
-# source  ~/zephyrproject/zephyr/zephyr-env.sh
            cd test/
            west build -b=native_posix
            west build -t run
