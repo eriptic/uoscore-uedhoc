@@ -40,7 +40,7 @@ jobs:
 
           tar xvf zephyr-sdk-0.15.0_linux-x86_64.tar.gz
           cd zephyr-sdk-0.15.0
-          ./setup.sh
+          ./setup.sh -t "x86_64-zephyr-elf" -h -c
       
       - name: Checkout code
         uses: actions/checkout@v2
