@@ -141,7 +141,39 @@ void t302_oscore_option_parser_no_kid(void)
 			    result.kid_context.len, "wrong kid_context");
 }
 
-void t303_options_reorder(void){
-    enum err r;
+void t303_options_reorder(void)
+{
+	enum err r;
 
+	struct o_coap_option u_options[] = {
+		{ .delta = 7, .len = 0, .value = NULL, .option_number = 7 },
+		{ .delta = 5, .len = 0, .value = NULL, .option_number = 12 }
+	};
+
+	struct o_coap_option e_options[] = {
+		{ .delta = 2, .len = 0, .value = NULL, .option_number = 2 },
+		{ .delta = 2, .len = 0, .value = NULL, .option_number = 4 }
+	};
+
+	struct o_coap_option expected[] = {
+		{ .delta = 2, .len = 0, .value = NULL, .option_number = 2 },
+		{ .delta = 2, .len = 0, .value = NULL, .option_number = 4 },
+		{ .delta = 3, .len = 0, .value = NULL, .option_number = 7 },
+		{ .delta = 5, .len = 0, .value = NULL, .option_number = 12 }
+	};
+
+	struct o_coap_option out_options[4];
+	uint8_t out_options_cnt;
+
+	r = options_reorder(u_options, 2, e_options, 2, out_options,
+			    &out_options_cnt);
+
+	zassert_equal(r, ok, "Error in options_reorder. r: %d", r);
+
+	// PRINT_ARRAY("out_options", out_options, sizeof(out_options));
+	// PRINT_ARRAY("expected", expected, sizeof(expected));
+
+	zassert_equal(out_options_cnt, 4, "wrong option count");
+	zassert_mem_equal__(out_options, expected, sizeof(expected),
+			    "wrong option order");
 }
