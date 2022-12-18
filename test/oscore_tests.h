@@ -29,4 +29,7 @@ void t102_inner_outer_option_split__with_observe_registration(void);
 void t103_oscore_pkg_generate__request_with_observe_registration(void);
 void t104_oscore_pkg_generate__request_with_observe_notification(void);
 void t200_options_serialize_deserialize(void);
+void t300_oscore_option_parser_no_piv(void);
+void t301_oscore_option_parser_wrong_n(void);
+void t302_oscore_option_parser_no_kid(void);
 #endif

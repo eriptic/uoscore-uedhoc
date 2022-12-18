@@ -28,6 +28,7 @@
 #include "common/oscore_edhoc_error.h"
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
+#include "common/unit_test.h"
 
 /**
  * @brief 	Parse all received options to find the OSCORE option. If it doesn't  
@@ -38,25 +39,21 @@
  * @param out: pointer output compressed OSCORE_option
  * @return error code
  */
-static inline enum err
-oscore_option_parser(struct o_coap_packet *in,
-		     struct compressed_oscore_option *out)
+STATIC enum err oscore_option_parser(const struct o_coap_option *opt,
+				     uint8_t opt_cnt,
+				     struct compressed_oscore_option *out)
 {
-	uint8_t temp_option_count = in->options_cnt;
-	struct o_coap_option *temp_options = in->options;
-	uint16_t temp_option_num = 0;
-	uint8_t *temp_current_option_value_ptr;
+	uint8_t *val_ptr;
 	uint16_t temp_kid_len = 0;
 
 	enum err r = not_oscore_pkt;
 
-	for (uint8_t i = 0; i < temp_option_count; i++) {
-		temp_option_num = temp_options[i].option_number;
-		temp_kid_len = temp_options[i].len;
+	for (uint8_t i = 0; i < opt_cnt; i++) {
+		temp_kid_len = opt[i].len;
 
 		/* Check current option is OSCORE_option or not */
-		if (temp_option_num == OSCORE) {
-			if (temp_options[i].len == 0) {
+		if (opt[i].option_number == OSCORE) {
+			if (opt[i].len == 0) {
 				/* No OSCORE option value*/
 				out->h = 0;
 				out->k = 0;
@@ -69,19 +66,18 @@ oscore_option_parser(struct o_coap_packet *in,
 				out->kid_context.len = 0;
 			} else {
 				/* Get address of current option value*/
-				temp_current_option_value_ptr =
-					temp_options[i].value;
+				val_ptr = opt[i].value;
 				/* Parse first byte of OSCORE value*/
-				out->h = ((*temp_current_option_value_ptr) &
+				out->h = ((*val_ptr) &
 					  COMP_OSCORE_OPT_KIDC_H_MASK) >>
 					 COMP_OSCORE_OPT_KIDC_H_OFFSET;
-				out->k = ((*temp_current_option_value_ptr) &
+				out->k = ((*val_ptr) &
 					  COMP_OSCORE_OPT_KID_K_MASK) >>
 					 COMP_OSCORE_OPT_KID_K_OFFSET;
-				out->n = ((*temp_current_option_value_ptr) &
+				out->n = ((*val_ptr) &
 					  COMP_OSCORE_OPT_PIV_N_MASK) >>
 					 COMP_OSCORE_OPT_PIV_N_OFFSET;
-				temp_current_option_value_ptr++;
+				val_ptr++;
 				temp_kid_len--;
 
 				/* Get PIV */
@@ -89,6 +85,7 @@ oscore_option_parser(struct o_coap_packet *in,
 				case 0:
 					/* NO PIV in COSE object*/
 					out->piv.ptr = NULL;
+					out->piv.len = 0;
 					break;
 				case 6:
 				case 7:
@@ -96,10 +93,9 @@ oscore_option_parser(struct o_coap_packet *in,
 					return oscore_inpkt_invalid_piv;
 					break;
 				default:
-					out->piv.ptr =
-						temp_current_option_value_ptr;
+					out->piv.ptr = val_ptr;
 					out->piv.len = out->n;
-					temp_current_option_value_ptr += out->n;
+					val_ptr += out->n;
 					temp_kid_len = (uint8_t)(temp_kid_len -
 								 out->n);
 					break;
@@ -110,15 +106,13 @@ oscore_option_parser(struct o_coap_packet *in,
 					out->kid_context.len = 0;
 					out->kid_context.ptr = NULL;
 				} else {
-					out->kid_context.len =
-						*temp_current_option_value_ptr;
-					out->kid_context.ptr =
-						++temp_current_option_value_ptr;
-					temp_current_option_value_ptr +=
-						out->kid_context.len;
-					temp_kid_len = (uint8_t)(
-						temp_kid_len -
-						(out->kid_context.len + 1));
+					out->kid_context.len = *val_ptr;
+					out->kid_context.ptr = ++val_ptr;
+					val_ptr += out->kid_context.len;
+					temp_kid_len =
+						(uint8_t)(temp_kid_len -
+							  (out->kid_context.len +
+							   1));
 				}
 
 				/* Get KID */
@@ -127,8 +121,7 @@ oscore_option_parser(struct o_coap_packet *in,
 					out->kid.ptr = NULL;
 				} else {
 					out->kid.len = temp_kid_len;
-					out->kid.ptr =
-						temp_current_option_value_ptr;
+					out->kid.ptr = val_ptr;
 				}
 			}
 
@@ -312,7 +305,8 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 	TRY(buf2coap(&buf, &oscore_packet));
 
 	/* Check if the packet is OSCORE packet and if so parse the OSCORE option */
-	TRY(oscore_option_parser(&oscore_packet, &oscore_option));
+	TRY(oscore_option_parser(oscore_packet.options,
+				 oscore_packet.options_cnt, &oscore_option));
 
 	/* Encrypted packet payload */
 	struct byte_array *ciphertext = &oscore_packet.payload;

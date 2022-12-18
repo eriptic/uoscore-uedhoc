@@ -35,6 +35,9 @@ enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 			     uint8_t u_options_cnt,
 			     struct byte_array *in_ciphertext,
 			     struct oscore_option *oscore_option);
+enum err oscore_option_parser(const struct o_coap_option *opt,
+				     uint8_t opt_cnt,
+				     struct compressed_oscore_option *out);
 
 #else
 #define STATIC static
