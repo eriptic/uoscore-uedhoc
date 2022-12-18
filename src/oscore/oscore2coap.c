@@ -35,7 +35,8 @@
  * 		 	have OSCORE option, then this packet is a normal CoAP. If it does 
  * 			have, it's an OSCORE packet, and then parse the compressed OSCORE 
  * 			option value to get value of PIV, KID and KID context of the client.
- * @param in: input OSCORE packet
+ * @param opt: input array of options
+ * @param opt_cnt: number of elements in the array
  * @param out: pointer output compressed OSCORE_option
  * @return error code
  */
@@ -140,49 +141,50 @@ STATIC enum err oscore_option_parser(const struct o_coap_option *opt,
  * @param out: output pointer to CoAP packet, which will have all reordered options
  * @return ok or error code
  */
-static inline enum err
-options_from_oscore_reorder(struct o_coap_packet *oscore_pkt,
-			    struct o_coap_option *E_options,
-			    uint8_t E_options_cnt, struct o_coap_packet *out)
+
+STATIC enum err
+options_reorder(struct o_coap_option *U_options, uint8_t U_options_cnt,
+		struct o_coap_option *E_options, uint8_t E_options_cnt,
+		struct o_coap_option *out_options, uint8_t *out_options_cnt)
 {
 	/*the maximum amount of options for the CoAP packet 
 	is the amount of all options -1 (for the OSCORE option)*/
-	uint8_t max_coap_opt_cnt =
-		(uint8_t)(oscore_pkt->options_cnt + E_options_cnt - 1);
+	uint8_t max_coap_opt_cnt = (uint8_t)(U_options_cnt + E_options_cnt - 1);
 
 	TRY(check_buffer_size(MAX_OPTION_COUNT, max_coap_opt_cnt));
-	out->options_cnt = 0;
+	*out_options_cnt = 0;
 
 	/*Get the all outer options. Discard OSCORE and outer OBSERVE as specified in 8.2 and 8.4 */
-	for (uint8_t i = 0; i < oscore_pkt->options_cnt; i++) {
-		if ((oscore_pkt->options[i].option_number != OSCORE) &&
-		    (oscore_pkt->options[i].option_number != OBSERVE)) {
-			out->options[out->options_cnt++] =
-				oscore_pkt->options[i];
+	for (uint8_t i = 0; i < U_options_cnt; i++) {
+		if ((U_options[i].option_number != OSCORE) &&
+		    (U_options[i].option_number != OBSERVE)) {
+			out_options[*out_options_cnt] = U_options[i];
+			*out_options_cnt += 1;
 		}
 	}
 
 	/*Get the inner options.*/
 	for (uint8_t i = 0; i < E_options_cnt; i++) {
-		out->options[out->options_cnt++] = E_options[i];
+		out_options[*out_options_cnt] = E_options[i];
+		*out_options_cnt += 1;
 	}
 
 	uint16_t delta = 0;
 	/* Order the options starting with minimum option number to maximum */
-	for (uint8_t i = 0; i < out->options_cnt; i++) {
+	for (uint8_t i = 0; i < *out_options_cnt; i++) {
 		uint8_t ipp = (uint8_t)(i + 1);
-		for (uint8_t k = ipp; k < out->options_cnt; k++) {
-			if (out->options[i].option_number >
-			    out->options[k].option_number) {
+		for (uint8_t k = ipp; k < *out_options_cnt; k++) {
+			if (out_options[i].option_number >
+			    out_options[k].option_number) {
 				struct o_coap_option tmp;
-				tmp = out->options[i];
-				out->options[i] = out->options[k];
-				out->options[k] = tmp;
+				tmp = out_options[i];
+				out_options[i] = out_options[k];
+				out_options[k] = tmp;
 			}
 		}
 		/*update the delta*/
-		out->options[i].delta = out->options[i].option_number - delta;
-		delta = out->options[i].option_number;
+		out_options[i].delta = out_options[i].option_number - delta;
+		delta = out_options[i].option_number;
 	}
 
 	return ok;
@@ -232,8 +234,9 @@ static inline enum err o_coap_pkg_generate(struct byte_array *decrypted_payload,
 	}
 
 	/* reorder all options, and copy it to output coap packet */
-	TRY(options_from_oscore_reorder(oscore_pkt, E_options, E_options_cnt,
-					out));
+	TRY(options_reorder(oscore_pkt->options, oscore_pkt->options_cnt,
+			    E_options, E_options_cnt, out->options,
+			    &out->options_cnt));
 	return ok;
 }
 

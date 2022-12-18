@@ -32,4 +32,5 @@ void t200_options_serialize_deserialize(void);
 void t300_oscore_option_parser_no_piv(void);
 void t301_oscore_option_parser_wrong_n(void);
 void t302_oscore_option_parser_no_kid(void);
+void t303_options_reorder(void);
 #endif

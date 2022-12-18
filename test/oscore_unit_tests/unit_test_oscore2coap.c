@@ -140,3 +140,8 @@ void t302_oscore_option_parser_no_kid(void)
 			    expected_result.kid_context.ptr,
 			    result.kid_context.len, "wrong kid_context");
 }
+
+void t303_options_reorder(void){
+    enum err r;
+
+}

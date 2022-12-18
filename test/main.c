@@ -136,7 +136,7 @@ void test_main(void)
 	/* OSCORE test-vector tests */
 
 	// ztest_test_suite(oscore_tests,
-	// 		 ztest_unit_test(t300_oscore_option_parser));
+	// 		 ztest_unit_test(t2_oscore_server_request_response));
 	ztest_test_suite(
 		oscore_tests,
 		ztest_unit_test(t1_oscore_client_request_response),
