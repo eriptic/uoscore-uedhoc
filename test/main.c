@@ -162,6 +162,7 @@ void test_main(void)
 			t104_oscore_pkg_generate__request_with_observe_notification),
 		ztest_unit_test(
 			t105_inner_outer_option_split__too_many_options),
+		ztest_unit_test(t106_oscore_option_generate_no_piv),
 		ztest_unit_test(t200_options_serialize_deserialize),
 		ztest_unit_test(t300_oscore_option_parser_no_piv),
 		ztest_unit_test(t301_oscore_option_parser_wrong_n),

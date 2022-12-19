@@ -83,8 +83,9 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			* Inner option has value NULL if notification or the original value 
 			* in the coap packet if registration/cancellation.
 			*/
-			e_options[*e_options_cnt].delta = (uint16_t)(
-				temp_option_nr - temp_E_option_delta_sum);
+			e_options[*e_options_cnt].delta =
+				(uint16_t)(temp_option_nr -
+					   temp_E_option_delta_sum);
 			if (is_request(in_o_coap)) {
 				/*registrations/cancellations are requests */
 				e_options[*e_options_cnt].len = temp_len;
@@ -118,8 +119,9 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			/*
 			*outer option (value as in the original coap packet
 			*/
-			U_options[*U_options_cnt].delta = (uint16_t)(
-				temp_option_nr - temp_U_option_delta_sum);
+			U_options[*U_options_cnt].delta =
+				(uint16_t)(temp_option_nr -
+					   temp_U_option_delta_sum);
 			U_options[*U_options_cnt].len = temp_len;
 			U_options[*U_options_cnt].value =
 				in_o_coap->options[i].value;
@@ -150,9 +152,10 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 					temp_option_nr;
 
 				/* Update delta sum of E-options */
-				temp_E_option_delta_sum = (uint8_t)(
-					temp_E_option_delta_sum +
-					e_options[*e_options_cnt].delta);
+				temp_E_option_delta_sum =
+					(uint8_t)(temp_E_option_delta_sum +
+						  e_options[*e_options_cnt]
+							  .delta);
 
 				/* Increment E-options count */
 				(*e_options_cnt)++;
@@ -172,9 +175,10 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 					temp_option_nr;
 
 				/* Update delta sum of E-options */
-				temp_U_option_delta_sum = (uint8_t)(
-					temp_U_option_delta_sum +
-					U_options[*U_options_cnt].delta);
+				temp_U_option_delta_sum =
+					(uint8_t)(temp_U_option_delta_sum +
+						  U_options[*U_options_cnt]
+							  .delta);
 
 				/* Increment E-options count */
 				(*U_options_cnt)++;
@@ -245,8 +249,9 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
  * @param   kid_context_len length of the KID context array
  * @return  length of the OSCORE option value
  */
-static inline uint32_t get_oscore_opt_val_len(uint32_t piv_len, uint32_t kid_len,
-					    uint32_t kid_context_len)
+static inline uint32_t get_oscore_opt_val_len(uint32_t piv_len,
+					      uint32_t kid_len,
+					      uint32_t kid_context_len)
 {
 	uint32_t length = piv_len + kid_len + kid_context_len;
 	if (length) {
@@ -270,10 +275,10 @@ static inline uint32_t get_oscore_opt_val_len(uint32_t piv_len, uint32_t kid_len
  * @param   oscore_option: output pointer OSCORE option structure
  * @return  err
  */
-static inline enum err
-oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
-		       struct byte_array *kid_context,
-		       struct oscore_option *oscore_option)
+STATIC enum err oscore_option_generate(struct byte_array *piv,
+				       struct byte_array *kid,
+				       struct byte_array *kid_context,
+				       struct oscore_option *oscore_option)
 {
 	uint32_t piv_len = (NULL == piv) ? 0 : piv->len;
 	uint32_t kid_len = (NULL == kid) ? 0 : kid->len;
@@ -300,13 +305,15 @@ oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
 				(uint8_t)(oscore_option->value[0] | piv->len);
 			/* copy PIV (sender sequence) */
 
-			dest_size = (uint32_t)(
-				oscore_option->len -
-				(temp_ptr + 1 - oscore_option->value));
+			dest_size = (uint32_t)(oscore_option->len -
+					       (temp_ptr + 1 -
+						oscore_option->value));
 			TRY(_memcpy_s(++temp_ptr, dest_size, piv->ptr,
 				      piv->len));
 
 			temp_ptr += piv->len;
+		} else {
+			temp_ptr++;
 		}
 
 		if (kid_context_len != 0) {
@@ -315,9 +322,9 @@ oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
 			/* Copy length and context value */
 			*temp_ptr = (uint8_t)(kid_context->len);
 
-			dest_size = (uint32_t)(
-				oscore_option->len -
-				(temp_ptr + 1 - oscore_option->value));
+			dest_size = (uint32_t)(oscore_option->len -
+					       (temp_ptr + 1 -
+						oscore_option->value));
 			TRY(_memcpy_s(++temp_ptr, dest_size, kid_context->ptr,
 				      kid_context->len));
 
@@ -552,8 +559,8 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	TRY(buf2coap(&buf, &o_coap_pkt));
 
 	/* Dismiss OSCORE encryption if messaging layer detected (simple ACK, code=0.00) */
-	if ((CODE_EMPTY == o_coap_pkt.header.code) &&
-	    (TYPE_ACK == o_coap_pkt.header.type)) {
+	if ((TYPE_ACK == o_coap_pkt.header.type) &&
+	    (CODE_EMPTY == o_coap_pkt.header.code)) {
 		PRINT_MSG(
 			"Messaging Layer CoAP packet detected, encryption dismissed\n");
 		*buf_oscore_len = buf_o_coap_len;

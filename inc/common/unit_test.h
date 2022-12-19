@@ -44,6 +44,11 @@ enum err options_reorder(struct o_coap_option *U_options, uint8_t U_options_cnt,
 			 struct o_coap_option *out_options,
 			 uint8_t *out_options_cnt);
 
+enum err oscore_option_generate(struct byte_array *piv,
+				       struct byte_array *kid,
+				       struct byte_array *kid_context,
+				       struct oscore_option *oscore_option);
+
 #else
 #define STATIC static
 #endif

@@ -655,3 +655,39 @@ void t105_inner_outer_option_split__too_many_options(void)
 	zassert_equal(r, too_many_options,
 		      "Error in inner_outer_option_split. r: %d", r);
 }
+
+/**
+ * @brief create an OSCORE option without a PIV
+*/
+void t106_oscore_option_generate_no_piv(void)
+{
+	struct oscore_option oscore_option;
+
+	uint8_t val[] = { 0b11000, 1, 1, 1 };
+	struct oscore_option expected = {
+		.delta = OSCORE,
+		.len = sizeof(val),
+		.value = val,
+		.option_number = OSCORE,
+	};
+
+	uint8_t kid_buf[] = { 1 };
+	uint8_t kid_context_buf[] = { 1 };
+
+	struct byte_array piv = BYTE_ARRAY_INIT(NULL, 0);
+	struct byte_array kid = BYTE_ARRAY_INIT(kid_buf, sizeof(kid_buf));
+	struct byte_array kid_context =
+		BYTE_ARRAY_INIT(kid_context_buf, sizeof(kid_context_buf));
+
+	enum err r = oscore_option_generate(&piv, &kid, &kid_context,
+					    &oscore_option);
+
+	zassert_equal(r, ok, "Error in oscore_option_generate. r: %d", r);
+	zassert_equal(oscore_option.len, expected.len,
+		      "wrong oscore option len");
+	zassert_equal(oscore_option.option_number, expected.option_number,
+		      "wrong oscore option_number");
+	zassert_mem_equal__(oscore_option.value, expected.value,
+			    oscore_option.len, "wrong oscore option value");
+	;
+}
