@@ -58,7 +58,7 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 	uint8_t temp_U_option_delta_sum = 0;
 
 	if (MAX_OPTION_COUNT < in_o_coap->options_cnt) {
-		return not_valid_input_packet;
+		return too_many_options;
 	}
 
 	for (uint8_t i = 0; i < in_o_coap->options_cnt; i++) {

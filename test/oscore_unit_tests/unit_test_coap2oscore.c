@@ -1,4 +1,13 @@
+/*
+   Copyright (c) 2022 Eriptic Technologies. See the COPYRIGHT
+   file at the top-level directory of this distribution.
 
+   Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+   http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+   <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+   option. This file may not be copied, modified, or distributed
+   except according to those terms.
+*/
 #include <zephyr/zephyr.h>
 #include <zephyr/ztest.h>
 
@@ -607,4 +616,42 @@ void t104_oscore_pkg_generate__request_with_observe_notification(void)
 
 	zassert_mem_equal__(&oscore_pkt, &expected_oscore_pkt,
 			    sizeof(oscore_pkt), "oscore_pkt incorrect");
+}
+
+/**
+ * @brief   Tests the function inner_outer_option_split with too many options
+ */
+void t105_inner_outer_option_split__too_many_options(void)
+{
+	enum err r;
+
+	struct o_coap_header header = {
+		.ver = 1,
+		.type = TYPE_CON,
+		.TKL = 0,
+		.code = CODE_REQ_POST,
+		.MID = 0x0,
+	};
+
+	struct o_coap_packet coap_pkt = {
+		.header = header,
+		.token = NULL,
+		.options_cnt = 21,
+		.payload.len = 0,
+		.payload.ptr = NULL,
+	};
+
+	struct o_coap_option inner_options[5];
+	struct o_coap_option outer_options[5];
+	memset(inner_options, 0, sizeof(inner_options));
+	memset(outer_options, 0, sizeof(outer_options));
+	uint16_t inner_options_len = 0;
+	uint8_t inner_options_cnt = 0;
+	uint8_t outer_options_cnt = 0;
+
+	r = inner_outer_option_split(&coap_pkt, inner_options,
+				     &inner_options_cnt, &inner_options_len,
+				     outer_options, &outer_options_cnt);
+	zassert_equal(r, too_many_options,
+		      "Error in inner_outer_option_split. r: %d", r);
 }
