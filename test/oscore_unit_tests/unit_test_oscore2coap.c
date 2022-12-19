@@ -163,6 +163,7 @@ void t303_options_reorder(void)
 	};
 
 	struct o_coap_option out_options[4];
+	memset(&out_options, 0, sizeof(out_options));
 	uint8_t out_options_cnt;
 
 	r = options_reorder(u_options, 2, e_options, 2, out_options,
@@ -170,8 +171,8 @@ void t303_options_reorder(void)
 
 	zassert_equal(r, ok, "Error in options_reorder. r: %d", r);
 
-	// PRINT_ARRAY("out_options", out_options, sizeof(out_options));
-	// PRINT_ARRAY("expected", expected, sizeof(expected));
+	PRINT_ARRAY("out_options", out_options, sizeof(out_options));
+	PRINT_ARRAY("expected", expected, sizeof(expected));
 
 	zassert_equal(out_options_cnt, 4, "wrong option count");
 	zassert_mem_equal__(out_options, expected, sizeof(expected),

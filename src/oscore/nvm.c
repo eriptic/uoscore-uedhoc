@@ -19,14 +19,16 @@
 enum err WEAK nvm_write_ssn(const struct byte_array *sender_id,
 			    const struct byte_array *id_context, uint64_t ssn)
 {
-	PRINT_MSG("The nvm_write_ssn() function MUST be overwritten by user!!!\n");
+	PRINT_MSG(
+		"The nvm_write_ssn() function MUST be overwritten by user!!!\n");
 	return not_implemented;
 }
 
 enum err WEAK nvm_read_ssn(const struct byte_array *sender_id,
 			   const struct byte_array *id_context, uint64_t *ssn)
 {
-	PRINT_MSG("The nvm_read_ssn() function MUST be overwritten by user!!!\n");
+	PRINT_MSG(
+		"The nvm_read_ssn() function MUST be overwritten by user!!!\n");
 	*ssn = 0;
 	return not_implemented;
 }
@@ -35,7 +37,7 @@ enum err ssn_store_in_nvm(const struct byte_array *sender_id,
 			  const struct byte_array *id_context, uint64_t ssn,
 			  bool ssn_in_nvm)
 {
-	if (ssn_in_nvm && (0 == ssn % K_SSN_NVM_STORE_INTERVAL)) {
+	if ((0 == ssn % K_SSN_NVM_STORE_INTERVAL) && ssn_in_nvm) {
 		TRY(nvm_write_ssn(sender_id, id_context, ssn));
 	}
 	return ok;
@@ -47,7 +49,8 @@ enum err ssn_init(const struct byte_array *sender_id,
 {
 	if (!ssn_in_nvm) {
 		*ssn = 0;
-		PRINTF("SSN initialized not from NMV. SSN = %" PRIu64 "\n", *ssn);
+		PRINTF("SSN initialized not from NMV. SSN = %" PRIu64 "\n",
+		       *ssn);
 	} else {
 		TRY(nvm_read_ssn(sender_id, id_context, ssn));
 		*ssn += K_SSN_NVM_STORE_INTERVAL + F_NVM_MAX_WRITE_FAILURE;

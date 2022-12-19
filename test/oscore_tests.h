@@ -38,4 +38,7 @@ void t301_oscore_option_parser_wrong_n(void);
 void t302_oscore_option_parser_no_kid(void);
 void t303_options_reorder(void);
 
+void t400_is_class_e(void);
+void t401_cache_echo_val(void);
+
 #endif
