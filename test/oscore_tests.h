@@ -40,5 +40,6 @@ void t303_options_reorder(void);
 
 void t400_is_class_e(void);
 void t401_cache_echo_val(void);
+void t402_echo_val_is_fresh(void);
 
 #endif

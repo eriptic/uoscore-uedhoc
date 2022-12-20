@@ -169,7 +169,8 @@ void test_main(void)
 		ztest_unit_test(t302_oscore_option_parser_no_kid),
 		ztest_unit_test(t303_options_reorder),
 		ztest_unit_test(t400_is_class_e),
-		ztest_unit_test(t401_cache_echo_val));
+		ztest_unit_test(t401_cache_echo_val),
+		ztest_unit_test(t402_echo_val_is_fresh));
 
 	ztest_run_test_suite(exporter);
 	ztest_run_test_suite(initiator_responder_interaction);

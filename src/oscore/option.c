@@ -81,10 +81,8 @@ enum err echo_val_is_fresh(struct byte_array *cache_val,
 			   struct byte_array *decrypted_payload)
 {
 	uint8_t code = 0;
-	struct byte_array unprotected_o_coap_payload = {
-		.len = 0,
-		.ptr = NULL,
-	};
+	BYTE_ARRAY_NEW(unprotected_o_coap_payload, 0, 0);
+
 	struct o_coap_option E_options[10];
 	uint8_t E_options_cnt = 0;
 
@@ -95,9 +93,9 @@ enum err echo_val_is_fresh(struct byte_array *cache_val,
 
 	for (uint8_t i = 0; i < E_options_cnt; i++) {
 		if (E_options[i].option_number == ECHO) {
-			if (cache_val->len == E_options[i].len &&
-			    0 == memcmp(E_options[i].value, cache_val->ptr,
-					cache_val->len)) {
+			if (0 == memcmp(E_options[i].value, cache_val->ptr,
+					cache_val->len) &&
+			    cache_val->len == E_options[i].len) {
 				PRINT_MSG("ECHO option check -- OK\n");
 				return ok;
 			} else {

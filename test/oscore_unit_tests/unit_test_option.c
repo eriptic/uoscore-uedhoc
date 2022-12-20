@@ -46,3 +46,36 @@ void t401_cache_echo_val(void)
 	r = cache_echo_val(&empty, (struct o_coap_option *)&options, 3);
 	zassert_equal(r, no_echo_option, "Error in cache_echo_val. r: %d", r);
 }
+
+void t402_echo_val_is_fresh(void)
+{
+	enum err r;
+
+	uint8_t cache_val_buf[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+				    0x06, 0x07, 0x08, 0x09, 0x10, 0x11 };
+
+	struct byte_array cache_val =
+		BYTE_ARRAY_INIT(cache_val_buf, sizeof(cache_val_buf));
+
+	uint8_t decrypted_payload_buf[] = { 0x01 }; /*code only*/
+	struct byte_array decrypted_payload = BYTE_ARRAY_INIT(
+		decrypted_payload_buf, sizeof(decrypted_payload_buf));
+
+	/*test no ECHO option*/
+	r = echo_val_is_fresh(&cache_val, &decrypted_payload);
+	zassert_equal(r, no_echo_option, "Error in echo_val_is_fresh. r: %d",
+		      r);
+
+	/*test ECHO option mismatch*/
+	uint8_t decrypted_payload_buf_mismatch[] = {
+		0x81, 0xDC, 0xEF, 0x00, 0x01, 0x02, 0x03, 0x04,
+		0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x12
+	}; /*wrong last byte of the ECHO option*/
+	struct byte_array decrypted_payload_mismatch =
+		BYTE_ARRAY_INIT(decrypted_payload_buf_mismatch,
+				sizeof(decrypted_payload_buf_mismatch));
+
+	r = echo_val_is_fresh(&cache_val, &decrypted_payload_mismatch);
+	zassert_equal(r, echo_val_mismatch, "Error in echo_val_is_fresh. r: %d",
+		      r);
+}
