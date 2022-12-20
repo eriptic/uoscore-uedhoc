@@ -48,4 +48,13 @@ void t500_oscore_context_init_corner_cases(void);
 void t501_piv2ssn(void);
 void t502_verify_token(void);
 void t503_derive_corner_case(void);
+
+void t600_server_replay_init_test(void);
+void t601_server_replay_reinit_test(void);
+void t602_server_replay_check_at_start_test(void);
+void t603_server_replay_check_in_progress_test(void);
+void t604_server_replay_insert_zero_test(void);
+void t605_server_replay_insert_test(void);
+void t606_server_replay_standard_scenario_test(void);
+
 #endif

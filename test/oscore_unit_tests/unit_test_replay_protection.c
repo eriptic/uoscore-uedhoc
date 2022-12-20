@@ -1,4 +1,13 @@
+/*
+   Copyright (c) 2022 Assa Abloy. See the COPYRIGHT
+   file at the top-level directory of this distribution.
 
+   Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+   http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+   <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+   option. This file may not be copied, modified, or distributed
+   except according to those terms.
+*/
 #include <stdio.h>
 #include <string.h>
 #include <zephyr/ztest.h>
@@ -47,7 +56,7 @@ _validate_window_and_check_result(uint64_t seq_num,
 /**
  * @brief Test replay window initialization.
  */
-static void server_replay_init_test(void)
+void t600_server_replay_init_test(void)
 {
 	static server_replay_window_t compare_window = { 0 };
 
@@ -67,7 +76,7 @@ static void server_replay_init_test(void)
 /**
  * @brief Test replay window re-initialization.
  */
-static void server_replay_reinit_test(void)
+void t601_server_replay_reinit_test(void)
 {
 	static const server_replay_window_t compare_window_1 = {
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -98,7 +107,7 @@ static void server_replay_reinit_test(void)
 /**
  * @brief Test replay window check for various sequence numbers - this case represents beginning of the communication.
  */
-static void server_replay_check_at_start_test(void)
+void t602_server_replay_check_at_start_test(void)
 {
 	// missing Sequence Numbers in starting_point: 9, 5, 3, 2, 1, 0
 	// SN 11 is ahead of current window = OK
@@ -134,7 +143,7 @@ static void server_replay_check_at_start_test(void)
 /**
  * @brief Test replay window check for various sequence numbers - this case represents communication in progress.
  */
-static void server_replay_check_in_progress_test(void)
+void t603_server_replay_check_in_progress_test(void)
 {
 	// missing Sequence Numbers in starting_point: 126, 127, 133
 	// SN 99 and below are behind the window = NOT OK
@@ -166,7 +175,7 @@ static void server_replay_check_in_progress_test(void)
 /**
  * @brief Test inserting zero into replay window at different moments of the session.
  */
-static void server_replay_insert_zero_test(void)
+void t604_server_replay_insert_zero_test(void)
 {
 	static const server_replay_window_t compare_window_1 = { { 0 }, true };
 
@@ -214,7 +223,7 @@ static void server_replay_insert_zero_test(void)
 /**
  * @brief Test inserting values into replay window at different moments of the session.
  */
-static void server_replay_insert_test(void)
+void t605_server_replay_insert_test(void)
 {
 	static const server_replay_window_t starting_point = {
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -271,7 +280,7 @@ static void server_replay_insert_test(void)
 /**
  * @brief Standard scenario test - checks and updates
  */
-static void server_replay_standard_scenario_test(void)
+void t606_server_replay_standard_scenario_test(void)
 {
 	static const server_replay_window_t compare_window_1 = {
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -317,18 +326,4 @@ static void server_replay_standard_scenario_test(void)
 		_update_window_and_check_result(seq_num, &replay_window, true);
 	}
 	_compare_windows(&replay_window, &compare_window_2);
-}
-
-void run_replay_protection_tests(void)
-{
-	ztest_test_suite(oscore_replay_protection,
-			 ztest_unit_test(server_replay_init_test),
-			 ztest_unit_test(server_replay_reinit_test),
-			 ztest_unit_test(server_replay_check_at_start_test),
-			 ztest_unit_test(server_replay_check_in_progress_test),
-			 ztest_unit_test(server_replay_insert_zero_test),
-			 ztest_unit_test(server_replay_insert_test),
-			 ztest_unit_test(server_replay_standard_scenario_test));
-
-	ztest_run_test_suite(oscore_replay_protection);
 }

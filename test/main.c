@@ -13,7 +13,6 @@
 #include <zephyr/ztest.h>
 #include "edhoc_integration_tests/edhoc_tests.h"
 #include "oscore_tests.h"
-#include "oscore_unit_tests/replay_protection_tests.h"
 
 // static void test_initiator1(void)
 // {
@@ -176,10 +175,16 @@ void test_main(void)
 		ztest_unit_test(t500_oscore_context_init_corner_cases),
 		ztest_unit_test(t501_piv2ssn),
 		ztest_unit_test(t502_verify_token),
-		ztest_unit_test(t503_derive_corner_case));
+		ztest_unit_test(t503_derive_corner_case),
+		ztest_unit_test(t600_server_replay_init_test),
+		ztest_unit_test(t601_server_replay_reinit_test),
+		ztest_unit_test(t602_server_replay_check_at_start_test),
+		ztest_unit_test(t603_server_replay_check_in_progress_test),
+		ztest_unit_test(t604_server_replay_insert_zero_test),
+		ztest_unit_test(t605_server_replay_insert_test),
+		ztest_unit_test(t606_server_replay_standard_scenario_test));
 
 	ztest_run_test_suite(exporter);
 	ztest_run_test_suite(initiator_responder_interaction);
-	run_replay_protection_tests();
 	ztest_run_test_suite(oscore_tests);
 }
