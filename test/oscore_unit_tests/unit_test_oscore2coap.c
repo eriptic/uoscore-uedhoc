@@ -171,8 +171,8 @@ void t303_options_reorder(void)
 
 	zassert_equal(r, ok, "Error in options_reorder. r: %d", r);
 
-	PRINT_ARRAY("out_options", out_options, sizeof(out_options));
-	PRINT_ARRAY("expected", expected, sizeof(expected));
+	//PRINT_ARRAY("out_options", out_options, sizeof(out_options));
+	//PRINT_ARRAY("expected", expected, sizeof(expected));
 
 	zassert_equal(out_options_cnt, 4, "wrong option count");
 	zassert_mem_equal__(out_options, expected, sizeof(expected),

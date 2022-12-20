@@ -153,6 +153,7 @@ options_reorder(struct o_coap_option *U_options, uint8_t U_options_cnt,
 
 	TRY(check_buffer_size(MAX_OPTION_COUNT, max_coap_opt_cnt));
 	*out_options_cnt = 0;
+	memset(out_options, 0, sizeof(struct o_coap_option) * max_coap_opt_cnt);
 
 	/*Get the all outer options. Discard OSCORE and outer OBSERVE as specified in 8.2 and 8.4 */
 	for (uint8_t i = 0; i < U_options_cnt; i++) {
