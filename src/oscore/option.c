@@ -81,7 +81,7 @@ enum err echo_val_is_fresh(struct byte_array *cache_val,
 			   struct byte_array *decrypted_payload)
 {
 	uint8_t code = 0;
-	BYTE_ARRAY_NEW(unprotected_o_coap_payload, 0, 0);
+	struct byte_array unprotected_o_coap_payload;
 
 	struct o_coap_option E_options[10];
 	uint8_t E_options_cnt = 0;

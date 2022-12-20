@@ -165,6 +165,7 @@ void test_main(void)
 		ztest_unit_test(t106_oscore_option_generate_no_piv),
 		ztest_unit_test(t200_options_serialize_deserialize),
 		ztest_unit_test(t201_coap_serialize_deserialize),
+		ztest_unit_test(t202_options_deserialize_corner_cases),
 		ztest_unit_test(t300_oscore_option_parser_no_piv),
 		ztest_unit_test(t301_oscore_option_parser_wrong_n),
 		ztest_unit_test(t302_oscore_option_parser_no_kid),

@@ -437,3 +437,53 @@ void t201_coap_serialize_deserialize(void)
 	zassert_equal(r, oscore_inpkt_invalid_tkl,
 		      "Error in coap_deserialize. r: %d", r);
 }
+
+void t202_options_deserialize_corner_cases(void)
+{
+	enum err r;
+	struct o_coap_packet coap_pkt;
+
+	/*test only payload marker no payload*/
+	uint8_t in_data1[] = { 0xff };
+	struct byte_array d1 = BYTE_ARRAY_INIT(in_data1, sizeof(in_data1));
+
+	r = options_deserialize(&d1, (struct o_coap_option *)&coap_pkt.options,
+				&coap_pkt.options_cnt, &coap_pkt.payload);
+
+	zassert_equal(r, not_valid_input_packet,
+		      "Error in options_deserialize. r: %d", r);
+
+	/*test invalid delta*/
+	uint8_t in_data2[] = { 0xf0 }; //delta is 15 -> not a valid value
+	struct byte_array d2 = BYTE_ARRAY_INIT(in_data2, sizeof(in_data2));
+
+	r = options_deserialize(&d2, (struct o_coap_option *)&coap_pkt.options,
+				&coap_pkt.options_cnt, &coap_pkt.payload);
+
+	zassert_equal(r, oscore_inpkt_invalid_option_delta,
+		      "Error in options_deserialize. r: %d", r);
+
+	/*test invalid len*/
+	uint8_t in_data3[] = { 0x0f }; //len is 15 -> not a valid value
+	struct byte_array d3 = BYTE_ARRAY_INIT(in_data3, sizeof(in_data3));
+
+	r = options_deserialize(&d3, (struct o_coap_option *)&coap_pkt.options,
+				&coap_pkt.options_cnt, &coap_pkt.payload);
+
+	zassert_equal(r, oscore_inpkt_invalid_optionlen,
+		      "Error in options_deserialize. r: %d", r);
+
+	/*test too many options*/
+	uint8_t in_data4[] = {
+		0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	}; //21 options with option number 1
+	struct byte_array d4 = BYTE_ARRAY_INIT(in_data4, sizeof(in_data4));
+
+	r = options_deserialize(&d4, (struct o_coap_option *)&coap_pkt.options,
+				&coap_pkt.options_cnt, &coap_pkt.payload);
+
+	zassert_equal(r, too_many_options,
+		      "Error in options_deserialize. r: %d", r);
+}
