@@ -116,7 +116,7 @@ struct compressed_oscore_option {
  * @param   out: pointer to an output OSCORE packet
  * @return  err
  */
-enum err buf2coap(struct byte_array *in, struct o_coap_packet *out);
+enum err coap_deserialize(struct byte_array *in, struct o_coap_packet *out);
 
 /**
  * @brief   Converts a CoAP/OSCORE packet to a byte string
@@ -125,7 +125,7 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out);
  * @param   out_byte_string_len: length of the byte string
  * @return  err
  */
-enum err coap2buf(struct o_coap_packet *in, uint8_t *out_byte_string,
+enum err coap_serialize(struct o_coap_packet *in, uint8_t *out_byte_string,
 		  uint32_t *out_byte_string_len);
 
 /**

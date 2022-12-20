@@ -219,7 +219,7 @@ enum err options_deserialize(struct byte_array *in_data,
 	return ok;
 }
 
-enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
+enum err coap_deserialize(struct byte_array *in, struct o_coap_packet *out)
 {
 	uint8_t *tmp_p = in->ptr;
 	uint32_t payload_len = in->len;
@@ -242,20 +242,23 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
 	tmp_p += 4;
 	payload_len -= 4;
 
-	if (payload_len != 0) {
-		/*Read the token, if it exists*/
-		if (out->header.TKL == 0) {
-			out->token = NULL;
-		} else if (out->header.TKL <= 8) {
+	/*Read the token, if it exists*/
+	if (out->header.TKL == 0) {
+		out->token = NULL;
+	} else if (out->header.TKL <= 8) {
+		if (out->header.TKL <= payload_len) {
 			out->token = tmp_p;
 		} else {
-			/* ERROR: CoAP token length maximal 8 bytes */
 			return oscore_inpkt_invalid_tkl;
 		}
-		/* Update pointer and length */
-		tmp_p += out->header.TKL;
-		payload_len -= out->header.TKL;
+	} else {
+		/* ERROR: CoAP token length maximal 8 bytes */
+		return oscore_inpkt_invalid_tkl;
 	}
+	/* Update pointer and length */
+	tmp_p += out->header.TKL;
+	payload_len -= out->header.TKL;
+
 	struct byte_array remaining_bytes = BYTE_ARRAY_INIT(tmp_p, payload_len);
 	TRY(options_deserialize(&remaining_bytes,
 				(struct o_coap_option *)&out->options,
@@ -264,8 +267,8 @@ enum err buf2coap(struct byte_array *in, struct o_coap_packet *out)
 	return ok;
 }
 
-enum err coap2buf(struct o_coap_packet *in, uint8_t *out_byte_string,
-		  uint32_t *out_byte_string_len)
+enum err coap_serialize(struct o_coap_packet *in, uint8_t *out_byte_string,
+			uint32_t *out_byte_string_len)
 {
 	uint8_t *temp_out_ptr = out_byte_string;
 

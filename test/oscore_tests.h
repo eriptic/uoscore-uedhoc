@@ -32,6 +32,7 @@ void t105_inner_outer_option_split__too_many_options(void);
 void t106_oscore_option_generate_no_piv(void);
 
 void t200_options_serialize_deserialize(void);
+void t201_coap_serialize_deserialize(void);
 
 void t300_oscore_option_parser_no_piv(void);
 void t301_oscore_option_parser_wrong_n(void);

@@ -162,19 +162,27 @@ void t303_options_reorder(void)
 		{ .delta = 5, .len = 0, .value = NULL, .option_number = 12 }
 	};
 
-	struct o_coap_option out_options[4];
-	memset(&out_options, 0, sizeof(out_options));
-	uint8_t out_options_cnt;
+	struct o_coap_option out[4];
+	memset(&out, 0, sizeof(out));
+	uint8_t out_cnt;
 
-	r = options_reorder(u_options, 2, e_options, 2, out_options,
-			    &out_options_cnt);
+	r = options_reorder(u_options, 2, e_options, 2, out, &out_cnt);
 
 	zassert_equal(r, ok, "Error in options_reorder. r: %d", r);
 
-	//PRINT_ARRAY("out_options", out_options, sizeof(out_options));
+	//PRINT_ARRAY("out", out, sizeof(out));
 	//PRINT_ARRAY("expected", expected, sizeof(expected));
 
-	zassert_equal(out_options_cnt, 4, "wrong option count");
-	zassert_mem_equal__(out_options, expected, sizeof(expected),
-			    "wrong option order");
+	uint8_t i;
+	uint8_t len = sizeof(out) / sizeof(out[0]);
+
+	zassert_equal(out_cnt, len, "wrong option count");
+
+	for (i = 0; i < len; i++) {
+		zassert_equal(expected[i].delta, out[i].delta, "wrong delta");
+		zassert_equal(expected[i].len, out[i].len, "wrong len");
+		zassert_equal(expected[i].value, out[i].value, "wrong value");
+		zassert_equal(expected[i].option_number, out[i].option_number,
+			      "wrong option_number");
+	}
 }

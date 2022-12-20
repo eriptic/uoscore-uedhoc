@@ -556,7 +556,7 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 
 	/*Parse the coap buf into a CoAP struct*/
 	memset(&o_coap_pkt, 0, sizeof(o_coap_pkt));
-	TRY(buf2coap(&buf, &o_coap_pkt));
+	TRY(coap_deserialize(&buf, &o_coap_pkt));
 
 	/* Dismiss OSCORE encryption if messaging layer detected (simple ACK, code=0.00) */
 	if ((TYPE_ACK == o_coap_pkt.header.type) &&
@@ -646,5 +646,5 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 				u_options_cnt, &ciphertext, &oscore_option));
 
 	/*convert the oscore pkg to byte string*/
-	return coap2buf(&oscore_pkt, buf_oscore, buf_oscore_len);
+	return coap_serialize(&oscore_pkt, buf_oscore, buf_oscore_len);
 }

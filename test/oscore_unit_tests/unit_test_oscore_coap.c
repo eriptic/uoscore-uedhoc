@@ -390,3 +390,50 @@ void t200_options_serialize_deserialize(void)
 	deserialization_test(EXPECTED13, sizeof(EXPECTED13), options13,
 			     sizeof(options13));
 }
+
+void t201_coap_serialize_deserialize(void)
+{
+	enum err r;
+	/*test malformed input data*/
+	struct byte_array in = BYTE_ARRAY_INIT(NULL, 0);
+	struct o_coap_packet out;
+
+	r = coap_deserialize(&in, &out);
+	zassert_equal(r, not_valid_input_packet,
+		      "Error in coap_deserialize. r: %d", r);
+
+	/*test no token*/
+	uint8_t in_buf[] = { 0x40, 0x00, 0x00, 0x00 };
+	in.ptr = in_buf;
+	in.len = sizeof(in_buf);
+
+	r = coap_deserialize(&in, &out);
+	zassert_equal(r, ok, "Error in coap_deserialize. r: %d", r);
+	zassert_is_null(out.token, "invalid token");
+	zassert_equal(out.header.TKL, 0, "invalid TKL");
+
+	uint8_t ser_dat[sizeof(in_buf)];
+	uint32_t ser_dat_len = 0;
+	r = coap_serialize(&out, (uint8_t *)&ser_dat, &ser_dat_len);
+	zassert_equal(r, ok, "Error in coap_deserialize. r: %d", r);
+	zassert_equal(ser_dat_len, sizeof(in_buf), "wrong ser_dat_len");
+	zassert_mem_equal__(ser_dat, in_buf, ser_dat_len, "wrong ser_dat");
+
+	/*test too long token*/
+	uint8_t in_buf_too_long_tkl[] = { 0x4F, 0x00, 0x00, 0x00 };
+	in.ptr = in_buf_too_long_tkl;
+	in.len = sizeof(in_buf_too_long_tkl);
+
+	r = coap_deserialize(&in, &out);
+	zassert_equal(r, oscore_inpkt_invalid_tkl,
+		      "Error in coap_deserialize. r: %d", r);
+
+	/*test valid tkl but no payload*/
+	uint8_t in_buf_valid_tkl_no_payload[] = { 0x41, 0x00, 0x00, 0x00 };
+	in.ptr = in_buf_valid_tkl_no_payload;
+	in.len = sizeof(in_buf_valid_tkl_no_payload);
+
+	r = coap_deserialize(&in, &out);
+	zassert_equal(r, oscore_inpkt_invalid_tkl,
+		      "Error in coap_deserialize. r: %d", r);
+}

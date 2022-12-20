@@ -217,15 +217,10 @@ static inline enum err o_coap_pkg_generate(struct byte_array *decrypted_payload,
 	out->header.ver = oscore_pkt->header.ver;
 	out->header.type = oscore_pkt->header.type;
 	out->header.TKL = oscore_pkt->header.TKL;
+	out->token = oscore_pkt->token;
 	out->header.code = code; //decrypted code must be used, see 8.2 p.7
 	out->header.MID = oscore_pkt->header.MID;
 
-	/* Token */
-	if (oscore_pkt->header.TKL == 0) {
-		out->token = NULL;
-	} else {
-		out->token = oscore_pkt->token;
-	}
 	/* Payload */
 	out->payload.len = unprotected_o_coap_payload.len;
 	if (unprotected_o_coap_payload.len == 0) {
@@ -306,7 +301,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 
 	/*Parse the incoming message (buf_in) into a CoAP struct*/
 	memset(&oscore_packet, 0, sizeof(oscore_packet));
-	TRY(buf2coap(&buf, &oscore_packet));
+	TRY(coap_deserialize(&buf, &oscore_packet));
 
 	/* Check if the packet is OSCORE packet and if so parse the OSCORE option */
 	TRY(oscore_option_parser(oscore_packet.options,
@@ -411,5 +406,5 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 	TRY(o_coap_pkg_generate(&plaintext, &oscore_packet, &o_coap_packet));
 
 	/*Convert to byte string*/
-	return coap2buf(&o_coap_packet, buf_out, buf_out_len);
+	return coap_serialize(&o_coap_packet, buf_out, buf_out_len);
 }

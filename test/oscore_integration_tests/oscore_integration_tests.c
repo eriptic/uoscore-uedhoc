@@ -74,8 +74,7 @@ void t1_oscore_client_request_response(void)
 	zassert_mem_equal__(&buf_oscore, T1__OSCORE_REQ, T1__OSCORE_REQ_LEN,
 			    "coap2oscore failed");
 
-	/*test concerting the response*/
-
+	/*test converting the response*/
 	r = oscore2coap((uint8_t *)T1__OSCORE_RESP, T1__OSCORE_RESP_LEN,
 			(uint8_t *)&buf_coap, &buf_coap_len, &c_client);
 	zassert_equal(r, ok, "Error in coap2oscore!");
@@ -221,6 +220,16 @@ void t2_oscore_server_request_response(void)
 	zassert_equal(r, ok, "Error in oscore2coap! Error code: %d", r);
 	zassert_mem_equal__(&buf_coap, T2__COAP_REQ, buf_coap_len,
 			    "oscore2coap failed");
+
+	/*test response not matching the recipient ID*/
+	uint8_t wrong_recipient_id[] = { 0x02 };
+	c_server.rc.recipient_id.ptr = wrong_recipient_id;
+	c_server.rc.recipient_id.len = sizeof(wrong_recipient_id);
+
+	r = oscore2coap((uint8_t *)T2__OSCORE_REQ, T2__OSCORE_REQ_LEN,
+			(uint8_t *)&buf_coap, &buf_coap_len, &c_server);
+	zassert_equal(r, oscore_kid_recipient_id_mismatch,
+		      "Error in coap2oscore!");
 
 	/*Test generating an encrypted response, see Appendix C7*/
 	uint8_t buf_oscore[256];
@@ -461,11 +470,11 @@ void t9_oscore_client_server_observe(void)
 		.payload.ptr = NULL,
 	};
 
-	r = coap2buf(&coap_pkt_registration, ser_coap_pkt_registration,
+	r = coap_serialize(&coap_pkt_registration, ser_coap_pkt_registration,
 		     &ser_coap_pkt_registration_len);
 	zassert_equal(
 		r, ok,
-		"Error in coap2buf during registration packet serialization!");
+		"Error in coap_serialize during registration packet serialization!");
 
 	PRINT_ARRAY("CoAP observe registration", ser_coap_pkt_registration,
 		    ser_coap_pkt_registration_len);
@@ -540,11 +549,11 @@ void t9_oscore_client_server_observe(void)
 		.payload.ptr = NULL,
 	};
 
-	r = coap2buf(&coap_pkt_notification1, ser_coap_pkt_notification1,
+	r = coap_serialize(&coap_pkt_notification1, ser_coap_pkt_notification1,
 		     &ser_coap_pkt_notification1_len);
 	zassert_equal(
 		r, ok,
-		"Error in coap2buf during notification1 packet serialization!");
+		"Error in coap_serialize during notification1 packet serialization!");
 
 	PRINT_ARRAY("CoAP observe notification1", ser_coap_pkt_notification1,
 		    ser_coap_pkt_notification1_len);
@@ -688,9 +697,9 @@ void t10_oscore_client_server_after_reboot(void)
 		.payload.ptr = NULL,
 	};
 
-	r = coap2buf(&coap_pkt_req1, ser_coap_pkt_req1, &ser_coap_pkt_req1_len);
+	r = coap_serialize(&coap_pkt_req1, ser_coap_pkt_req1, &ser_coap_pkt_req1_len);
 	zassert_equal(r, ok,
-		      "Error in coap2buf during req1 packet serialization!");
+		      "Error in coap_serialize during req1 packet serialization!");
 
 	PRINT_ARRAY("CoAP  req1", ser_coap_pkt_req1, ser_coap_pkt_req1_len);
 
@@ -747,10 +756,10 @@ void t10_oscore_client_server_after_reboot(void)
 		.payload.ptr = NULL,
 	};
 
-	r = coap2buf(&coap_pkt_resp1, ser_coap_pkt_resp1,
+	r = coap_serialize(&coap_pkt_resp1, ser_coap_pkt_resp1,
 		     &ser_coap_pkt_resp1_len);
 	zassert_equal(r, ok,
-		      "Error in coap2buf during req1 packet serialization!");
+		      "Error in coap_serialize during req1 packet serialization!");
 	r = coap2oscore(ser_coap_pkt_resp1, ser_coap_pkt_resp1_len,
 			ser_oscore_pkt, &ser_oscore_pkt_len, &c_server);
 	zassert_equal(r, ok, "Error in coap2oscore!");
@@ -814,9 +823,9 @@ void t10_oscore_client_server_after_reboot(void)
 		.payload.ptr = NULL,
 	};
 
-	r = coap2buf(&coap_pkt_req2, ser_coap_pkt_req2, &ser_coap_pkt_req2_len);
+	r = coap_serialize(&coap_pkt_req2, ser_coap_pkt_req2, &ser_coap_pkt_req2_len);
 	zassert_equal(r, ok,
-		      "Error in coap2buf during req1 packet serialization!");
+		      "Error in coap_serialize during req1 packet serialization!");
 
 	PRINT_ARRAY("CoAP  req2", ser_coap_pkt_req2, ser_coap_pkt_req2_len);
 
@@ -874,10 +883,10 @@ void t10_oscore_client_server_after_reboot(void)
 		.payload.ptr = payload,
 	};
 
-	r = coap2buf(&coap_pkt_resp2, ser_coap_pkt_resp2,
+	r = coap_serialize(&coap_pkt_resp2, ser_coap_pkt_resp2,
 		     &ser_coap_pkt_resp2_len);
 	zassert_equal(r, ok,
-		      "Error in coap2buf during req2 packet serialization!");
+		      "Error in coap_serialize during req2 packet serialization!");
 	r = coap2oscore(ser_coap_pkt_resp2, ser_coap_pkt_resp2_len,
 			ser_oscore_pkt, &ser_oscore_pkt_len, &c_server);
 	zassert_equal(r, ok, "Error in coap2oscore!");
@@ -933,9 +942,9 @@ void t10_oscore_client_server_after_reboot(void)
 		.payload.ptr = NULL,
 	};
 
-	r = coap2buf(&coap_pkt_req3, ser_coap_pkt_req3, &ser_coap_pkt_req3_len);
+	r = coap_serialize(&coap_pkt_req3, ser_coap_pkt_req3, &ser_coap_pkt_req3_len);
 	zassert_equal(r, ok,
-		      "Error in coap2buf during req1 packet serialization!");
+		      "Error in coap_serialize during req1 packet serialization!");
 
 	PRINT_ARRAY("CoAP  req1", ser_coap_pkt_req3, ser_coap_pkt_req3_len);
 
