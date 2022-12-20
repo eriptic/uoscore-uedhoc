@@ -34,7 +34,6 @@
 static enum err create_enc_structure(struct byte_array *external_aad,
 				     struct byte_array *out)
 {
-	bool success_encoding;
 	struct oscore_enc_structure enc_structure;
 
 	uint8_t context[] = { "Encrypt0" };
@@ -49,12 +48,12 @@ static enum err create_enc_structure(struct byte_array *external_aad,
 		external_aad->len;
 
 	size_t payload_len_out = 0;
-	success_encoding = cbor_encode_oscore_enc_structure(
-		out->ptr, out->len, &enc_structure, &payload_len_out);
 
-	if (!success_encoding) {
-		return cbor_encoding_error;
-	}
+	TRY_EXPECT(cbor_encode_oscore_enc_structure(out->ptr, out->len,
+						    &enc_structure,
+						    &payload_len_out),
+		   true);
+
 	out->len = (uint32_t)payload_len_out;
 	return ok;
 }

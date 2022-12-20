@@ -26,6 +26,7 @@
 #include "common/oscore_edhoc_error.h"
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
+#include "common/unit_test.h"
 
 /**
  * @brief       Common derive procedure used to derive the Common IV and 
@@ -36,7 +37,7 @@
  * @param out   out-array. Must be initialized
  * @return      err
  */
-static enum err derive(struct common_context *cc, struct byte_array *id,
+STATIC enum err derive(struct common_context *cc, struct byte_array *id,
 		       enum derive_type type, struct byte_array *out)
 {
 	BYTE_ARRAY_NEW(info, MAX_INFO_LEN, MAX_INFO_LEN);
@@ -212,8 +213,7 @@ enum err ssn2piv(uint64_t ssn, struct byte_array *piv)
 
 enum err piv2ssn(struct byte_array *piv, uint64_t *ssn)
 {
-	if ( (NULL == ssn) || (NULL == piv) )
-	{
+	if ((NULL == ssn) || (NULL == piv)) {
 		return wrong_parameter;
 	}
 	uint64_t result = 0;

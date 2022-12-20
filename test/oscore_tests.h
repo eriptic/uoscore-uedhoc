@@ -44,4 +44,8 @@ void t400_is_class_e(void);
 void t401_cache_echo_val(void);
 void t402_echo_val_is_fresh(void);
 
+void t500_oscore_context_init_corner_cases(void);
+void t501_piv2ssn(void);
+void t502_verify_token(void);
+void t503_derive_corner_case(void);
 #endif

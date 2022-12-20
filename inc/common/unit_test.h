@@ -15,6 +15,7 @@
 #include "byte_array.h"
 
 #include "oscore/oscore_coap.h"
+#include "oscore/security_context.h"
 
 /*when UNIT_TEST is defined all static functions are not static anymore and 
 can be used in unit test files.*/
@@ -44,10 +45,12 @@ enum err options_reorder(struct o_coap_option *U_options, uint8_t U_options_cnt,
 			 struct o_coap_option *out_options,
 			 uint8_t *out_options_cnt);
 
-enum err oscore_option_generate(struct byte_array *piv,
-				       struct byte_array *kid,
-				       struct byte_array *kid_context,
-				       struct oscore_option *oscore_option);
+enum err oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
+				struct byte_array *kid_context,
+				struct oscore_option *oscore_option);
+
+enum err derive(struct common_context *cc, struct byte_array *id,
+		enum derive_type type, struct byte_array *out);
 
 #else
 #define STATIC static
