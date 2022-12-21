@@ -22,6 +22,7 @@ enum err {
 	unexpected_result_from_ext_lib = 3,
 	wrong_parameter = 4,
 	crypto_operation_not_implemented = 5,
+	not_supported_feature = 6,
 	/*indicates that transport layer is not initialized*/
 	transport_deinitialized = 6,
 	not_implemented = 7,

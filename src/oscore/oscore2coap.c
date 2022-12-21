@@ -379,9 +379,10 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 				 oscore_packet.header.TKL,
 				 oscore_packet.token));
 
-		if (oscore_option.piv.len != 0) {
-			if (is_observe(oscore_packet.options,
-				       oscore_packet.options_cnt)) {
+		if (is_observe(oscore_packet.options,
+			       oscore_packet.options_cnt)) {
+			if (oscore_option.piv.len != 0) {
+				/*Notification with PIV received*/
 				PRINT_MSG(
 					"Observe notification with PIV received\n");
 
@@ -400,13 +401,20 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 					&c->rc.notification_num_initialized,
 					&oscore_option.piv));
 			} else {
-				/* typically the first response after server reset, containing its own PIV and ECHO option as a freshness challange for the client */
-				TRY(decrypt_wrapper(ciphertext, &plaintext, c,
-						    &oscore_option));
+				/*Notification without PIV received -- Currently not supported*/
+				return not_supported_feature;
 			}
 		} else {
-			/* regular response does not have PIV field, and rcc.nonce from the request is used to decrypt the packet */
-			TRY(decrypt_wrapper(ciphertext, &plaintext, c, NULL));
+			/*regular response received*/
+			if (oscore_option.piv.len != 0) {
+				/*response with PIV*/
+				TRY(decrypt_wrapper(ciphertext, &plaintext, c,
+						    &oscore_option));
+			} else {
+				/*response without PIV*/
+				TRY(decrypt_wrapper(ciphertext, &plaintext, c,
+						    NULL));
+			}
 		}
 	}
 
