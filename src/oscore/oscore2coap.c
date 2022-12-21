@@ -331,16 +331,13 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		TRY(update_request_piv_request_kid(c, &oscore_option.piv,
 						   &oscore_option.kid));
 
-		/*first request after reboot*/
-		if (c->rrc.reboot) {
-			c->rrc.reboot = false;
-			c->rrc.second_req_expected = true;
-			PRINT_MSG("Abort -- first request after reboot!\n");
-			return first_request_after_reboot;
-		}
-
-		/*check if the packet is replayed*/
-		if (!c->rrc.second_req_expected) {
+		/* 
+		* Check if the packet is replayed
+		* in case it is not the firs and not the second request
+		* c->rrc.reboot = false
+		* c->rrc.second_req_expected = false
+		*/
+		if (!c->rrc.second_req_expected && !c->rrc.reboot) {
 			if (!server_is_sequence_number_valid(
 				    *oscore_option.piv.ptr,
 				    &c->rc.replay_window)) {
@@ -352,6 +349,17 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		/* Decrypt packet using new nonce based on the packet */
 		TRY(decrypt_wrapper(ciphertext, &plaintext, c, &oscore_option));
 
+		/*
+		* Abort the execution if this is the first request after reboot
+		* c->rrc.reboot = true
+		* c->rrc.second_req_expected = false
+		*/
+		if (c->rrc.reboot && !c->rrc.second_req_expected) {
+			c->rrc.second_req_expected = true;
+			PRINT_MSG("Abort -- first request after reboot!\n");
+			return first_request_after_reboot;
+		}
+
 		if (c->rrc.second_req_expected) {
 			/*if this is a second request after reboot it should have an ECHO option for proving freshness*/
 			TRY(echo_val_is_fresh(&c->rrc.echo_opt_val,
@@ -360,6 +368,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 			TRY(server_replay_window_reinit(*oscore_option.piv.ptr,
 							&c->rc.replay_window));
 			c->rrc.second_req_expected = false;
+			c->rrc.reboot = false;
 		} else {
 			server_replay_window_update(*oscore_option.piv.ptr,
 						    &c->rc.replay_window);
