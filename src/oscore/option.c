@@ -41,6 +41,7 @@ enum err cache_echo_val(struct byte_array *dest, struct o_coap_option *options,
 			PRINT_MSG("Caching the ECHO value!\n");
 			TRY(_memcpy_s(dest->ptr, dest->len, options[i].value,
 				      options[i].len));
+			dest->len = options[i].len;
 			return ok;
 		}
 	}
