@@ -35,11 +35,11 @@ jobs:
           pip install -r ~/zephyrproject/zephyr/scripts/requirements.txt
 
           cd ~
-          wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.15.0/zephyr-sdk-0.15.0_linux-x86_64.tar.gz
-          wget -O - https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.15.0/sha256.sum | shasum --check --ignore-missing
+          wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.15.2/zephyr-sdk-0.15.2_linux-x86_64.tar.gz
+          wget -O - https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.15.2/sha256.sum | shasum --check --ignore-missing
 
-          tar xvf zephyr-sdk-0.15.0_linux-x86_64.tar.gz
-          cd zephyr-sdk-0.15.0
+          tar xvf zephyr-sdk-0.15.2_linux-x86_64.tar.gz
+          cd zephyr-sdk-0.15.2
           ./setup.sh -t "x86_64-zephyr-elf" -h -c
       
       - name: Checkout code
