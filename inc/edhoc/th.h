@@ -19,15 +19,14 @@
 /**
  * @brief   calculates transcript hash th2 
  * @param   alg hash algorithm to be used
- * @param   msg1 pointer to a message 1
- * @param   msg1_len length of message 1
+ * @param   msg1_hash Message 1 hash
  * @param   g_y Pointer to the public DH parameter
  * @param   g_y_len length of g_y
  * @param   c_r Pointer to the conception identifier of the responder
  * @param   c_r_len length of c_r
  * @param   th2 ouput buffer
  */
-enum err th2_calculate(enum hash_alg alg, uint8_t *msg1, uint32_t msg1_len,
+enum err th2_calculate(enum hash_alg alg, uint8_t *msg1_hash,
 		       uint8_t *g_y, uint32_t g_y_len, uint8_t *c_r,
 		       uint32_t c_r_len, uint8_t *th2);
 

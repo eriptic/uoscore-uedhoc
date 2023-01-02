@@ -141,17 +141,15 @@ static enum err th34_calculate(enum hash_alg alg,
 	return ok;
 }
 
-enum err th2_calculate(enum hash_alg alg, uint8_t *msg1, uint32_t msg1_len,
+enum err th2_calculate(enum hash_alg alg, uint8_t *msg1_hash,
 		       uint8_t *g_y, uint32_t g_y_len, uint8_t *c_r,
 		       uint32_t c_r_len, uint8_t *th2)
 {
 	uint8_t th2_input[TH2_INPUT_DEFAULT_SIZE];
 	uint32_t th2_input_len = sizeof(th2_input);
 
-	uint8_t hash_msg1[HASH_DEFAULT_SIZE];
-	TRY(hash(alg, msg1, msg1_len, hash_msg1));
 	PRINT_ARRAY("hash_msg1_raw", hash_msg1, HASH_DEFAULT_SIZE);
-	TRY(th2_input_encode(hash_msg1, sizeof(hash_msg1), g_y, g_y_len, c_r,
+	TRY(th2_input_encode(msg1_hash, HASH_DEFAULT_SIZE, g_y, g_y_len, c_r,
 			     c_r_len, th2_input, &th2_input_len));
 	TRY(hash(alg, th2_input, th2_input_len, th2));
 	PRINT_ARRAY("TH2", th2, HASH_DEFAULT_SIZE);
