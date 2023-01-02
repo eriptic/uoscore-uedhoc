@@ -148,7 +148,7 @@ enum err th2_calculate(enum hash_alg alg, uint8_t *msg1_hash,
 	uint8_t th2_input[TH2_INPUT_DEFAULT_SIZE];
 	uint32_t th2_input_len = sizeof(th2_input);
 
-	PRINT_ARRAY("hash_msg1_raw", hash_msg1, HASH_DEFAULT_SIZE);
+	PRINT_ARRAY("hash_msg1_raw", msg1_hash, HASH_DEFAULT_SIZE);
 	TRY(th2_input_encode(msg1_hash, HASH_DEFAULT_SIZE, g_y, g_y_len, c_r,
 			     c_r_len, th2_input, &th2_input_len));
 	TRY(hash(alg, th2_input, th2_input_len, th2));
