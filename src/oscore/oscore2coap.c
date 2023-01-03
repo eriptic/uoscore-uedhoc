@@ -402,7 +402,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 					&oscore_option.piv));
 			} else {
 				/*Notification without PIV received -- Currently not supported*/
-				return not_supported_feature;
+				return not_supported_feature; //LCOV_EXCL_LINE
 			}
 		} else {
 			/*regular response received*/
