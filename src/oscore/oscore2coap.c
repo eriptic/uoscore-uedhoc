@@ -110,10 +110,9 @@ STATIC enum err oscore_option_parser(const struct o_coap_option *opt,
 					out->kid_context.len = *val_ptr;
 					out->kid_context.ptr = ++val_ptr;
 					val_ptr += out->kid_context.len;
-					temp_kid_len =
-						(uint8_t)(temp_kid_len -
-							  (out->kid_context.len +
-							   1));
+					temp_kid_len = (uint8_t)(
+						temp_kid_len -
+						(out->kid_context.len + 1));
 				}
 
 				/* Get KID */
@@ -331,13 +330,9 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		TRY(update_request_piv_request_kid(c, &oscore_option.piv,
 						   &oscore_option.kid));
 
-		/* 
-		* Check if the packet is replayed
-		* in case it is not the firs and not the second request
-		* c->rrc.reboot = false
-		* c->rrc.second_req_expected = false
-		*/
-		if (!c->rrc.second_req_expected && !c->rrc.reboot) {
+		/* Check if the packet is replayed - in case of normal operation (replay window already synchronized).
+		   It must be performed before decrypting the packet (see RFC 8613 p. 7.4). */
+		if (ECHO_SYNCHRONIZED == c->rrc.echo_state_machine) {
 			if (!server_is_sequence_number_valid(
 				    *oscore_option.piv.ptr,
 				    &c->rc.replay_window)) {
@@ -349,27 +344,32 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		/* Decrypt packet using new nonce based on the packet */
 		TRY(decrypt_wrapper(ciphertext, &plaintext, c, &oscore_option));
 
-		/*
-		* Abort the execution if this is the first request after reboot
-		* c->rrc.reboot = true
-		* c->rrc.second_req_expected = false
-		*/
-		if (c->rrc.reboot && !c->rrc.second_req_expected) {
-			c->rrc.second_req_expected = true;
+		if (ECHO_REBOOT == c->rrc.echo_state_machine) {
+			/* Abort the execution if this is the the first request after reboot.
+			   Let the application layer know that it should prepare a special response with ECHO option
+			   and prepare for verifying ECHO of the next request. */
 			PRINT_MSG("Abort -- first request after reboot!\n");
+			c->rrc.echo_state_machine = ECHO_VERIFY;
 			return first_request_after_reboot;
-		}
-
-		if (c->rrc.second_req_expected) {
-			/*if this is a second request after reboot it should have an ECHO option for proving freshness*/
-			TRY(echo_val_is_fresh(&c->rrc.echo_opt_val,
-					      &plaintext));
-			/*reinitialize replay window*/
-			TRY(server_replay_window_reinit(*oscore_option.piv.ptr,
-							&c->rc.replay_window));
-			c->rrc.second_req_expected = false;
-			c->rrc.reboot = false;
+		} else if (ECHO_VERIFY == c->rrc.echo_state_machine) {
+			/* Next request should already have proper ECHO option for proving freshness.
+			   If so, perform replay window reinitialization and start normal operation.
+			   If not, repeat the whole process until normal operation can be started. */
+			if (ok == echo_val_is_fresh(&c->rrc.echo_opt_val,
+						    &plaintext)) {
+				TRY(server_replay_window_reinit(
+					*oscore_option.piv.ptr,
+					&c->rc.replay_window));
+				c->rrc.echo_state_machine = ECHO_SYNCHRONIZED;
+			} else {
+				PRINT_MSG(
+					"Abort -- ECHO validation failed! Repeating the challenge.\n");
+				return first_request_after_reboot;
+			}
 		} else {
+			/* Normal operation - update replay window. */
+			TRY_EXPECT(c->rrc.echo_state_machine,
+				   ECHO_SYNCHRONIZED);
 			server_replay_window_update(*oscore_option.piv.ptr,
 						    &c->rc.replay_window);
 		}

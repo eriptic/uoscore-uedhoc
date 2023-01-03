@@ -208,7 +208,7 @@ void t2_oscore_server_request_response(void)
 	zassert_equal(r, ok, "Error in oscore_context_init");
 
 	/*we test here the regular behavior not the behaviour after reboot*/
-	c_server.rrc.reboot = false;
+	c_server.rrc.echo_state_machine = ECHO_SYNCHRONIZED;
 
 	/*Test decrypting of an incoming request*/
 	uint8_t buf_coap[256];
@@ -426,7 +426,7 @@ void t9_oscore_client_server_observe(void)
 	r = oscore_context_init(&params_server, &c_server);
 	zassert_equal(r, ok, "Error in oscore_context_init for server");
 	/*we test the general case not the case after reboot*/
-	c_server.rrc.reboot = false;
+	c_server.rrc.echo_state_machine = ECHO_SYNCHRONIZED;
 
 	/*
 	 *
