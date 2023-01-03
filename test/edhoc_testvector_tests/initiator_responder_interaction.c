@@ -327,7 +327,8 @@ void test_initiator_responder_interaction(uint8_t vec_num)
 	k_thread_start(&thread_initiator_data);
 	k_thread_start(&thread_responder_data);
 
-	k_thread_join(&thread_initiator_data, K_FOREVER);
+    k_thread_join(&thread_initiator_data, K_FOREVER);
+    k_thread_join(&thread_responder_data, K_FOREVER);
 
 	PRINT_MSG("threads completed\n");
 
