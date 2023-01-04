@@ -183,7 +183,7 @@ void thread_initiator(void *vec_num, void *dummy2, void *dummy3)
 	PRINT_ARRAY("I_PRK_out", I_PRK_out, sizeof(I_PRK_out));
 
 	r = prk_out2exporter(SHA_256, I_PRK_out, sizeof(I_PRK_out),
-			     I_prk_exporter);
+				 I_prk_exporter);
 	if (r != ok) {
 		goto end;
 	}
@@ -196,7 +196,7 @@ void thread_initiator(void *vec_num, void *dummy2, void *dummy3)
 		goto end;
 	}
 	PRINT_ARRAY("OSCORE Master Secret", I_master_secret,
-		    sizeof(I_master_secret));
+			sizeof(I_master_secret));
 
 	r = edhoc_exporter(SHA_256, OSCORE_MASTER_SALT, I_prk_exporter,
 			   sizeof(I_prk_exporter), I_master_salt,
@@ -281,7 +281,7 @@ void thread_responder(void *vec_num, void *dummy2, void *dummy3)
 	PRINT_ARRAY("R_PRK_out", R_PRK_out, sizeof(R_PRK_out));
 
 	r = prk_out2exporter(SHA_256, R_PRK_out, sizeof(R_PRK_out),
-			     R_prk_exporter);
+				 R_prk_exporter);
 	if (r != ok) {
 		goto end;
 	}
@@ -294,7 +294,7 @@ void thread_responder(void *vec_num, void *dummy2, void *dummy3)
 		goto end;
 	}
 	PRINT_ARRAY("OSCORE Master Secret", R_master_secret,
-		    sizeof(R_master_secret));
+			sizeof(R_master_secret));
 
 	r = edhoc_exporter(SHA_256, OSCORE_MASTER_SALT, R_prk_exporter,
 			   sizeof(R_prk_exporter), R_master_salt,
@@ -313,36 +313,44 @@ void test_initiator_responder_interaction(uint8_t vec_num)
 	PRINT_MSG("start initiator_responder_interaction\n");
 
 	/*initiator thread*/
-	k_thread_create(&thread_initiator_data, thread_initiator_stack_area,
-			K_THREAD_STACK_SIZEOF(thread_initiator_stack_area),
-			thread_initiator, (void *)&vec_num, NULL, NULL,
-			PRIORITY, 0, K_NO_WAIT);
+	k_tid_t initiator_tid= k_thread_create(&thread_initiator_data, thread_initiator_stack_area,
+						K_THREAD_STACK_SIZEOF(thread_initiator_stack_area),
+						thread_initiator, (void *)&vec_num, NULL, NULL,
+						PRIORITY, 0, K_NO_WAIT);
 
 	/*responder thread*/
-	k_thread_create(&thread_responder_data, thread_responder_stack_area,
-			K_THREAD_STACK_SIZEOF(thread_responder_stack_area),
-			thread_responder, (void *)&vec_num, NULL, NULL,
-			PRIORITY, 0, K_NO_WAIT);
+	k_tid_t responder_tid = k_thread_create(&thread_responder_data, thread_responder_stack_area,
+						K_THREAD_STACK_SIZEOF(thread_responder_stack_area),
+						thread_responder, (void *)&vec_num, NULL, NULL,
+						PRIORITY, 0, K_NO_WAIT);
 
 	k_thread_start(&thread_initiator_data);
 	k_thread_start(&thread_responder_data);
 
-    k_thread_join(&thread_initiator_data, K_FOREVER);
-    k_thread_join(&thread_responder_data, K_FOREVER);
+	if ( 0 != k_thread_join(&thread_initiator_data, K_MSEC(5000)) )
+	{
+		PRINT_MSG("initiator thread stalled! Aborting.");
+		k_thread_abort(initiator_tid);
+	}
+	if ( 0!= k_thread_join(&thread_responder_data, K_MSEC(5000)) )
+	{
+		PRINT_MSG("responder thread stalled! Aborting.");
+		k_thread_abort(responder_tid);
+	}
 
 	PRINT_MSG("threads completed\n");
 
 	/* check if Initiator and Responder computed the same values */
 
 	zassert_mem_equal__(I_PRK_out, R_PRK_out, sizeof(R_PRK_out),
-			    "wrong prk_out");
+				"wrong prk_out");
 
 	zassert_mem_equal__(I_prk_exporter, R_prk_exporter,
-			    sizeof(R_prk_exporter), "wrong prk_exporter");
+				sizeof(R_prk_exporter), "wrong prk_exporter");
 
 	zassert_mem_equal__(I_master_secret, R_master_secret,
-			    sizeof(R_master_secret), "wrong master_secret");
+				sizeof(R_master_secret), "wrong master_secret");
 
 	zassert_mem_equal__(I_master_salt, R_master_salt, sizeof(R_master_salt),
-			    "wrong master_salt");
+				"wrong master_salt");
 }
