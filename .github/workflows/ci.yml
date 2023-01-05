@@ -6,7 +6,7 @@ jobs:
 # This workflow contains 2 jobs build and test
 
   build:
-    name: Build uoscore-uedhoc
+    name: build & test
     runs-on: ubuntu-latest
     
     steps:
