@@ -40,7 +40,7 @@ jobs:
 
           tar xvf zephyr-sdk-0.15.0_linux-x86_64.tar.gz
           cd zephyr-sdk-0.15.0
-          ./setup.sh
+          /bin/bash -c "yes | ./setup.sh"
       
       - name: Checkout code
         uses: actions/checkout@v2
@@ -51,7 +51,8 @@ jobs:
 # native_posix (0x68)
       - name: Build native_posix
         run: |
-           source  ~/zephyrproject/zephyr/zephyr-env.sh
+           source ~/zephyrproject/zephyr/zephyr-env.sh
+           source ~/zephyrproject/.venv/bin/activate
            cd test/
            west build -b=native_posix
            west build -t run
@@ -65,7 +66,8 @@ jobs:
 # native_posix_64 
       - name: Build native_posix_64
         run: |
-           source  ~/zephyrproject/zephyr/zephyr-env.sh
+           source ~/zephyrproject/zephyr/zephyr-env.sh
+           source ~/zephyrproject/.venv/bin/activate
            cd test/
            rm -rf build
            rm -rf build_lib_test
