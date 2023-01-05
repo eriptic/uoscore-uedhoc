@@ -71,6 +71,9 @@ void t600_server_replay_init_test(void)
 	result = server_replay_window_init(&replay_window);
 	zassert_equal(ok, result, "");
 	_compare_windows(&replay_window, &compare_window);
+
+	/* extra check of helper function */
+	zassert_equal(false, server_is_sequence_number_valid(0, NULL), "");
 }
 
 /**

@@ -25,6 +25,15 @@ enum derive_type {
 };
 
 /**
+ * @brief State machine for replay window synchronization using ECHO option after server reboot.
+ */
+enum echo_state {
+	ECHO_REBOOT, /* default value after reboot */
+	ECHO_VERIFY, /* verification in progress */
+	ECHO_SYNCHRONIZED, /* synchronized, normal operation */
+};
+
+/**
  * @brief Common Context
  * Contains information common to the Sender and Recipient Contexts
  */
@@ -75,10 +84,9 @@ struct req_resp_context {
 	uint8_t echo_opt_val_buf[ECHO_OPT_VALUE_LEN];
 
 	struct byte_array token_request;
-	uint8_t token_request_bug[MAX_TOKEN_LEN];
+	uint8_t token_request_buf[MAX_TOKEN_LEN];
 
-	bool reboot;
-	bool second_req_expected;
+	enum echo_state echo_state_machine;
 };
 
 /* Context struct containing all contexts*/

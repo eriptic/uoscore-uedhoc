@@ -612,8 +612,8 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 					o_coap_pkt.header.TKL,
 					o_coap_pkt.token));
 
-	} else if (c->rrc.second_req_expected) {
-		/* A server prepares a response to first request after reboot.*/
+	} else if (ECHO_VERIFY == c->rrc.echo_state_machine) {
+		/* A server prepares a response with ECHO challenge after the reboot.*/
 		TRY(cache_echo_val(&c->rrc.echo_opt_val, e_options,
 				   e_options_cnt));
 
