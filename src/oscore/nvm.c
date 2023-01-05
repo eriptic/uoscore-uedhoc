@@ -54,6 +54,9 @@ enum err ssn_init(const struct byte_array *sender_id,
 	} else {
 		TRY(nvm_read_ssn(sender_id, id_context, ssn));
 		*ssn += K_SSN_NVM_STORE_INTERVAL + F_NVM_MAX_WRITE_FAILURE;
+
+		/* Updated SSN has to be written back immediately, in case of uncontrolled reboot before first write happens. */
+		TRY(nvm_write_ssn(sender_id, id_context, ssn));
 		PRINTF("SSN initialized from NMV. SSN = %" PRIu64 "\n", *ssn);
 	}
 	return ok;
