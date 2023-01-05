@@ -1,5 +1,7 @@
 # uOSCORE / uEDHOC 
 
+![GitHub CI](https://github.com/eriptic/uoscore-uedhoc/actions/workflows/ci.yml/badge.svg)
+
 This repository contains C implementations  for constrained (and non-constrained) devices of the IETF protocols:
 
 * [OSOCRE (RFC8613)](https://tools.ietf.org/html/rfc8613) and
