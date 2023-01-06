@@ -86,6 +86,8 @@ jobs:
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
            cd test/
+           rm -rf build
+           rm -rf build_lib_test
            west build -b native_posix -- -DCONFIG_COVERAGE=y
            ./build/zephyr/zephyr.exe
            lcov --capture --directory ./ --output-file lcov.info -q --rc lcov_branch_coverage=1
