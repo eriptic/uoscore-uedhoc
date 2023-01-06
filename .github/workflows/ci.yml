@@ -98,7 +98,7 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with: 
           name: github-pages  
-          path: test/github-pages.tar.gz
+          path: test
       
 
   # Deploy job
