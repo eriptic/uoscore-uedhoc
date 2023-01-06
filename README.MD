@@ -1,7 +1,7 @@
 # uOSCORE / uEDHOC 
 
 ![GitHub CI](https://github.com/eriptic/uoscore-uedhoc/actions/workflows/ci.yml/badge.svg)
-![uOSCORE coverage](https://badgen.net/https/stefan-hristozov.npkn.net/uoscore-uedhoc-codecov/badge)
+
 
 This repository contains C implementations  for constrained (and non-constrained) devices of the IETF protocols:
 
@@ -17,6 +17,10 @@ For more background and evaluation in terms of speed, RAM and flash requirements
 * check the configurations in `makefile_config.mk` and adjust them if necessary
 * run `make` 
 * link the static library `build/libuoscore-uedhoc.a` in your project
+
+## Test coverage
+* [Test coverage report uOSCORE](https://eriptic.github.io/uoscore-uedhoc/src/oscore/index.html)
+* [Test coverage report uEDHOC](https://eriptic.github.io/uoscore-uedhoc/src/edhoc/index.html)
 
 ## Project (Folder) Structure
 
