@@ -30,6 +30,24 @@ static void print_options(struct o_coap_option *opt, uint8_t opt_cnt)
 	}
 }
 
+static void assert_options(struct o_coap_option *opt,
+			   struct o_coap_option *opt_expected, uint8_t opt_cnt,
+			   uint8_t opt_cnt_expected)
+{
+	zassert_equal(opt_cnt, opt_cnt_expected, "wrong option count");
+
+	for (uint8_t i = 0; i < opt_cnt; i++) {
+		zassert_equal(opt[i].delta, opt_expected[i].delta,
+			      "wrong delta");
+		zassert_equal(opt[i].len, opt_expected[i].len, "wrong length");
+		zassert_equal(opt[i].option_number,
+			      opt_expected[i].option_number, "option_number");
+
+		zassert_mem_equal__(opt[i].value, opt_expected[i].value,
+				    opt[i].len, "wrong value");
+	}
+}
+
 /**
  * @brief   Tests the function inner_outer_option_split without options
  *          with that require special processing.
@@ -83,6 +101,8 @@ void t100_inner_outer_option_split__no_special_options(void)
 	uint16_t inner_options_len = 0;
 	uint8_t inner_options_cnt = 0;
 	uint8_t outer_options_cnt = 0;
+	uint8_t expected_inner_options_cnt;
+	uint8_t expected_outer_options_cnt;
 
 	struct o_coap_option expected_inner_options[] = {
 		/*If-Match (opt num 1, E)*/
@@ -99,6 +119,8 @@ void t100_inner_outer_option_split__no_special_options(void)
 		  .option_number = CONTENT_FORMAT }
 
 	};
+	expected_inner_options_cnt = sizeof(expected_inner_options) /
+				     sizeof(expected_inner_options[0]);
 
 	struct o_coap_option expected_outer_options[] = {
 		/*Proxy-Uri (opt num 35, U)*/
@@ -107,6 +129,8 @@ void t100_inner_outer_option_split__no_special_options(void)
 		  .value = NULL,
 		  .option_number = PROXY_URI }
 	};
+	expected_outer_options_cnt = sizeof(expected_outer_options) /
+				     sizeof(expected_outer_options[0]);
 
 	r = inner_outer_option_split(&coap_pkt, inner_options,
 				     &inner_options_cnt, &inner_options_len,
@@ -119,13 +143,11 @@ void t100_inner_outer_option_split__no_special_options(void)
 
 	zassert_equal(r, ok, "Error in inner_outer_option_split. r: %d", r);
 
-	zassert_mem_equal__(inner_options, expected_inner_options,
-			    sizeof(expected_inner_options),
-			    "inner options incorrect");
+	assert_options(inner_options, expected_inner_options, inner_options_cnt,
+		       expected_inner_options_cnt);
 
-	zassert_mem_equal__(outer_options, expected_outer_options,
-			    sizeof(expected_outer_options),
-			    "inner options incorrect");
+	assert_options(outer_options, expected_outer_options, outer_options_cnt,
+		       expected_outer_options_cnt);
 }
 
 /**
@@ -244,27 +266,11 @@ void t101_inner_outer_option_split__with_observe_notification(void)
 
 	zassert_equal(r, ok, "Error in inner_outer_option_split. r: %d", r);
 
-	zassert_equal(
-		expected_inner_options_cnt, inner_options_cnt,
-		"the count of the inner options differs from the expected one");
+	assert_options(inner_options, expected_inner_options, inner_options_cnt,
+		       expected_inner_options_cnt);
 
-	zassert_mem_equal__(inner_options, expected_inner_options,
-			    sizeof(expected_inner_options),
-			    "inner options incorrect");
-
-	zassert_equal(
-		expected_outer_options_cnt, outer_options_cnt,
-		"the count of the outer options differs from the expected one");
-
-	// PRINT_ARRAY("outer_options", outer_options,
-	// 	    outer_options_cnt * sizeof(struct o_coap_option));
-
-	// PRINT_ARRAY("expected_outer_options", expected_outer_options,
-	// 	    sizeof(expected_outer_options));
-
-	zassert_mem_equal__(outer_options, expected_outer_options,
-			    sizeof(expected_outer_options),
-			    "outer options incorrect");
+	assert_options(outer_options, expected_outer_options, outer_options_cnt,
+		       expected_outer_options_cnt);
 }
 
 /**
@@ -381,19 +387,15 @@ void t102_inner_outer_option_split__with_observe_registration(void)
 	PRINT_MSG("\nouter options\n");
 	print_options(outer_options, outer_options_cnt);
 
-	// PRINT_ARRAY("inner_options", inner_options,
-	// 	    inner_options_cnt * sizeof(struct o_coap_option));
+	uint8_t expected_inner_options_cnt =
+		sizeof(expected_inner_options) / sizeof(struct o_coap_option);
+	uint8_t expected_outer_options_cnt =
+		sizeof(expected_outer_options) / sizeof(struct o_coap_option);
+	assert_options(inner_options, expected_inner_options, inner_options_cnt,
+		       expected_inner_options_cnt);
 
-	// PRINT_ARRAY("expected_inner_options", expected_inner_options,
-	// 	    sizeof(expected_inner_options));
-
-	zassert_mem_equal__(inner_options, expected_inner_options,
-			    sizeof(expected_inner_options),
-			    "inner options incorrect");
-
-	zassert_mem_equal__(outer_options, expected_outer_options,
-			    sizeof(expected_outer_options),
-			    "outer options incorrect");
+	assert_options(outer_options, expected_outer_options, outer_options_cnt,
+		       expected_outer_options_cnt);
 }
 
 /**
