@@ -81,7 +81,7 @@ jobs:
           path: test/build/uoscore_uedhoc/libuoscore-uedhoc.a
 
 ### Generate test coverage report
-      - name: Build native_posix
+      - name: Build native_posix with coverage information
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
@@ -89,7 +89,7 @@ jobs:
            rm -rf build
            rm -rf build_lib_test
            west build -b native_posix -- -DCONFIG_COVERAGE=y
-           ./build/zephyr/zephyr.exe
+           west build -t run
            lcov --capture --directory ./ --output-file lcov.info -q --rc lcov_branch_coverage=1
            genhtml lcov.info --output-directory lcov_html -q --ignore-errors source --branch-coverage --highlight --legend
            tar -zcvf coverage.tar.gz lcov_html
