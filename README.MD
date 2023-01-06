@@ -1,6 +1,7 @@
 # uOSCORE / uEDHOC 
 
 ![GitHub CI](https://github.com/eriptic/uoscore-uedhoc/actions/workflows/ci.yml/badge.svg)
+!\[uOSCORE coverage\](https://badgen.net/badge/uOSCORE coverage/99\%/green?icon=codecov)
 
 This repository contains C implementations  for constrained (and non-constrained) devices of the IETF protocols:
 
