@@ -92,13 +92,13 @@ jobs:
            west build -t run
            lcov --capture --directory ./ --output-file lcov.info -q --rc lcov_branch_coverage=1
            genhtml lcov.info --output-directory lcov_html -q --ignore-errors source --branch-coverage --highlight --legend
-           tar -zcvf coverage.tar.gz lcov_html
+           tar -zcvf github-pages.tar.gz lcov_html
 
       - name: Upload test coverage report
         uses: actions/upload-pages-artifact@v1
         with: 
           name: github-pages  
-          path: test/coverage.tar.gz
+          path: test/github-pages.tar.gz
       
 
   # Deploy job
