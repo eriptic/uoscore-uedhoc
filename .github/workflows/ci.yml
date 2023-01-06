@@ -79,3 +79,44 @@ jobs:
         with:
           name: uoscore-uedhoc-x86-64
           path: test/build/uoscore_uedhoc/libuoscore-uedhoc.a
+
+### Generate test coverage report
+      - name: Build native_posix
+        run: |
+           source ~/zephyrproject/zephyr/zephyr-env.sh
+           source ~/zephyrproject/.venv/bin/activate
+           cd test/
+           west build -b native_posix -- -DCONFIG_COVERAGE=y
+           ./build/zephyr/zephyr.exe
+           lcov --capture --directory ./ --output-file lcov.info -q --rc lcov_branch_coverage=1
+           genhtml lcov.info --output-directory lcov_html -q --ignore-errors source --branch-coverage --highlight --legend
+           tar -zcvf coverage.tar.gz lcov_html
+
+      - name: Upload test coverage report
+        uses: actions/upload-pages-artifact
+        with: 
+          name: github-pages  
+          path: test/coverage.tar.gz
+      
+
+  # Deploy job
+  deploy:
+    # Add a dependency to the build job
+    needs: build
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
