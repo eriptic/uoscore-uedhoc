@@ -93,7 +93,7 @@ jobs:
            tar -zcvf coverage.tar.gz lcov_html
 
       - name: Upload test coverage report
-        uses: actions/upload-pages-artifact
+        uses: actions/upload-pages-artifact@v1
         with: 
           name: github-pages  
           path: test/coverage.tar.gz
