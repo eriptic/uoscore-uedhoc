@@ -471,7 +471,7 @@ void t9_oscore_client_server_observe(void)
 	};
 
 	r = coap_serialize(&coap_pkt_registration, ser_coap_pkt_registration,
-		     &ser_coap_pkt_registration_len);
+			   &ser_coap_pkt_registration_len);
 	zassert_equal(
 		r, ok,
 		"Error in coap_serialize during registration packet serialization!");
@@ -550,7 +550,7 @@ void t9_oscore_client_server_observe(void)
 	};
 
 	r = coap_serialize(&coap_pkt_notification1, ser_coap_pkt_notification1,
-		     &ser_coap_pkt_notification1_len);
+			   &ser_coap_pkt_notification1_len);
 	zassert_equal(
 		r, ok,
 		"Error in coap_serialize during notification1 packet serialization!");
@@ -599,21 +599,46 @@ void t9_oscore_client_server_observe(void)
 
 /**
  * @brief	This function test the behavior of a server and a client after 
- * 			reboot and the rejection of a replayed request
+ * 			reboot of the server and the rejection of a replayed request
  *
- *			    client				 				 server
- *			    ---------			        		---------
- *					|                                   |
- *					|------request--------------------->|
- *					|<-----response with ECHO option----|
- *					|              		            	|
- *					|------request with ECHO option---->|
- * 					|<-----response---------------------|
- * 					|									|
- * 					|------request--------------------->|
- * 					|------replayed request----------X	| rejected message
+ *		   client				 				 		server
+ *		  ---------			        				---------
+ *			|                                   		|
+ *		1)	|------request----------------------------->|
+ *			|<-----response with ECHO option (ECHO1)----|
+ *			|                                   		|
+ *		2)	|------new request without ECHO opt-------->| 
+ *			|<-----response with new ECHO option (ECHO2)|
+ *			|              		            			|
+ *		3)	|------request with old ECHO option-(ECHO1)>|
+ * 			|<-----response with new ECHO option (ECHO3)|
+ * 			|											|
+ *		4)	|------request with ECHO option-(ECHO3)---->|
+ * 			|<-----response-----------------------------|
+ *			|											|
+ *		5)	|------request----------------------------->|
+ * 			|------replayed request----------X			| rejected message
  *
  * 			See as RFC8613 Appendix B1.2 and RFC9175
+ * 
+ * - 1) and 4) are represent the normal flow. 
+ * - 2), 3) and 5) represent special cases.
+ * 
+ * 
+ * 
+ * 1) 	The client send a first request. The server responds with ECHO option. 
+ *		This flow is mandatory and should be executed after every reboot of the 
+ *		server. Then the client should send the ECHO option that it received in 
+ *		the next request.
+ *
+ * 2)	The client sends a new request without an ECHO option. This may happen 
+ * 		if for some reason the client did not received the first ECHO option.
+ * 
+ * 3)	The client responds with wrong option -- not ECHO2 but ECHO1. The 
+ * 		client receives a new option ECHO3 from the server.
+ * 
+ * 4)	The client sends the expected ECHO option ECHO3
+ * 5)	The client replays an request which gets detected.
  */
 void t10_oscore_client_server_after_reboot(void)
 {
@@ -623,7 +648,7 @@ void t10_oscore_client_server_after_reboot(void)
 	 *
 	 */
 	enum err r;
-	struct context c_client;
+	struct context cc; //context of the client
 	struct oscore_init_params params_client = {
 		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
 		.master_secret.len = T1__MASTER_SECRET_LEN,
@@ -639,10 +664,10 @@ void t10_oscore_client_server_after_reboot(void)
 		.hkdf = OSCORE_SHA_256,
 		.fresh_master_secret_salt = true,
 	};
-	r = oscore_context_init(&params_client, &c_client);
+	r = oscore_context_init(&params_client, &cc);
 	zassert_equal(r, ok, "Error in oscore_context_init for client");
 
-	struct context c_server;
+	struct context cs; //context of the server
 	struct oscore_init_params params_server = {
 		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
 		.master_secret.len = T1__MASTER_SECRET_LEN,
@@ -658,24 +683,79 @@ void t10_oscore_client_server_after_reboot(void)
 		.hkdf = OSCORE_SHA_256,
 		.fresh_master_secret_salt = true,
 	};
-	r = oscore_context_init(&params_server, &c_server);
+	r = oscore_context_init(&params_server, &cs);
 	zassert_equal(r, ok, "Error in oscore_context_init for server");
 
+	/*coap and oscore buffers*/
+	uint8_t coap_pkt[40];
+	uint8_t oscore_pkt[60];
+	uint8_t conv_coap_pkt[40];
+	uint32_t coap_pkt_len;
+	uint32_t oscore_pkt_len;
+	uint32_t conv_coap_pkt_len;
+
+	/*Expected OSCORE values*/
+	const uint8_t OSCORE_REQ1[] = { 0x41, 0x02, 0x00, 0x00, 0x4A, 0x92,
+					0x09, 0x00, 0xFF, 0xAE, 0x82, 0x2A,
+					0x10, 0x7C, 0x9C, 0x48, 0xE4, 0xDF,
+					0xF2, 0xA3, 0x0E, 0xA7, 0xAC, 0x85,
+					0x92, 0xBE, 0x8B, 0x75, 0x09, 0xFB };
+
+	const uint8_t OSCORE_RESP1[] = { 0x61, 0x44, 0x00, 0x00, 0x4A, 0x93,
+					 0x09, 0x00, 0x01, 0xFF, 0x89, 0x6F,
+					 0xB4, 0x03, 0xFE, 0xEA, 0xDA, 0x57,
+					 0x06, 0xDB, 0xC3, 0x73, 0x32, 0xC5,
+					 0x36, 0x3D, 0x4F, 0x4A, 0xB6, 0xAB,
+					 0xFD, 0xE2, 0x15 };
+
+	const uint8_t OSCORE_RESP2[] = { 0x61, 0x44, 0x00, 0x00, 0x4A, 0x93,
+					 0x09, 0x01, 0x01, 0xFF, 0x96, 0x3F,
+					 0x4C, 0x0B, 0xD3, 0x21, 0x22, 0x6F,
+					 0x38, 0xF1, 0x4A, 0x13, 0xB0, 0xFE,
+					 0x26, 0xEE, 0xC0, 0x56, 0x7A, 0x90,
+					 0x36, 0x91, 0xF9 };
+
+	const uint8_t OSCORE_REQ3[] = {
+		0x41, 0x02, 0x00, 0x00, 0x4B, 0x92, 0x09, 0x02, 0xFF,
+		0x8E, 0x45, 0x39, 0x6A, 0xCF, 0x67, 0x1E, 0x0A, 0x1C,
+		0x38, 0xFB, 0x54, 0x9B, 0xF2, 0x5F, 0x44, 0xA2, 0xAD,
+		0x10, 0xDB, 0x1F, 0x55, 0xB2, 0xAC, 0x26, 0xF1, 0x55,
+		0x3F, 0x7C, 0xF0, 0xF9, 0x24, 0xEA, 0x40, 0x88
+	};
+
+	const uint8_t OSCORE_RESP3[] = { 0x61, 0x44, 0x00, 0x00, 0x4B, 0x93,
+					 0x09, 0x02, 0x01, 0xFF, 0xF3, 0x0C,
+					 0x34, 0x94, 0xBF, 0x31, 0x24, 0x9A,
+					 0xCB, 0x73, 0xB6, 0xE8, 0x0E, 0x1E,
+					 0xB4, 0x1E, 0x1F, 0x73, 0x23, 0x0F,
+					 0x2A, 0x12, 0x83 };
+
+	const uint8_t OSCORE_REQ4[] = {
+		0x41, 0x02, 0x00, 0x00, 0x4B, 0x92, 0x09, 0x03, 0xFF,
+		0x7D, 0xD7, 0xE3, 0x39, 0xF0, 0xC0, 0xFC, 0x7D, 0xEB,
+		0x61, 0xC3, 0x71, 0xAB, 0xFE, 0xC3, 0x8C, 0x9E, 0xFC,
+		0x12, 0x48, 0x48, 0xD4, 0x77, 0x9B, 0x59, 0x6B, 0x36,
+		0xD2, 0x82, 0x23, 0xE6, 0x2A, 0x42, 0xAB, 0x9F
+	};
+
+	const uint8_t OSCORE_RESP4[] = { 0x61, 0x44, 0x00, 0x00, 0x4B, 0x90,
+					 0xFF, 0x2B, 0x8F, 0x62, 0x41, 0x31,
+					 0x9B, 0x7B, 0x1C, 0x90, 0x37, 0x9E,
+					 0x83, 0x93, 0x4B };
+
+	/**************************************************************************/
+	/* 		1)	|------request----------------------------->|				  */
+	/*			|<-----response with ECHO option (ECHO1)----|				  */
+	/**************************************************************************/
 	/*
 	 *
 	 * First request
 	 *
 	 */
-	PRINT_MSG("\n\n |------ first request---->| \n\n");
+	PRINT_MSG("\n\n |------request----------------------------->| \n\n");
 	uint8_t uri_path_val[] = { 't', 'e', 'm', 'p', 'e', 'r',
 				   'a', 't', 'u', 'r', 'e' };
 	uint8_t token[] = { 0x4a };
-	uint8_t ser_coap_pkt_req1[40];
-	uint32_t ser_coap_pkt_req1_len = sizeof(ser_coap_pkt_req1);
-	uint8_t ser_oscore_pkt[60];
-	uint32_t ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
-	memset(ser_coap_pkt_req1, 0, ser_coap_pkt_req1_len);
-	memset(ser_oscore_pkt, 0, ser_oscore_pkt_len);
 
 	struct o_coap_packet coap_pkt_req1 = {
 		.header = {
@@ -697,23 +777,24 @@ void t10_oscore_client_server_after_reboot(void)
 		.payload.ptr = NULL,
 	};
 
-	r = coap_serialize(&coap_pkt_req1, ser_coap_pkt_req1, &ser_coap_pkt_req1_len);
-	zassert_equal(r, ok,
-		      "Error in coap_serialize during req1 packet serialization!");
+	coap_pkt_len = sizeof(coap_pkt);
+	r = coap_serialize(&coap_pkt_req1, coap_pkt, &coap_pkt_len);
+	zassert_equal(r, ok, "req1 serialization failed!");
 
-	PRINT_ARRAY("CoAP  req1", ser_coap_pkt_req1, ser_coap_pkt_req1_len);
+	PRINT_ARRAY("CoAP  req1", coap_pkt, coap_pkt_len);
 
-	r = coap2oscore(ser_coap_pkt_req1, ser_coap_pkt_req1_len,
-			ser_oscore_pkt, &ser_oscore_pkt_len, &c_client);
+	oscore_pkt_len = sizeof(oscore_pkt);
+	r = coap2oscore(coap_pkt, coap_pkt_len, oscore_pkt, &oscore_pkt_len,
+			&cc);
 	zassert_equal(r, ok, "Error in coap2oscore!");
+	zassert_mem_equal__(oscore_pkt, OSCORE_REQ1, sizeof(OSCORE_REQ1),
+			    "coap2oscore failed");
 
-	PRINT_ARRAY("OSCORE req1", ser_oscore_pkt, ser_oscore_pkt_len);
+	PRINT_ARRAY("OSCORE req1", oscore_pkt, oscore_pkt_len);
 
-	uint8_t ser_conv_coap_pkt[60];
-	uint32_t ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
-
-	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
-			&ser_conv_coap_pkt_len, &c_server);
+	conv_coap_pkt_len = sizeof(conv_coap_pkt);
+	r = oscore2coap(oscore_pkt, oscore_pkt_len, conv_coap_pkt,
+			&conv_coap_pkt_len, &cs);
 
 	zassert_equal(r, first_request_after_reboot, "Error in oscore2coap!");
 
@@ -723,22 +804,20 @@ void t10_oscore_client_server_after_reboot(void)
 	*
 	*
 	*/
-	PRINT_MSG("\n\n |<------response1 with ECHO option----| \n\n");
+	PRINT_MSG("\n\n |<-----response with ECHO option (ECHO1)----|	 \n\n");
 
 	/*Test first the rejection of CoAP packets without an echo option*/
 	PRINT_MSG(
 		"Try first supplying a CoAP message without an ECHO option\n");
-	uint8_t COAP_PKT_WITHOUT_ECHO[] = { 0x61, 0x81, 0x00, 0x00, 0x4A };
-	r = coap2oscore(COAP_PKT_WITHOUT_ECHO, sizeof(COAP_PKT_WITHOUT_ECHO),
-			ser_oscore_pkt, &ser_oscore_pkt_len, &c_server);
+	uint8_t COAP_RESP_WITHOUT_ECHO[] = { 0x61, 0x81, 0x00, 0x00, 0x4A };
+	oscore_pkt_len = sizeof(oscore_pkt);
+	r = coap2oscore(COAP_RESP_WITHOUT_ECHO, sizeof(COAP_RESP_WITHOUT_ECHO),
+			oscore_pkt, &oscore_pkt_len, &cs);
 	zassert_equal(r, no_echo_option, "Error in coap2oscore!");
 
 	/* do it now the correct way -- with ECHO option*/
-	uint8_t ser_coap_pkt_resp1[40];
-	uint32_t ser_coap_pkt_resp1_len = sizeof(ser_coap_pkt_resp1);
-	ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
-	uint8_t echo_opt_val[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-				   0x06, 0x07, 0x08, 0x09, 0x10, 0x11 };
+	uint8_t echo_opt_val1[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+				    0x06, 0x07, 0x08, 0x09, 0x10, 0x11 };
 
 	struct o_coap_packet coap_pkt_resp1 = {
 		.header = { .ver = 1,
@@ -749,53 +828,116 @@ void t10_oscore_client_server_after_reboot(void)
 		.token = token,
 		.options_cnt = 1,
 		.options = { { .delta = 252,
-			       .len = sizeof(echo_opt_val),
-			       .value = echo_opt_val,
+			       .len = sizeof(echo_opt_val1),
+			       .value = echo_opt_val1,
 			       .option_number = ECHO } },
 		.payload.len = 0,
 		.payload.ptr = NULL,
 	};
 
-	r = coap_serialize(&coap_pkt_resp1, ser_coap_pkt_resp1,
-		     &ser_coap_pkt_resp1_len);
-	zassert_equal(r, ok,
-		      "Error in coap_serialize during req1 packet serialization!");
-	r = coap2oscore(ser_coap_pkt_resp1, ser_coap_pkt_resp1_len,
-			ser_oscore_pkt, &ser_oscore_pkt_len, &c_server);
-	zassert_equal(r, ok, "Error in coap2oscore!");
-	const uint8_t EXPECTED_OSCORE[] = { 0x61, 0x44, 0x00, 0x00, 0x4A, 0x93,
-					    0x09, 0x00, 0x01, 0xFF, 0x89, 0x6F,
-					    0xB4, 0x03, 0xFE, 0xEA, 0xDA, 0x57,
-					    0x06, 0xDB, 0xC3, 0x73, 0x32, 0xC5,
-					    0x36, 0x3D, 0x4F, 0x4A, 0xB6, 0xAB,
-					    0xFD, 0xE2, 0x15 };
-	zassert_mem_equal__(ser_oscore_pkt, EXPECTED_OSCORE,
-			    sizeof(EXPECTED_OSCORE), "coap2oscore failed");
+	coap_pkt_len = sizeof(coap_pkt);
+	r = coap_serialize(&coap_pkt_resp1, coap_pkt, &coap_pkt_len);
+	zassert_equal(r, ok, "Error in coap_serialize");
 
-	ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
-	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
-			&ser_conv_coap_pkt_len, &c_client);
+	oscore_pkt_len = sizeof(oscore_pkt);
+	r = coap2oscore(coap_pkt, coap_pkt_len, oscore_pkt, &oscore_pkt_len,
+			&cs);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	zassert_mem_equal__(oscore_pkt, OSCORE_RESP1, sizeof(OSCORE_RESP1),
+			    "coap2oscore failed");
+
+	conv_coap_pkt_len = sizeof(conv_coap_pkt);
+	r = oscore2coap(oscore_pkt, oscore_pkt_len, conv_coap_pkt,
+			&conv_coap_pkt_len, &cc);
 
 	zassert_equal(r, ok, "Error in oscore2coap!");
-	const uint8_t EXPECTED_COAP[] = { 0x61, 0x81, 0x00, 0x00, 0x4A,
-					  0xDC, 0xEF, 0x00, 0x01, 0x02,
-					  0x03, 0x04, 0x05, 0x06, 0x07,
-					  0x08, 0x09, 0x10, 0x11 };
-	zassert_mem_equal__(ser_conv_coap_pkt, EXPECTED_COAP,
-			    sizeof(EXPECTED_COAP), "oscore2coap failed");
+	zassert_mem_equal__(conv_coap_pkt, coap_pkt, conv_coap_pkt_len,
+			    "oscore2coap failed");
+
+	/**************************************************************************/
+	/* 		2)	|------new request without ECHO opt-------->| 				  */
+	/*			|<-----response with new ECHO option (ECHO2)|			      */
+	/**************************************************************************/
+	/*
+	*
+	* Request
+	*
+	*/
+	PRINT_MSG("\n\n|------new request without ECHO opt-------->| \n\n");
+	uint8_t COAP_REQ_WITHOUT_ECHO[] = { 0x41, 0x01, 0x00, 0x00, 0x4A };
+
+	oscore_pkt_len = sizeof(oscore_pkt);
+	r = coap2oscore(COAP_REQ_WITHOUT_ECHO, sizeof(COAP_REQ_WITHOUT_ECHO),
+			oscore_pkt, &oscore_pkt_len, &cc);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	PRINT_ARRAY("OSCORE req2", oscore_pkt, oscore_pkt_len);
+
+	conv_coap_pkt_len = sizeof(conv_coap_pkt);
+	r = oscore2coap(oscore_pkt, oscore_pkt_len, conv_coap_pkt,
+			&conv_coap_pkt_len, &cs);
+
+	zassert_equal(r, echo_validation_failed, "Error in oscore2coap!");
 
 	/*
+	*
+	* Response
+	*
+	*/
+	PRINT_MSG("\n\n|<-----response with new ECHO option (ECHO2)|\n\n");
+	uint8_t echo_opt_val2[] = {
+		0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+		0x06, 0x07, 0x08, 0x09, 0x10, 0x22
+	}; /*last byte is different*/
+	struct o_coap_packet coap_pkt_resp2 = {
+		.header = { .ver = 1,
+			    .type = TYPE_ACK,
+			    .TKL = 1,
+			    .code = CODE_RESP_UNAUTHORIZED,
+			    .MID = 0x0 },
+		.token = token,
+		.options_cnt = 1,
+		.options = { { .delta = 252,
+			       .len = sizeof(echo_opt_val2),
+			       .value = echo_opt_val2,
+			       .option_number = ECHO } },
+		.payload.len = 0,
+		.payload.ptr = NULL,
+	};
+
+	coap_pkt_len = sizeof(coap_pkt);
+	r = coap_serialize(&coap_pkt_resp2, coap_pkt, &coap_pkt_len);
+	zassert_equal(r, ok, "Error in coap_serialize!");
+
+	oscore_pkt_len = sizeof(oscore_pkt);
+	r = coap2oscore(coap_pkt, coap_pkt_len, oscore_pkt, &oscore_pkt_len,
+			&cs);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	zassert_mem_equal__(oscore_pkt, OSCORE_RESP2, oscore_pkt_len,
+			    "coap2oscore failed");
+
+	conv_coap_pkt_len = sizeof(conv_coap_pkt);
+	r = oscore2coap(oscore_pkt, oscore_pkt_len, conv_coap_pkt,
+			&conv_coap_pkt_len, &cc);
+
+	zassert_equal(r, ok, "Error in oscore2coap!");
+
+	zassert_mem_equal__(conv_coap_pkt, coap_pkt, coap_pkt_len,
+			    "oscore2coap failed");
+
+	/**************************************************************************/
+	/*		3)	|------request with old ECHO option-(ECHO1)>|*/
+	/* 			|<-----response with new ECHO option (ECHO3)|*/
+	/**************************************************************************/
+	/*
 	 *
-	 * Request with ECHO option
+	 * Request with old ECHO option-(ECHO1)
 	 *
 	 */
-	PRINT_MSG("\n\n |------ Request with ECHO option---->| \n\n");
+	PRINT_MSG("\n\n |-------request with old ECHO option-(ECHO1)>|| \n\n");
 	token[0] = 0x4b;
-	uint8_t ser_coap_pkt_req2[60];
-	uint32_t ser_coap_pkt_req2_len = sizeof(ser_coap_pkt_req2);
-	memset(ser_coap_pkt_req2, 0, ser_coap_pkt_req2_len);
-	ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
-	memset(ser_oscore_pkt, 0, ser_oscore_pkt_len);
 
 	struct o_coap_packet coap_pkt_req2 = {
 		.header = {
@@ -808,69 +950,151 @@ void t10_oscore_client_server_after_reboot(void)
 		.token = token,
 		.options_cnt = 2,
 		.options = {
-					    { 
+					    {
 							.delta = 11,
-                        	.len = sizeof(uri_path_val),
-                        	.value = uri_path_val,
-                        	.option_number = URI_PATH},/*E, opt num 11*/
-                        { 
+	                    	.len = sizeof(uri_path_val),
+	                    	.value = uri_path_val,
+	                    	.option_number = URI_PATH},/*E, opt num 11*/
+	                    {
 							.delta = 241,
-                        	.len = sizeof(echo_opt_val),
-                        	.value = echo_opt_val,
-                        	.option_number = ECHO},/*ECHO, opt num 252*/
-                   },
+	                    	.len = sizeof(echo_opt_val1),
+	                    	.value = echo_opt_val1,
+	                    	.option_number = ECHO},/*ECHO, opt num 252*/
+	               },
 		.payload.len = 0,
 		.payload.ptr = NULL,
 	};
 
-	r = coap_serialize(&coap_pkt_req2, ser_coap_pkt_req2, &ser_coap_pkt_req2_len);
-	zassert_equal(r, ok,
-		      "Error in coap_serialize during req1 packet serialization!");
+	coap_pkt_len = sizeof(coap_pkt);
+	r = coap_serialize(&coap_pkt_req2, coap_pkt, &coap_pkt_len);
+	zassert_equal(r, ok, "Error in coap_serialize !");
 
-	PRINT_ARRAY("CoAP  req2", ser_coap_pkt_req2, ser_coap_pkt_req2_len);
-
-	r = coap2oscore(ser_coap_pkt_req2, ser_coap_pkt_req2_len,
-			ser_oscore_pkt, &ser_oscore_pkt_len, &c_client);
+	oscore_pkt_len = sizeof(oscore_pkt);
+	r = coap2oscore(coap_pkt, coap_pkt_len, oscore_pkt, &oscore_pkt_len,
+			&cc);
 	zassert_equal(r, ok, "Error in coap2oscore!");
-	const uint8_t EXPECTED_OSCORE1[] = {
-		0x41, 0x02, 0x00, 0x00, 0x4B, 0x92, 0x09, 0x01, 0xFF,
-		0x19, 0x4F, 0x30, 0x46, 0xD9, 0xC0, 0xA3, 0x38, 0x20,
-		0xC1, 0xF0, 0x5E, 0x5C, 0x52, 0xC9, 0xCB, 0x8C, 0x73,
-		0x3D, 0xAF, 0xA8, 0x39, 0x41, 0xDA, 0x72, 0x4B, 0x54,
-		0x02, 0xB4, 0xB0, 0xB9, 0xB3, 0x60, 0x18, 0x7B
-	};
-	zassert_mem_equal__(ser_oscore_pkt, EXPECTED_OSCORE1,
-			    sizeof(EXPECTED_OSCORE1), "coap2oscore failed");
+	zassert_mem_equal__(oscore_pkt, OSCORE_REQ3, oscore_pkt_len,
+			    "coap2oscore failed");
 
-	PRINT_ARRAY("OSCORE req2", ser_oscore_pkt, ser_oscore_pkt_len);
+	conv_coap_pkt_len = sizeof(conv_coap_pkt);
+	r = oscore2coap(oscore_pkt, oscore_pkt_len, conv_coap_pkt,
+			&conv_coap_pkt_len, &cs);
 
-	ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
-
-	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
-			&ser_conv_coap_pkt_len, &c_server);
-
-	zassert_equal(r, 0, "Error in oscore2coap!");
-	const uint8_t EXPECTED_COAP1[] = { 0x41, 0x01, 0x00, 0x00, 0x4B, 0xBB,
-					   0x74, 0x65, 0x6D, 0x70, 0x65, 0x72,
-					   0x61, 0x74, 0x75, 0x72, 0x65, 0xDC,
-					   0xE4, 0x00, 0x01, 0x02, 0x03, 0x04,
-					   0x05, 0x06, 0x07, 0x08, 0x09, 0x10,
-					   0x11 };
-	zassert_mem_equal__(ser_conv_coap_pkt, EXPECTED_COAP1,
-			    sizeof(EXPECTED_COAP1), "oscore2coap failed");
+	zassert_equal(r, echo_validation_failed, "Error in oscore2coap!");
 
 	/*
-	 * 
+	 *
+	 * Response option ECHO3
+	 *
+	 */
+	PRINT_MSG("\n\n|<-----response with new ECHO option (ECHO2)|\n\n");
+	uint8_t echo_opt_val3[] = {
+		0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+		0x06, 0x07, 0x08, 0x09, 0x10, 0x33
+	}; /*last byte is different*/
+	struct o_coap_packet coap_pkt_resp3 = {
+		.header = { .ver = 1,
+			    .type = TYPE_ACK,
+			    .TKL = 1,
+			    .code = CODE_RESP_UNAUTHORIZED,
+			    .MID = 0x0 },
+		.token = token,
+		.options_cnt = 1,
+		.options = { { .delta = 252,
+			       .len = sizeof(echo_opt_val3),
+			       .value = echo_opt_val3,
+			       .option_number = ECHO } },
+		.payload.len = 0,
+		.payload.ptr = NULL,
+	};
+
+	coap_pkt_len = sizeof(coap_pkt);
+	r = coap_serialize(&coap_pkt_resp3, coap_pkt, &coap_pkt_len);
+	zassert_equal(r, ok, "Error in coap_serialize!");
+
+	oscore_pkt_len = sizeof(oscore_pkt);
+	r = coap2oscore(coap_pkt, coap_pkt_len, oscore_pkt, &oscore_pkt_len,
+			&cs);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	zassert_mem_equal__(oscore_pkt, OSCORE_RESP3, oscore_pkt_len,
+			    "coap2oscore failed");
+
+	conv_coap_pkt_len = sizeof(conv_coap_pkt);
+	r = oscore2coap(oscore_pkt, oscore_pkt_len, conv_coap_pkt,
+			&conv_coap_pkt_len, &cc);
+
+	zassert_equal(r, ok, "Error in oscore2coap!");
+
+	zassert_mem_equal__(conv_coap_pkt, coap_pkt, coap_pkt_len,
+			    "oscore2coap failed");
+
+	/**************************************************************************/
+	/*		4)	|------request with ECHO option-(ECHO3)---->|*/
+	/* 			|<-----response-----------------------------|*/
+	/**************************************************************************/
+
+	/*
+	 *
+	 * Request with ECHO option
+	 *
+	 */
+	PRINT_MSG("\n\n |------request with ECHO option-(ECHO3)---->| \n\n");
+	struct o_coap_packet coap_pkt_req4 = {
+		.header = {
+			.ver = 1,
+			.type = TYPE_CON,
+			.TKL = 1,
+			.code = CODE_REQ_GET,
+			.MID = 0x0
+		},
+		.token = token,
+		.options_cnt = 2,
+		.options = {
+					    {
+							.delta = 11,
+	                    	.len = sizeof(uri_path_val),
+	                    	.value = uri_path_val,
+	                    	.option_number = URI_PATH},/*E, opt num 11*/
+	                    {
+							.delta = 241,
+	                    	.len = sizeof(echo_opt_val3),
+	                    	.value = echo_opt_val3,
+	                    	.option_number = ECHO},/*ECHO, opt num 252*/
+	               },
+		.payload.len = 0,
+		.payload.ptr = NULL,
+	};
+
+	coap_pkt_len = sizeof(coap_pkt);
+	r = coap_serialize(&coap_pkt_req4, coap_pkt, &coap_pkt_len);
+	zassert_equal(r, ok, "Error in coap_serialize!");
+
+	oscore_pkt_len = sizeof(oscore_pkt);
+	r = coap2oscore(coap_pkt, coap_pkt_len, oscore_pkt, &oscore_pkt_len,
+			&cc);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	zassert_mem_equal__(oscore_pkt, OSCORE_REQ4, oscore_pkt_len,
+			    "coap2oscore failed");
+
+	conv_coap_pkt_len = sizeof(conv_coap_pkt);
+	r = oscore2coap(oscore_pkt, oscore_pkt_len, conv_coap_pkt,
+			&conv_coap_pkt_len, &cs);
+
+	zassert_equal(r, 0, "Error in oscore2coap!");
+	zassert_mem_equal__(conv_coap_pkt, coap_pkt, coap_pkt_len,
+			    "oscore2coap failed");
+
+	/*
+	 *
 	 * Normal response
-	 * 
+	 *
 	 */
 	PRINT_MSG("\n\n |<------response2 ----| \n\n");
-	uint8_t ser_coap_pkt_resp2[40];
-	uint32_t ser_coap_pkt_resp2_len = sizeof(ser_coap_pkt_resp2);
-	ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
 	uint8_t payload[] = { 0xde, 0xad, 0xbe, 0xaf };
 
-	struct o_coap_packet coap_pkt_resp2 = {
+	struct o_coap_packet coap_pkt_resp4 = {
 		.header = { .ver = 1,
 			    .type = TYPE_ACK,
 			    .TKL = 1,
@@ -883,46 +1107,42 @@ void t10_oscore_client_server_after_reboot(void)
 		.payload.ptr = payload,
 	};
 
-	r = coap_serialize(&coap_pkt_resp2, ser_coap_pkt_resp2,
-		     &ser_coap_pkt_resp2_len);
-	zassert_equal(r, ok,
-		      "Error in coap_serialize during req2 packet serialization!");
-	r = coap2oscore(ser_coap_pkt_resp2, ser_coap_pkt_resp2_len,
-			ser_oscore_pkt, &ser_oscore_pkt_len, &c_server);
-	zassert_equal(r, ok, "Error in coap2oscore!");
-	const uint8_t EXPECTED_OSCORE2[] = { 0x61, 0x44, 0x00, 0x00, 0x4B, 0x90,
-					     0xFF, 0x47, 0x43, 0xA4, 0xED, 0xAC,
-					     0xDB, 0xFF, 0x8F, 0xE2, 0xA0, 0x5A,
-					     0xE7, 0xCA, 0xD7 };
-	zassert_mem_equal__(ser_oscore_pkt, EXPECTED_OSCORE2,
-			    sizeof(EXPECTED_OSCORE2), "coap2oscore failed");
+	coap_pkt_len = sizeof(coap_pkt);
+	r = coap_serialize(&coap_pkt_resp4, coap_pkt, &coap_pkt_len);
+	zassert_equal(r, ok, "Error in coap_serialize !");
 
-	ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
-	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
-			&ser_conv_coap_pkt_len, &c_client);
+	oscore_pkt_len = sizeof(oscore_pkt);
+	r = coap2oscore(coap_pkt, coap_pkt_len, oscore_pkt, &oscore_pkt_len,
+			&cs);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	zassert_mem_equal__(oscore_pkt, OSCORE_RESP4, oscore_pkt_len,
+			    "coap2oscore failed");
+
+	conv_coap_pkt_len = sizeof(conv_coap_pkt);
+	r = oscore2coap(oscore_pkt, oscore_pkt_len, conv_coap_pkt,
+			&conv_coap_pkt_len, &cc);
 
 	zassert_equal(r, ok, "Error in oscore2coap!");
-	const uint8_t EXPECTED_COAP2[] = { 0x61, 0x45, 0x00, 0x00, 0x4B,
-					   0xFF, 0xDE, 0xAD, 0xBE, 0xAF };
-	zassert_mem_equal__(ser_conv_coap_pkt, EXPECTED_COAP2,
-			    sizeof(EXPECTED_COAP2), "oscore2coap failed");
+	zassert_mem_equal__(conv_coap_pkt, coap_pkt, coap_pkt_len,
+			    "oscore2coap failed");
+
+	/**************************************************************************/
+	/*		5)	|------request----------------------------->|				  */
+	/* 			| -- -- --replayed request-- -- -- -- --X   | rejected message*/
+	/**************************************************************************/
 
 	/*
-	 * 
-	 * Test replay protection on the server side 
-	 * 
-	 * 
+	 *
+	 * Test replay protection on the server side
+	 *
+	 *
 	*/
 	PRINT_MSG(
 		"\n\n |------ regular request (to be replayed later)---->| \n\n");
 	token[0] = 0x4a;
-	uint8_t ser_coap_pkt_req3[40];
-	uint32_t ser_coap_pkt_req3_len = sizeof(ser_coap_pkt_req3);
-	ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
-	memset(ser_coap_pkt_req3, 0, ser_coap_pkt_req3_len);
-	memset(ser_oscore_pkt, 0, ser_oscore_pkt_len);
 
-	struct o_coap_packet coap_pkt_req3 = {
+	struct o_coap_packet coap_pkt_req5 = {
 		.header = {
 			.ver = 1,
 			.type = TYPE_CON,
@@ -933,37 +1153,32 @@ void t10_oscore_client_server_after_reboot(void)
 		.token = token,
 		.options_cnt = 1,
 		.options = {
-                        { .delta = 11,
-                        .len = sizeof(uri_path_val),
-                        .value = uri_path_val,
-                        .option_number = URI_PATH},/*E, opt num 11*/
-                   },
+	                    { .delta = 11,
+	                    .len = sizeof(uri_path_val),
+	                    .value = uri_path_val,
+	                    .option_number = URI_PATH},/*E, opt num 11*/
+	               },
 		.payload.len = 0,
 		.payload.ptr = NULL,
 	};
 
-	r = coap_serialize(&coap_pkt_req3, ser_coap_pkt_req3, &ser_coap_pkt_req3_len);
-	zassert_equal(r, ok,
-		      "Error in coap_serialize during req1 packet serialization!");
+	coap_pkt_len = sizeof(coap_pkt);
+	r = coap_serialize(&coap_pkt_req5, coap_pkt, &coap_pkt_len);
+	zassert_equal(r, ok, "Error in coap_serialize!");
 
-	PRINT_ARRAY("CoAP  req1", ser_coap_pkt_req3, ser_coap_pkt_req3_len);
-
-	r = coap2oscore(ser_coap_pkt_req3, ser_coap_pkt_req3_len,
-			ser_oscore_pkt, &ser_oscore_pkt_len, &c_client);
+	oscore_pkt_len = sizeof(oscore_pkt);
+	r = coap2oscore(coap_pkt, coap_pkt_len, oscore_pkt, &oscore_pkt_len,
+			&cc);
 	zassert_equal(r, ok, "Error in coap2oscore!");
 
-	PRINT_ARRAY("OSCORE req3", ser_oscore_pkt, ser_oscore_pkt_len);
-
-	ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
-
-	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
-			&ser_conv_coap_pkt_len, &c_server);
-
+	conv_coap_pkt_len = sizeof(conv_coap_pkt);
+	r = oscore2coap(oscore_pkt, oscore_pkt_len, conv_coap_pkt,
+			&conv_coap_pkt_len, &cs);
 	zassert_equal(r, ok, "Error in oscore2coap!");
 
 	/*try to replay the request*/
-	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
-			&ser_conv_coap_pkt_len, &c_server);
+	r = oscore2coap(oscore_pkt, oscore_pkt_len, conv_coap_pkt,
+			&conv_coap_pkt_len, &cs);
 
 	zassert_equal(r, oscore_replay_window_protection_error,
 		      "Error in oscore2coap!");

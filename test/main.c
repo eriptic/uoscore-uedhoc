@@ -136,8 +136,7 @@ void test_main(void)
 
 	// ztest_test_suite(
 	// 	oscore_tests,
-	// 	ztest_unit_test(
-	// 		t105_inner_outer_option_split__too_many_options));
+	// 	ztest_unit_test(t10_oscore_client_server_after_reboot));
 	ztest_test_suite(
 		oscore_tests,
 		ztest_unit_test(t1_oscore_client_request_response),

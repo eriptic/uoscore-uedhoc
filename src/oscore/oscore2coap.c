@@ -364,7 +364,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 			} else {
 				PRINT_MSG(
 					"Abort -- ECHO validation failed! Repeating the challenge.\n");
-				return first_request_after_reboot;
+				return echo_validation_failed;
 			}
 		} else {
 			/* Normal operation - update replay window. */
