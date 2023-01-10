@@ -62,28 +62,6 @@ void t501_piv2ssn(void)
 	zassert_equal(r, wrong_parameter, "Error in piv2ssn. r: %d", r);
 }
 
-void t502_verify_token(void)
-{
-	enum err r;
-	uint8_t buf[] = { 12 };
-	struct byte_array cached_token = BYTE_ARRAY_INIT(buf, sizeof(buf));
-
-	/*test with valid parameters*/
-	uint8_t token[] = { 12 };
-	r = verify_token(&cached_token, 1, (uint8_t *)&token);
-	zassert_equal(r, ok, "Error in verify_token. r: %d", r);
-
-	/*test with invalid parameters*/
-	/*wrong token*/
-	uint8_t token1[] = { 13 };
-	r = verify_token(&cached_token, 1, (uint8_t *)&token1);
-	zassert_equal(r, token_mismatch, "Error in verify_token. r: %d", r);
-	/*wrong token len*/
-	uint8_t token2[] = { 13, 14 };
-	r = verify_token(&cached_token, 2, (uint8_t *)&token2);
-	zassert_equal(r, token_mismatch, "Error in verify_token. r: %d", r);
-}
-
 /*
 * @brief test with wrong kdf
 */

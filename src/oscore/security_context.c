@@ -154,29 +154,7 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	c->rrc.request_piv.ptr = c->rrc.request_piv_buf;
 	c->rrc.echo_opt_val.len = sizeof(c->rrc.echo_opt_val_buf);
 	c->rrc.echo_opt_val.ptr = c->rrc.echo_opt_val_buf;
-	c->rrc.token_request.len = sizeof(c->rrc.token_request_buf);
-	c->rrc.token_request.ptr = c->rrc.token_request_buf;
 	c->rrc.echo_state_machine = ECHO_REBOOT;
-	return ok;
-}
-
-enum err cache_request_token(struct byte_array *dest_token, uint8_t tkl,
-			     uint8_t *token)
-{
-	memset(dest_token->ptr, 0, MAX_TOKEN_LEN);
-	TRY(_memcpy_s(dest_token->ptr, MAX_TOKEN_LEN, token, tkl));
-	dest_token->len = tkl;
-	return ok;
-}
-
-enum err verify_token(struct byte_array *cached_token, uint8_t tkl,
-		      uint8_t *token)
-{
-	if (tkl != cached_token->len ||
-	    0 != memcmp(cached_token->ptr, token, cached_token->len)) {
-		return token_mismatch;
-	}
-	PRINT_MSG("token verification -- pass\n");
 	return ok;
 }
 

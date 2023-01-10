@@ -110,9 +110,10 @@ STATIC enum err oscore_option_parser(const struct o_coap_option *opt,
 					out->kid_context.len = *val_ptr;
 					out->kid_context.ptr = ++val_ptr;
 					val_ptr += out->kid_context.len;
-					temp_kid_len = (uint8_t)(
-						temp_kid_len -
-						(out->kid_context.len + 1));
+					temp_kid_len =
+						(uint8_t)(temp_kid_len -
+							  (out->kid_context.len +
+							   1));
 				}
 
 				/* Get KID */
@@ -375,10 +376,6 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		}
 	} else {
 		/* received any kind of response */
-		TRY(verify_token(&c->rrc.token_request,
-				 oscore_packet.header.TKL,
-				 oscore_packet.token));
-
 		if (is_observe(oscore_packet.options,
 			       oscore_packet.options_cnt)) {
 			if (oscore_option.piv.len != 0) {

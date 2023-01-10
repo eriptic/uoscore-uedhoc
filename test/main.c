@@ -173,7 +173,6 @@ void test_main(void)
 		ztest_unit_test(t402_echo_val_is_fresh),
 		ztest_unit_test(t500_oscore_context_init_corner_cases),
 		ztest_unit_test(t501_piv2ssn),
-		ztest_unit_test(t502_verify_token),
 		ztest_unit_test(t503_derive_corner_case),
 		ztest_unit_test(t600_server_replay_init_test),
 		ztest_unit_test(t601_server_replay_reinit_test),

@@ -83,9 +83,6 @@ struct req_resp_context {
 	struct byte_array echo_opt_val;
 	uint8_t echo_opt_val_buf[ECHO_OPT_VALUE_LEN];
 
-	struct byte_array token_request;
-	uint8_t token_request_buf[MAX_TOKEN_LEN];
-
 	enum echo_state echo_state_machine;
 };
 
@@ -124,24 +121,5 @@ enum err update_request_piv_request_kid(struct context *c,
 					struct byte_array *piv,
 					struct byte_array *kid);
 
-/**
- * @brief	Saves the token contained in a request	
- * @param	dest_token destination
- * @param	tkl length of the token
- * @param 	token pointer to the token
- * @retval	error code	
-*/
-enum err cache_request_token(struct byte_array *dest_token, uint8_t tkl,
-			     uint8_t *token);
 
-/**
- * @brief	Verifies that the token in the received response has the token of 
- * 			the previously send request
- * @param	cached_token the previously saved token
- * @param	tkl length of the token
- * @param 	token pointer to the token
- * @retval	error code	
-*/
-enum err verify_token(struct byte_array *cached_token, uint8_t tkl,
-		      uint8_t *token);
 #endif

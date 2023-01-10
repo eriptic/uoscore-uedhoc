@@ -419,7 +419,8 @@ enum err WEAK hkdf_extract(enum hash_alg alg, const uint8_t *salt,
 			   uint8_t *out)
 {
 	/*"Note that [RFC5869] specifies that if the salt is not provided, 
-	it is set to a string of zeros.  For implementation purposes, not providing the salt is the same as setting the salt to the empty byte 
+	it is set to a string of zeros.  For implementation purposes, 
+	not providing the salt is the same as setting the salt to the empty byte 
 	string. OSCORE sets the salt default value to empty byte string, which 
 	is converted to a string of zeroes (see Section 2.2 of [RFC5869])".*/
 

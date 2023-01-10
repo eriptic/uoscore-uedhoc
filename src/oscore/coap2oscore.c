@@ -607,11 +607,6 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 		TRY(encrypt_wrapper(&plaintext, &ciphertext, c, &oscore_option,
 				    request, true));
 
-		/* Store request token for handling future responses. */
-		TRY(cache_request_token(&c->rrc.token_request,
-					o_coap_pkt.header.TKL,
-					o_coap_pkt.token));
-
 	} else if (ECHO_VERIFY == c->rrc.echo_state_machine) {
 		/* A server prepares a response with ECHO challenge after the reboot.*/
 		TRY(cache_echo_val(&c->rrc.echo_opt_val, e_options,
