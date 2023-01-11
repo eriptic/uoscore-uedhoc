@@ -17,6 +17,26 @@
 #include "oscore.h"
 #include "oscore/security_context.h"
 
+static void test_single_piv2ssn(uint8_t *piv_ptr, uint32_t piv_size, uint64_t expected_ssn)
+{
+	uint64_t ssn;
+	struct byte_array piv = BYTE_ARRAY_INIT(piv_ptr, piv_size);
+	enum err result = piv2ssn(&piv, &ssn);
+	zassert_equal(result, ok, "Error in piv2ssn (code=%d)", result);
+	zassert_equal(ssn, expected_ssn, "wrong SSN calculation");
+}
+
+static void test_single_ssn2piv(uint64_t ssn, uint8_t *expected_piv, uint32_t expected_size)
+{
+	static uint8_t buf[5];
+	struct byte_array piv = BYTE_ARRAY_INIT(buf, sizeof(buf));
+	enum err result = ssn2piv(ssn, &piv);
+
+	zassert_equal(result, ok, "Error in ssn2piv (code=%d)", result);
+	zassert_equal(piv.len, expected_size, "wrong PIV size");
+	zassert_mem_equal(piv.ptr, expected_piv, expected_size, "wrong PIV value");
+}
+
 void t500_oscore_context_init_corner_cases(void)
 {
 	enum err r;
@@ -46,20 +66,61 @@ void t501_piv2ssn(void)
 {
 	enum err r;
 	uint64_t ssn;
+	uint8_t piv1[] = { 0x00 };
+	uint8_t piv2[] = { 0xFF };
+	uint8_t piv3[] = { 0x02, 0xF0 };
+	uint8_t piv4[] = { 0xDE, 0xAD, 0xBE, 0xEF };
+	uint8_t piv5[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
 	/*test with valid parameters*/
-	uint8_t buf[] = { 12 };
-	struct byte_array piv = BYTE_ARRAY_INIT(buf, sizeof(buf));
-
-	r = piv2ssn(&piv, &ssn);
-	zassert_equal(r, ok, "Error in piv2ssn. r: %d", r);
-	zassert_equal(ssn, 12, "wrong SSN calculation");
+	test_single_piv2ssn(piv1, sizeof(piv1), 0x00);
+	test_single_piv2ssn(piv2, sizeof(piv2), 0xFF);
+	test_single_piv2ssn(piv3, sizeof(piv3), 0x02F0);
+	test_single_piv2ssn(piv4, sizeof(piv4), 0xDEADBEEF);
+	test_single_piv2ssn(piv5, sizeof(piv5), MAX_SSN_VALUE);
+	test_single_piv2ssn(NULL, 0, 0);
+	test_single_piv2ssn(NULL, 1, 0);
 
 	/*test with invalid parameters*/
 	r = piv2ssn(NULL, &ssn);
-	zassert_equal(r, wrong_parameter, "Error in piv2ssn. r: %d", r);
-	r = piv2ssn(&piv, NULL);
-	zassert_equal(r, wrong_parameter, "Error in piv2ssn. r: %d", r);
+	zassert_equal(r, wrong_parameter, "Error in piv2ssn. r: %d", r); //nullpointer for input value
+
+	struct byte_array piv_ba1 = BYTE_ARRAY_INIT(piv1, sizeof(piv1));
+	r = piv2ssn(&piv_ba1, NULL);
+	zassert_equal(r, wrong_parameter, "Error in piv2ssn. r: %d", r); //nullpointer for output value
+
+	struct byte_array piv_ba2 = BYTE_ARRAY_INIT(piv1, 10);
+	r = piv2ssn(&piv_ba2, &ssn);
+	zassert_equal(r, wrong_parameter, "Error in piv2ssn. r: %d", r); //buffer size exceeds maximum
+}
+
+void t502_ssn2piv(void)
+{
+	enum err r;
+	uint8_t piv1[] = { 0x00 };
+	uint8_t piv2[] = { 0x20 };
+	uint8_t piv3[] = { 0x20, 0xAA };
+	uint8_t piv4[] = { 0xDE, 0xAD, 0xBE, 0xEF };
+	uint8_t piv5[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+	/*test with valid parameters*/
+	test_single_ssn2piv(0, piv1, sizeof(piv1));
+	test_single_ssn2piv(0x20, piv2, sizeof(piv2));
+	test_single_ssn2piv(0x20AA, piv3, sizeof(piv3));
+	test_single_ssn2piv(0xDEADBEEF, piv4, sizeof(piv4));
+	test_single_ssn2piv(MAX_SSN_VALUE, piv5, sizeof(piv5));
+
+	/*test with invalid parameters*/
+	r = ssn2piv(0, NULL);
+	zassert_equal(r, wrong_parameter, "Error in piv2ssn. r: %d", r); //nullpointer for input value
+
+	struct byte_array piv_ba1 = BYTE_ARRAY_INIT(NULL, 10);
+	r = ssn2piv(0, &piv_ba1);
+	zassert_equal(r, wrong_parameter, "Error in piv2ssn. r: %d", r); //nullpointer for input value
+
+	struct byte_array piv_ba2 = BYTE_ARRAY_INIT(piv5, sizeof(piv5));
+	r = ssn2piv(MAX_SSN_VALUE + 1, &piv_ba2);
+	zassert_equal(r, wrong_parameter, "Error in piv2ssn. r: %d", r); //max value of ssn exceeded
 }
 
 /*

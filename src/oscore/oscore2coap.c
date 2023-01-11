@@ -110,10 +110,9 @@ STATIC enum err oscore_option_parser(const struct o_coap_option *opt,
 					out->kid_context.len = *val_ptr;
 					out->kid_context.ptr = ++val_ptr;
 					val_ptr += out->kid_context.len;
-					temp_kid_len =
-						(uint8_t)(temp_kid_len -
-							  (out->kid_context.len +
-							   1));
+					temp_kid_len = (uint8_t)(
+						temp_kid_len -
+						(out->kid_context.len + 1));
 				}
 
 				/* Get KID */
@@ -334,9 +333,10 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		/* Check if the packet is replayed - in case of normal operation (replay window already synchronized).
 		   It must be performed before decrypting the packet (see RFC 8613 p. 7.4). */
 		if (ECHO_SYNCHRONIZED == c->rrc.echo_state_machine) {
+			uint64_t ssn;
+			piv2ssn(&oscore_option.piv, &ssn);
 			if (!server_is_sequence_number_valid(
-				    *oscore_option.piv.ptr,
-				    &c->rc.replay_window)) {
+				    ssn, &c->rc.replay_window)) {
 				PRINT_MSG("Replayed message detected!\n");
 				return oscore_replay_window_protection_error;
 			}
