@@ -46,7 +46,7 @@ void t402_echo_val_is_fresh(void);
 
 void t500_oscore_context_init_corner_cases(void);
 void t501_piv2ssn(void);
-void t502_verify_token(void);
+void t502_ssn2piv(void);
 void t503_derive_corner_case(void);
 
 void t600_server_replay_init_test(void);

@@ -169,22 +169,30 @@ enum err update_request_piv_request_kid(struct context *c,
 
 enum err ssn2piv(uint64_t ssn, struct byte_array *piv)
 {
-	uint8_t *p = (uint8_t *)&ssn;
-
-	for (int8_t i = 7; i >= 0; i--) {
-		if (*(p + i) > 0) {
-			TRY(_memcpy_s(piv->ptr, MAX_PIV_LEN, p,
-				      (uint32_t)(i + 1)));
-			piv->len = (uint32_t)(i + 1);
-			PRINT_ARRAY("PIV", piv->ptr, piv->len);
-			return ok;
-		}
+	if ((NULL == piv) || (NULL == piv->ptr) || (ssn > MAX_SSN_VALUE)) {
+		return wrong_parameter;
 	}
 
-	/*if the sender seq number is 0 piv has value 0 and length 1*/
-	*piv->ptr = 0;
-	piv->len = 1;
-	PRINT_ARRAY("PIV", piv->ptr, piv->len);
+	static uint8_t tmp_piv[MAX_PIV_LEN];
+	uint8_t len = 0;
+	while (ssn > 0) {
+		tmp_piv[len] = (uint8_t)(ssn & 0xFF);
+		len++;
+		ssn >>= 8;
+	}
+
+	if (len == 0) {
+		//if the sender seq number is 0 piv has value 0 and length 1
+		piv->ptr[0] = 0;
+		piv->len = 1;
+	}
+	else {
+		//PIV is encoded in big endian
+		for (uint8_t pos=0; pos<len; pos++) {
+			piv->ptr[pos] = tmp_piv[len - 1 - pos];
+		}
+		piv->len = len;
+	}
 	return ok;
 }
 
@@ -193,9 +201,21 @@ enum err piv2ssn(struct byte_array *piv, uint64_t *ssn)
 	if ((NULL == ssn) || (NULL == piv)) {
 		return wrong_parameter;
 	}
+
+	uint8_t *value = piv->ptr;
+	uint32_t len = piv->len;
+	if (len > MAX_PIV_LEN)
+	{
+		return wrong_parameter;
+	}
+
 	uint64_t result = 0;
-	for (uint32_t pos = 0; pos < piv->len; pos++) {
-		result += (uint64_t)(piv->ptr[pos]) << (8 * pos);
+	if (NULL != value)
+	{
+		//PIV is encoded in big endian
+		for (uint32_t pos = 0; pos < len; pos++) {
+			result += (uint64_t)(value[pos]) << (8 * (len - 1 - pos));
+		}
 	}
 	*ssn = result;
 	return ok;

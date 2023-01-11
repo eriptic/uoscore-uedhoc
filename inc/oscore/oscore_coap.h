@@ -24,6 +24,7 @@
 #define MAX_KID_LEN 8
 #define MAX_AAD_LEN 30
 #define MAX_INFO_LEN 50
+#define MAX_SSN_VALUE 0xFFFFFFFFFF /* maximum SSN value is 2^40-1, according to RFC 8613 p. 7.2.1.*/
 
 /* Mask and offset for first byte in CoAP/OSCORE header*/
 #define HEADER_LEN 4
