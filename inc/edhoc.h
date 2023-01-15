@@ -95,7 +95,8 @@
 	(C_I_DEFAULT_SIZE + G_Y_DEFAULT_SIZE + C_R_DEFAULT_SIZE)
 #define TH2_INPUT_DEFAULT_SIZE                                                 \
 	(G_Y_DEFAULT_SIZE + C_R_DEFAULT_SIZE + HASH_DEFAULT_SIZE)
-#define TH34_INPUT_DEFAULT_SIZE (HASH_DEFAULT_SIZE + PLAINTEXT_DEFAULT_SIZE + CRED_DEFAULT_SIZE)
+#define TH34_INPUT_DEFAULT_SIZE                                                \
+	(HASH_DEFAULT_SIZE + PLAINTEXT_DEFAULT_SIZE + CRED_DEFAULT_SIZE)
 #define ECDH_SECRET_DEFAULT_SIZE 32
 #define DERIVED_SECRET_DEFAULT_SIZE 32
 #define AD_DEFAULT_SIZE 256
@@ -109,7 +110,6 @@
 #define SIGNATURE_DEFAULT_SIZE 64
 #define TH_ENC_DEFAULT_SIZE 42
 #define ENCODING_OVERHEAD 6
-
 
 #ifdef _WIN32
 #define WEAK
@@ -177,9 +177,8 @@ struct edhoc_initiator_context {
  *          and public key length as output.
 
  */
-enum err WEAK
-ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed, uint8_t *sk, uint8_t *pk,
-		     uint32_t *pk_size);
+enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
+				   uint8_t *sk, uint8_t *pk, uint32_t *pk_size);
 
 /**
  * @brief   Executes the EDHOC protocol on the initiator side
@@ -202,6 +201,33 @@ enum err edhoc_initiator_run(
 	uint8_t *err_msg, uint32_t *err_msg_len, uint8_t *ead_2,
 	uint32_t *ead_2_len, uint8_t *ead_4, uint32_t *ead_4_len,
 	uint8_t *prk_out, uint32_t prk_out_len,
+	enum err (*tx)(void *sock, uint8_t *data, uint32_t data_len),
+	enum err (*rx)(void *sock, uint8_t *data, uint32_t *data_len));
+
+/**
+ * @brief   Executes the EDHOC protocol on the initiator side
+ * @param   c cointer to a structure containing initialization parameters
+ * @param   cred_r_array containing elements of type other_party_cred used for
+ *          the retrival of the other party (the responder) parameters at run
+ *          time
+ * @param   num_cred_r number of the elements in cred_r_array
+ * @param   err_msg in case that an error message is received its contend is 
+ *          provided to the caller though the err_msg
+ * @param   ead_2 the received in msg2 additional data is provided to the 
+ *          caller through ead_2
+ * @param   ead_2_len length of ead_2
+ * @param   c_r_bytes connection identifier
+ * @param   c_r_bytes_len length of c_i_bytes
+ * @param   prk_out the derived shared secret
+ * @param   prk_out_len length of prk_out
+ */
+enum err edhoc_initiator_run_extended(
+	const struct edhoc_initiator_context *c,
+	struct other_party_cred *cred_r_array, uint16_t num_cred_r,
+	uint8_t *err_msg, uint32_t *err_msg_len, uint8_t *ead_2,
+	uint32_t *ead_2_len, uint8_t *ead_4, uint32_t *ead_4_len,
+	uint8_t *c_r_bytes, uint32_t *c_r_bytes_len, uint8_t *prk_out,
+	uint32_t prk_out_len,
 	enum err (*tx)(void *sock, uint8_t *data, uint32_t data_len),
 	enum err (*rx)(void *sock, uint8_t *data, uint32_t *data_len));
 
@@ -259,9 +285,9 @@ enum err edhoc_responder_run_extended(
 	struct other_party_cred *cred_i_array, uint16_t num_cred_i,
 	uint8_t *err_msg, uint32_t *err_msg_len, uint8_t *ead_1,
 	uint32_t *ead_1_len, uint8_t *ead_3, uint32_t *ead_3_len,
-	uint8_t *prk_out, uint32_t prk_out_len,
-	uint8_t *client_pub_key, uint32_t *client_pub_key_size,
-	uint8_t *c_i_bytes, uint32_t *c_i_bytes_len,
+	uint8_t *prk_out, uint32_t prk_out_len, uint8_t *client_pub_key,
+	uint32_t *client_pub_key_size, uint8_t *c_i_bytes,
+	uint32_t *c_i_bytes_len,
 	enum err (*tx)(void *sock, uint8_t *data, uint32_t data_len),
 	enum err (*rx)(void *sock, uint8_t *data, uint32_t *data_len));
 
