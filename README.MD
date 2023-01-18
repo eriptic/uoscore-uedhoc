@@ -138,33 +138,26 @@ AES keys should never be used more than once with a given nonce, see [RFC5084](h
    * `fresh_master_secret_salt = false` in case the same master secret and salt are used in subsequent reboots. In this case the user should implement in addition two functions that require access to Non-volatile Memory (NVM):
    ```c
    /**
-   * @brief   When the same OSCORE master secret and salt are reused through
-   * 			several reboots of the device, e.g., no fresh shared secret is
-   * 			derived through EDHOC (or some other method) the Sender Sequence 
-   * 			Number MUST be stored periodically in NVM. 
-   * @param	sender_id the user may use the sender_id as a key in a table in 
-   * 			NVM holding SSNs for different sender contexts. 
-   * @param   id_context id of the context. To be used as an additional key 
-   * @param	ssn the ssn to be written in NVM
-   * @retval	ok or error code if storing the SSN was not possible.
+   * @brief When the same OSCORE master secret and salt are reused through
+   *        several reboots of the device, e.g., no fresh shared secret is
+   *        derived through EDHOC (or some other method) the Sender Sequence 
+   *        Number MUST be stored periodically in NVM. 
+   * @param nvm_key part of the context that is permitted to be used for identifying the right store slot in NVM.
+   * @param	ssn SSN to be written in NVM.
+   * @retval ok or error code if storing the SSN was not possible.
    */
-   enum err nvm_write_ssn(const struct byte_array *sender_id,
-               const struct byte_array *id_context, uint64_t ssn)
-
+   enum err nvm_write_ssn(const struct nvm_key_t *nvm_key, uint64_t ssn);
 
    /**
-   * @brief   When the same OSCORE master secret and salt are reused through
-   * 			several reboots of the device, e.g., no fresh shared secret is
-   * 			derived through EDHOC (or some other method) the Sender Sequence 
-   * 			Number MUST be restored from NVM at each reboot. 
-   * @param	sender_id the user may use the sender_id as a key in a table in 
-   * 			NVM holding SSNs for different sender contexts. 
-   * @param   id_context id of the context. To be used as an additional key 
-   * @param	ssn the ssn to be read out from NVM
-   * @retval	ok or error code if the retrieving the SSN was not possible.
+   * @brief When the same OSCORE master secret and salt are reused through
+   *        several reboots of the device, e.g., no fresh shared secret is
+   *        derived through EDHOC (or some other method) the Sender Sequence 
+   *        Number MUST be restored from NVM at each reboot. 
+   * @param nvm_key part of the context that is permitted to be used for identifying the right store slot in NVM.
+   * @param	ssn SSN to be read out from NVM.
+   * @retval ok or error code if the retrieving the SSN was not possible.
    */
-   enum err nvm_read_ssn(const struct byte_array *sender_id,
-               const struct byte_array *id_context, uint64_t *ssn)
+   enum err nvm_read_ssn(const struct nvm_key_t *nvm_key, uint64_t *ssn);
    ```  
 
 ## Additional configuration options
