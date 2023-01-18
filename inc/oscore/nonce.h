@@ -18,9 +18,9 @@
 /**
  * @brief   Create the OSCORE nonce.
  * @param   id_piv "Sender ID of the endpoint that generated the Partial IV"
- * @param   partial_iv MUST be max 5 bytes long
+ * @param   piv MUST be max 5 bytes long
  * @param   common_iv MUST be 13 bytes long
- * @param   out MUST be 13 bytes long
+ * @param   nonce MUST be 13 bytes long
  */
 enum err create_nonce(struct byte_array *id_piv, struct byte_array *piv,
 		      struct byte_array *common_iv, struct byte_array *nonce);

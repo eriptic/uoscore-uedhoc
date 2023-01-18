@@ -20,11 +20,13 @@
 #include "oscore/oscore_coap.h"
 #include "oscore/oscore_hkdf_info.h"
 #include "oscore/security_context.h"
+#include "oscore/nvm.h"
 
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"
 #include "common/memcpy_s.h"
 #include "common/print_util.h"
+#include "common/unit_test.h"
 
 /**
  * @brief       Common derive procedure used to derive the Common IV and 
@@ -35,15 +37,10 @@
  * @param out   out-array. Must be initialized
  * @return      err
  */
-static enum err derive(struct common_context *cc, struct byte_array *id,
+STATIC enum err derive(struct common_context *cc, struct byte_array *id,
 		       enum derive_type type, struct byte_array *out)
 {
-	uint8_t info_bytes[MAX_INFO_LEN];
-	struct byte_array info = {
-		.len = sizeof(info_bytes),
-		.ptr = info_bytes,
-	};
-
+	BYTE_ARRAY_NEW(info, MAX_INFO_LEN, MAX_INFO_LEN);
 	TRY(oscore_create_hkdf_info(id, &cc->id_context, cc->aead_alg, type,
 				    &info));
 
@@ -103,78 +100,9 @@ static enum err derive_recipient_key(struct common_context *cc,
 	return ok;
 }
 
-enum err context_update(enum dev_type dev, struct o_coap_option *options,
-			uint16_t opt_num, struct byte_array *new_piv,
-			struct byte_array *new_kid_context, struct context *c)
-{
-	if (dev == SERVER) {
-		/**************************************************************/
-		/*update PIV*/
-		TRY(_memcpy_s(c->rrc.piv.ptr, MAX_PIV_LEN, new_piv->ptr,
-			      new_piv->len));
-
-		c->rrc.piv.len = new_piv->len;
-
-		/**************************************************************/
-		/*update Sender Key, Recipient Key and Common IV if KID context 
-		defers from the ID Context*/
-		if (!array_equals(&c->cc.id_context, new_kid_context)) {
-			/*if the ID Context is equal to the KID_context (the 
-			ID_context received with the oscore option) no update 
-			of Sender/recipient keys and Common IV required)*/
-
-			/*update KID Context*/
-			TRY(_memcpy_s(c->rrc.kid_context.ptr,
-				      MAX_KID_CONTEXT_LEN, new_kid_context->ptr,
-				      new_kid_context->len));
-
-			c->rrc.kid_context.len = new_kid_context->len;
-
-			TRY(_memcpy_s(
-				c->cc.id_context.ptr, c->cc.id_context.len,
-				new_kid_context->ptr, new_kid_context->len));
-
-			c->cc.id_context.len = new_kid_context->len;
-
-			PRINT_MSG("Common Context Updated*****************\n");
-			TRY(derive_common_iv(&c->cc));
-			TRY(derive_sender_key(&c->cc, &c->sc));
-			TRY(derive_recipient_key(&c->cc, &c->rc));
-		}
-	}
-	/**********************************************************************/
-	/*calculate nonce*/
-	TRY(create_nonce(&c->rrc.kid, &c->rrc.piv, &c->cc.common_iv,
-			 &c->rrc.nonce));
-
-	/**********************************************************************/
-	/*calculate AAD*/
-	uint8_t aad_buf[MAX_AAD_LEN];
-
-	struct byte_array aad;
-	aad.len = sizeof(aad_buf);
-	aad.ptr = aad_buf;
-
-	enum err status = create_aad(options, opt_num, c->cc.aead_alg,
-								&c->rrc.kid, &c->rrc.piv, &aad);
-
-	memcpy(c->rrc.aad.ptr, aad.ptr, aad.len);
-	c->rrc.aad.len = aad.len;
-
-	return status;
-}
-
 enum err oscore_context_init(struct oscore_init_params *params,
 			     struct context *c)
 {
-	if (params->dev_type == CLIENT) {
-		PRINT_MSG(
-			"\n\n\nClient context initialization****************\n");
-	} else {
-		PRINT_MSG(
-			"\n\n\nServer context initialization****************\n");
-	}
-
 	/*derive common context************************************************/
 
 	if (params->aead_alg != OSCORE_AES_CCM_16_64_128) {
@@ -198,10 +126,12 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	TRY(derive_common_iv(&c->cc));
 
 	/*derive Recipient Context*********************************************/
+	c->rc.notification_num_initialized = false;
 	server_replay_window_init(&c->rc.replay_window);
 	c->rc.recipient_id.len = params->recipient_id.len;
 	c->rc.recipient_id.ptr = c->rc.recipient_id_buf;
-	memcpy(c->rc.recipient_id.ptr, params->recipient_id.ptr, params->recipient_id.len);
+	memcpy(c->rc.recipient_id.ptr, params->recipient_id.ptr,
+	       params->recipient_id.len);
 	c->rc.recipient_key.len = sizeof(c->rc.recipient_key_buf);
 	c->rc.recipient_key.ptr = c->rc.recipient_key_buf;
 	TRY(derive_recipient_key(&c->cc, &c->rc));
@@ -210,62 +140,83 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	c->sc.sender_id = params->sender_id;
 	c->sc.sender_key.len = sizeof(c->sc.sender_key_buf);
 	c->sc.sender_key.ptr = c->sc.sender_key_buf;
+	c->sc.ssn_in_nvm = !params->fresh_master_secret_salt;
+	TRY(ssn_init(&c->sc.sender_id, &c->cc.id_context, &c->sc.ssn,
+		     c->sc.ssn_in_nvm));
 	TRY(derive_sender_key(&c->cc, &c->sc));
-	c->sc.sender_seq_num = 0;
 
 	/*set up the request response context**********************************/
 	c->rrc.nonce.len = sizeof(c->rrc.nonce_buf);
 	c->rrc.nonce.ptr = c->rrc.nonce_buf;
-
-	c->rrc.aad.len = sizeof(c->rrc.aad_buf);
-	c->rrc.aad.ptr = c->rrc.aad_buf;
-
-	c->rrc.piv.len = sizeof(c->rrc.piv_buf);
-	c->rrc.piv.ptr = c->rrc.piv_buf;
-
-	c->rrc.kid_context.len = sizeof(c->rrc.kid_context_buf);
-	c->rrc.kid_context.ptr = c->rrc.kid_context_buf;
-
-	c->rrc.kid.len = sizeof(c->rrc.kid_buf);
-	c->rrc.kid.ptr = c->rrc.kid_buf;
-
-	if (params->dev_type == CLIENT) {
-		TRY(_memcpy_s(c->rrc.kid_context.ptr, c->rrc.kid_context.len,
-			      params->id_context.ptr, params->id_context.len));
-		c->rrc.kid_context.len = params->id_context.len;
-		TRY(_memcpy_s(c->rrc.kid.ptr, c->rrc.kid.len,
-			      params->sender_id.ptr, params->sender_id.len));
-		c->rrc.kid.len = params->sender_id.len;
-
-		PRINT_ARRAY("KID context", c->rrc.kid_context.ptr,
-			    c->rrc.kid_context.len);
-	} else {
-		TRY(_memcpy_s(c->rrc.kid.ptr, c->rrc.kid.len,
-			      params->recipient_id.ptr,
-			      params->recipient_id.len));
-		c->rrc.kid.len = params->recipient_id.len;
-	}
-	PRINT_ARRAY("KID", c->rrc.kid.ptr, c->rrc.kid.len);
+	c->rrc.request_kid.len = sizeof(c->rrc.request_kid_buf);
+	c->rrc.request_kid.ptr = c->rrc.request_kid_buf;
+	c->rrc.request_piv.len = sizeof(c->rrc.request_piv_buf);
+	c->rrc.request_piv.ptr = c->rrc.request_piv_buf;
+	c->rrc.echo_opt_val.len = sizeof(c->rrc.echo_opt_val_buf);
+	c->rrc.echo_opt_val.ptr = c->rrc.echo_opt_val_buf;
+	c->rrc.echo_state_machine = ECHO_REBOOT;
 	return ok;
 }
 
-//todo: how big is piv? 5 byte= 40 bit -> in that case the sender sequence number needs to loop at the value of 2^40 -1 !!! -> uint8_t is sufficient for the sender sequence number.
-enum err sender_seq_num2piv(uint64_t ssn, struct byte_array *piv)
+enum err update_request_piv_request_kid(struct context *c,
+					struct byte_array *piv,
+					struct byte_array *kid)
 {
-	uint8_t *p = (uint8_t *)&ssn;
+	TRY(byte_array_cpy(&c->rrc.request_kid, kid, MAX_KID_LEN));
+	TRY(byte_array_cpy(&c->rrc.request_piv, piv, MAX_PIV_LEN));
+	return ok;
+}
 
-	//todo here we can start at 4?
-	for (int8_t i = 7; i >= 0; i--) {
-		if (*(p + i) > 0) {
-			TRY(_memcpy_s(piv->ptr, MAX_PIV_LEN, p,
-				      (uint32_t)(i + 1)));
-			piv->len = (uint32_t)(i + 1);
-			return ok;
-		}
+enum err ssn2piv(uint64_t ssn, struct byte_array *piv)
+{
+	if ((NULL == piv) || (NULL == piv->ptr) || (ssn > MAX_SSN_VALUE)) {
+		return wrong_parameter;
 	}
 
-	/*if the sender seq number is 0 piv has value 0 and length 1*/
-	*piv->ptr = 0;
-	piv->len = 1;
+	static uint8_t tmp_piv[MAX_PIV_LEN];
+	uint8_t len = 0;
+	while (ssn > 0) {
+		tmp_piv[len] = (uint8_t)(ssn & 0xFF);
+		len++;
+		ssn >>= 8;
+	}
+
+	if (len == 0) {
+		//if the sender seq number is 0 piv has value 0 and length 1
+		piv->ptr[0] = 0;
+		piv->len = 1;
+	}
+	else {
+		//PIV is encoded in big endian
+		for (uint8_t pos=0; pos<len; pos++) {
+			piv->ptr[pos] = tmp_piv[len - 1 - pos];
+		}
+		piv->len = len;
+	}
+	return ok;
+}
+
+enum err piv2ssn(struct byte_array *piv, uint64_t *ssn)
+{
+	if ((NULL == ssn) || (NULL == piv)) {
+		return wrong_parameter;
+	}
+
+	uint8_t *value = piv->ptr;
+	uint32_t len = piv->len;
+	if (len > MAX_PIV_LEN)
+	{
+		return wrong_parameter;
+	}
+
+	uint64_t result = 0;
+	if (NULL != value)
+	{
+		//PIV is encoded in big endian
+		for (uint32_t pos = 0; pos < len; pos++) {
+			result += (uint64_t)(value[pos]) << (8 * (len - 1 - pos));
+		}
+	}
+	*ssn = result;
 	return ok;
 }

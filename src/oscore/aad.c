@@ -35,27 +35,23 @@ enum err create_aad(struct o_coap_option *options, uint16_t opt_num,
 	aad_array._aad_array_request_piv.value = piv->ptr;
 	aad_array._aad_array_request_piv.len = piv->len;
 
-	/* options */
-	uint32_t encoded_opt_i_len =
-		encoded_option_len(options, opt_num, CLASS_I);
-	TRY(check_buffer_size(I_OPTIONS_BUFF_MAX_LEN, encoded_opt_i_len));
-	uint8_t encoded_opt_i_bytes[I_OPTIONS_BUFF_MAX_LEN];
-	struct byte_array opts_i = {
-		.len = encoded_opt_i_len,
-		.ptr = encoded_opt_i_bytes,
-	};
-	TRY(encode_options(options, opt_num, CLASS_I, &opts_i.ptr[0],
-			   encoded_opt_i_len));
+	PRINT_ARRAY("request_piv", piv->ptr, piv->len);
+	PRINT_ARRAY("request_kid", kid->ptr, kid->len);
 
-	aad_array._aad_array_options.len = opts_i.len;
-	aad_array._aad_array_options.value = opts_i.ptr;
+	/*
+	 * Currently there are no I options defined.
+	 * If at some later time I options are defined this implementation 
+	 * must  be extended here. 
+	 */
+	aad_array._aad_array_options.len = 0;
+	aad_array._aad_array_options.value = NULL;
 
 	size_t payload_len_out;
 	TRY_EXPECT(cbor_encode_aad_array(out->ptr, out->len, &aad_array,
 					 &payload_len_out),
 		   true);
 
-	out->len = (uint32_t) payload_len_out;
+	out->len = (uint32_t)payload_len_out;
 	PRINT_ARRAY("AAD", out->ptr, out->len);
 	return ok;
 }

@@ -38,12 +38,10 @@ output = HKDF(salt, IKM, info, L
 */
 
 enum err oscore_create_hkdf_info(struct byte_array *id,
-					struct byte_array *id_context,
-					enum AEAD_algorithm aead_alg,
-					enum derive_type type,
-					struct byte_array *out)
+				 struct byte_array *id_context,
+				 enum AEAD_algorithm aead_alg,
+				 enum derive_type type, struct byte_array *out)
 {
-	bool success_encoding;
 	struct oscore_info info_struct;
 
 	char type_enc[10];
@@ -56,8 +54,6 @@ enum err oscore_create_hkdf_info(struct byte_array *id,
 	case IV:
 		strncpy(type_enc, "IV", 10);
 		len = 13;
-		break;
-	default:
 		break;
 	}
 
@@ -82,12 +78,11 @@ enum err oscore_create_hkdf_info(struct byte_array *id,
 	info_struct._oscore_info_L = len;
 
 	size_t payload_len_out;
-	success_encoding = cbor_encode_oscore_info(
-		out->ptr, out->len, &info_struct, &payload_len_out);
 
-	if (!success_encoding) {
-		return cbor_encoding_error;
-	}
-	out->len = (uint32_t) payload_len_out;
+	TRY_EXPECT(cbor_encode_oscore_info(out->ptr, out->len, &info_struct,
+					   &payload_len_out),
+		   true);
+
+	out->len = (uint32_t)payload_len_out;
 	return ok;
 }

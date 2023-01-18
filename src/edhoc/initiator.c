@@ -141,8 +141,8 @@ enum err msg1_gen(const struct edhoc_initiator_context *c,
 enum err msg3_gen(const struct edhoc_initiator_context *c,
 		  struct runtime_context *rc,
 		  struct other_party_cred *cred_r_array, uint16_t num_cred_r,
-		  uint8_t *ead_2, uint32_t *ead_2_len, uint8_t *prk_out,
-		  uint32_t prk_out_len)
+		  uint8_t *ead_2, uint32_t *ead_2_len, uint8_t *c_r,
+		  uint32_t *c_r_len, uint8_t *prk_out, uint32_t prk_out_len)
 {
 	bool static_dh_i = false, static_dh_r = false;
 
@@ -150,9 +150,6 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 
 	uint8_t g_y[G_Y_DEFAULT_SIZE];
 	uint32_t g_y_len = get_ecdh_pk_len(rc->suite.edhoc_ecdh);
-
-	uint8_t c_r[C_R_DEFAULT_SIZE];
-	uint32_t c_r_len = sizeof(c_r);
 
 	uint8_t ciphertext[CIPHERTEXT2_DEFAULT_SIZE];
 	uint32_t ciphertext_len = sizeof(ciphertext);
@@ -167,8 +164,8 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	* return. Then the caller needs to examine SUITES_R in err_msg 
 	* re-initialize the initiator and call edhoc_initiator_run again
 	*/
-	TRY(msg2_parse(rc->msg, rc->msg_len, g_y, g_y_len, c_r, &c_r_len,
-			       ciphertext, &ciphertext_len));
+	TRY(msg2_parse(rc->msg, rc->msg_len, g_y, g_y_len, c_r, c_r_len,
+		       ciphertext, &ciphertext_len));
 	// if (r == error_message_received) {
 	// 	/*provide the error message to the caller*/
 	// 	r = _memcpy_s(err_msg, *err_msg_len, msg2, msg2_len);
@@ -190,8 +187,8 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	uint32_t th2_len = get_hash_len(rc->suite.edhoc_hash);
 	TRY(check_buffer_size(HASH_DEFAULT_SIZE, th2_len));
 
-	TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1_hash, g_y,
-			  g_y_len, c_r, c_r_len, th2));
+	TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1_hash, g_y, g_y_len,
+			  c_r, *c_r_len, th2));
 	PRINT_ARRAY("TH_2", th2, th2_len);
 
 	/*calculate PRK_2e*/
@@ -287,7 +284,8 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 
 	/*TH4*/
 	TRY(th4_calculate(rc->suite.edhoc_hash, th3, th3_len, plaintext,
-			  plaintext_len, c->cred_i.ptr, c->cred_i.len, rc->th4));
+			  plaintext_len, c->cred_i.ptr, c->cred_i.len,
+			  rc->th4));
 
 	/*PRK_out*/
 	TRY(edhoc_kdf(rc->suite.edhoc_hash, rc->prk_4e3m, rc->prk_4e3m_len,
@@ -320,12 +318,13 @@ enum err msg4_process(struct runtime_context *rc, uint8_t *ead_4,
 }
 #endif // EDHOC_MESSAGE_4_SUPPORTED
 
-enum err edhoc_initiator_run(
+enum err edhoc_initiator_run_extended(
 	const struct edhoc_initiator_context *c,
 	struct other_party_cred *cred_r_array, uint16_t num_cred_r,
 	uint8_t *err_msg, uint32_t *err_msg_len, uint8_t *ead_2,
 	uint32_t *ead_2_len, uint8_t *ead_4, uint32_t *ead_4_len,
-	uint8_t *prk_out, uint32_t prk_out_len,
+	uint8_t *c_r_bytes, uint32_t *c_r_bytes_len, uint8_t *prk_out,
+	uint32_t prk_out_len,
 	enum err (*tx)(void *sock, uint8_t *data, uint32_t data_len),
 	enum err (*rx)(void *sock, uint8_t *data, uint32_t *data_len))
 {
@@ -339,8 +338,8 @@ enum err edhoc_initiator_run(
 
 	PRINT_MSG("waiting to receive message 2...\n");
 	TRY(rx(c->sock, rc.msg, &rc.msg_len));
-	TRY(msg3_gen(c, &rc, cred_r_array, num_cred_r, ead_2, ead_2_len,
-		     prk_out, prk_out_len));
+	TRY(msg3_gen(c, &rc, cred_r_array, num_cred_r, c_r_bytes, c_r_bytes_len,
+		     ead_2, ead_2_len, prk_out, prk_out_len));
 	TRY(tx(c->sock, rc.msg, rc.msg_len));
 
 #ifdef EDHOC_MESSAGE_4_SUPPORTED
@@ -351,4 +350,23 @@ enum err edhoc_initiator_run(
 	}
 #endif // EDHOC_MESSAGE_4_SUPPORTED
 	return ok;
+}
+
+enum err edhoc_initiator_run(
+	const struct edhoc_initiator_context *c,
+	struct other_party_cred *cred_r_array, uint16_t num_cred_r,
+	uint8_t *err_msg, uint32_t *err_msg_len, uint8_t *ead_2,
+	uint32_t *ead_2_len, uint8_t *ead_4, uint32_t *ead_4_len,
+	uint8_t *prk_out, uint32_t prk_out_len,
+	enum err (*tx)(void *sock, uint8_t *data, uint32_t data_len),
+	enum err (*rx)(void *sock, uint8_t *data, uint32_t *data_len))
+{
+	uint8_t c_r[C_R_DEFAULT_SIZE];
+	uint32_t c_r_len = sizeof(c_r);
+
+	return edhoc_initiator_run_extended(c, cred_r_array, num_cred_r,
+					    err_msg, err_msg_len, ead_2,
+					    ead_2_len, ead_4, ead_4_len, c_r,
+					    &c_r_len, prk_out, prk_out_len, tx,
+					    rx);
 }

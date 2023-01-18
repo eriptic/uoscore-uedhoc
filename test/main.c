@@ -11,9 +11,8 @@
 
 #include <zephyr/zephyr.h>
 #include <zephyr/ztest.h>
-#include "edhoc_testvector_tests/edhoc_tests.h"
-#include "oscore_testvector_tests/oscore_tests.h"
-#include "oscore_testvector_tests/replay_protection_tests.h"
+#include "edhoc_integration_tests/edhoc_tests.h"
+#include "oscore_tests.h"
 
 // static void test_initiator1(void)
 // {
@@ -127,22 +126,6 @@ void test_main(void)
 {
 	/* EDHOC testvector tests  */
 
-	// ztest_test_suite(initiator_tests, ztest_unit_test(test_initiator1),
-	// 		 ztest_unit_test(test_initiator2),
-	// 		 ztest_unit_test(test_initiator3),
-	// 		 ztest_unit_test(test_initiator4),
-	// 		 ztest_unit_test(test_initiator12),
-	// 		 ztest_unit_test(test_initiator13));
-
-	// ztest_test_suite(responder_tests, ztest_unit_test(test_responder1),
-	// 		 ztest_unit_test(test_responder2),
-	// 		 ztest_unit_test(test_responder3),
-	// 		 ztest_unit_test(test_responder4),
-	// 		 ztest_unit_test(test_responder8),
-	// 		 ztest_unit_test(test_responder9),
-	// 		 ztest_unit_test(test_responder12),
-	// 		 ztest_unit_test(test_responder13));
-
 	ztest_test_suite(exporter, ztest_unit_test(test_exporter));
 	ztest_test_suite(
 		initiator_responder_interaction,
@@ -151,20 +134,56 @@ void test_main(void)
 
 	/* OSCORE test-vector tests */
 
-	ztest_test_suite(oscore_tests, ztest_unit_test(oscore_client_test1),
-			 ztest_unit_test(oscore_server_test2),
-			 ztest_unit_test(oscore_client_test3),
-			 ztest_unit_test(oscore_server_test4),
-			 ztest_unit_test(oscore_client_test5),
-			 ztest_unit_test(oscore_server_test6),
-			 //test7 - not supported yet
-			 ztest_unit_test(oscore_misc_test8));
+	// ztest_test_suite(
+	// 	oscore_tests,
+	// 	ztest_unit_test(t10_oscore_client_server_after_reboot));
+	ztest_test_suite(
+		oscore_tests,
+		ztest_unit_test(t1_oscore_client_request_response),
+		ztest_unit_test(t2_oscore_server_request_response),
+		ztest_unit_test(t3_oscore_client_request),
+		ztest_unit_test(t4_oscore_server_key_derivation),
+		ztest_unit_test(t5_oscore_client_request),
+		ztest_unit_test(t6_oscore_server_key_derivation),
+		ztest_unit_test(t8_oscore_server_response_simple_ack),
+		ztest_unit_test(t9_oscore_client_server_observe),
+		ztest_unit_test(t10_oscore_client_server_after_reboot),
+		ztest_unit_test(
+			t100_inner_outer_option_split__no_special_options),
+		ztest_unit_test(
+			t101_inner_outer_option_split__with_observe_notification),
+		ztest_unit_test(
+			t102_inner_outer_option_split__with_observe_registration),
+		ztest_unit_test(
+			t103_oscore_pkg_generate__request_with_observe_registration),
+		ztest_unit_test(
+			t104_oscore_pkg_generate__request_with_observe_notification),
+		ztest_unit_test(
+			t105_inner_outer_option_split__too_many_options),
+		ztest_unit_test(t106_oscore_option_generate_no_piv),
+		ztest_unit_test(t200_options_serialize_deserialize),
+		ztest_unit_test(t201_coap_serialize_deserialize),
+		ztest_unit_test(t202_options_deserialize_corner_cases),
+		ztest_unit_test(t300_oscore_option_parser_no_piv),
+		ztest_unit_test(t301_oscore_option_parser_wrong_n),
+		ztest_unit_test(t302_oscore_option_parser_no_kid),
+		ztest_unit_test(t303_options_reorder),
+		ztest_unit_test(t400_is_class_e),
+		ztest_unit_test(t401_cache_echo_val),
+		ztest_unit_test(t402_echo_val_is_fresh),
+		ztest_unit_test(t500_oscore_context_init_corner_cases),
+		ztest_unit_test(t501_piv2ssn),
+		ztest_unit_test(t502_ssn2piv),
+		ztest_unit_test(t503_derive_corner_case),
+		ztest_unit_test(t600_server_replay_init_test),
+		ztest_unit_test(t601_server_replay_reinit_test),
+		ztest_unit_test(t602_server_replay_check_at_start_test),
+		ztest_unit_test(t603_server_replay_check_in_progress_test),
+		ztest_unit_test(t604_server_replay_insert_zero_test),
+		ztest_unit_test(t605_server_replay_insert_test),
+		ztest_unit_test(t606_server_replay_standard_scenario_test));
 
-	ztest_run_test_suite(oscore_tests);
 	ztest_run_test_suite(exporter);
 	ztest_run_test_suite(initiator_responder_interaction);
-	// ztest_run_test_suite(initiator_tests);
-	// ztest_run_test_suite(responder_tests);
-
-	run_replay_protection_tests();
+	ztest_run_test_suite(oscore_tests);
 }

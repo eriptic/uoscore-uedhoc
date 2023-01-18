@@ -3,7 +3,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
 #include "common/oscore_edhoc_error.h"
+#include "common/byte_array.h"
 
 /* Replay window size - it can be defined by the user here or outside of this file. */
 /* NOTE: window size of 32 is the MINUMUM that is RFC-compliant. */
@@ -39,17 +41,6 @@ enum err server_replay_window_init(server_replay_window_t *replay_window);
 enum err server_replay_window_reinit(uint64_t current_sequence_number,
 				     server_replay_window_t *replay_window);
 
-/**
- * @brief Get currently newest sequence number from the replay window.
- *
- * This could be used by the user to store the session.
- *
- * @param seq_number [out] a pointer where result will be stored
- * @param replay_window [in] a pointer to replay window structure
- * @return err
- */
-enum err server_replay_window_get_last_number(
-	uint64_t *seq_number, const server_replay_window_t *replay_window);
 
 /**
  * @brief Check whether given sequence number is valid in terms of server replay protection.
@@ -71,4 +62,27 @@ bool server_is_sequence_number_valid(uint64_t seq_number,
 bool server_replay_window_update(uint64_t seq_number,
 				 server_replay_window_t *replay_window);
 
+/**
+ * @brief	Checks if an notification is replayed 
+ * @param	notification_num the notification number
+ * @param	notification_num_initialized flag used to indicated if the 
+ * 			notification number was initialized
+ * @param	piv the PIV
+ * @retval	error code or ok
+*/
+enum err replay_protection_check_notification(uint64_t notification_num,
+					      bool notification_num_initialized,
+					      struct byte_array *piv);
+
+/**
+ * @brief	Updates the notification number with value of the PIV
+ * @param	notification_num pointer to the notification number
+ * @param	notification_num_initialized flag used to indicated if the 
+ * 			notification number was initialized
+ * @param	piv the PIV
+ * @retval	error code or ok
+*/
+enum err notification_number_update(uint64_t *notification_num,
+				    bool *notification_num_initialized,
+				    struct byte_array *piv);
 #endif

@@ -15,22 +15,6 @@
 #include "edhoc_tests.h"
 bool rx_initiator_switch = false;
 
-/**
- * memcpy_s (see [1]) may not be available in some setups thus our own 
- * implementation 
- * [1]: https://docs.microsoft.com/de-de/cpp/c-runtime-library/reference/memcpy-s-wmemcpy-s?view=msvc-160
- */
-static int _memcpy_s(uint8_t *dest, uint32_t destSize, const uint8_t *src,
-		     uint8_t count)
-{
-	if (destSize < count) {
-		return -1;
-	} else {
-		memcpy(dest, src, count);
-	}
-	return 0;
-}
-
 static uint8_t msg_cnt;
 
 void rx_init(void)

@@ -7,8 +7,10 @@ project(auto_test)
 
 FILE(GLOB app_sources
   *.c
-  edhoc_testvector_tests/*.c
-  oscore_testvector_tests/*.c
+  edhoc_integration_tests/*.c
+  oscore_integration_tests/*.c
+  oscore_unit_tests/*.c
+  mocks/*.c
   ../externals/zcbor/src/*.c
   ../externals/compact25519/src/c25519/*.c
   ../externals/compact25519/src/*.c
@@ -25,8 +27,8 @@ include_directories(
   ../externals/mbedtls/include/psa)
 
 add_definitions(
-
-  #-DDEBUG_PRINT
+  -DUNIT_TEST
+  -DDEBUG_PRINT
   -DZCBOR_CANONICAL
 )
 

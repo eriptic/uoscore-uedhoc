@@ -16,6 +16,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "oscore_edhoc_error.h"
+#include "memcpy_s.h"
+
 /* Array with pointer and length.*/
 struct byte_array {
 	uint32_t len;
@@ -29,16 +32,6 @@ extern struct byte_array EMPTY_ARRAY;
 extern struct byte_array NULL_ARRAY;
 
 /**
- * @brief Initializes a variable of type byte_array
- * 
- * @param buf buffer containing the data
- * @param buf_len the lenhgt of the buffer
- * @param byte_array the byte_array variable to be initialized
- */
-void byte_array_init(uint8_t *buf, uint32_t buf_len,
-		     struct byte_array *byte_array);
-
-/**
  * @brief   Compares if the given two arrays have an equal content.
  *
  *          Handles null-arrays correctly
@@ -48,5 +41,25 @@ void byte_array_init(uint8_t *buf, uint32_t buf_len,
  */
 bool array_equals(const struct byte_array *left,
 		  const struct byte_array *right);
+
+enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src,
+			const uint32_t dest_max_len);
+
+/**
+ * @brief   Sets the pointer and the length of a byte_array variable to a given array
+*/
+#define BYTE_ARRAY_INIT(PTR, SIZE) { .ptr = PTR, .len = SIZE };
+
+/**
+ * @brief   Creates a variable of type byte_array.
+ *          In addition a buffer is created to hold the data.
+ *          Before the creation of the buffer it is checked if the size of the 
+ *          buffer (BUF_SIZE) will be sufficient for the size of the byte_array 
+ *          (SIZE). 
+*/
+#define BYTE_ARRAY_NEW(NAME, BUF_SIZE, SIZE)                                   \
+	TRY(check_buffer_size(BUF_SIZE, SIZE));                                \
+	uint8_t NAME##_buf[BUF_SIZE];                                          \
+	struct byte_array NAME = BYTE_ARRAY_INIT(NAME##_buf, SIZE);
 
 #endif

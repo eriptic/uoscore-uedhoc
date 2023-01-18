@@ -1,5 +1,8 @@
 # uOSCORE / uEDHOC 
 
+![GitHub CI](https://github.com/eriptic/uoscore-uedhoc/actions/workflows/ci.yml/badge.svg)
+
+
 This repository contains C implementations  for constrained (and non-constrained) devices of the IETF protocols:
 
 * [OSOCRE (RFC8613)](https://tools.ietf.org/html/rfc8613) and
@@ -14,6 +17,10 @@ For more background and evaluation in terms of speed, RAM and flash requirements
 * check the configurations in `makefile_config.mk` and adjust them if necessary
 * run `make` 
 * link the static library `build/libuoscore-uedhoc.a` in your project
+
+## Test coverage
+* [Test coverage report uOSCORE](https://eriptic.github.io/uoscore-uedhoc/src/oscore/index.html)
+* [Test coverage report uEDHOC](https://eriptic.github.io/uoscore-uedhoc/src/edhoc/index.html)
 
 ## Project (Folder) Structure
 
@@ -123,6 +130,42 @@ Note that uEDHOC does not provide correlation of messages. Correlation may be ha
 ## Using Different Cryptographic Libraries or Hardware Accelerators
 
 The logic of uOSCORE and uEDHOC is independent form the cryptographic library, i.e., the cryptographic library can easily be exchanged by the user. For that the user needs to provide implementations for the functions specified in `crypto_wrapper.c`. 
+
+## Preventing Nonce Reuse Attacks in OSCORE
+
+AES keys should never be used more than once with a given nonce, see [RFC5084](https://datatracker.ietf.org/doc/html/rfc5084). In order to avoid this situation the user should set:
+   * `fresh_master_secret_salt = true` in case that after each reboot of the device it uses fresh master secret/salt which can be derived, e.g., with EDHOC.
+   * `fresh_master_secret_salt = false` in case the same master secret and salt are used in subsequent reboots. In this case the user should implement in addition two functions that require access to Non-volatile Memory (NVM):
+   ```c
+   /**
+   * @brief   When the same OSCORE master secret and salt are reused through
+   * 			several reboots of the device, e.g., no fresh shared secret is
+   * 			derived through EDHOC (or some other method) the Sender Sequence 
+   * 			Number MUST be stored periodically in NVM. 
+   * @param	sender_id the user may use the sender_id as a key in a table in 
+   * 			NVM holding SSNs for different sender contexts. 
+   * @param   id_context id of the context. To be used as an additional key 
+   * @param	ssn the ssn to be written in NVM
+   * @retval	ok or error code if storing the SSN was not possible.
+   */
+   enum err nvm_write_ssn(const struct byte_array *sender_id,
+               const struct byte_array *id_context, uint64_t ssn)
+
+
+   /**
+   * @brief   When the same OSCORE master secret and salt are reused through
+   * 			several reboots of the device, e.g., no fresh shared secret is
+   * 			derived through EDHOC (or some other method) the Sender Sequence 
+   * 			Number MUST be restored from NVM at each reboot. 
+   * @param	sender_id the user may use the sender_id as a key in a table in 
+   * 			NVM holding SSNs for different sender contexts. 
+   * @param   id_context id of the context. To be used as an additional key 
+   * @param	ssn the ssn to be read out from NVM
+   * @retval	ok or error code if the retrieving the SSN was not possible.
+   */
+   enum err nvm_read_ssn(const struct byte_array *sender_id,
+               const struct byte_array *id_context, uint64_t *ssn)
+   ```  
 
 ## Additional configuration options
 Following preprocessor directives allow for better memory usage adjustments:

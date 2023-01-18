@@ -19,27 +19,30 @@
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
-enum o_coap_option_num {
-	COAP_OPTION_IF_MATCH = 1,
-	COAP_OPTION_URI_HOST = 3,
-	COAP_OPTION_ETAG = 4,
-	COAP_OPTION_IF_NONE_MATCH = 5,
-	COAP_OPTION_OBSERVE = 6,
-	COAP_OPTION_URI_PORT = 7,
-	COAP_OPTION_LOCATION_PATH = 8,
-	COAP_OPTION_OSCORE = 9,
-	COAP_OPTION_URI_PATH = 11,
-	COAP_OPTION_CONTENT_FORMAT = 12,
-	COAP_OPTION_MAX_AGE = 14,
-	COAP_OPTION_URI_QUERY = 15,
-	COAP_OPTION_ACCEPT = 17,
-	COAP_OPTION_LOCATION_QUERY = 20,
-	COAP_OPTION_BLOCK2 = 23,
-	COAP_OPTION_BLOCK1 = 27,
-	COAP_OPTION_SIZE2 = 28,
-	COAP_OPTION_PROXY_URI = 35,
-	COAP_OPTION_PROXY_SCHEME = 39,
-	COAP_OPTION_SIZE1 = 60,
+#define	OPT_SERIAL_OVERHEAD 5
+
+enum o_num {
+	IF_MATCH = 1,
+	URI_HOST = 3,
+	ETAG = 4,
+	IF_NONE_MATCH = 5,
+	OBSERVE = 6,
+	URI_PORT = 7,
+	LOCATION_PATH = 8,
+	OSCORE = 9,
+	URI_PATH = 11,
+	CONTENT_FORMAT = 12,
+	MAX_AGE = 14,
+	URI_QUERY = 15,
+	ACCEPT = 17,
+	LOCATION_QUERY = 20,
+	BLOCK2 = 23,
+	BLOCK1 = 27,
+	SIZE2 = 28,
+	PROXY_URI = 35,
+	PROXY_SCHEME = 39,
+	SIZE1 = 60,
+	ECHO = 252,
 };
 
 enum option_class {
@@ -55,15 +58,6 @@ enum option_class {
  * @return  true if the option is a Class E Option
  */
 bool is_class_e(uint16_t code);
-
-/**
- * @brief Checks if an option belongs to a certain class
- * 
- * @param option_num the option number
- * @return true if the option belongs to a given class
- * @return false if the option does not belong to a given class
- */
-bool option_belongs_to_class(uint16_t option_num, enum option_class class);
 
 /**
  * @brief   Parses the passed options until the payload marker of end of 
@@ -107,5 +101,53 @@ uint32_t encoded_option_len(struct o_coap_option *options, uint16_t opt_num,
 enum err encode_options(struct o_coap_option *options, uint16_t opt_num,
 			enum option_class class, uint8_t *out,
 			uint32_t out_buf_len);
+
+/**
+ * @brief	Checks if an array of options contains a observe option
+ * @param	options pointer to an array of options. This can be an array 
+ * 			containing all options of an input CoAP packet, the inner or 
+ * 			outer options of an OSCORE packet. This is because the observe 
+ * 			option is contained in all of the above collections
+ * @param	options_cnt number of entries in the array
+ */
+bool is_observe(struct o_coap_option *options, uint8_t options_cnt);
+
+/**
+ * @brief	Saves an ECHO option value to be compared later with an ECHO value 
+ * 			received from the client.
+ * @param	dest location to save the ECHO value
+ * @param	options	E options
+ * @param	options_cnt the number of the options
+ * @retval	error code
+ * 
+*/
+enum err cache_echo_val(struct byte_array *dest, struct o_coap_option *options,
+			uint8_t options_cnt);
+
+/**
+ * @brief	Checks if an ECHO value is fresh. It takes a decrypted payload and 
+ * 			search in it for an ECHO option. If such is find it compares it 
+ * 			to the cached one.
+ * @param	cache_value previously saved ECHO value
+ * @param	decrypted_payload the decrypted payload of the message
+ * @retval	error code
+*/
+enum err echo_val_is_fresh(struct byte_array *cache_val,
+			   struct byte_array *decrypted_payload);
+
+/**
+ * @brief Parse the decrypted OSCORE payload into code, E-options and original unprotected CoAP payload
+ * @param in_payload: input decrypted payload
+ * @param out_code: pointer to code number of the request
+ * @param out_E_options: output pointer to an array of E-options
+ * @param E_options_cnt: count number of E-options
+ * @param out_o_coap_payload: output pointer original unprotected CoAP payload
+ * @return  err
+ */
+enum err oscore_decrypted_payload_parser(struct byte_array *in_payload,
+					 uint8_t *out_code,
+					 struct o_coap_option *out_E_options,
+					 uint8_t *E_options_cnt,
+					 struct byte_array *out_o_coap_payload);
 
 #endif

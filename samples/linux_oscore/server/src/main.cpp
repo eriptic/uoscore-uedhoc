@@ -26,6 +26,30 @@ extern "C" {
 #include "oscore_test_vectors.h"
 
 #define USE_IPV6
+#define ECHO_OPT_NUM 252
+
+static void prepare_first_CoAP_response(CoapPDU *recvPDU, CoapPDU *sendPDU)
+{
+	/*This is just an example of an ECHO value. In production deployments the ECHO value MUST be computes as stated in Appendix A.2 or A.3 RFC9175*/
+	uint8_t echo_opt_val[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+				   0x06, 0x07, 0x08, 0x09, 0x10, 0x11 };
+
+	sendPDU->reset();
+	sendPDU->setVersion(1);
+	sendPDU->setType(CoapPDU::COAP_ACKNOWLEDGEMENT);
+	sendPDU->setCode(CoapPDU::COAP_UNAUTHORIZED);
+	sendPDU->setToken(recvPDU->getTokenPointer(),
+			  recvPDU->getTokenLength());
+	sendPDU->setMessageID(recvPDU->getMessageID());
+	sendPDU->addOption(ECHO_OPT_NUM, sizeof(echo_opt_val), echo_opt_val);
+	sendPDU->setPayload(NULL, 0);
+
+	printf("\n=============================================================\n");
+	printf("Unprotected first response:\n");
+	if (sendPDU->validate()) {
+		sendPDU->printHuman();
+	}
+}
 
 static void prepare_CoAP_response(CoapPDU *recvPDU, CoapPDU *sendPDU)
 {
@@ -58,8 +82,6 @@ int main()
 	uint8_t coap_rx_buf[256];
 	uint32_t coap_rx_buf_len = 0;
 	uint8_t buf_oscore[256];
-	uint32_t buf_oscore_len = sizeof(buf_oscore);
-	bool oscore_flag;
 	int sockfd;
 
 #ifdef USE_IPV4
@@ -91,9 +113,8 @@ int main()
 	}
 #endif
 
-	/*OSCORE contex initialization*/
+	/*OSCORE context initialization*/
 	oscore_init_params params = {
-		SERVER,
 		T1__MASTER_SECRET_LEN,
 		(uint8_t *)T1__MASTER_SECRET,
 		T1__RECIPIENT_ID_LEN,
@@ -106,6 +127,7 @@ int main()
 		(uint8_t *)T1__MASTER_SALT,
 		OSCORE_AES_CCM_16_64_128,
 		OSCORE_SHA_256,
+		true,
 	};
 	r = oscore_context_init(&params, &c_server);
 	if (r != ok) {
@@ -113,29 +135,43 @@ int main()
 	}
 
 	while (1) {
+		uint32_t buf_oscore_len = sizeof(buf_oscore);
 		n = recvfrom(sockfd, (char *)buffer, sizeof(buffer), 0,
 			     (struct sockaddr *)&client_addr, &client_addr_len);
 		if (n < 0)
 			return n;
 
 		r = oscore2coap((uint8_t *)buffer, n, coap_rx_buf,
-				&coap_rx_buf_len, &oscore_flag, &c_server);
-		if (r != ok) {
+				&coap_rx_buf_len, &c_server);
+
+		if (r != ok && r != not_oscore_pkt &&
+		    r != first_request_after_reboot) {
 			printf("Error in oscore2coap (error code %d)!\n", r);
 		}
 
-		if (oscore_flag) {
-			/*we received an OSOCRE packet*/
-			recvPDU = new CoapPDU((uint8_t *)coap_rx_buf,
-					      coap_rx_buf_len);
+		if (r != not_oscore_pkt) {
+			/*we received an OSCORE packet*/
 
 			printf("\n=====================================================\n");
-			printf("OSCORE packet received and converted to CoAP:\n");
-			if (recvPDU->validate()) {
-				recvPDU->printHuman();
-			}
 
-			prepare_CoAP_response(recvPDU, sendPDU);
+			if (r == first_request_after_reboot) {
+				/*we are here when the server received a first request after reboot*/
+				/*we assume that the server has rebooted before calling oscore_context_init*/
+				recvPDU = new CoapPDU((uint8_t *)buffer, n);
+				printf("First OSCORE packet received after reboot:\n");
+				if (recvPDU->validate()) {
+					recvPDU->printHuman();
+				}
+				prepare_first_CoAP_response(recvPDU, sendPDU);
+			} else {
+				recvPDU = new CoapPDU((uint8_t *)coap_rx_buf,
+						      coap_rx_buf_len);
+				printf("OSCORE packet received and converted to CoAP:\n");
+				if (recvPDU->validate()) {
+					recvPDU->printHuman();
+				}
+				prepare_CoAP_response(recvPDU, sendPDU);
+			}
 
 			r = coap2oscore(sendPDU->getPDUPointer(),
 					sendPDU->getPDULength(), buf_oscore,
@@ -166,8 +202,9 @@ int main()
 				     sendPDU->getPDULength(), 0,
 				     (struct sockaddr *)&client_addr,
 				     client_addr_len);
-			if (err < 0)
+			if (err < 0) {
 				return err;
+			}
 		}
 	}
 

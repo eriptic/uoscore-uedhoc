@@ -13,9 +13,6 @@
 #define ERROR_H
 #include "print_util.h"
 
-#define RED "\x1B[31m"
-#define RESET "\033[0m"
-
 /* All possible errors that EDHOC and OSCORE can have */
 enum err {
 	/*common errors*/
@@ -25,8 +22,10 @@ enum err {
 	unexpected_result_from_ext_lib = 3,
 	wrong_parameter = 4,
 	crypto_operation_not_implemented = 5,
+	not_supported_feature = 6,
 	/*indicates that transport layer is not initialized*/
 	transport_deinitialized = 6,
+	not_implemented = 7,
 
 	/*EDHOC specifc errors*/
 	/*todo implement error messages*/
@@ -52,51 +51,47 @@ enum err {
 	suites_i_list_to_long = 121,
 
 	/*OSCORE specific errors*/
-	oscore_unknown_hkdf = 202,
-	oscore_invalid_algorithm_aead = 204,
-	oscore_invalid_algorithm_hkdf = 205,
-	oscore_kid_recipent_id_mismatch = 206,
-	oscore_valuelen_to_long_error = 208,
-	oscore_inpkt_invalid_tkl = 209,
-	oscore_inpkt_invalid_option_delta = 210,
-	oscore_inpkt_invalid_optionlen = 211,
-	oscore_inpkt_invalid_piv = 212,
-	delta_extra_byte_error = 215,
-	len_extra_byte_error = 216,
-	not_valid_input_packet = 218,
-	oscore_replay_window_protection_error = 219,
-
+	not_oscore_pkt = 200,
+	first_request_after_reboot = 201,
+	echo_validation_failed = 202,
+	oscore_unknown_hkdf = 203,
+	token_mismatch = 204,
+	oscore_invalid_algorithm_aead = 205,
+	oscore_invalid_algorithm_hkdf = 206,
+	oscore_kid_recipient_id_mismatch = 207,
+	too_many_options = 208,
+	oscore_valuelen_to_long_error = 209,
+	oscore_inpkt_invalid_tkl = 210,
+	oscore_inpkt_invalid_option_delta = 211,
+	oscore_inpkt_invalid_optionlen = 212,
+	oscore_inpkt_invalid_piv = 213,
+	not_valid_input_packet = 214,
+	oscore_replay_window_protection_error = 215,
+	oscore_replay_notification_protection_error = 216,
+	no_echo_option = 217,
+	echo_val_mismatch = 218,
 };
 
-/*This macro checks if a function returns an error and if so it propages 
+/*This macro checks if a function returns an error and if so it propagates 
 	the error to the caller function*/
-#define TRY(x)                                                           \
-    do {                                                                 \
-        enum err retval = (x);                                           \
-        if (transport_deinitialized == retval) {                         \
-            PRINTF(RESET                                                 \
-                   "Transport deinitialized at %s:%d\n\n",               \
-                   __FILE__, __LINE__);                                  \
-            return retval;                                               \
-        }                                                                \
-        if (ok != retval) {                                              \
-            PRINTF(RED                                                   \
-                   "Runtime error: %s error code %d at %s:%d\n\n" RESET, \
-                   #x, retval, __FILE__, __LINE__);                      \
-            return retval;                                               \
-        }                                                                \
-    } while (0)
+#define TRY(x)                                                                 \
+	do {                                                                   \
+		enum err retval = (x);                                         \
+		if (ok != retval) {                                            \
+			handle_runtime_error(retval, __FILE__, __LINE__);      \
+			return retval;                                         \
+		}                                                              \
+	} while (0)
 
 /* This macro checks if a function belonging to an external library returns an expected result or an error. If an error is returned the macro returns unexpected_result_from_ext_lib. */
-#define TRY_EXPECT(x, expected_result)                                               \
-	do {                                                                         \
-		int retval = (x);                                                    \
-		if (retval != expected_result) {                                     \
-			PRINTF(RED                                                   \
-			       "Runtime error: %s error code %d at %s:%d\n\n" RESET, \
-			       #x, retval, __FILE__, __LINE__);                      \
-			return unexpected_result_from_ext_lib;                       \
-		}                                                                    \
+#define TRY_EXPECT(x, expected_result)                                         \
+	do {                                                                   \
+		int retval = (x);                                              \
+		if (retval != expected_result) {                               \
+			handle_external_runtime_error(retval, __FILE__,        \
+						      __LINE__);               \
+			return unexpected_result_from_ext_lib;                 \
+		}                                                              \
 	} while (0)
 
 #endif

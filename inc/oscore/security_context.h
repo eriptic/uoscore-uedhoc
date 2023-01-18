@@ -19,14 +19,18 @@
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
-enum dev_type {
-	SERVER,
-	CLIENT,
-};
-
 enum derive_type {
 	KEY,
 	IV,
+};
+
+/**
+ * @brief State machine for replay window synchronization using ECHO option after server reboot.
+ */
+enum echo_state {
+	ECHO_REBOOT, /* default value after reboot */
+	ECHO_VERIFY, /* verification in progress */
+	ECHO_SYNCHRONIZED, /* synchronized, normal operation */
 };
 
 /**
@@ -49,7 +53,8 @@ struct sender_context {
 	uint8_t sender_id_buf[7];
 	struct byte_array sender_key;
 	uint8_t sender_key_buf[SENDER_KEY_LEN_];
-	uint64_t sender_seq_num;
+	uint64_t ssn;
+	bool ssn_in_nvm;
 };
 
 /* Recipient Context used to decrypt inbound messages */
@@ -59,6 +64,8 @@ struct recipient_context {
 	uint8_t recipient_key_buf[RECIPIENT_KEY_LEN_];
 	uint8_t recipient_id_buf[RECIPIENT_ID_BUFF_LEN];
 	server_replay_window_t replay_window;
+	uint64_t notification_num;
+	bool notification_num_initialized; /* this is only used to skip the first notification check after the reboot */
 };
 
 /*request-response context contains parameters that need to persists between
@@ -67,17 +74,16 @@ struct req_resp_context {
 	struct byte_array nonce;
 	uint8_t nonce_buf[NONCE_LEN];
 
-	struct byte_array aad;
-	uint8_t aad_buf[MAX_AAD_LEN];
+	struct byte_array request_kid;
+	uint8_t request_kid_buf[MAX_KID_LEN];
 
-	struct byte_array piv;
-	uint8_t piv_buf[MAX_PIV_LEN];
+	struct byte_array request_piv;
+	uint8_t request_piv_buf[MAX_PIV_LEN];
 
-	struct byte_array kid_context;
-	uint8_t kid_context_buf[MAX_KID_CONTEXT_LEN];
+	struct byte_array echo_opt_val;
+	uint8_t echo_opt_val_buf[ECHO_OPT_VALUE_LEN];
 
-	struct byte_array kid;
-	uint8_t kid_buf[MAX_KID_LEN];
+	enum echo_state echo_state_machine;
 };
 
 /* Context struct containing all contexts*/
@@ -89,24 +95,31 @@ struct context {
 };
 
 /**
- * @brief   converts the sender sequence number (uint64_t) to 
+ * @brief   Converts the sender sequence number (uint64_t) to 
  *          piv (byte string of maximum 5 byte) 
  * @param   ssn the sender sequence number
  * @param   piv Partial IV
  */
-enum err sender_seq_num2piv(uint64_t ssn, struct byte_array *piv);
+enum err ssn2piv(uint64_t ssn, struct byte_array *piv);
 
 /**
- * @brief   Updates runtime parameter of the context
- * @param   type of the device SERVER/CLIENT
- * @param   options pointer to an array of options
- * @param   opt_num number of options
- * @param   new_piv new PIV
- * @param   new_kid_context 
- * @param   c oscore context
+ * @brief Converts PIV (byte string of maximum 5 bytes) to 
+ *        Sender Sequence Number (uint64_t)
+ * @param piv Partial IV
+ * @param ssn Sender Sequence Number
  */
-enum err context_update(enum dev_type dev, struct o_coap_option *options,
-			uint16_t opt_num, struct byte_array *new_piv,
-			struct byte_array *new_kid_context, struct context *c);
+enum err piv2ssn(struct byte_array *piv, uint64_t *ssn);
+
+/**
+ * @brief	Updates the request_piv and the request_kid
+ * @param	c the context
+ * @param	piv	the new PIV
+ * @param 	kid the new KID
+ * @retval 	error code
+*/
+enum err update_request_piv_request_kid(struct context *c,
+					struct byte_array *piv,
+					struct byte_array *kid);
+
 
 #endif

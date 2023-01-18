@@ -2,6 +2,9 @@
 #include <string.h>
 
 #include "oscore/replay_protection.h"
+#include "oscore/security_context.h"
+#include "common/memcpy_s.h"
+#include "common/byte_array.h"
 
 #define WINDOW_SIZE OSCORE_SERVER_REPLAY_WINDOW_SIZE
 
@@ -32,7 +35,8 @@ enum err server_replay_window_init(server_replay_window_t *replay_window)
 		return wrong_parameter;
 	}
 
-	memset(replay_window->window, 0, WINDOW_SIZE * sizeof(replay_window->window[0]));
+	memset(replay_window->window, 0,
+	       WINDOW_SIZE * sizeof(replay_window->window[0]));
 	replay_window->seq_num_zero_received = false;
 	return ok;
 }
@@ -59,17 +63,6 @@ enum err server_replay_window_reinit(uint64_t current_sequence_number,
 	return ok;
 }
 
-enum err server_replay_window_get_last_number(
-	uint64_t *seq_number, const server_replay_window_t *replay_window)
-{
-	if ((NULL == replay_window) || (NULL == seq_number)) {
-		return wrong_parameter;
-	}
-
-	*seq_number = replay_window->window[WINDOW_SIZE - 1];
-	return ok;
-}
-
 bool server_is_sequence_number_valid(uint64_t seq_number,
 				     server_replay_window_t *replay_window)
 {
@@ -79,8 +72,8 @@ bool server_is_sequence_number_valid(uint64_t seq_number,
 
 	/* replay window uses zeros for unused entries, so in case of sequence number is 0, a little logic is needed */
 	if (0 == seq_number) {
-		if ((!replay_window->seq_num_zero_received) && (0 == replay_window->window[0]))
-		{
+		if ((!replay_window->seq_num_zero_received) &&
+		    (0 == replay_window->window[0])) {
 			return true;
 		}
 		return false;
@@ -128,4 +121,31 @@ bool server_replay_window_update(uint64_t seq_number,
 	}
 	server_replay_window_insert(seq_number, replay_window, index);
 	return true;
+}
+
+enum err replay_protection_check_notification(uint64_t notification_num,
+					      bool notification_num_initialized,
+					      struct byte_array *piv)
+{
+	uint64_t ssn;
+	TRY(piv2ssn(piv, &ssn));
+
+
+	if (notification_num_initialized) {
+		if (notification_num >= ssn) {
+			PRINT_MSG("Replayed notification detected!\n");
+			return oscore_replay_notification_protection_error;
+		}
+	}
+	return ok;
+}
+
+enum err notification_number_update(uint64_t *notification_num,
+				    bool *notification_num_initialized,
+				    struct byte_array *piv)
+{
+	TRY(_memcpy_s((uint8_t *)notification_num, sizeof(*notification_num),
+		      piv->ptr, piv->len));
+	*notification_num_initialized = true;
+	return ok;
 }

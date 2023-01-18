@@ -1,4 +1,4 @@
-name: Build uoscore-uedhoc
+name: build & test
 
 on: push
 
@@ -16,7 +16,7 @@ jobs:
           sudo apt upgrade
           wget https://apt.kitware.com/kitware-archive.sh
           sudo bash kitware-archive.sh
-          sudo apt install --no-install-recommends git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1
+          sudo apt install --no-install-recommends git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1 lcov
           cmake --version
           python3 --version
           dtc --version
@@ -35,11 +35,11 @@ jobs:
           pip install -r ~/zephyrproject/zephyr/scripts/requirements.txt
 
           cd ~
-          wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.15.0/zephyr-sdk-0.15.0_linux-x86_64.tar.gz
-          wget -O - https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.15.0/sha256.sum | shasum --check --ignore-missing
+          wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.15.2/zephyr-sdk-0.15.2_linux-x86_64.tar.gz
+          wget -O - https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.15.2/sha256.sum | shasum --check --ignore-missing
 
-          tar xvf zephyr-sdk-0.15.0_linux-x86_64.tar.gz
-          cd zephyr-sdk-0.15.0
+          tar xvf zephyr-sdk-0.15.2_linux-x86_64.tar.gz
+          cd zephyr-sdk-0.15.2
           /bin/bash -c "yes | ./setup.sh"
       
       - name: Checkout code
@@ -79,3 +79,46 @@ jobs:
         with:
           name: uoscore-uedhoc-x86-64
           path: test/build/uoscore_uedhoc/libuoscore-uedhoc.a
+
+### Generate test coverage report
+      - name: Build native_posix with coverage information
+        run: |
+           source ~/zephyrproject/zephyr/zephyr-env.sh
+           source ~/zephyrproject/.venv/bin/activate
+           cd test/
+           rm -rf build
+           rm -rf build_lib_test
+           west build -b native_posix -- -DCONFIG_COVERAGE=y
+           west build -t run
+           lcov --capture --directory ./ --output-file lcov.info -q --rc lcov_branch_coverage=1
+           genhtml lcov.info --output-directory lcov_html -q --ignore-errors source --branch-coverage --highlight --legend
+           tar -zcvf github-pages.tar.gz lcov_html
+
+      - name: Upload test coverage report
+        uses: actions/upload-pages-artifact@v1
+        with: 
+          name: github-pages  
+          path: test/lcov_html
+      
+
+  # Deploy job
+  deploy:
+    # Add a dependency to the build job
+    needs: build
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
