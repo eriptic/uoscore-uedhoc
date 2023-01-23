@@ -201,6 +201,11 @@ int main()
 	cred_r.ca_pk.len = test_vectors[vec_num_i].ca_r_pk_len;
 	cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_r_pk;
 
+#ifdef TINYCRYPT
+		/* Register RNG function */
+		uECC_set_rng(default_CSPRNG);
+#endif
+
 	TRY(edhoc_initiator_run(&c_i, &cred_r, cred_num, err_msg, &err_msg_len,
 				NULL, NULL, NULL, NULL, PRK_out,
 				sizeof(PRK_out), tx, rx));

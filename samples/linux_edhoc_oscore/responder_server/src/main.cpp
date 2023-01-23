@@ -274,6 +274,11 @@ int main()
 	c_r.pk_r.ptr = (uint8_t *)test_vectors[vec_num_i].pk_r_raw;
 	c_r.sock = &sockfd;
 
+#ifdef TINYCRYPT
+		/* Register RNG function */
+		uECC_set_rng(default_CSPRNG);
+#endif
+
 	TRY(edhoc_responder_run(&c_r, &cred_i, cred_num, err_msg, &err_msg_len,
 				(uint8_t *)&ad_1, &ad_1_len, (uint8_t *)&ad_3,
 				&ad_3_len, PRK_out, sizeof(PRK_out), tx, rx));
