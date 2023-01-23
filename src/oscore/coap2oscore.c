@@ -444,6 +444,30 @@ STATIC enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 }
 
 /**
+ * @brief Increment Sender Sequence Number and call the function to periodically write it to NVM.
+ * 
+ * @param c Security context.
+ * @return enum err 
+ */
+static enum err generate_new_ssn(struct context *c)
+{
+	if (NULL == c) {
+		return wrong_parameter;
+	}
+
+	c->sc.ssn++;
+
+	struct nvm_key_t nvm_key = { .sender_id = c->sc.sender_id,
+				     .recipient_id = c->rc.recipient_id,
+				     .id_context = c->cc.id_context };
+	bool is_storable = c->sc.ssn_in_nvm;
+	bool echo_sync_in_progress =
+		(ECHO_SYNCHRONIZED != c->rrc.echo_state_machine);
+	return ssn_store_in_nvm(&nvm_key, c->sc.ssn, is_storable,
+				echo_sync_in_progress);
+}
+
+/**
  * @brief Wrapper function with common operations for encrypting the payload.
  *        These operations are shared in all possible scenarios.
  *        For more info, see RFC8616 8.1 and 8.3.
@@ -471,10 +495,8 @@ static enum err encrypt_wrapper(struct byte_array *plaintext,
 
 	if (use_new_piv) {
 		/* Generate new PIV and nonce if needed. */
-		TRY(ssn_store_in_nvm(&c->sc.sender_id, &c->cc.id_context,
-				     c->sc.ssn, c->sc.ssn_in_nvm));
 		TRY(ssn2piv(c->sc.ssn, &new_piv));
-		c->sc.ssn++;
+		TRY(generate_new_ssn(c));
 		TRY(create_nonce(&c->sc.sender_id, &new_piv, &c->cc.common_iv,
 				 &new_nonce));
 

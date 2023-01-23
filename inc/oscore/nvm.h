@@ -12,62 +12,62 @@
 #ifndef NVM_H
 #define NVM_H
 
-#include "oscore.h"
+#include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
 /**
- * @brief   When the same OSCORE master secret and salt are reused through
- * 			several reboots of the device, e.g., no fresh shared secret is
- * 			derived through EDHOC (or some other method) the Sender Sequence 
- * 			Number MUST be stored periodically in NVM. 
- * @param	sender_id the user may use the sender_id as a key in a table in 
- * 			NVM holding SSNs for different sender contexts. 
- * @param   id_context id of the context. To be used as an additional key 
- * @param	ssn the ssn to be written in NVM
- * @retval	ok or error code if storing the SSN was not possible.
+ * @brief Public fields of the security context which can be used to find the right slot in the NVM.
+ *        The usage of given fields is up to user's implementation.
+ *        For more details, see nvm_write_ssn and nvm_read_ssn.
  */
-enum err nvm_write_ssn(const struct byte_array *sender_id,
-			    const struct byte_array *id_context, uint64_t ssn);
+struct nvm_key_t {
+	struct byte_array sender_id;
+	struct byte_array recipient_id;
+	struct byte_array id_context;
+};
 
 /**
- * @brief   When the same OSCORE master secret and salt are reused through
- * 			several reboots of the device, e.g., no fresh shared secret is
- * 			derived through EDHOC (or some other method) the Sender Sequence 
- * 			Number MUST be restored from NVM at each reboot. 
- * @param	sender_id the user may use the sender_id as a key in a table in 
- * 			NVM holding SSNs for different sender contexts. 
- * @param   id_context id of the context. To be used as an additional key 
- * @param	ssn the ssn to be read out from NVM
- * @retval	ok or error code if the retrieving the SSN was not possible.
+* @brief When the same OSCORE master secret and salt are reused through
+*        several reboots of the device, e.g., no fresh shared secret is
+*        derived through EDHOC (or some other method) the Sender Sequence 
+*        Number MUST be stored periodically in NVM. 
+* @param nvm_key part of the context that is permitted to be used for identifying the right store slot in NVM.
+* @param	ssn SSN to be written in NVM.
+* @retval ok or error code if storing the SSN was not possible.
+*/
+enum err nvm_write_ssn(const struct nvm_key_t *nvm_key, uint64_t ssn);
+
+/**
+* @brief When the same OSCORE master secret and salt are reused through
+*        several reboots of the device, e.g., no fresh shared secret is
+*        derived through EDHOC (or some other method) the Sender Sequence 
+*        Number MUST be restored from NVM at each reboot. 
+* @param nvm_key part of the context that is permitted to be used for identifying the right store slot in NVM.
+* @param	ssn SSN to be read out from NVM.
+* @retval ok or error code if the retrieving the SSN was not possible.
+*/
+enum err nvm_read_ssn(const struct nvm_key_t *nvm_key, uint64_t *ssn);
+
+/**
+ * @brief Periodically stores the SSN in NVM (if needed).
+ * 
+ * @param nvm_key part of the context that is permitted to be used for identifying the right store slot in NVM.
+ * @param ssn SSN to be written in NVM.
+ * @param is_storable Indicates if it is necessary to store the SSN.
+ * @param echo_sync_in_progress Indicates if the device is still in the ECHO synchronization mode.
+ * @return enum err 
  */
-enum err nvm_read_ssn(const struct byte_array *sender_id,
-			   const struct byte_array *id_context, uint64_t *ssn);
+enum err ssn_store_in_nvm(const struct nvm_key_t *nvm_key, uint64_t ssn,
+			  bool is_storable, bool echo_sync_in_progress);
 
 /**
- * @brief   Stores the SSN in NVM if ssn_in_nvm is true.
- * @param   sender_id id of the sender. To be used for identifying the 
- *          right store location.
- * @param   id_context id of the context. To be used as an additional key 
- *          for identifying the right store location.
- * @param   ssn the value to be stored
- * @param   ssn_in_nvm indicates if it is necessary to store the SSN
- * @retval  error code
+ * @brief Initializes the SSN after reboot (if needed).
+ * @param nvm_key part of the context that is permitted to be used for identifying the right store slot in NVM.
+ * @param ssn Pointer which will be updated with the value read from NVM.
+ * @param is_storable Indicates if the value needs to be retrievd from SSN.
+ * @retval error code
 */
-enum err ssn_store_in_nvm(const struct byte_array *sender_id,
-			  const struct byte_array *id_context, uint64_t ssn,
-			  bool ssn_in_nvm);
+enum err ssn_init(const struct nvm_key_t *nvm_key, uint64_t *ssn,
+		  bool is_storable);
 
-/**
- * @brief   Initializes the SSN after reboot.
- * @param   sender_id id of the sender. To be used for identifying the 
- *          right store slot in NVM.
- * @param   id_context id of the context. To be used as an additional key 
- *          for identifying the right store location.
- * @param   ssn the value to initialized
- * @param   ssn_in_nvm indicates if the value needs to be retrievd from SSN
- * @retval  error code
-*/
-enum err ssn_init(const struct byte_array *sender_id,
-		  const struct byte_array *id_context, uint64_t *ssn,
-		  bool ssn_in_nvm);
 #endif
