@@ -41,6 +41,8 @@ enum err create_nonce(struct byte_array *id_piv, struct byte_array *piv,
 	TRY(_memcpy_s(&nonce->ptr[1 + sizeof(padded_id_piv)],
 		      sizeof(padded_piv), padded_piv, sizeof(padded_piv)));
 
+	PRINT_ARRAY("nonce input A", nonce->ptr, nonce->len);
+	PRINT_ARRAY("nonce input B", common_iv->ptr, common_iv->len);
 	/* "4. and then XORing with the Common IV."*/
 	for (uint32_t i = 0; i < common_iv->len; i++) {
 		nonce->ptr[i] ^= common_iv->ptr[i];
