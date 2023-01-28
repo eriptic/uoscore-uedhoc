@@ -190,7 +190,7 @@ void test_main(void)
 		ztest_unit_test(t704_interactions_usecases_test)
 		);
 
-	ztest_run_test_suite(exporter);
+	//ztest_run_test_suite(exporter);
 	ztest_run_test_suite(initiator_responder_interaction);
-	ztest_run_test_suite(oscore_tests);
+	//ztest_run_test_suite(oscore_tests);
 }

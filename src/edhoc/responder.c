@@ -374,7 +374,7 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	return ok;
 }
 
-#ifdef EDHOC_MESSAGE_4_SUPPORTED
+#ifdef MESSAGE_4
 enum err msg4_gen(struct edhoc_responder_context *c, struct runtime_context *rc)
 {
 	/*Ciphertext 4 calculate*/
@@ -396,7 +396,7 @@ enum err msg4_gen(struct edhoc_responder_context *c, struct runtime_context *rc)
 	PRINT_ARRAY("Message 4 ", rc->msg, rc->msg_len);
 	return ok;
 }
-#endif // EDHOC_MESSAGE_4_SUPPORTED
+#endif // MESSAGE_4
 
 enum err edhoc_responder_run_extended(
 	struct edhoc_responder_context *c,
@@ -430,12 +430,12 @@ enum err edhoc_responder_run_extended(
 	}
 	TRY(msg3_process(c, &rc, cred_i_array, num_cred_i, ead_3, ead_3_len,
 			 prk_out, prk_out_len, client_pub_key, client_pub_key_size));
-#ifdef EDHOC_MESSAGE_4_SUPPORTED
+#ifdef MESSAGE_4
 	if (c->msg4) {
 		TRY(msg4_gen(c, &rc));
 		TRY(tx(c->sock, rc.msg, rc.msg_len));
 	}
-#endif // EDHOC_MESSAGE_4_SUPPORTED
+#endif // MESSAGE_4
 	return ok;
 }
 

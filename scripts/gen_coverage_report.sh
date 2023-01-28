@@ -15,9 +15,9 @@
 cd ../test
 rm -rf build/
 rm -rf ../build/
-rm -rf lcov_html/
+rm -rf ../report_coverage/
 rm lcov.info
 west build -b native_posix -- -DCONFIG_COVERAGE=y
 west build -t run
 lcov --capture --directory ./ --output-file lcov.info -q --rc lcov_branch_coverage=1
-genhtml lcov.info --output-directory lcov_html -q --ignore-errors source --branch-coverage --highlight --legend
+genhtml lcov.info --output-directory ../report_coverage -q --ignore-errors source --branch-coverage --highlight --legend
