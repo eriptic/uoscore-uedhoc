@@ -168,7 +168,7 @@ Following preprocessor directives allow for better memory usage adjustments:
    * EDHOC_BUF_SIZES_RPK - select when authentication can be based on raw public keys, or
    * EDHOC_BUF_SIZES_C509_CERT - select when authentication can be based on CBOR encoded certificates, or
    * EDHOC_BUF_SIZES_X509_CERT - select when authentication can be based on X.509 certificates
-   * EDHOC_MESSAGE_4_SUPPORTED - select when generation of message 4 should be supported
+   * MESSAGE_4 - select when generation of message 4 should be supported
 
 *  **oscore.h**
 

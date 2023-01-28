@@ -74,12 +74,14 @@ FILTERED_CFLAGS = -Os
 EXTENDED_CFLAGS = $(filter-out $(FILTERED_CFLAGS), $(CFLAGS))
 
 #add options form configuration file 
+EXTENDED_CFLAGS += $(FEATURES)
 EXTENDED_CFLAGS += $(ARCH)
 EXTENDED_CFLAGS += $(OPT)
 EXTENDED_CFLAGS += $(DEBUG_PRINT)
 EXTENDED_CFLAGS += $(CBOR_ENGINE)
 EXTENDED_CFLAGS += $(CRYPTO_ENGINE)
 EXTENDED_CFLAGS += $(DUNIT_TEST)
+
 
 #add include paths
 EXTENDED_CFLAGS += $(C_INCLUDES)
@@ -90,7 +92,8 @@ EXTENDED_CFLAGS += -g -gdwarf-2
 # Generate dependency information
 EXTENDED_CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
-
+# Generate stack usage information
+EXTENDED_CFLAGS += -fstack-usage
 
 #GCC warning flags
 ifeq ($(findstring cc,$(CC)),cc)

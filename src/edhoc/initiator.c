@@ -293,7 +293,7 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	return ok;
 }
 
-#ifdef EDHOC_MESSAGE_4_SUPPORTED
+#ifdef MESSAGE_4
 enum err msg4_process(struct runtime_context *rc, uint8_t *ead_4,
 		      uint32_t *ead_4_len)
 {
@@ -316,7 +316,7 @@ enum err msg4_process(struct runtime_context *rc, uint8_t *ead_4,
 				     plaintext4_len));
 	return ok;
 }
-#endif // EDHOC_MESSAGE_4_SUPPORTED
+#endif // MESSAGE_4
 
 enum err edhoc_initiator_run_extended(
 	const struct edhoc_initiator_context *c,
@@ -342,13 +342,13 @@ enum err edhoc_initiator_run_extended(
 		     ead_2, ead_2_len, prk_out, prk_out_len));
 	TRY(tx(c->sock, rc.msg, rc.msg_len));
 
-#ifdef EDHOC_MESSAGE_4_SUPPORTED
+#ifdef MESSAGE_4
 	if (c->msg4) {
 		PRINT_MSG("waiting to receive message 4...\n");
 		TRY(rx(c->sock, rc.msg, &rc.msg_len));
 		TRY(msg4_process(&rc, ead_4, ead_4_len));
 	}
-#endif // EDHOC_MESSAGE_4_SUPPORTED
+#endif // MESSAGE_4
 	return ok;
 }
 

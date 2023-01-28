@@ -171,8 +171,8 @@ struct edhoc_initiator_context {
  *
  * @param   curve DH curve to used
  * @param   seed a random seed
- * @param   sk pointer to a buffer where the secret key will be strored
- * @param   pk pointer to a buffer where the public key will be strored
+ * @param   sk pointer to a buffer where the secret key will be stored
+ * @param   pk pointer to a buffer where the public key will be stored
  * @param   pk_size pointer to a variable with public key buffer size as input,
  *          and public key length as output.
 
@@ -182,9 +182,9 @@ enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
 
 /**
  * @brief   Executes the EDHOC protocol on the initiator side
- * @param   c cointer to a structure containing initialization parameters
+ * @param   c pointer to a structure containing initialization parameters
  * @param   cred_r_array containing elements of type other_party_cred used for
- *          the retrival of the other party (the responder) parameters at run
+ *          the retrieval of the other party (the responder) parameters at run
  *          time
  * @param   num_cred_r number of the elements in cred_r_array
  * @param   err_msg in case that an error message is received its contend is 
@@ -206,9 +206,9 @@ enum err edhoc_initiator_run(
 
 /**
  * @brief   Executes the EDHOC protocol on the initiator side
- * @param   c cointer to a structure containing initialization parameters
+ * @param   c pointer to a structure containing initialization parameters
  * @param   cred_r_array containing elements of type other_party_cred used for
- *          the retrival of the other party (the responder) parameters at run
+ *          the retrieval of the other party (the responder) parameters at run
  *          time
  * @param   num_cred_r number of the elements in cred_r_array
  * @param   err_msg in case that an error message is received its contend is 
@@ -233,9 +233,9 @@ enum err edhoc_initiator_run_extended(
 
 /**
  * @brief   Executes the EDHOC protocol on the responder side
- * @param   c cointer to a structure containing initialization parameters
+ * @param   c pointer to a structure containing initialization parameters
  * @param   cred_i_array containing elements of type other_party_cred used for 
- *          the retrival of the other party (the initiator) parameters at run 
+ *          the retrieval of the other party (the initiator) parameters at run 
  *          time
  * @param   num_cred_i number of the elements in cred_i_array
  * @param   err_msg in case that an error message is received its contend is 
@@ -260,9 +260,9 @@ enum err edhoc_responder_run(
 
 /**
  * @brief   Executes the EDHOC protocol on the responder side
- * @param   c cointer to a structure containing initialization parameters
+ * @param   c pointer to a structure containing initialization parameters
  * @param   cred_i_array containing elements of type other_party_cred used for
- *          the retrival of the other party (the initiator) parameters at run
+ *          the retrieval of the other party (the initiator) parameters at run
  *          time
  * @param   num_cred_i number of the elements in cred_i_array
  * @param   err_msg in case that an error message is received its contend is

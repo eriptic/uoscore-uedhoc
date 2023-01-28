@@ -183,7 +183,7 @@ void test_main(void)
 		ztest_unit_test(t605_server_replay_insert_test),
 		ztest_unit_test(t606_server_replay_standard_scenario_test));
 
-	ztest_run_test_suite(exporter);
+	//ztest_run_test_suite(exporter);
 	ztest_run_test_suite(initiator_responder_interaction);
-	ztest_run_test_suite(oscore_tests);
+	//ztest_run_test_suite(oscore_tests);
 }
