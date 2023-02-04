@@ -43,7 +43,7 @@ enum info_label {
  * @param   out_len length of out
  * @return  err
  */
-enum err create_hkdf_info(uint8_t label, uint8_t *context, uint32_t context_len,
-			  uint32_t okm_len, uint8_t *out, uint32_t *out_len);
+enum err create_hkdf_info(uint8_t label, struct byte_array *context,
+			  uint32_t okm_len, struct byte_array *out);
 
 #endif

@@ -45,14 +45,13 @@
  * @return enum err 
  */
 static inline enum err
-verify_cert2cred(bool static_dh_auth, struct other_party_cred *cred_array,
-		 uint16_t cred_num, enum id_cred_x_label label,
-		 const uint8_t *cert, uint32_t cert_len, uint8_t *cred,
-		 uint32_t *cred_len, uint8_t *pk, uint32_t *pk_len, uint8_t *g,
-		 uint32_t *g_len)
+verify_cert2cred(bool static_dh_auth, struct cred_array *cred_array,
+		 enum id_cred_x_label label, struct const_byte_array *cert,
+		 struct byte_array *cred, struct byte_array *pk,
+		 struct byte_array *g)
 {
-	PRINT_ARRAY("ID_CRED_x contains a certificate", cert, cert_len);
-	TRY(encode_byte_string(cert, cert_len, cred, cred_len));
+	PRINT_ARRAY("ID_CRED_x contains a certificate", cert->ptr, cert->len);
+	TRY(encode_bstr((struct byte_array *)cert, cred));
 
 	bool verified = false;
 	switch (label) {
@@ -60,25 +59,21 @@ verify_cert2cred(bool static_dh_auth, struct other_party_cred *cred_array,
 	case x5bag:
 	case x5chain:
 		if (static_dh_auth) {
-			*pk_len = 0;
-			TRY(cert_x509_verify(cert, cert_len, cred_array,
-					     cred_num, g, g_len, &verified));
+			pk->len = 0;
+			TRY(cert_x509_verify(cert, cred_array, g, &verified));
 		} else {
-			*g_len = 0;
-			TRY(cert_x509_verify(cert, cert_len, cred_array,
-					     cred_num, pk, pk_len, &verified));
+			g->len = 0;
+			TRY(cert_x509_verify(cert, cred_array, pk, &verified));
 		}
 		break;
 	case c5b:
 	case c5c:
 		if (static_dh_auth) {
-			*pk_len = 0;
-			TRY(cert_c509_verify(cert, cert_len, cred_array,
-					     cred_num, g, g_len, &verified));
+			pk->len = 0;
+			TRY(cert_c509_verify(cert, cred_array, g, &verified));
 		} else {
-			*g_len = 0;
-			TRY(cert_c509_verify(cert, cert_len, cred_array,
-					     cred_num, pk, pk_len, &verified));
+			g->len = 0;
+			TRY(cert_c509_verify(cert, cred_array, pk, &verified));
 		}
 		break;
 		break;
@@ -93,47 +88,50 @@ verify_cert2cred(bool static_dh_auth, struct other_party_cred *cred_array,
 	} else {
 		return certificate_authentication_failed;
 	}
+	return ok;
 }
 
 static enum err get_local_cred(bool static_dh_auth,
-			       struct other_party_cred *cred_array,
-			       uint16_t cred_num, uint8_t *id_cred,
-			       uint32_t id_cred_len, uint8_t *cred,
-			       uint32_t *cred_len, uint8_t *pk,
-			       uint32_t *pk_len, uint8_t *g, uint32_t *g_len)
+			       struct cred_array *cred_array,
+			       struct byte_array *ID_cred,
+			       struct byte_array *cred, struct byte_array *pk,
+			       struct byte_array *g)
 {
-	for (uint16_t i = 0; i < cred_num; i++) {
-		if ((cred_array[i].id_cred.len == id_cred_len) &&
-		    (0 ==
-		     memcmp(cred_array[i].id_cred.ptr, id_cred, id_cred_len))) {
+	for (uint16_t i = 0; i < cred_array->len; i++) {
+		if ((cred_array->ptr[i].id_cred.len == ID_cred->len) &&
+		    (0 == memcmp(cred_array->ptr[i].id_cred.ptr, ID_cred->ptr,
+				 ID_cred->len))) {
 			/*retrieve CRED_x*/
-			TRY(_memcpy_s(cred, *cred_len, cred_array[i].cred.ptr,
-				      cred_array[i].cred.len));
-			*cred_len = cred_array[i].cred.len;
+			TRY(_memcpy_s(cred->ptr, cred->len,
+				      cred_array->ptr[i].cred.ptr,
+				      cred_array->ptr[i].cred.len));
+			cred->len = cred_array->ptr[i].cred.len;
 
 			/*retrieve PK*/
 			if (static_dh_auth) {
-				*pk_len = 0;
-				if (cred_array[i].g.len == 65) {
+				pk->len = 0;
+				if (cred_array->ptr[i].g.len == 65) {
 					/*decompressed P256 DH pk*/
-					g[0] = 0x2;
-					TRY(_memcpy_s(&g[1], *g_len - 1,
-						      &cred_array[i].g.ptr[1],
-						      32));
-					*g_len = 33;
+					g->ptr[0] = 0x2;
+					TRY(_memcpy_s(
+						&g->ptr[1], g->len - 1,
+						&cred_array->ptr[i].g.ptr[1],
+						32));
+					g->len = 33;
 
 				} else {
-					TRY(_memcpy_s(g, *g_len,
-						      cred_array[i].g.ptr,
-						      cred_array[i].g.len));
-					*g_len = cred_array[i].g.len;
+					TRY(_memcpy_s(g->ptr, g->len,
+						      cred_array->ptr[i].g.ptr,
+						      cred_array->ptr[i].g.len));
+					g->len = cred_array->ptr[i].g.len;
 				}
 
 			} else {
-				*g_len = 0;
-				TRY(_memcpy_s(pk, *pk_len, cred_array[i].pk.ptr,
-					      cred_array[i].pk.len));
-				*pk_len = cred_array[i].pk.len;
+				g->len = 0;
+				TRY(_memcpy_s(pk->ptr, pk->len,
+					      cred_array->ptr[i].pk.ptr,
+					      cred_array->ptr[i].pk.len));
+				pk->len = cred_array->ptr[i].pk.len;
 			}
 			return ok;
 		}
@@ -142,16 +140,14 @@ static enum err get_local_cred(bool static_dh_auth,
 	return credential_not_found;
 }
 
-enum err retrieve_cred(bool static_dh_auth, struct other_party_cred *cred_array,
-		       uint16_t cred_num, uint8_t *id_cred,
-		       uint32_t id_cred_len, uint8_t *cred, uint32_t *cred_len,
-		       uint8_t *pk, uint32_t *pk_len, uint8_t *g,
-		       uint32_t *g_len)
+enum err retrieve_cred(bool static_dh_auth, struct cred_array *cred_array,
+		       struct byte_array *id_cred, struct byte_array *cred,
+		       struct byte_array *pk, struct byte_array *g)
 {
 	size_t decode_len = 0;
 	struct id_cred_x_map map;
 
-	TRY_EXPECT(cbor_decode_id_cred_x_map(id_cred, id_cred_len, &map,
+	TRY_EXPECT(cbor_decode_id_cred_x_map(id_cred->ptr, id_cred->len, &map,
 					     &decode_len),
 		   true);
 	/*the cred should be locally available on the device if 
@@ -161,47 +157,47 @@ enum err retrieve_cred(bool static_dh_auth, struct other_party_cred *cred_array,
 	    (map._id_cred_x_map_x5t_present != 0) ||
 	    (map._id_cred_x_map_c5u_present != 0) ||
 	    (map._id_cred_x_map_c5t_present != 0)) {
-		TRY(get_local_cred(static_dh_auth, cred_array, cred_num,
-				   id_cred, id_cred_len, cred, cred_len, pk,
-				   pk_len, g, g_len));
+		TRY(get_local_cred(static_dh_auth, cred_array, id_cred, cred,
+				   pk, g));
 		return ok;
 	}
 	/*x5chain*/
 	else if (map._id_cred_x_map_x5chain_present != 0) {
-		TRY(verify_cert2cred(
-			static_dh_auth, cred_array, cred_num, x5chain,
+		struct const_byte_array cert = BYTE_ARRAY_INIT(
 			map._id_cred_x_map_x5chain._id_cred_x_map_x5chain.value,
 			(uint32_t)map._id_cred_x_map_x5chain
-				._id_cred_x_map_x5chain.len,
-			cred, cred_len, pk, pk_len, g, g_len));
+				._id_cred_x_map_x5chain.len);
+
+		TRY(verify_cert2cred(static_dh_auth, cred_array, x5chain, &cert,
+				     cred, pk, g));
 		return ok;
 	}
 	/*x5bag*/
 	else if (map._id_cred_x_map_x5bag_present != 0) {
-		TRY(verify_cert2cred(
-			static_dh_auth, cred_array, cred_num, x5bag,
+		struct const_byte_array cert = BYTE_ARRAY_INIT(
 			map._id_cred_x_map_x5bag._id_cred_x_map_x5bag.value,
 			(uint32_t)map._id_cred_x_map_x5bag._id_cred_x_map_x5bag
-				.len,
-			cred, cred_len, pk, pk_len, g, g_len));
+				.len);
+		TRY(verify_cert2cred(static_dh_auth, cred_array, x5bag, &cert,
+				     cred, pk, g));
 		return ok;
 	}
 	/*c5c*/
 	else if (map._id_cred_x_map_c5c_present != 0) {
-		TRY(verify_cert2cred(
-			static_dh_auth, cred_array, cred_num, c5c,
+		struct const_byte_array cert = BYTE_ARRAY_INIT(
 			map._id_cred_x_map_c5c._id_cred_x_map_c5c.value,
-			(uint32_t)map._id_cred_x_map_c5c._id_cred_x_map_c5c.len,
-			cred, cred_len, pk, pk_len, g, g_len));
+			(uint32_t)map._id_cred_x_map_c5c._id_cred_x_map_c5c.len);
+		TRY(verify_cert2cred(static_dh_auth, cred_array, c5c, &cert,
+				     cred, pk, g));
 		return ok;
 	}
 	/*c5b*/
 	else if (map._id_cred_x_map_c5b_present != 0) {
-		TRY(verify_cert2cred(
-			static_dh_auth, cred_array, cred_num, c5b,
+		struct const_byte_array cert = BYTE_ARRAY_INIT(
 			map._id_cred_x_map_c5b._id_cred_x_map_c5b.value,
-			(uint32_t)map._id_cred_x_map_c5b._id_cred_x_map_c5b.len,
-			cred, cred_len, pk, pk_len, g, g_len));
+			(uint32_t)map._id_cred_x_map_c5b._id_cred_x_map_c5b.len);
+		TRY(verify_cert2cred(static_dh_auth, cred_array, c5b, &cert,
+				     cred, pk, g));
 		return ok;
 	}
 

@@ -32,11 +32,12 @@
  * @param   stat_sk_len length of stat_sk
  * @param   prk_out pointer to the buffer for the newly created PRK
  */
-enum err prk_derive(bool static_dh_auth, struct suite suite, uint8_t label,
-		    uint8_t *context, uint32_t context_len,
-		    const uint8_t *prk_in, const uint32_t prk_in_len,
-		    const uint8_t *stat_pk, const uint32_t stat_pk_len,
-		    const uint8_t *stat_sk, const uint32_t stat_sk_len,
-		    uint8_t *prk_out);
+enum err prk_derive(bool static_dh_auth, 
+   struct suite suite, uint8_t label,
+	struct byte_array *context, 
+	const struct byte_array *prk_in,
+	const struct byte_array *stat_pk,
+	const struct byte_array *stat_sk, 
+   uint8_t *prk_out);
 
 #endif

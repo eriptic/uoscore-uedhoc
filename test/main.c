@@ -133,6 +133,9 @@ void test_main(void)
 		ztest_unit_test(test_initiator_responder_interaction2));
 
 	/* OSCORE test-vector tests */
+
+	// ztest_test_suite(oscore_tests,
+	// 		 ztest_unit_test(t1_oscore_client_request_response));
 	ztest_test_suite(
 		oscore_tests,
 		ztest_unit_test(t1_oscore_client_request_response),
@@ -172,8 +175,7 @@ void test_main(void)
 		ztest_unit_test(t403_uri_path_create),
 		ztest_unit_test(t404_get_observe_value),
 		ztest_unit_test(t500_oscore_context_init_corner_cases),
-		ztest_unit_test(t501_piv2ssn),
-		ztest_unit_test(t502_ssn2piv),
+		ztest_unit_test(t501_piv2ssn), ztest_unit_test(t502_ssn2piv),
 		ztest_unit_test(t503_derive_corner_case),
 		ztest_unit_test(t504_context_freshness),
 		ztest_unit_test(t600_server_replay_init_test),
@@ -190,7 +192,7 @@ void test_main(void)
 		ztest_unit_test(t704_interactions_usecases_test)
 		);
 
-	//ztest_run_test_suite(exporter);
+	ztest_run_test_suite(exporter);
 	ztest_run_test_suite(initiator_responder_interaction);
-	//ztest_run_test_suite(oscore_tests);
+	ztest_run_test_suite(oscore_tests);
 }

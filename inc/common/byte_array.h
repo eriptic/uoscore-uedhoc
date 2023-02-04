@@ -25,6 +25,11 @@ struct byte_array {
 	uint8_t *ptr;
 };
 
+struct const_byte_array {
+	uint32_t len;
+	const uint8_t *ptr;
+};
+
 /* Empty Array with len=0 but with a non-null pointer.*/
 extern struct byte_array EMPTY_ARRAY;
 
@@ -48,7 +53,10 @@ enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src,
 /**
  * @brief   Sets the pointer and the length of a byte_array variable to a given array
 */
-#define BYTE_ARRAY_INIT(PTR, SIZE) { .ptr = PTR, .len = SIZE }
+#define BYTE_ARRAY_INIT(PTR, SIZE)                                             \
+	{                                                                      \
+		.len = SIZE, .ptr = PTR                                        \
+	}
 
 /**
  * @brief   Creates a variable of type byte_array.
@@ -62,4 +70,4 @@ enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src,
 	uint8_t NAME##_buf[BUF_SIZE];                                          \
 	struct byte_array NAME = BYTE_ARRAY_INIT(NAME##_buf, SIZE);
 
-#endif
+#endif //BYTE_ARRAY_H

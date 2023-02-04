@@ -3,8 +3,8 @@
 #
 #CC = gcc
 #AR = ar
-CC = /opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc
-AR = /opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-ar
+#CC = /opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc
+#AR = /opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-ar
 #CC = clang-13
 
 
@@ -13,7 +13,7 @@ AR = /opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-ar
 #
 # see for arm flags: https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html
 #ARCH = -m32
-ARCH = -mtune=cortex-m3
+#ARCH = -mtune=cortex-m3
 
 # 
 # Compiler optimization
@@ -24,7 +24,7 @@ OPT = -O0
 # Print helpful debug messages
 #
 # Uncomment this to print intermediary results at runtime
-# DEBUG_PRINT += -DDEBUG_PRINT
+DEBUG_PRINT += -DDEBUG_PRINT
 
 #
 # Unit testing
@@ -39,11 +39,21 @@ DUNIT_TEST += -DUNIT_TEST
 # currently only ZCBOR is supported
 CBOR_ENGINE += -DZCBOR
 
-# Uncomment to enable Non-volatile memory (NVM) support for storing security context between device reboots
-OSCORE_NVM_SUPPORT += -DOSCORE_NVM_SUPPORT
 
-# The uoscore-uedhoc can be used with different crypto angines. 
-# The user can provide as well additinal cryptoengines by providing 
+#
+# Turn on/off some of the optional features to save RAM on the stack
+#
+# In deployments where no protected application message is sent from the 
+# Responder to the Initiator, message_4 MUST be used.
+FEATURES += -DMESSAGE_4
+# If EAD is not used set its buffer size to 0
+FEATURES += -DEAD_SIZE=0
+
+#
+# Crypto engine
+#
+# The uoscore-uedhoc can be used with different crypto engines. 
+# The user can provide as well additional crypto engines by providing 
 # implementations of the function defined (as week) in the crypto_wrapper file.
 # Currently we have build in support for the following engines which 
 # allow fowling modes of operation and suites:

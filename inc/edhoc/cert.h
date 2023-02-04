@@ -26,10 +26,9 @@
  * @param   verified true if verification successful
  * @retval  enum err
  */
-enum err cert_c509_verify(const uint8_t *cert, uint32_t cert_len,
-			  const struct other_party_cred *cred_array,
-			  uint16_t cred_num, uint8_t *pk, uint32_t *pk_len,
-			  bool *verified);
+enum err cert_c509_verify(struct const_byte_array *cert,
+			  const struct cred_array *cred_array,
+			  struct byte_array *pk, bool *verified);
 
 /**
  * @brief   Verifies a x509 certificate
@@ -42,8 +41,7 @@ enum err cert_c509_verify(const uint8_t *cert, uint32_t cert_len,
  * @param   verified true if verification successful
  * @retval  enum err
  */
-enum err cert_x509_verify(const uint8_t *cert, uint32_t cert_len,
-			  const struct other_party_cred *cred_array,
-			  uint16_t cred_num, uint8_t *pk, uint32_t *pk_len,
-			  bool *verified);
+enum err cert_x509_verify(struct const_byte_array *cert,
+			  const struct cred_array *cred_array,
+			  struct byte_array *pk, bool *verified);
 #endif

@@ -16,21 +16,28 @@
 #include "edhoc.h"
 
 struct runtime_context {
-	uint8_t msg1_hash[HASH_DEFAULT_SIZE];
-	uint8_t msg[MSG_MAX_SIZE];
-	uint32_t msg_len;
+	uint8_t msg_buf[MSG_MAX_SIZE];
+	struct byte_array msg;
+#if EAD_SIZE != 0
+	uint8_t ead_buf[EAD_SIZE];
+#endif
+	struct byte_array ead;
 	struct suite suite;
+	uint8_t msg1_hash[HASH_DEFAULT_SIZE];
+
 	/*initiator specific*/
-	uint8_t th4[HASH_DEFAULT_SIZE];
-	uint32_t th4_len;
-	uint8_t prk_4e3m[PRK_DEFAULT_SIZE];
-	uint32_t prk_4e3m_len;
+	uint8_t th4_buf[HASH_DEFAULT_SIZE];
+	struct byte_array th4;
+	uint8_t prk_4e3m_buf[PRK_DEFAULT_SIZE];
+	struct byte_array prk_4e3m;
+
 	/*responder specific*/
-	uint8_t th3[HASH_DEFAULT_SIZE];
-	uint32_t th3_len;
-	uint8_t prk_3e2m[PRK_DEFAULT_SIZE];
-	uint32_t prk_3e2m_len;
 	bool static_dh_i;
+	uint8_t th3_buf[HASH_DEFAULT_SIZE];
+	struct byte_array th3;
+	uint8_t prk_3e2m_buf[PRK_DEFAULT_SIZE];
+	struct byte_array prk_3e2m;
+	
 };
 
 #endif

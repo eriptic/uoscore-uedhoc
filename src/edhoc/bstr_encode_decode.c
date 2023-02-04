@@ -10,32 +10,32 @@
 #include "common/oscore_edhoc_error.h"
 #include "common/print_util.h"
 #include "common/memcpy_s.h"
+#include "common/byte_array.h"
 
-enum err encode_byte_string(const uint8_t *in, uint32_t in_len, uint8_t *out,
-			    uint32_t *out_len)
+enum err encode_bstr(const struct byte_array *in, struct byte_array *out)
 {
 	size_t payload_len_out;
 	struct zcbor_string tmp;
-	tmp.value = in;
-	tmp.len = in_len;
-	TRY_EXPECT(cbor_encode_bstr_type_b_str(out, *out_len, &tmp,
+	tmp.value = in->ptr;
+	tmp.len = in->len;
+	TRY_EXPECT(cbor_encode_bstr_type_b_str(out->ptr, out->len, &tmp,
 					       &payload_len_out),
 		   true);
-	*out_len = (uint32_t)payload_len_out;
+	out->len = (uint32_t)payload_len_out;
 	return ok;
 }
 
-enum err decode_byte_string(const uint8_t *in, const uint32_t in_len,
-			    uint8_t *out, uint32_t *out_len)
+enum err decode_bstr(const struct byte_array *in, struct byte_array *out)
 {
 	struct zcbor_string str;
 	size_t decode_len = 0;
 
-	TRY_EXPECT(cbor_decode_bstr_type_b_str(in, in_len, &str, &decode_len),
+	TRY_EXPECT(cbor_decode_bstr_type_b_str(in->ptr, in->len, &str,
+					       &decode_len),
 		   true);
 
-	TRY(_memcpy_s(out, *out_len, str.value, (uint32_t)str.len));
-	*out_len = (uint32_t)str.len;
+	TRY(_memcpy_s(out->ptr, out->len, str.value, (uint32_t)str.len));
+	out->len = (uint32_t)str.len;
 
 	return ok;
 }

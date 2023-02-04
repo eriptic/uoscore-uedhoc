@@ -17,8 +17,7 @@
  * @param   out_len Length of out
  * @retval   enum err An error code in a case of an error, else 0
  */
-enum err encode_byte_string(const uint8_t *in, uint32_t in_len, uint8_t *out,
-			    uint32_t *out_len);
+enum err encode_bstr(const struct byte_array *in, struct byte_array *out);
 
 /**
  * @brief Decodes an a cbor bstr to an array of data
@@ -29,7 +28,6 @@ enum err encode_byte_string(const uint8_t *in, uint32_t in_len, uint8_t *out,
  * @param out_len Length of out
  * @return enum err An error code in a case of an error, else 0
  */
-enum err decode_byte_string(const uint8_t *in, const uint32_t in_len,
-			    uint8_t *out, uint32_t *out_len);
+enum err decode_bstr(const struct byte_array *in, struct byte_array *out);
 
 #endif

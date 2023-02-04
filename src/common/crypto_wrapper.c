@@ -24,7 +24,6 @@
 struct edhoc_mock_cb edhoc_crypto_mock_cb;
 #endif // EDHOC_MOCK_CRYPTO_WRAPPER
 
-
 #ifdef MBEDTLS
 /*
 IMPORTANT!!!!
@@ -168,7 +167,8 @@ cleanup:
 
 #ifdef TINYCRYPT
 /* Declaration of function from TinyCrypt ecc.c */
-uECC_word_t cond_set(uECC_word_t p_true, uECC_word_t p_false, unsigned int cond);
+uECC_word_t cond_set(uECC_word_t p_true, uECC_word_t p_false,
+		     unsigned int cond);
 
 /* From uECC project embedded in TinyCrypt - ecc.c
    BSD-2-Clause license */
@@ -188,22 +188,23 @@ static uECC_word_t uECC_vli_add(uECC_word_t *result, const uECC_word_t *left,
 
 /* From uECC project; curve-specific.inc */
 /* Calculates EC square root of bignum (Very Large Integer) based on curve */
-static void mod_sqrt_default(uECC_word_t *a, uECC_Curve curve) {
-    bitcount_t i;
-    uECC_word_t p1[NUM_ECC_WORDS] = {1};
-    uECC_word_t l_result[NUM_ECC_WORDS] = {1};
-    wordcount_t num_words = curve->num_words;
-    
-    /* When curve->p == 3 (mod 4), we can compute
+static void mod_sqrt_default(uECC_word_t *a, uECC_Curve curve)
+{
+	bitcount_t i;
+	uECC_word_t p1[NUM_ECC_WORDS] = { 1 };
+	uECC_word_t l_result[NUM_ECC_WORDS] = { 1 };
+	wordcount_t num_words = curve->num_words;
+
+	/* When curve->p == 3 (mod 4), we can compute
        sqrt(a) = a^((curve->p + 1) / 4) (mod curve->p). */
-    uECC_vli_add(p1, curve->p, p1, num_words); /* p1 = curve_p + 1 */
-    for (i = uECC_vli_numBits(p1, num_words) - 1; i > 1; --i) {
-        uECC_vli_modMult_fast(l_result, l_result, l_result, curve);
-        if (uECC_vli_testBit(p1, i)) {
-            uECC_vli_modMult_fast(l_result, l_result, a, curve);
-        }
-    }
-    uECC_vli_set(a, l_result, num_words);
+	uECC_vli_add(p1, curve->p, p1, num_words); /* p1 = curve_p + 1 */
+	for (i = uECC_vli_numBits(p1, num_words) - 1; i > 1; --i) {
+		uECC_vli_modMult_fast(l_result, l_result, l_result, curve);
+		if (uECC_vli_testBit(p1, i)) {
+			uECC_vli_modMult_fast(l_result, l_result, a, curve);
+		}
+	}
+	uECC_vli_set(a, l_result, num_words);
 }
 
 /**
@@ -216,23 +217,25 @@ static void mod_sqrt_default(uECC_word_t *a, uECC_Curve curve) {
  */
 /* From uECC project 
    BSD-2-Clause license */
-static inline void uECC_decompress(const uint8_t *compressed, uint8_t *public_key, uECC_Curve curve) {
+static inline void uECC_decompress(const uint8_t *compressed,
+				   uint8_t *public_key, uECC_Curve curve)
+{
+	uECC_word_t point[NUM_ECC_WORDS * 2];
 
-    uECC_word_t point[NUM_ECC_WORDS * 2];
+	uECC_word_t *y = point + curve->num_words;
 
-    uECC_word_t *y = point + curve->num_words;
+	uECC_vli_bytesToNative(point, compressed, curve->num_bytes);
 
-    uECC_vli_bytesToNative(point, compressed, curve->num_bytes);
+	curve->x_side(y, point, curve);
+	mod_sqrt_default(y, curve);
 
-    curve->x_side(y, point, curve);
-    mod_sqrt_default(y, curve);
+	if ((y[0] & 0x01) != (compressed[0] == 0x03)) {
+		uECC_vli_sub(y, curve->p, y, curve->num_words);
+	}
 
-    if ((y[0] & 0x01) != (compressed[0] == 0x03)) {
-        uECC_vli_sub(y, curve->p, y, curve->num_words);
-    }
-
-    uECC_vli_nativeToBytes(public_key, curve->num_bytes, point);
-    uECC_vli_nativeToBytes(public_key + curve->num_bytes, curve->num_bytes, y);
+	uECC_vli_nativeToBytes(public_key, curve->num_bytes, point);
+	uECC_vli_nativeToBytes(public_key + curve->num_bytes, curve->num_bytes,
+			       y);
 }
 #endif
 
@@ -258,21 +261,20 @@ aead_mock_args_match_predefined(struct edhoc_mock_aead_in_out *predefined,
 }
 #endif // EDHOC_MOCK_CRYPTO_WRAPPER
 
-enum err WEAK aead(enum aes_operation op, const uint8_t *in,
-		   const uint32_t in_len, const uint8_t *key,
-		   const uint32_t key_len, uint8_t *nonce,
-		   const uint32_t nonce_len, const uint8_t *aad,
-		   const uint32_t aad_len, uint8_t *out, const uint32_t out_len,
-		   uint8_t *tag, const uint32_t tag_len)
+enum err WEAK aead(enum aes_operation op, const struct byte_array *in,
+		   const struct byte_array *key, struct byte_array *nonce,
+		   const struct byte_array *aad, struct byte_array *out,
+		   struct byte_array *tag)
 {
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
 	for (uint32_t i = 0; i < edhoc_crypto_mock_cb.aead_in_out_count; i++) {
 		struct edhoc_mock_aead_in_out *predefined_in_out =
 			edhoc_crypto_mock_cb.aead_in_out + i;
 		if (aead_mock_args_match_predefined(
-			    predefined_in_out, key, key_len, nonce, nonce_len,
-			    aad, aad_len, tag, tag_len)) {
-			memcpy(out, predefined_in_out->out.ptr,
+			    predefined_in_out, key->ptr, key->len, nonce->ptr,
+			    nonce->len, aad->ptr, aad->len, tag->ptr,
+			    tag->len)) {
+			memcpy(out->ptr, predefined_in_out->out.ptr,
 			       predefined_in_out->out.len);
 			return ok;
 		}
@@ -283,20 +285,22 @@ enum err WEAK aead(enum aes_operation op, const uint8_t *in,
 #if defined(TINYCRYPT)
 	struct tc_ccm_mode_struct c;
 	struct tc_aes_key_sched_struct sched;
-	TRY_EXPECT(tc_aes128_set_encrypt_key(&sched, key), 1);
-	TRY_EXPECT(tc_ccm_config(&c, &sched, nonce, nonce_len, tag_len), 1);
+	TRY_EXPECT(tc_aes128_set_encrypt_key(&sched, key->ptr), 1);
+	TRY_EXPECT(tc_ccm_config(&c, &sched, nonce->ptr, nonce->len, tag->len),
+		   1);
 
 	if (op == DECRYPT) {
-		TRY_EXPECT(tc_ccm_decryption_verification(
-				   out, out_len, aad, aad_len, in, in_len, &c),
+		TRY_EXPECT(tc_ccm_decryption_verification(out->ptr, out->len,
+							  aad->ptr, aad->len,
+							  in->ptr, in->len, &c),
 			   1);
 
 	} else {
 		TRY_EXPECT(tc_ccm_generation_encryption(
-				   out, (out_len + tag_len), aad, aad_len, in,
-				   in_len, &c),
+				   out->ptr, (out->len + tag->len), aad->ptr,
+				   aad->len, in->ptr, in->len, &c),
 			   1);
-		memcpy(tag, out + out_len, tag_len);
+		memcpy(tag->ptr, out->ptr + out->len, tag->len);
 	}
 #elif defined(MBEDTLS)
 	psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
@@ -304,35 +308,35 @@ enum err WEAK aead(enum aes_operation op, const uint8_t *in,
 	TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
 		       unexpected_result_from_ext_lib);
 
-	psa_algorithm_t alg =
-		PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, (uint32_t)tag_len);
+	psa_algorithm_t alg = PSA_ALG_AEAD_WITH_SHORTENED_TAG(
+		PSA_ALG_CCM, (uint32_t)tag->len);
 
 	psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
 	psa_set_key_usage_flags(&attr,
 				PSA_KEY_USAGE_DECRYPT | PSA_KEY_USAGE_ENCRYPT);
 	psa_set_key_algorithm(&attr, alg);
 	psa_set_key_type(&attr, PSA_KEY_TYPE_AES);
-	psa_set_key_bits(&attr, ((size_t)key_len << 3));
+	psa_set_key_bits(&attr, ((size_t)key->len << 3));
 	psa_set_key_lifetime(&attr, PSA_KEY_LIFETIME_VOLATILE);
-	TRY_EXPECT_PSA(psa_import_key(&attr, key, key_len, &key_id),
+	TRY_EXPECT_PSA(psa_import_key(&attr, key->ptr, key->len, &key_id),
 		       PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 
 	if (op == DECRYPT) {
 		size_t out_len_re = 0;
-		TRY_EXPECT_PSA(psa_aead_decrypt(key_id, alg, nonce, nonce_len,
-						aad, aad_len, in, in_len, out,
-						out_len, &out_len_re),
-			       PSA_SUCCESS, key_id,
-			       unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(
+			psa_aead_decrypt(key_id, alg, nonce->ptr, nonce->len,
+					 aad->ptr, aad->len, in->ptr, in->len,
+					 out->ptr, out->len, &out_len_re),
+			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 	} else {
 		size_t out_len_re;
-		TRY_EXPECT_PSA(psa_aead_encrypt(key_id, alg, nonce, nonce_len,
-						aad, aad_len, in, in_len, out,
-						(size_t)(in_len + tag_len),
-						&out_len_re),
-			       PSA_SUCCESS, key_id,
-			       unexpected_result_from_ext_lib);
-		memcpy(tag, out + out_len_re - tag_len, tag_len);
+		TRY_EXPECT_PSA(
+			psa_aead_encrypt(key_id, alg, nonce->ptr, nonce->len,
+					 aad->ptr, aad->len, in->ptr, in->len,
+					 out->ptr, (size_t)(in->len + tag->len),
+					 &out_len_re),
+			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		memcpy(tag->ptr, out->ptr + out_len_re - tag->len, tag->len);
 	}
 	TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
 
@@ -359,17 +363,17 @@ sign_mock_args_match_predefined(struct edhoc_mock_sign_in_out *predefined,
 }
 #endif // EDHOC_MOCK_CRYPTO_WRAPPER
 
-enum err WEAK sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
-		   const uint8_t *pk, const uint8_t *msg,
-		   const uint32_t msg_len, uint8_t *out)
+enum err WEAK sign(enum sign_alg alg, const struct byte_array *sk,
+		   const struct byte_array *pk, const struct byte_array *msg,
+		   uint8_t *out)
 {
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
 	for (uint32_t i = 0; i < edhoc_crypto_mock_cb.sign_in_out_count; i++) {
 		struct edhoc_mock_sign_in_out *predefined_in_out =
 			edhoc_crypto_mock_cb.sign_in_out + i;
-		if (sign_mock_args_match_predefined(predefined_in_out, sk,
-						    sk_len, pk, PK_DEFAULT_SIZE,
-						    msg, msg_len)) {
+		if (sign_mock_args_match_predefined(
+			    predefined_in_out, sk->ptr, sk->len, pk->ptr,
+			    PK_DEFAULT_SIZE, msg->ptr, msg->len)) {
 			memcpy(out, predefined_in_out->out.ptr,
 			       predefined_in_out->out.len);
 			return ok;
@@ -379,24 +383,25 @@ enum err WEAK sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
 
 	if (alg == EdDSA) {
 #if defined(COMPACT25519)
-		edsign_sign(out, pk, sk, msg, msg_len);
+		edsign_sign(out, pk->ptr, sk->ptr, msg->ptr, msg->len);
 		return ok;
 #endif
 	} else if (alg == ES256) {
 #if defined(TINYCRYPT)
 
-	uECC_Curve p256 = uECC_secp256r1();
-	struct tc_sha256_state_struct ctx_sha256;
-	uint8_t hash[NUM_ECC_BYTES];
+		uECC_Curve p256 = uECC_secp256r1();
+		struct tc_sha256_state_struct ctx_sha256;
+		uint8_t hash[NUM_ECC_BYTES];
 
-	TRY_EXPECT(tc_sha256_init(&ctx_sha256), 1);
-	TRY_EXPECT(tc_sha256_update(&ctx_sha256, msg, msg_len), 1);
-	TRY_EXPECT(tc_sha256_final(hash, &ctx_sha256), 1);
+		TRY_EXPECT(tc_sha256_init(&ctx_sha256), 1);
+		TRY_EXPECT(tc_sha256_update(&ctx_sha256, msg->ptr, msg->len),
+			   1);
+		TRY_EXPECT(tc_sha256_final(hash, &ctx_sha256), 1);
 
-	TRY_EXPECT(uECC_sign(sk, hash,
-	      NUM_ECC_BYTES, out, p256), TC_CRYPTO_SUCCESS);
+		TRY_EXPECT(uECC_sign(sk->ptr, hash, NUM_ECC_BYTES, out, p256),
+			   TC_CRYPTO_SUCCESS);
 
-	return ok;
+		return ok;
 
 #elif defined(MBEDTLS)
 		psa_algorithm_t psa_alg;
@@ -404,7 +409,7 @@ enum err WEAK sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
 		psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
 
 		psa_alg = PSA_ALG_ECDSA(PSA_ALG_SHA_256);
-		bits = PSA_BYTES_TO_BITS((size_t)sk_len);
+		bits = PSA_BYTES_TO_BITS((size_t)sk->len);
 
 		TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
 			       unexpected_result_from_ext_lib);
@@ -421,16 +426,16 @@ enum err WEAK sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
 		psa_set_key_bits(&attributes, bits);
 		psa_set_key_lifetime(&attributes, PSA_KEY_LIFETIME_VOLATILE);
 
-		TRY_EXPECT_PSA(psa_import_key(&attributes, sk, sk_len, &key_id),
-			       PSA_SUCCESS, key_id,
-			       unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(
+			psa_import_key(&attributes, sk->ptr, sk->len, &key_id),
+			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 
 		size_t signature_length;
-		TRY_EXPECT_PSA(psa_sign_message(key_id, psa_alg, msg, msg_len,
-						out, SIGNATURE_DEFAULT_SIZE,
-						&signature_length),
-			       PSA_SUCCESS, key_id,
-			       unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(
+			psa_sign_message(key_id, psa_alg, msg->ptr, msg->len,
+					 out, SIGNATURE_DEFAULT_SIZE,
+					 &signature_length),
+			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 
 		TRY_EXPECT_PSA(signature_length, SIGNATURE_DEFAULT_SIZE, key_id,
 			       sign_failed);
@@ -441,14 +446,14 @@ enum err WEAK sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
 	return unsupported_ecdh_curve;
 }
 
-enum err WEAK verify(enum sign_alg alg, const uint8_t *pk,
-		     const uint32_t pk_len, const uint8_t *msg,
-		     const uint32_t msg_len, const uint8_t *sgn,
-		     const uint32_t sgn_len, bool *result)
+enum err WEAK verify(enum sign_alg alg, const struct byte_array *pk,
+		     struct const_byte_array *msg, struct const_byte_array *sgn,
+		     bool *result)
 {
 	if (alg == EdDSA) {
 #ifdef COMPACT25519
-		int verified = edsign_verify(sgn, pk, msg, msg_len);
+		int verified =
+			edsign_verify(sgn->ptr, pk->ptr, msg->ptr, msg->len);
 		if (verified) {
 			*result = true;
 		} else {
@@ -479,12 +484,12 @@ enum err WEAK verify(enum sign_alg alg, const uint8_t *pk,
 		psa_set_key_type(&attributes, PSA_KEY_TYPE_ECC_PUBLIC_KEY(
 						      PSA_ECC_FAMILY_SECP_R1));
 		psa_set_key_bits(&attributes, bits);
-		TRY_EXPECT_PSA(psa_import_key(&attributes, pk, pk_len, &key_id),
-			       PSA_SUCCESS, key_id,
-			       unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(
+			psa_import_key(&attributes, pk->ptr, pk->len, &key_id),
+			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 
-		status = psa_verify_message(key_id, psa_alg, msg, msg_len, sgn,
-					    sgn_len);
+		status = psa_verify_message(key_id, psa_alg, msg->ptr, msg->len,
+					    sgn->ptr, sgn->len);
 		if (PSA_SUCCESS == status) {
 			*result = true;
 		} else {
@@ -497,13 +502,16 @@ enum err WEAK verify(enum sign_alg alg, const uint8_t *pk,
 		struct tc_sha256_state_struct ctx_sha256;
 		uint8_t hash[NUM_ECC_BYTES];
 		TRY_EXPECT(tc_sha256_init(&ctx_sha256), 1);
-		TRY_EXPECT(tc_sha256_update(&ctx_sha256, msg, msg_len), 1);
+		TRY_EXPECT(tc_sha256_update(&ctx_sha256, msg->ptr, msg->len),
+			   1);
 		TRY_EXPECT(tc_sha256_final(hash, &ctx_sha256), 1);
-		if ((P_256_PUB_KEY_UNCOMPRESSED_SIZE == pk_len) && (0x04 == *pk))
-		{
-			pk++;
+		if ((P_256_PUB_KEY_UNCOMPRESSED_SIZE == pk->len) &&
+		    (0x04 == *pk->ptr)) {
+			pk->ptr++;
 		}
-		TRY_EXPECT(uECC_verify(pk, hash, NUM_ECC_BYTES, sgn, p256), 1);
+		TRY_EXPECT(uECC_verify(pk->ptr, hash, NUM_ECC_BYTES, sgn->ptr,
+				       p256),
+			   1);
 		*result = true;
 		return ok;
 #endif
@@ -511,9 +519,8 @@ enum err WEAK verify(enum sign_alg alg, const uint8_t *pk,
 	return crypto_operation_not_implemented;
 }
 
-enum err WEAK hkdf_extract(enum hash_alg alg, const uint8_t *salt,
-			   uint32_t salt_len, uint8_t *ikm, uint32_t ikm_len,
-			   uint8_t *out)
+enum err WEAK hkdf_extract(enum hash_alg alg, const struct byte_array *salt,
+			   struct byte_array *ikm, uint8_t *out)
 {
 	/*"Note that [RFC5869] specifies that if the salt is not provided, 
 	it is set to a string of zeros.  For implementation purposes, 
@@ -528,14 +535,14 @@ enum err WEAK hkdf_extract(enum hash_alg alg, const uint8_t *salt,
 #ifdef TINYCRYPT
 	struct tc_hmac_state_struct h;
 	memset(&h, 0x00, sizeof(h));
-	if (salt == NULL || salt_len == 0) {
+	if (salt->ptr == NULL || salt->len == 0) {
 		uint8_t zero_salt[32] = { 0 };
 		TRY_EXPECT(tc_hmac_set_key(&h, zero_salt, 32), 1);
 	} else {
-		TRY_EXPECT(tc_hmac_set_key(&h, salt, salt_len), 1);
+		TRY_EXPECT(tc_hmac_set_key(&h, salt->ptr, salt->len), 1);
 	}
 	TRY_EXPECT(tc_hmac_init(&h), 1);
-	TRY_EXPECT(tc_hmac_update(&h, ikm, ikm_len), 1);
+	TRY_EXPECT(tc_hmac_update(&h, ikm->ptr, ikm->len), 1);
 	TRY_EXPECT(tc_hmac_final(out, TC_SHA256_DIGEST_SIZE, &h), 1);
 #endif
 #ifdef MBEDTLS
@@ -551,10 +558,10 @@ enum err WEAK hkdf_extract(enum hash_alg alg, const uint8_t *salt,
 	psa_set_key_algorithm(&attr, psa_alg);
 	psa_set_key_type(&attr, PSA_KEY_TYPE_HMAC);
 
-	if (salt && salt_len) {
-		TRY_EXPECT_PSA(psa_import_key(&attr, salt, salt_len, &key_id),
-			       PSA_SUCCESS, key_id,
-			       unexpected_result_from_ext_lib);
+	if (salt->ptr && salt->len) {
+		TRY_EXPECT_PSA(
+			psa_import_key(&attr, salt->ptr, salt->len, &key_id),
+			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 	} else {
 		uint8_t zero_salt[32] = { 0 };
 
@@ -563,8 +570,8 @@ enum err WEAK hkdf_extract(enum hash_alg alg, const uint8_t *salt,
 			       unexpected_result_from_ext_lib);
 	}
 	size_t out_len;
-	TRY_EXPECT_PSA(psa_mac_compute(key_id, psa_alg, ikm, ikm_len, out, 32,
-				       &out_len),
+	TRY_EXPECT_PSA(psa_mac_compute(key_id, psa_alg, ikm->ptr, ikm->len, out,
+				       32, &out_len),
 		       PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 
 	TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
@@ -572,16 +579,14 @@ enum err WEAK hkdf_extract(enum hash_alg alg, const uint8_t *salt,
 	return ok;
 }
 
-enum err WEAK hkdf_expand(enum hash_alg alg, const uint8_t *prk,
-			  const uint32_t prk_len, const uint8_t *info,
-			  const uint32_t info_len, uint8_t *out,
-			  uint32_t out_len)
+enum err WEAK hkdf_expand(enum hash_alg alg, const struct byte_array *prk,
+			  const struct byte_array *info, struct byte_array *out)
 {
 	if (alg != SHA_256) {
 		return crypto_operation_not_implemented;
 	}
 	/* "N = ceil(L/HashLen)" */
-	uint32_t iterations = (out_len + 31) / 32;
+	uint32_t iterations = (out->len + 31) / 32;
 	/* "L length of output keying material in octets (<= 255*HashLen)"*/
 	if (iterations > 255) {
 		return hkdf_failed;
@@ -592,18 +597,18 @@ enum err WEAK hkdf_expand(enum hash_alg alg, const uint8_t *prk,
 	struct tc_hmac_state_struct h;
 	for (uint8_t i = 1; i <= iterations; i++) {
 		memset(&h, 0x00, sizeof(h));
-		TRY_EXPECT(tc_hmac_set_key(&h, prk, prk_len), 1);
+		TRY_EXPECT(tc_hmac_set_key(&h, prk->ptr, prk->len), 1);
 		tc_hmac_init(&h);
 		if (i > 1) {
 			TRY_EXPECT(tc_hmac_update(&h, t, 32), 1);
 		}
-		TRY_EXPECT(tc_hmac_update(&h, info, info_len), 1);
+		TRY_EXPECT(tc_hmac_update(&h, info->ptr, info->len), 1);
 		TRY_EXPECT(tc_hmac_update(&h, &i, 1), 1);
 		TRY_EXPECT(tc_hmac_final(t, TC_SHA256_DIGEST_SIZE, &h), 1);
-		if (out_len < i * 32) {
-			memcpy(&out[(i - 1) * 32], t, out_len % 32);
+		if (out->len < i * 32) {
+			memcpy(&out->ptr[(i - 1) * 32], t, out->len % 32);
 		} else {
-			memcpy(&out[(i - 1) * 32], t, 32);
+			memcpy(&out->ptr[(i - 1) * 32], t, 32);
 		}
 	}
 #endif
@@ -619,10 +624,10 @@ enum err WEAK hkdf_expand(enum hash_alg alg, const uint8_t *prk,
 	psa_set_key_algorithm(&attr, PSA_ALG_HMAC(PSA_ALG_SHA_256));
 	psa_set_key_type(&attr, PSA_KEY_TYPE_HMAC);
 
-	TRY_EXPECT_PSA(psa_import_key(&attr, prk, prk_len, &key_id),
+	TRY_EXPECT_PSA(psa_import_key(&attr, prk->ptr, prk->len, &key_id),
 		       PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 
-	size_t combo_len = (32 + (size_t)info_len + 1);
+	size_t combo_len = (32 + (size_t)info->len + 1);
 
 	TRY_EXPECT_PSA(check_buffer_size(INFO_DEFAULT_SIZE,
 					 (uint32_t)combo_len),
@@ -631,7 +636,7 @@ enum err WEAK hkdf_expand(enum hash_alg alg, const uint8_t *prk,
 	uint8_t combo[INFO_DEFAULT_SIZE];
 	uint8_t tmp_out[32];
 	memset(tmp_out, 0, 32);
-	memcpy(combo + 32, info, info_len);
+	memcpy(combo + 32, info->ptr, info->len);
 	size_t offset = 32;
 	for (uint32_t i = 1; i <= iterations; i++) {
 		memcpy(combo, tmp_out, 32);
@@ -643,9 +648,9 @@ enum err WEAK hkdf_expand(enum hash_alg alg, const uint8_t *prk,
 		TRY_EXPECT_PSA(status, PSA_SUCCESS, key_id,
 			       unexpected_result_from_ext_lib);
 		offset = 0;
-		uint8_t *dest = out + ((i - 1) << 5);
-		if (out_len < (uint32_t)(i << 5)) {
-			memcpy(dest, tmp_out, out_len & 31);
+		uint8_t *dest = out->ptr + ((i - 1) << 5);
+		if (out->len < (uint32_t)(i << 5)) {
+			memcpy(dest, tmp_out, out->len & 31);
 		} else {
 			memcpy(dest, tmp_out, 32);
 		}
@@ -659,26 +664,23 @@ enum err WEAK hkdf_sha_256(struct byte_array *master_secret,
 			   struct byte_array *master_salt,
 			   struct byte_array *info, struct byte_array *out)
 {
-	uint8_t prk[HASH_DEFAULT_SIZE];
-	TRY(hkdf_extract(SHA_256, master_salt->ptr, master_salt->len,
-			 master_secret->ptr, master_secret->len, prk));
-
-	TRY(hkdf_expand(SHA_256, prk, sizeof(prk), info->ptr, info->len,
-			out->ptr, out->len));
+	BYTE_ARRAY_NEW(prk, HASH_DEFAULT_SIZE, HASH_DEFAULT_SIZE);
+	TRY(hkdf_extract(SHA_256, master_salt, master_secret, prk.ptr));
+	TRY(hkdf_expand(SHA_256, &prk, info, out));
 	return ok;
 }
 
-enum err WEAK shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
-				   const uint32_t sk_len, const uint8_t *pk,
-				   const uint32_t pk_len,
+enum err WEAK shared_secret_derive(enum ecdh_alg alg,
+				   const struct byte_array *sk,
+				   const struct byte_array *pk,
 				   uint8_t *shared_secret)
 {
 	if (alg == X25519) {
 #ifdef COMPACT25519
 		uint8_t e[F25519_SIZE];
-		f25519_copy(e, sk);
+		f25519_copy(e, sk->ptr);
 		c25519_prepare(e);
-		c25519_smult(shared_secret, pk, e);
+		c25519_smult(shared_secret, pk->ptr, e);
 		return ok;
 #endif
 	}
@@ -687,12 +689,14 @@ enum err WEAK shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 		uECC_Curve p256 = uECC_secp256r1();
 		uint8_t pk_decompressed[P_256_PUB_KEY_UNCOMPRESSED_SIZE];
 
-		uECC_decompress(pk, pk_decompressed, p256);
+		uECC_decompress(pk->ptr, pk_decompressed, p256);
 
 		PRINT_ARRAY("pk_decompressed", pk_decompressed,
 			    2 * P_256_PUB_KEY_X_CORD_SIZE);
 
-		TRY_EXPECT(uECC_shared_secret(pk_decompressed, sk, shared_secret, p256), 1);
+		TRY_EXPECT(uECC_shared_secret(pk_decompressed, sk->ptr,
+					      shared_secret, p256),
+			   1);
 
 		return ok;
 #elif defined(MBEDTLS) /* TINYCRYPT / MBEDTLS */
@@ -702,7 +706,7 @@ enum err WEAK shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 		psa_status_t result = ok;
 
 		psa_alg = PSA_ALG_ECDH;
-		bits = PSA_BYTES_TO_BITS(sk_len);
+		bits = PSA_BYTES_TO_BITS(sk->len);
 
 		TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
 			       unexpected_result_from_ext_lib);
@@ -714,9 +718,10 @@ enum err WEAK shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 		psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_KEY_PAIR(
 						PSA_ECC_FAMILY_SECP_R1));
 
-		TRY_EXPECT_PSA(
-			psa_import_key(&attr, sk, (size_t)sk_len, &key_id),
-			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(psa_import_key(&attr, sk->ptr, (size_t)sk->len,
+					      &key_id),
+			       PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 		psa_key_type_t type = psa_get_key_type(&attr);
 		size_t shared_size =
 			PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(type, bits);
@@ -741,8 +746,8 @@ enum err WEAK shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
 			goto cleanup;
 		}
 		if (PSA_SUCCESS !=
-		    mbedtls_ecp_decompress(&mbedtls_pk_ec(ctx_verify)->grp, pk,
-					   pk_len, pk_decompressed,
+		    mbedtls_ecp_decompress(&mbedtls_pk_ec(ctx_verify)->grp,
+					   pk->ptr, pk->len, pk_decompressed,
 					   &pk_decompressed_len,
 					   sizeof(pk_decompressed))) {
 			result = unexpected_result_from_ext_lib;
@@ -781,7 +786,8 @@ enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
 		TRY_EXPECT(tc_sha256_init(&s), 1);
 		TRY_EXPECT(tc_sha256_update(&s, (uint8_t *)&seed, sizeof(seed)),
 			   1);
-		TRY_EXPECT(tc_sha256_final(extended_seed, &s), TC_CRYPTO_SUCCESS);
+		TRY_EXPECT(tc_sha256_final(extended_seed, &s),
+			   TC_CRYPTO_SUCCESS);
 #elif defined(MBEDTLS) /* TINYCRYPT / MBEDTLS */
 		size_t length;
 		TRY_EXPECT(psa_hash_compute(PSA_ALG_SHA_256, (uint8_t *)&seed,
@@ -802,8 +808,10 @@ enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
 		}
 		uECC_Curve p256 = uECC_secp256r1();
 		uint8_t pk_decompressed[P_256_PUB_KEY_UNCOMPRESSED_SIZE];
-		TRY_EXPECT(uECC_make_key(pk_decompressed, sk, p256), TC_CRYPTO_SUCCESS);
-		TRY(_memcpy_s(pk, P_256_PUB_KEY_X_CORD_SIZE, pk_decompressed, P_256_PUB_KEY_X_CORD_SIZE));
+		TRY_EXPECT(uECC_make_key(pk_decompressed, sk, p256),
+			   TC_CRYPTO_SUCCESS);
+		TRY(_memcpy_s(pk, P_256_PUB_KEY_X_CORD_SIZE, pk_decompressed,
+			      P_256_PUB_KEY_X_CORD_SIZE));
 		*pk_size = P_256_PUB_KEY_X_CORD_SIZE;
 		return ok;
 #elif defined(MBEDTLS) /* TINYCRYPT / MBEDTLS */
@@ -861,25 +869,26 @@ enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
 	return ok;
 }
 
-enum err WEAK hash(enum hash_alg alg, const uint8_t *in, const uint32_t in_len,
-		   uint8_t *out)
+enum err WEAK hash(enum hash_alg alg, const struct byte_array *in, uint8_t *out)
 {
+	PRINT_ARRAY("+++hash_input", in->ptr, in->len);
 	if (alg == SHA_256) {
 #ifdef TINYCRYPT
 		struct tc_sha256_state_struct s;
 		TRY_EXPECT(tc_sha256_init(&s), 1);
-		TRY_EXPECT(tc_sha256_update(&s, in, in_len), 1);
+		TRY_EXPECT(tc_sha256_update(&s, in->ptr, in->len), 1);
 		TRY_EXPECT(tc_sha256_final(out, &s), 1);
 		return ok;
 #endif
 #ifdef MBEDTLS
 		size_t length;
-		TRY_EXPECT(psa_hash_compute(PSA_ALG_SHA_256, in, in_len, out,
-					    HASH_DEFAULT_SIZE, &length),
+		TRY_EXPECT(psa_hash_compute(PSA_ALG_SHA_256, in->ptr, in->len,
+					    out, HASH_DEFAULT_SIZE, &length),
 			   PSA_SUCCESS);
 		if (length != HASH_DEFAULT_SIZE) {
 			return sha_failed;
 		}
+		PRINT_ARRAY("hash", out, HASH_DEFAULT_SIZE);
 		return ok;
 #endif
 	}

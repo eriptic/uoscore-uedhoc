@@ -30,8 +30,11 @@
  * @param   okm_len length of okm
  * @param   okm ouput pointer
  */
-enum err edhoc_kdf(enum hash_alg hash_alg, const uint8_t *prk, uint32_t prk_len,
-		   uint8_t label, uint8_t *context, uint32_t context_len,
-		   uint32_t okm_len, uint8_t *okm);
+enum err edhoc_kdf(
+   enum hash_alg hash_alg, 
+   const struct byte_array *prk,
+	uint8_t label, 
+   struct byte_array *context,
+   struct byte_array *okm);
 
 #endif

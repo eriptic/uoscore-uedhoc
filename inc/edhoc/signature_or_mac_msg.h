@@ -45,14 +45,15 @@ enum sgn_or_mac_op { VERIFY, GENERATE };
  * @return enum err 
  */
 enum err signature_or_mac(enum sgn_or_mac_op op, bool static_dh,
-			  struct suite *suite, const uint8_t *sk,
-			  uint32_t sk_len, const uint8_t *pk, uint32_t pk_len,
-			  const uint8_t *prk, uint32_t prk_len,
-			  const uint8_t *th, uint32_t th_len,
-			  const uint8_t *id_cred, uint32_t id_cred_len,
-			  const uint8_t *cred, uint32_t cred_len,
-			  const uint8_t *ead, uint32_t ead_len,
-			  enum info_label mac_label, uint8_t *signature_or_mac,
-			  uint32_t *signature_or_mac_len);
+			  struct suite *suite, 
+			  const struct byte_array *sk, 
+			  const struct byte_array *pk, 
+			  const struct byte_array *prk,
+			  const struct byte_array *th, 
+			  const struct byte_array *id_cred, 
+			  const struct byte_array *cred, 
+			  const struct byte_array *ead, 
+			  enum info_label mac_label, 
+			  struct byte_array *signature_or_mac);
 
 #endif
