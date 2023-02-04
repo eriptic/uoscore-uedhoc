@@ -83,17 +83,20 @@ static int find_pk_cb(void *void_ppk, int tag, unsigned char *start, size_t len)
 
 #define ISSUER_CN_OID "\x55\x04\x03"
 
-#define EXPECTO_TAG(tag, cursor, len)									\
-	if (*cursor != tag) {									\
-		rv = wrong_parameter;								\
-		PRINTF(RED											\
-			"Runtime error: expected %s tag at %s:%d\n\n"	\
-			RESET, #tag, __FILE__, __LINE__);				\
-		break;												\
-	} else {												\
-		cursor++;											\
-		mbedtls_asn1_get_len(&cursor, end, &len);			\
-		if (0 == *cursor) {cursor++; len--;}				\
+#define EXPECTO_TAG(tag, cursor, len)                                          \
+	if (*cursor != tag) {                                                  \
+		rv = wrong_parameter;                                          \
+		PRINTF(RED                                                     \
+		       "Runtime error: expected %s tag at %s:%d\n\n" RESET,    \
+		       #tag, __FILE__, __LINE__);                              \
+		break;                                                         \
+	} else {                                                               \
+		cursor++;                                                      \
+		mbedtls_asn1_get_len(&cursor, end, &len);                      \
+		if (0 == *cursor) {                                            \
+			cursor++;                                              \
+			len--;                                                 \
+		}                                                              \
 	}
 
 enum tag_map_enum {
@@ -102,15 +105,13 @@ enum tag_map_enum {
 	ASN1_SEQUENCE = 0x30
 };
 
-
 /* Extracted from mbedtls library; asn1_parse.c */
 /* License for file: Apache-2.0 */
 /* ASN.1 DER encoding is described in ITU-T X.690 standard. */
 /* First bit of length byte contains information, if length
    value shall be concatenated with following byte length. */
-static int
-mbedtls_asn1_get_len(const unsigned char **p, const unsigned char *end,
-			 size_t *len) 
+static int mbedtls_asn1_get_len(const unsigned char **p,
+				const unsigned char *end, size_t *len)
 {
 	if ((end - *p) < 1)
 		return (buffer_to_small);
@@ -178,66 +179,65 @@ mbedtls_asn1_get_len(const unsigned char **p, const unsigned char *end,
  * @param root_pk_len the lenhgt of the root public key
  * @return enum err 
  */
-static enum err ca_pk_get(const struct other_party_cred *cred_array,
-			  uint16_t cred_num, const uint8_t *issuer,
-			  uint8_t **root_pk, uint32_t *root_pk_len)
+static enum err ca_pk_get(const struct cred_array *cred_array,
+			  const uint8_t *issuer, struct byte_array *root_pk)
 {
 	/* when single credential without certificate is stored, return stored ca_pk if available */
-	if(1 == cred_num
+	if (1 == cred_array->len
 #ifdef MBEDTLS
-	/* In case no MBEDTLS is enabled, issuer identification is not extracted from certificate */
-	&& ( 0 == cred_array[0].ca.len || NULL == cred_array[0].ca.ptr)
+	    /* In case no MBEDTLS is enabled, issuer identification is not extracted from certificate */
+	    && (0 == cred_array->ptr[0].ca.len ||
+		NULL == cred_array->ptr[0].ca.ptr)
 #endif
-		)
-	{
-		if(NULL == cred_array[0].ca_pk.ptr || 0 == cred_array[0].ca_pk.len)
-		{
+	) {
+		if (NULL == cred_array->ptr[0].ca_pk.ptr ||
+		    0 == cred_array->ptr[0].ca_pk.len) {
 			return no_such_ca;
 		}
 
-		*root_pk = cred_array[0].ca_pk.ptr;
-		*root_pk_len = cred_array[0].ca_pk.len;
+		root_pk->ptr = cred_array->ptr[0].ca_pk.ptr;
+		root_pk->len = cred_array->ptr[0].ca_pk.len;
 		return ok;
 	}
 
 #ifdef MBEDTLS
 	/* Accept only certificate based search if multiple credentials available*/
-	for (uint16_t i = 0; i < cred_num; i++) {
-		if(NULL == cred_array[i].ca.ptr || 0 == cred_array[i].ca.len)
-		{
+	for (uint16_t i = 0; i < cred_array->len; i++) {
+		if (NULL == cred_array->ptr[i].ca.ptr ||
+		    0 == cred_array->ptr[i].ca.len) {
 			continue;
 		}
 
-		PRINT_ARRAY("cred_array[i].ca.ptr", cred_array[i].ca.ptr,
-			    cred_array[i].ca.len);
-		PRINT_ARRAY("issuer", issuer, cred_array[i].ca.len);
+		PRINT_ARRAY("cred_array[i].ca.ptr", cred_array->ptr[i].ca.ptr,
+			    cred_array->ptr[i].ca.len);
+		PRINT_ARRAY("issuer", issuer, cred_array->ptr[i].ca.len);
 
 		mbedtls_x509_crt m_cert;
 		mbedtls_x509_crt_init(&m_cert);
 
 		/* parse the certificate */
-		TRY_EXPECT(mbedtls_x509_crt_parse_der_nocopy(&m_cert, cred_array[i].ca.ptr, cred_array[i].ca.len), 0);
+		TRY_EXPECT(mbedtls_x509_crt_parse_der_nocopy(
+				   &m_cert, cred_array->ptr[i].ca.ptr,
+				   cred_array->ptr[i].ca.len),
+			   0);
 
 		const mbedtls_x509_name *p = &m_cert.subject;
 		const mbedtls_asn1_buf *subject_id = NULL;
 		while (p) {
-
 			if (0 == MBEDTLS_OID_CMP(MBEDTLS_OID_AT_CN, &p->oid)) {
 				subject_id = &p->val;
 			}
 			p = p->next;
 		};
 
-		if (0 == memcmp(subject_id->p, issuer,
-				subject_id->len)) {
-			*root_pk = cred_array[i].ca_pk.ptr;
-			*root_pk_len = cred_array[i].ca_pk.len;
-			PRINT_ARRAY("Root PK of the CA", *root_pk,
-				    *root_pk_len);
+		if (0 == memcmp(subject_id->p, issuer, subject_id->len)) {
+			root_pk->ptr = cred_array->ptr[i].ca_pk.ptr;
+			root_pk->len = cred_array->ptr[i].ca_pk.len;
+			PRINT_ARRAY("Root PK of the CA", root_pk->ptr,
+				    root_pk->len);
 			mbedtls_x509_crt_free(&m_cert);
 			return ok;
-		}
-		else{
+		} else {
 			mbedtls_x509_crt_free(&m_cert);
 		}
 	}
@@ -246,20 +246,18 @@ static enum err ca_pk_get(const struct other_party_cred *cred_array,
 	return no_such_ca;
 }
 
-enum err cert_c509_verify(const uint8_t *cert, uint32_t cert_len,
-			  const struct other_party_cred *cred_array,
-			  uint16_t cred_num, uint8_t *pk, uint32_t *pk_len,
-			  bool *verified)
+enum err cert_c509_verify(struct const_byte_array *cert,
+			  const struct cred_array *cred_array,
+			  struct byte_array *pk, bool *verified)
 {
 	size_t decode_len = 0;
 	struct cert c;
 
-	TRY_EXPECT(cbor_decode_cert(cert, cert_len, &c, &decode_len), true);
+	TRY_EXPECT(cbor_decode_cert(cert->ptr, cert->len, &c, &decode_len),
+		   true);
 
 	PRINT_MSG("CBOR certificate parsed.\n");
 	PRINTF("Certificate type: %d\n", c._cert_type);
-	// PRINT_ARRAY("Serial number", c._cert_serial_number.value,
-	// 	    c._cert_serial_number.len);
 	PRINT_ARRAY("issuer", c._cert_issuer.value,
 		    (uint32_t)c._cert_issuer.len);
 	PRINTF("validity_not_before: %d\n", c._cert_validity_not_before);
@@ -274,28 +272,28 @@ enum err cert_c509_verify(const uint8_t *cert, uint32_t cert_len,
 		    (uint32_t)c._cert_signature.len);
 
 	/*get the CA's public key*/
-	uint8_t *root_pk = NULL;
-	uint32_t root_pk_len = 0;
-	TRY(ca_pk_get(cred_array, cred_num, c._cert_issuer.value, &root_pk,
-		      &root_pk_len));
+	struct byte_array root_pk;
+	TRY(ca_pk_get(cred_array, c._cert_issuer.value, &root_pk));
 
 	/*verify the certificates signature*/
-	TRY(verify((enum sign_alg)c._cert_issuer_signature_algorithm, root_pk,
-		   root_pk_len, cert,
-		   cert_len - 2 - (uint32_t)c._cert_signature.len,
-		   c._cert_signature.value, (uint32_t)c._cert_signature.len,
-		   verified));
+	struct const_byte_array m = BYTE_ARRAY_INIT(
+		cert->ptr, cert->len - 2 - (uint32_t)c._cert_signature.len);
+	struct const_byte_array sgn = BYTE_ARRAY_INIT(
+		c._cert_signature.value, (uint32_t)c._cert_signature.len);
 
-	TRY(_memcpy_s(pk, *pk_len, c._cert_pk.value, (uint32_t)c._cert_pk.len));
-	*pk_len = (uint32_t)c._cert_pk.len;
+	TRY(verify((enum sign_alg)c._cert_issuer_signature_algorithm, &root_pk,
+		   &m, &sgn, verified));
+
+	TRY(_memcpy_s(pk->ptr, pk->len, c._cert_pk.value,
+		      (uint32_t)c._cert_pk.len));
+	pk->len = (uint32_t)c._cert_pk.len;
 
 	return ok;
 }
 
-enum err cert_x509_verify(const uint8_t *cert, uint32_t cert_len,
-			  const struct other_party_cred *cred_array,
-			  uint16_t cred_num, uint8_t *pk, uint32_t *pk_len,
-			  bool *verified)
+enum err cert_x509_verify(struct const_byte_array *cert,
+			  const struct cred_array *cred_array,
+			  struct byte_array *pk, bool *verified)
 {
 #ifdef MBEDTLS
 
@@ -305,7 +303,8 @@ enum err cert_x509_verify(const uint8_t *cert, uint32_t cert_len,
 	mbedtls_x509_crt_init(&m_cert);
 
 	/* parse the certificate */
-	TRY_EXPECT(mbedtls_x509_crt_parse_der_nocopy(&m_cert, cert, cert_len),
+	TRY_EXPECT(mbedtls_x509_crt_parse_der_nocopy(&m_cert, cert->ptr,
+						     cert->len),
 		   0);
 
 	/* some raw data from certificate */
@@ -357,31 +356,30 @@ enum err cert_x509_verify(const uint8_t *cert, uint32_t cert_len,
 	}
 	int hash_len = mbedtls_md_get_size(md_info);
 
-	size_t sig_len = get_signature_len(sign_alg);
-	TRY(check_buffer_size(SIGNATURE_DEFAULT_SIZE, (uint32_t)sig_len));
-	uint8_t sig[SIGNATURE_DEFAULT_SIZE];
+	BYTE_ARRAY_NEW(sig, SIGNATURE_DEFAULT_SIZE,
+		       get_signature_len(sign_alg));
 
 	/* get the public key of the CA */
-	uint8_t *root_pk;
-	uint32_t root_pk_len;
-	TRY(ca_pk_get(cred_array, cred_num, issuer_id->p, &root_pk,
-		      &root_pk_len));
+	struct byte_array root_pk;
+	TRY(ca_pk_get(cred_array, issuer_id->p, &root_pk));
 
 	/* deserialize signature from ASN.1 to raw concatenation of (R, S) */
 	{
 		uint8_t *pp = m_cert.sig.p;
 		struct deser_sign_ctx_s deser_sign_ctx;
-		deser_sign_ctx_init(&deser_sign_ctx, sig, sig + sig_len,
+		deser_sign_ctx_init(&deser_sign_ctx, sig.ptr, sig.ptr + sig.len,
 				    hash_len);
 		mbedtls_asn1_traverse_sequence_of(&pp, pp + m_cert.sig.len, 0,
 						  0, 0, 0, deser_sign_cb,
 						  &deser_sign_ctx);
-		PRINT_ARRAY("Certificate signature", sig, (uint32_t)sig_len);
+		PRINT_ARRAY("Certificate signature", sig.ptr, sig.len);
 	}
 
 	/*verify the certificates signature*/
-	TRY(verify(sign_alg, root_pk, root_pk_len, m_cert.tbs.p,
-		   (uint32_t)m_cert.tbs.len, sig, (uint32_t)sig_len, verified));
+	struct const_byte_array m =
+		BYTE_ARRAY_INIT(m_cert.tbs.p, (uint32_t)m_cert.tbs.len);
+	TRY(verify(sign_alg, &root_pk, &m, (struct const_byte_array *)&sig,
+		   verified));
 
 	/* export the public key from certificate */
 	{
@@ -397,9 +395,9 @@ enum err cert_x509_verify(const uint8_t *cert, uint32_t cert_len,
 			cpk_len = m_cert.pk_raw.len -
 				  (size_t)(cpk - m_cert.pk_raw.p);
 		}
-		TRY(_memcpy_s(pk, *pk_len, cpk, (uint32_t)cpk_len));
-		*pk_len = (uint32_t)cpk_len;
-		PRINT_ARRAY("pk from cert", pk, *pk_len);
+		TRY(_memcpy_s(pk->ptr, pk->len, cpk, (uint32_t)cpk_len));
+		pk->len = (uint32_t)cpk_len;
+		PRINT_ARRAY("pk from cert", pk->ptr, pk->len);
 	}
 
 	/* cleanup */
@@ -409,25 +407,24 @@ enum err cert_x509_verify(const uint8_t *cert, uint32_t cert_len,
 
 #else /* MBEDTLS */
 
-	const uint8_t *tbs_start = cert;
-	const uint8_t *tbs_end = &cert[ cert_len ];
-	size_t sig_len = 0;
-	uint8_t sig[SIGNATURE_DEFAULT_SIZE];
+	const uint8_t *tbs_start = cert->ptr;
+	const uint8_t *tbs_end = &cert->ptr[cert->len];
+	BYTE_ARRAY_NEW(sig, SIGNATURE_DEFAULT_SIZE, SIGNATURE_DEFAULT_SIZE);
 
 	enum err rv = certificate_authentication_failed;
 
 	/* Crude way to get TBSCertificate address, public key and signature */
 	do {
-		const uint8_t *cursor = cert;
-		const uint8_t *end = &cert[ cert_len ];
+		const uint8_t *cursor = cert->ptr;
+		const uint8_t *end = &cert->ptr[cert->len];
 		size_t len;
 
 		/* Get first tag, which should be first sequence */
-		EXPECTO_TAG( ASN1_SEQUENCE, cursor, len );
+		EXPECTO_TAG(ASN1_SEQUENCE, cursor, len);
 
 		/* Get second, inner tag, which should be TBSCertificate */
 		tbs_start = cursor;
-		EXPECTO_TAG( ASN1_SEQUENCE, cursor, len );
+		EXPECTO_TAG(ASN1_SEQUENCE, cursor, len);
 		tbs_end = cursor + len;
 
 		/* Iterate over 6 elements to get to public key according to X.509 schema */
@@ -440,15 +437,15 @@ enum err cert_x509_verify(const uint8_t *cert, uint32_t cert_len,
 		}
 
 		/* Here should be 7th element with information about key */
-		EXPECTO_TAG( ASN1_SEQUENCE, cursor, len );
+		EXPECTO_TAG(ASN1_SEQUENCE, cursor, len);
 
 		/* Here should be element with information about type of key */
-		EXPECTO_TAG( ASN1_SEQUENCE, cursor, len );
+		EXPECTO_TAG(ASN1_SEQUENCE, cursor, len);
 		/* This section is being skippped */
 		cursor += len;
 
 		/* Expected BIT STRING containing public key */
-		EXPECTO_TAG( ASN1_BIT_STRING, cursor, len );
+		EXPECTO_TAG(ASN1_BIT_STRING, cursor, len);
 
 		/* Now cursor points to public key */
 		_memcpy_s(pk, *pk_len, cursor, (uint32_t)len);
@@ -459,47 +456,54 @@ enum err cert_x509_verify(const uint8_t *cert, uint32_t cert_len,
 		cursor = tbs_end;
 
 		/* Here should be information about signature algorithm */
-		EXPECTO_TAG( ASN1_SEQUENCE, cursor, len );
+		EXPECTO_TAG(ASN1_SEQUENCE, cursor, len);
 		/* We can skip algorithm info length */
 		cursor += len;
 
 		/* Expected BIT STRING containing signature */
-		EXPECTO_TAG( ASN1_BIT_STRING, cursor, len );
+		EXPECTO_TAG(ASN1_BIT_STRING, cursor, len);
 		// cursor++;
 
-		EXPECTO_TAG( ASN1_SEQUENCE, cursor, len );
-		
-		EXPECTO_TAG( ASN1_INTEGER, cursor, len );
+		EXPECTO_TAG(ASN1_SEQUENCE, cursor, len);
 
-		TRY_EXPECT( (cursor + len) <= end, 1 );
-		_memcpy_s(sig, SIGNATURE_DEFAULT_SIZE, cursor, (uint32_t)len);
-		sig_len = len;
+		EXPECTO_TAG(ASN1_INTEGER, cursor, len);
+
+		TRY_EXPECT((cursor + len) <= end, 1);
+		_memcpy_s(sig.ptr, SIGNATURE_DEFAULT_SIZE, cursor,
+			  (uint32_t)len);
+		sig.len = len;
 		cursor += len;
-		PRINT_ARRAY("Certificate signature - part1", sig, (uint32_t)sig_len);
+		PRINT_ARRAY("Certificate signature - part1", sig,
+			    (uint32_t)sig_len);
 
-		EXPECTO_TAG( ASN1_INTEGER, cursor, len );
-		TRY_EXPECT( (cursor + len) <= end, 1 );
-		_memcpy_s(sig + sig_len, (uint32_t)(SIGNATURE_DEFAULT_SIZE - sig_len), cursor, (uint32_t)len);
-		sig_len += len;
+		EXPECTO_TAG(ASN1_INTEGER, cursor, len);
+		TRY_EXPECT((cursor + len) <= end, 1);
+		_memcpy_s(sig.ptr + sig.len,
+			  (uint32_t)(SIGNATURE_DEFAULT_SIZE - sig.len), cursor,
+			  (uint32_t)len);
+		sig.len += len;
 		rv = ok;
-		PRINT_ARRAY("Certificate signature", sig, (uint32_t)sig_len);
+		PRINT_ARRAY("Certificate signature", sig.ptr,
+			    (uint32_t)sig.len);
 
 	} while (0);
 
-	uint8_t *root_pk;
-	uint32_t root_pk_len = 0;
+	struct byte_array root_pk;
+	struct byte_array m =
+		BYTE_ARRAY_INIT(tbs_start, (uint32_t)(tbs_end - tbs_start));
 
-	if (ok == rv)
-	{
-		for (size_t iter = 0; iter < cred_num; iter++)
-		{
+	if (ok == rv) {
+		for (size_t iter = 0; iter < cred_num; iter++) {
 			/* Issuer will not be read from certificate, so no identification is possible within public keys array. */
-			ca_pk_get(cred_array + iter, 1, NULL, &root_pk, &root_pk_len);
-			PRINT_ARRAY("pk from cred_list", root_pk, root_pk_len);
-			rv = verify(ES256, root_pk, root_pk_len, tbs_start, (uint32_t)(tbs_end - tbs_start), sig, (uint32_t)sig_len, verified);
+			TRY(ca_pk_get(cred_array->ptr + iter, 1, NULL,
+				      &root_pk));
+			PRINT_ARRAY("pk from cred_list", root_pk.ptr,
+				    root_pk.len);
+			rv = verify(ES256, &root_pk, &m, &sig, verified);
 		}
 	}
 	return rv;
 
 #endif /* MBEDTLS */
+	return ok;
 }

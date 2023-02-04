@@ -23,7 +23,6 @@
  * @param   out pointer to hold the encoded data
  * @param   out_len length of the encoded data
  */
-enum err associated_data_encode(uint8_t *th, const uint32_t th_len,
-				uint8_t *out, uint32_t *out_len);
+enum err associated_data_encode(struct byte_array *thX, struct byte_array *out);
 
 #endif

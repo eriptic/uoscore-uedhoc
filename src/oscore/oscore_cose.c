@@ -74,9 +74,8 @@ enum err oscore_cose_decrypt(struct byte_array *in_ciphertext,
 
 	PRINT_ARRAY("Ciphertext", in_ciphertext->ptr, in_ciphertext->len);
 
-	TRY(aead(DECRYPT, in_ciphertext->ptr, in_ciphertext->len, key->ptr,
-		 key->len, nonce->ptr, nonce->len, aad.ptr, aad.len,
-		 out_plaintext->ptr, out_plaintext->len, tag.ptr, tag.len));
+	TRY(aead(DECRYPT, in_ciphertext, key, nonce, &aad, out_plaintext,
+		 &tag));
 
 	PRINT_ARRAY("Decrypted plaintext", out_plaintext->ptr,
 		    out_plaintext->len);
@@ -99,12 +98,15 @@ enum err oscore_cose_encrypt(struct byte_array *in_plaintext,
 	struct byte_array tag =
 		BYTE_ARRAY_INIT(out_ciphertext->ptr + in_plaintext->len, 8);
 
-	TRY(aead(ENCRYPT, in_plaintext->ptr, in_plaintext->len, key->ptr,
-		 key->len, nonce->ptr, nonce->len, aad.ptr, aad.len,
-		 out_ciphertext->ptr, out_ciphertext->len - tag.len, tag.ptr,
-		 tag.len));
+	out_ciphertext->len -= tag.len;
+	TRY(aead(ENCRYPT, in_plaintext, key, nonce, &aad, out_ciphertext,
+		 &tag));
 
 	PRINT_ARRAY("tag", tag.ptr, tag.len);
 	PRINT_ARRAY("Ciphertext", out_ciphertext->ptr, out_ciphertext->len);
+	out_ciphertext->len += tag.len;
+	PRINT_ARRAY("Ciphertext + tag", out_ciphertext->ptr,
+		    out_ciphertext->len);
+
 	return ok;
 }

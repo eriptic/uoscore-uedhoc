@@ -22,8 +22,7 @@
  * @param   _kid output pointer
  * @param   kid_len length of the kid
  */
-enum err id_cred2kid(const uint8_t *id_cred, uint32_t id_cred_len,
-		     uint8_t *_kid, uint32_t *kid_len);
+enum err id_cred2kid(const struct byte_array *id_cred, struct byte_array *kid);
 
 /**
  * @brief   Splits a the plaintext of message 2 to its subfields
@@ -36,10 +35,8 @@ enum err id_cred2kid(const uint8_t *id_cred, uint32_t id_cred_len,
  * @param   ad axillary data
  * @param   ad_len length of ad
  */
-enum err plaintext_split(uint8_t *ptxt, const uint32_t ptxt_len,
-			 uint8_t *id_cred_x, uint32_t *id_cred_x_len,
-			 uint8_t *sign_or_mac, uint32_t *sign_or_mac_len,
-			 uint8_t *ad, uint32_t *ad_len);
+enum err plaintext_split(struct byte_array *ptxt, struct byte_array *id_cred_x,
+			 struct byte_array *sign_or_mac, struct byte_array *ad);
 
 /**
  * @brief   Encodes a plaintext 

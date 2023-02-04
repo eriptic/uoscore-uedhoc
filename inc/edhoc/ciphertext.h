@@ -35,13 +35,11 @@ enum ciphertext { CIPHERTEXT2, CIPHERTEXT3, CIPHERTEXT4 };
  * @return enum err 
  */
 enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
-			uint8_t *id_cred, uint32_t id_cred_len,
-			uint8_t *signature_or_mac,
-			uint32_t signature_or_mac_len, uint8_t *ead,
-			uint32_t ead_len, uint8_t *prk, uint32_t prk_len,
-			uint8_t *th, uint32_t th_len, uint8_t *ciphertext,
-			uint32_t *ciphertext_len, uint8_t *plaintext,
-			uint32_t *plaintext_len);
+			const struct byte_array *id_cred,
+			struct byte_array *signature_or_mac,
+			const struct byte_array *ead, struct byte_array *prk,
+			struct byte_array *th, struct byte_array *ciphertext,
+			struct byte_array *plaintext);
 
 /**
  * @brief Decrypts a ciphertest and splits the resulting plaintext into its 
@@ -66,13 +64,11 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
  * @return enum err 
  */
 enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
-				  uint8_t *id_cred, uint32_t *id_cred_len,
-				  uint8_t *signature_or_mac,
-				  uint32_t *signature_or_mac_len, uint8_t *ead,
-				  uint32_t *ead_len, uint8_t *prk,
-				  uint32_t prk_len, uint8_t *th,
-				  uint32_t th_len, uint8_t *ciphertext,
-				  uint32_t ciphertext_len, uint8_t *plaintext,
-				  uint32_t plaintext_len);
+				  struct byte_array *id_cred,
+				  struct byte_array *sig_or_mac,
+				  struct byte_array *ead,
+				  struct byte_array *prk, struct byte_array *th,
+				  struct byte_array *ciphertext,
+				  struct byte_array *plaintext);
 
 #endif

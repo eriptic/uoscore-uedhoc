@@ -13,6 +13,7 @@
 #define COSE_H
 
 #include "common/oscore_edhoc_error.h"
+#include "common/byte_array.h"
 
 enum cose_context {
 	Encrypt0,
@@ -52,12 +53,10 @@ enum err cose_enc_structure_encode(const uint8_t *context, uint32_t context_len,
  * @param	out_len length of the encoded structure
  * @retval	err error code
  */
-enum err cose_sig_structure_encode(const uint8_t *context, uint32_t context_len,
-				   const uint8_t *protected,
-				   uint32_t protected_len,
-				   const uint8_t *external_aad,
-				   uint32_t external_aad_len,
-				   const uint8_t *payload, uint32_t payload_len,
-				   uint8_t *out, uint32_t *out_len);
+enum err cose_sig_structure_encode(const struct byte_array *context,
+				   const struct byte_array *protected,
+				   const struct byte_array *external_aad,
+				   const struct byte_array *payload,
+				   struct byte_array *out);
 
 #endif

@@ -57,10 +57,11 @@ enum id_cred_x_label {
  * @param   g static DH public key
  * @param   g_len length of g
  */
-enum err retrieve_cred(bool static_dh_auth, struct other_party_cred *cred_array,
-		       uint16_t cred_num, uint8_t *id_cred,
-		       uint32_t id_cred_len, uint8_t *cred, uint32_t *cred_len,
-		       uint8_t *pk, uint32_t *pk_len, uint8_t *g,
-		       uint32_t *g_len);
+enum err retrieve_cred(bool static_dh_auth, 
+	struct cred_array *cred_array,
+	struct byte_array *id_cred, 
+	struct byte_array *cred, 
+	struct byte_array *pk,
+	struct byte_array *g);
 
 #endif

@@ -3,8 +3,8 @@
 #
 #CC = gcc
 #AR = ar
-CC = /opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc
-AR = /opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-ar
+#CC = /opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc
+#AR = /opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-ar
 #CC = clang-13
 
 
@@ -13,7 +13,7 @@ AR = /opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-ar
 #
 # see for arm flags: https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html
 #ARCH = -m32
-ARCH = -mtune=cortex-m3
+#ARCH = -mtune=cortex-m3
 
 # 
 # Compiler optimization
@@ -24,7 +24,7 @@ OPT = -O0
 # Print helpful debug messages
 #
 # Uncomment this to print intermediary results at runtime
-# DEBUG_PRINT += -DDEBUG_PRINT
+DEBUG_PRINT += -DDEBUG_PRINT
 
 #
 # Unit testing
@@ -46,7 +46,8 @@ CBOR_ENGINE += -DZCBOR
 # In deployments where no protected application message is sent from the 
 # Responder to the Initiator, message_4 MUST be used.
 FEATURES += -DMESSAGE_4
-
+# If EAD is not used set its buffer size to 0
+FEATURES += -DEAD_SIZE=0
 
 #
 # Crypto engine

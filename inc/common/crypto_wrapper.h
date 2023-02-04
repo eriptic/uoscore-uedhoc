@@ -39,11 +39,10 @@ enum aes_operation {
  * @param   tag_len the length of tag
  * @retval  an err code
  */
-enum err aead(enum aes_operation op, const uint8_t *in, const uint32_t in_len,
-	      const uint8_t *key, const uint32_t key_len, uint8_t *nonce,
-	      const uint32_t nonce_len, const uint8_t *aad,
-	      const uint32_t aad_len, uint8_t *out, const uint32_t out_len,
-	      uint8_t *tag, const uint32_t tag_len);
+enum err aead(enum aes_operation op, const struct byte_array *in,
+	      const struct byte_array *key, struct byte_array *nonce,
+	      const struct byte_array *aad, struct byte_array *out,
+	      struct byte_array *tag);
 
 /**
  * @brief   Derives ECDH shared secret
@@ -55,9 +54,9 @@ enum err aead(enum aes_operation op, const uint8_t *in, const uint32_t in_len,
  * @param   shared_secret the result
  * @retval  an err code
  */
-enum err shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
-			      const uint32_t sk_len, const uint8_t *pk,
-			      const uint32_t pk_len, uint8_t *shared_secret);
+enum err shared_secret_derive(enum ecdh_alg alg, const struct byte_array *sk,
+			      const struct byte_array *pk,
+			      uint8_t *shared_secret);
 
 /**
  * @brief   HKDF extract function, see rfc5869
@@ -69,8 +68,8 @@ enum err shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
  * @param   out result
  * @retval  an err code
  */
-enum err hkdf_extract(enum hash_alg alg, const uint8_t *salt, uint32_t salt_len,
-		      uint8_t *ikm, uint32_t ikm_len, uint8_t *out);
+enum err hkdf_extract(enum hash_alg alg, const struct byte_array *salt,
+		      struct byte_array *ikm, uint8_t *out);
 
 /**
  * @brief   HKDF expand function, see rfc5869
@@ -83,20 +82,17 @@ enum err hkdf_extract(enum hash_alg alg, const uint8_t *salt, uint32_t salt_len,
  * @param   out_len length of out
  * @retval  an err code
  */
-enum err hkdf_expand(enum hash_alg alg, const uint8_t *prk,
-		     const uint32_t prk_len, const uint8_t *info,
-		     const uint32_t info_len, uint8_t *out, uint32_t out_len);
+enum err hkdf_expand(enum hash_alg alg, const struct byte_array *prk,
+		     const struct byte_array *info, struct byte_array *out);
 
 /**
  * @brief   calculates a hash
  * @param   alg the hash algorithm
  * @param   in input message
- * @param   in_len length of in
  * @param   out the hash 
  * @retval  an err code
  */
-enum err hash(enum hash_alg alg, const uint8_t *in, const uint32_t in_len,
-	      uint8_t *out);
+enum err hash(enum hash_alg alg, const struct byte_array *in, uint8_t *out);
 
 /**
  * @brief   Verifies an asymmetric signature
@@ -109,8 +105,8 @@ enum err hash(enum hash_alg alg, const uint8_t *in, const uint32_t in_len,
  * @param   out signature
  * @retval  an err code
  */
-enum err sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
-	      const uint8_t *pk, const uint8_t *msg, const uint32_t msg_len,
+enum err sign(enum sign_alg alg, const struct byte_array *sk,
+	      const struct byte_array *pk, const struct byte_array *msg,
 	      uint8_t *out);
 
 /**
@@ -125,9 +121,9 @@ enum err sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
  * @param   result true if the signature verification is successfully
  * @retval  an err code
  */
-enum err verify(enum sign_alg alg, const uint8_t *pk, const uint32_t pk_len,
-		const uint8_t *msg, const uint32_t msg_len, const uint8_t *sgn,
-		const uint32_t sgn_len, bool *result);
+enum err verify(enum sign_alg alg, const struct byte_array *pk,
+		struct const_byte_array *msg, struct const_byte_array *sgn,
+		bool *result);
 
 /**
  * @brief   HKDF funcion used for the derivation of the Common IV, 
@@ -143,7 +139,7 @@ enum err hkdf_sha_256(struct byte_array *master_secret,
 
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
 /*
- * Eliptic curve based signature algorithms generate signatures that are not deterministic. In order to test edhoc
+ * Elliptic curve based signature algorithms generate signatures that are not deterministic. In order to test edhoc
  * module against test vectors provided by the RFC authors, a mocking functionality has been added.
  *
  * When EDHOC_MOCK_CRYPTO_WRAPPER macro is defined, structure edhoc_crypto_mock_cb can be used to define values
@@ -153,7 +149,7 @@ enum err hkdf_sha_256(struct byte_array *master_secret,
  *
  * When there is no matching arguments, the function aead()/sign() will continue normally.
  */
-struct edhoc_mock_aead_in_out{
+struct edhoc_mock_aead_in_out {
 	struct byte_array out;
 	struct byte_array in;
 	struct byte_array key;
