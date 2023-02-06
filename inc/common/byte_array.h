@@ -65,9 +65,15 @@ enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src,
  *          buffer (BUF_SIZE) will be sufficient for the size of the byte_array 
  *          (SIZE). 
 */
+#ifdef VLA
+#define BYTE_ARRAY_NEW(NAME, BUF_SIZE, SIZE)                                   \
+	uint8_t NAME##_buf[SIZE];                                              \
+	struct byte_array NAME = BYTE_ARRAY_INIT(NAME##_buf, SIZE);
+#else
 #define BYTE_ARRAY_NEW(NAME, BUF_SIZE, SIZE)                                   \
 	TRY(check_buffer_size(BUF_SIZE, SIZE));                                \
 	uint8_t NAME##_buf[BUF_SIZE];                                          \
 	struct byte_array NAME = BYTE_ARRAY_INIT(NAME##_buf, SIZE);
+#endif
 
 #endif //BYTE_ARRAY_H

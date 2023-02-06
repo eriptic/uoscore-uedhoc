@@ -1,5 +1,6 @@
 #include <edhoc.h>
 #include <zephyr/ztest.h>
+#include <zephyr/debug/thread_analyzer.h>
 #include "edhoc_test_vectors_exporter_v15.h"
 
 void test_exporter(void)
@@ -26,14 +27,17 @@ void test_exporter(void)
 				      .len = sizeof(T1_PRK_OUT) };
 	struct byte_array context = { .ptr = T1_KEY_UPDATE_CONTEXT,
 				      .len = sizeof(T1_KEY_UPDATE_CONTEXT) };
-
+	/***/
+	/***/
 	err = prk_out_update(SHA_256, &prk_out, &context, &prk_out_new);
+
 	zassert_true(err == 0, "prk_out_update failed");
 	zassert_mem_equal__(T1_PRK_OUT_NEW, prk_out_new.ptr, prk_out_new.len,
 			    "wrong prk_out_new");
 	/***/
 	/***/
 	err = prk_out2exporter(SHA_256, &prk_out, &prk_exporter);
+
 	zassert_true(err == 0, "prk_out2exporter failed");
 	zassert_mem_equal__(T1_PRK_EXPORTER, prk_exporter.ptr, prk_exporter.len,
 			    "wrong prk_exporter");
@@ -51,4 +55,8 @@ void test_exporter(void)
 	zassert_true(err == 0, "edhoc_exporter failed");
 	zassert_mem_equal__(T1_OSCORE_MASTER_SALT, master_salt.ptr,
 			    master_salt.len, "wrong master_salt");
+
+#ifdef REPORT_STACK_USAGE
+	thread_analyzer_print();
+#endif
 }
