@@ -144,8 +144,7 @@ enum err notification_number_update(uint64_t *notification_num,
 				    bool *notification_num_initialized,
 				    struct byte_array *piv)
 {
-	TRY(_memcpy_s((uint8_t *)notification_num, sizeof(*notification_num),
-		      piv->ptr, piv->len));
+	TRY(piv2ssn(piv, notification_num));
 	*notification_num_initialized = true;
 	return ok;
 }
