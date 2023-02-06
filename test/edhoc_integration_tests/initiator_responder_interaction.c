@@ -6,6 +6,7 @@
 
 #include <zephyr/zephyr.h>
 #include <zephyr/ztest.h>
+#include <zephyr/debug/thread_analyzer.h>
 
 #include <edhoc.h>
 
@@ -53,7 +54,7 @@ struct byte_array R_err_msg = { .ptr = R_err_msg_buf,
 				.len = sizeof(R_err_msg_buf) };
 
 /* size of stack area used by each thread */
-#define STACKSIZE 1024
+#define STACKSIZE 3000
 /* scheduling priority used by each thread */
 #define PRIORITY 7
 K_THREAD_STACK_DEFINE(thread_initiator_stack_area, STACKSIZE);
@@ -66,7 +67,7 @@ K_SEM_DEFINE(tx_initiator_completed, 0, 1);
 K_SEM_DEFINE(tx_responder_completed, 0, 1);
 
 /*message exchange buffer*/
-uint8_t msg_exchange_buf[1024];
+uint8_t msg_exchange_buf[1024 * 2];
 uint32_t msg_exchange_buf_len = sizeof(msg_exchange_buf);
 
 void semaphore_give(struct k_sem *sem)
@@ -223,6 +224,11 @@ void thread_initiator(void *vec_num, void *dummy2, void *dummy3)
 		goto end;
 	}
 	PRINT_ARRAY("OSCORE Master Salt", I_master_salt.ptr, I_master_salt.len);
+
+#ifdef REPORT_STACK_USAGE
+	thread_analyzer_print();
+#endif
+
 	return;
 end:
 	PRINTF("An error has occurred. Error code: %d\n", r);
@@ -315,6 +321,11 @@ void thread_responder(void *vec_num, void *dummy2, void *dummy3)
 		goto end;
 	}
 	PRINT_ARRAY("OSCORE Master Salt", R_master_salt.ptr, R_master_salt.len);
+
+#ifdef REPORT_STACK_USAGE
+	thread_analyzer_print();
+#endif
+
 	return;
 end:
 	PRINTF("An error has occurred. Error code: %d\n", r);

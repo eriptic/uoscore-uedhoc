@@ -30,6 +30,7 @@ add_definitions(
   -DUNIT_TEST
   #-DDEBUG_PRINT
   -DZCBOR_CANONICAL
+  #-DREPORT_STACK_USAGE
 )
 
 # The external static library that we are linking with does not know

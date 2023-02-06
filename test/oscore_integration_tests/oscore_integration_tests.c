@@ -1,5 +1,7 @@
 
 #include <stdio.h>
+//#include <zephyr/posix/netinet/in.h>
+//#include <netinet/in.h>
 
 #include <zephyr/zephyr.h>
 #include <zephyr/ztest.h>
@@ -513,7 +515,7 @@ void t9_oscore_client_server_observe(void)
 	/*RFC7641: To provide an order among notifications for the client, the server
    	sets the value of the Observe Option in each notification to the 24
    	least significant bits of a strictly increasing sequence number.*/
-	uint32_t observe_sequence_number = 0;
+	//uint32_t observe_sequence_number = 0;
 	uint32_t val = 0;
 	struct o_coap_packet coap_pkt_notification1 = {
 		.header = { .ver = 1,

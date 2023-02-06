@@ -116,12 +116,12 @@ enum err rx(void *sock, struct byte_array *data)
 	recvPDU = new CoapPDU((uint8_t *)buffer, n);
 
 	if (recvPDU->validate()) {
-		recvPDU->printHuman();
+		//recvPDU->printHuman();
 	}
 
 	uint32_t payload_len = recvPDU->getPayloadLength();
-	printf("data_len: %d\n", data->len);
-	printf("payload_len: %d\n", payload_len);
+	//printf("data_len: %d\n", data->len);
+	//printf("payload_len: %d\n", payload_len);
 
 	if (data->len >= payload_len) {
 		memcpy(data->ptr, recvPDU->getPayloadPointer(), payload_len);

@@ -119,7 +119,7 @@ EXTENDED_CFLAGS += -Wpointer-arith
 EXTENDED_CFLAGS += -Wall
 EXTENDED_CFLAGS += -Wextra
 EXTENDED_CFLAGS += -Wcast-qual
-EXTENDED_CFLAGS += -Wstack-usage=9000
+#EXTENDED_CFLAGS += -Wstack-usage=9000
 EXTENDED_CFLAGS += -Wconversion
 EXTENDED_CFLAGS += -Wpedantic
 #EXTENDED_CFLAGS += -Werror

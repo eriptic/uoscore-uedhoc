@@ -616,6 +616,7 @@ enum err WEAK hkdf_expand(enum hash_alg alg, const struct byte_array *prk,
 	psa_status_t status;
 	psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
 	psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
+	PRINTF("key_id: %d\n", key_id);
 
 	TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
 		       unexpected_result_from_ext_lib);
@@ -624,6 +625,7 @@ enum err WEAK hkdf_expand(enum hash_alg alg, const struct byte_array *prk,
 	psa_set_key_algorithm(&attr, PSA_ALG_HMAC(PSA_ALG_SHA_256));
 	psa_set_key_type(&attr, PSA_KEY_TYPE_HMAC);
 
+	PRINT_ARRAY("PRK:", prk->ptr, prk->len);
 	TRY_EXPECT_PSA(psa_import_key(&attr, prk->ptr, prk->len, &key_id),
 		       PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 
