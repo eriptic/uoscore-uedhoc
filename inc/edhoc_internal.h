@@ -60,8 +60,9 @@ enum err msg1_gen(const struct edhoc_initiator_context *c,
 enum err msg3_gen(const struct edhoc_initiator_context *c,
 		  struct runtime_context *rc,
 		  struct other_party_cred *cred_r_array, uint16_t num_cred_r,
-		  uint8_t *ead_2, uint32_t *ead_2_len, uint8_t *c_r,
-		  uint32_t *c_r_len, uint8_t *prk_out, uint32_t prk_out_len);
+		  uint8_t *ead_2, uint32_t *ead_2_len, 
+		  uint8_t *c_r, uint32_t *c_r_len, 
+		  uint8_t *prk_out, uint32_t prk_out_len);
 
 /**
  * @brief Processes message 4. This function should by used by on the initiator 

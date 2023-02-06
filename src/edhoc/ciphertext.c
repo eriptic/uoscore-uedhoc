@@ -164,7 +164,7 @@ enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
 	uint32_t tag_len = get_aead_mac_len(suite->edhoc_aead);
 	// uint32_t plaintext_len = ciphertext_len;
 	if (ctxt != CIPHERTEXT2) {
-		if(plaintext_len < tag_len){
+		if (plaintext_len < tag_len) {
 			return error_message_received;
 		}
 		plaintext_len -= tag_len;
@@ -192,7 +192,7 @@ enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
 		PRINT_ARRAY("ID_CRED", id_cred, *id_cred_len);
 		PRINT_ARRAY("sign_or_mac", signature_or_mac,
 			    *signature_or_mac_len);
-		if (*ead_len) {
+		if (ead_len != NULL && *ead_len != 0) {
 			PRINT_ARRAY("ead", ead, *ead_len);
 		}
 	}

@@ -39,7 +39,7 @@
 /** 
  * @brief   Parses message 2
  * @param   c initiator context
- * @param   msg2 pointer to a buffer containign message 2 
+ * @param   msg2 pointer to a buffer containing message 2 
  * @param   msg2_len the length of the raw message
  * @param   msg2_struct pointer to a structure for the parsed message
  * @param   err_msg pointer to an error message structure
@@ -338,8 +338,8 @@ enum err edhoc_initiator_run_extended(
 
 	PRINT_MSG("waiting to receive message 2...\n");
 	TRY(rx(c->sock, rc.msg, &rc.msg_len));
-	TRY(msg3_gen(c, &rc, cred_r_array, num_cred_r, c_r_bytes, c_r_bytes_len,
-		     ead_2, ead_2_len, prk_out, prk_out_len));
+	TRY(msg3_gen(c, &rc, cred_r_array, num_cred_r, ead_2, ead_2_len,
+		     c_r_bytes, c_r_bytes_len, prk_out, prk_out_len));
 	TRY(tx(c->sock, rc.msg, rc.msg_len));
 
 #ifdef EDHOC_MESSAGE_4_SUPPORTED
