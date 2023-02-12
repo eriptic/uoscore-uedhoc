@@ -28,7 +28,7 @@ include_directories(
 
 add_definitions(
   -DUNIT_TEST
-  #-DDEBUG_PRINT
+  -DDEBUG_PRINT
   -DZCBOR_CANONICAL
   #-DREPORT_STACK_USAGE
 )

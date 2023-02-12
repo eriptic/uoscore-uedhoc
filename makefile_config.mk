@@ -51,7 +51,7 @@ CBOR_ENGINE += -DZCBOR
 FEATURES += -DEAD_SIZE=0
 
 # Compute the length of buffers at runtime (variable length array VLA)
-#FEATURES += -DVLA
+FEATURES += -DVLA
 
 #
 # Crypto engine

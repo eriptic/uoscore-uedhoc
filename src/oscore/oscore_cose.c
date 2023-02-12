@@ -52,7 +52,7 @@ static enum err create_enc_structure(struct byte_array *external_aad,
 	TRY_EXPECT(cbor_encode_oscore_enc_structure(out->ptr, out->len,
 						    &enc_structure,
 						    &payload_len_out),
-		   true);
+		   0);
 
 	out->len = (uint32_t)payload_len_out;
 	return ok;

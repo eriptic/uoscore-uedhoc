@@ -63,7 +63,7 @@ static inline enum err th2_input_encode(uint8_t *hash_msg1,
 	}
 	TRY_EXPECT(cbor_encode_th2(th2_input->ptr, th2_input->len, &th2,
 				   &payload_len_out),
-		   true);
+		   0);
 
 	/* Get the the total th2 length */
 	th2_input->len = (uint32_t)payload_len_out;
@@ -134,7 +134,6 @@ enum err th34_calculate(enum hash_alg alg, struct byte_array *th23,
 	BYTE_ARRAY_NEW(th34_input, TH34_INPUT_DEFAULT_SIZE, th34_input_len);
 
 	TRY(th34_input_encode(th23, plaintext_23, cred, &th34_input));
-	PRINT_ARRAY("---th34_input", th34_input.ptr, th34_input.len);
 	TRY(hash(alg, &th34_input, th34));
 	PRINT_ARRAY("TH34", th34, HASH_DEFAULT_SIZE);
 	return ok;
