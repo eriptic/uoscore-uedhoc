@@ -254,7 +254,7 @@ enum err cert_c509_verify(struct const_byte_array *cert,
 	struct cert c;
 
 	TRY_EXPECT(cbor_decode_cert(cert->ptr, cert->len, &c, &decode_len),
-		   true);
+		   0);
 
 	PRINT_MSG("CBOR certificate parsed.\n");
 	PRINTF("Certificate type: %d\n", c._cert_type);

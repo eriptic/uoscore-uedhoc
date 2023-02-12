@@ -19,6 +19,7 @@
 
 #include "cbor/edhoc_encode_info.h"
 
+
 enum err create_hkdf_info(uint8_t label, struct byte_array *context,
 			  uint32_t okm_len, struct byte_array *out)
 {
@@ -53,7 +54,7 @@ enum err create_hkdf_info(uint8_t label, struct byte_array *context,
 	size_t payload_len_out = 0;
 	TRY_EXPECT(cbor_encode_info(out->ptr, out->len, &info,
 				    &payload_len_out),
-		   true);
+		   0);
 
 	out->len = (uint32_t)payload_len_out;
 

@@ -36,6 +36,7 @@
 #include "cbor/edhoc_decode_message_2.h"
 #include "cbor/edhoc_encode_message_3.h"
 
+
 /** 
  * @brief   Parses message 2
  * @param   c initiator context
@@ -52,7 +53,7 @@ static inline enum err msg2_parse(struct byte_array *msg2,
 	size_t decode_len = 0;
 	struct m2 m;
 
-	TRY_EXPECT(cbor_decode_m2(msg2->ptr, msg2->len, &m, &decode_len), true);
+	TRY_EXPECT(cbor_decode_m2(msg2->ptr, msg2->len, &m, &decode_len), 0);
 	TRY(_memcpy_s(g_y->ptr, g_y->len, m._m2_G_Y_CIPHERTEXT_2.value,
 		      g_y->len));
 	PRINT_ARRAY("g_y", g_y->ptr, g_y->len);
@@ -127,7 +128,7 @@ enum err msg1_gen(const struct edhoc_initiator_context *c,
 	size_t payload_len_out;
 	TRY_EXPECT(cbor_encode_message_1(rc->msg.ptr, rc->msg.len, &m1,
 					 &payload_len_out),
-		   true);
+		   0);
 	rc->msg.len = (uint32_t)payload_len_out;
 
 	PRINT_ARRAY("message_1 (CBOR Sequence)", rc->msg.ptr, rc->msg.len);

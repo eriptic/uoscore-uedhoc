@@ -149,7 +149,7 @@ enum err retrieve_cred(bool static_dh_auth, struct cred_array *cred_array,
 
 	TRY_EXPECT(cbor_decode_id_cred_x_map(id_cred->ptr, id_cred->len, &map,
 					     &decode_len),
-		   true);
+		   0);
 	/*the cred should be locally available on the device if 
 	kid, x5u, x5t, c5u, c5t is used*/
 	if ((map._id_cred_x_map_kid_present != 0) ||

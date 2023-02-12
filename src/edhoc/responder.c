@@ -35,7 +35,6 @@
 
 #include "cbor/edhoc_decode_message_1.h"
 #include "cbor/edhoc_encode_message_2.h"
-#include "cbor/edhoc_decode_bstr_type.h"
 #include "cbor/edhoc_decode_message_3.h"
 
 #define CBOR_UINT_SINGLE_BYTE_UINT_MAX_VALUE (0x17)
@@ -63,7 +62,7 @@ msg1_parse(struct byte_array *msg1, enum method_type *method,
 	size_t decode_len = 0;
 
 	TRY_EXPECT(cbor_decode_message_1(msg1->ptr, msg1->len, &m, &decode_len),
-		   true);
+		   0);
 
 	/*METHOD*/
 	*method = (enum method_type)m._message_1_METHOD;
@@ -181,7 +180,7 @@ static inline enum err msg2_encode(const struct byte_array *g_y,
 	}
 
 	TRY_EXPECT(cbor_encode_m2(msg2->ptr, msg2->len, &m, &payload_len_out),
-		   true);
+		   0);
 	msg2->len = (uint32_t)payload_len_out;
 
 	PRINT_ARRAY("message_2 (CBOR Sequence)", msg2->ptr, msg2->len);

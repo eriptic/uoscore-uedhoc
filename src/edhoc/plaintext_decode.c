@@ -68,7 +68,7 @@ static enum err id_cred_x_encode(enum id_cred_x_label label, int algo,
 
 	TRY_EXPECT(cbor_encode_id_cred_x_map(id_cred_x->ptr, id_cred_x->len,
 					     &map, &payload_len_out),
-		   true);
+		   0);
 
 	id_cred_x->len = (uint32_t)payload_len_out;
 
@@ -82,7 +82,7 @@ enum err plaintext_split(struct byte_array *ptxt, struct byte_array *id_cred_x,
 	struct plaintext p;
 
 	TRY_EXPECT(cbor_decode_plaintext(ptxt->ptr, ptxt->len, &p, &decode_len),
-		   true);
+		   0);
 
 	/*ID_CRED_x*/
 	if (p._plaintext_ID_CRED_x_choice == _plaintext_ID_CRED_x__map) {

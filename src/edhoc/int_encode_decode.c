@@ -14,7 +14,7 @@ enum err encode_int(const int32_t *in, uint32_t in_len, uint8_t *out,
 {
 	size_t payload_len_out;
 	TRY_EXPECT(cbor_encode_int_type_i(out, *out_len, in, &payload_len_out),
-		   true);
+		   0);
 	*out_len = (uint32_t)payload_len_out;
 	return ok;
 }
@@ -22,7 +22,7 @@ enum err encode_int(const int32_t *in, uint32_t in_len, uint8_t *out,
 enum err decode_int(uint8_t *in, uint32_t in_len, int32_t *out)
 {
 	size_t decode_len = 0;
-	TRY_EXPECT(cbor_decode_int_type_i(in, in_len, out, &decode_len), true);
+	TRY_EXPECT(cbor_decode_int_type_i(in, in_len, out, &decode_len), 0);
 	if (decode_len != 1) {
 		return cbor_decoding_error;
 	}

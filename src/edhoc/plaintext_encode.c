@@ -32,7 +32,7 @@ enum err id_cred2kid(const struct byte_array *id_cred, struct byte_array *kid)
 	size_t decode_len = 0;
 	TRY_EXPECT(cbor_decode_id_cred_x_map(id_cred->ptr, id_cred->len, &map,
 					     &decode_len),
-		   true);
+		   0);
 
 	if (map._id_cred_x_map_kid_present != 0) {
 		TRY_EXPECT(

@@ -873,7 +873,6 @@ enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
 
 enum err WEAK hash(enum hash_alg alg, const struct byte_array *in, uint8_t *out)
 {
-	PRINT_ARRAY("+++hash_input", in->ptr, in->len);
 	if (alg == SHA_256) {
 #ifdef TINYCRYPT
 		struct tc_sha256_state_struct s;

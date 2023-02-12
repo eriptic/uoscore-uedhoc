@@ -54,7 +54,7 @@ struct byte_array R_err_msg = { .ptr = R_err_msg_buf,
 				.len = sizeof(R_err_msg_buf) };
 
 /* size of stack area used by each thread */
-#define STACKSIZE 3000
+#define STACKSIZE 20000
 /* scheduling priority used by each thread */
 #define PRIORITY 7
 K_THREAD_STACK_DEFINE(thread_initiator_stack_area, STACKSIZE);
@@ -77,7 +77,7 @@ void semaphore_give(struct k_sem *sem)
 
 enum err semaphore_take(struct k_sem *sem, uint8_t *data, uint32_t *data_len)
 {
-	if (k_sem_take(sem, K_MSEC(50)) != 0) {
+	if (k_sem_take(sem, K_FOREVER) != 0) {
 		PRINT_MSG("Cannot receive a message!\n");
 	} else {
 		if (msg_exchange_buf_len > *data_len) {
@@ -114,16 +114,19 @@ enum err tx_initiator(void *sock, struct byte_array *data)
 
 enum err tx_responder(void *sock, struct byte_array *data)
 {
+	//PRINTF("tx_responder data len: %d\n", data->len);
 	enum err r = copy_message(data->ptr, data->len);
 	if (r != ok) {
 		return r;
 	}
+	//PRINTF("msg_exchange_buf_len: %d\n",msg_exchange_buf_len);
 	semaphore_give(&tx_responder_completed);
 	return ok;
 }
 
 enum err rx_initiator(void *sock, struct byte_array *data)
-{
+{	
+	PRINTF("msg_exchange_buf_len: %d\n",msg_exchange_buf_len);
 	return semaphore_take(&tx_responder_completed, data->ptr, &data->len);
 }
 enum err rx_responder(void *sock, struct byte_array *data)
@@ -349,14 +352,16 @@ void test_initiator_responder_interaction(uint8_t vec_num)
 		thread_responder, (void *)&vec_num, NULL, NULL, PRIORITY, 0,
 		K_NO_WAIT);
 
+	
+
 	k_thread_start(&thread_initiator_data);
 	k_thread_start(&thread_responder_data);
 
-	if (0 != k_thread_join(&thread_initiator_data, K_MSEC(5000))) {
+	if (0 != k_thread_join(&thread_initiator_data, K_MSEC(10000))) {
 		PRINT_MSG("initiator thread stalled! Aborting.");
 		k_thread_abort(initiator_tid);
 	}
-	if (0 != k_thread_join(&thread_responder_data, K_MSEC(5000))) {
+	if (0 != k_thread_join(&thread_responder_data, K_MSEC(10000))) {
 		PRINT_MSG("responder thread stalled! Aborting.");
 		k_thread_abort(responder_tid);
 	}
