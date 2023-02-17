@@ -169,15 +169,13 @@ static int mbedtls_asn1_get_len(const unsigned char **p,
 #endif /* MBEDTLS */
 
 /**
- * @brief retrives the public key of the CA from CRED_ARRAY.
+ * @brief retrieves the public key of the CA from CRED_ARRAY.
  * 
  * 
- * @param cred_array contains the public key of the root CA
- * @param cred_num the number of elements in cred_array
- * @param issuer the issuer name, i.e. the name of the CA
- * @param root_pk the root public key
- * @param root_pk_len the lenhgt of the root public key
- * @return enum err 
+ * @param[in] cred_array contains the public key of the root CA
+ * @param[in] issuer the issuer name, i.e. the name of the CA
+ * @param[out] root_pk the root public key
+ * @return error code
  */
 static enum err ca_pk_get(const struct cred_array *cred_array,
 			  const uint8_t *issuer, struct byte_array *root_pk)

@@ -34,14 +34,14 @@
 void runtime_context_init(struct runtime_context *c);
 
 /**
- * @brief Generates message 1. This function should by used by on the 
- *        initiator side.
+ * @brief 			Generates message 1. 
  * 
- * @param c initiator context
- * @param rc runtime context
+ * @param[in] c 		Initiator context.
+ * @param[in,out] rc 		Runtime context.
+ * @retval			Ok or error code.
  */
-enum err msg1_gen(const struct edhoc_initiator_context *c,
-		  struct runtime_context *rc);
+static enum err msg1_gen(const struct edhoc_initiator_context *c,
+			 struct runtime_context *rc);
 
 /**
  * @brief Generates message 3. This function should by used by on the 

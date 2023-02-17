@@ -36,14 +36,14 @@
 #include "cbor/edhoc_decode_message_2.h"
 #include "cbor/edhoc_encode_message_3.h"
 
-
 /** 
- * @brief   Parses message 2
- * @param   c initiator context
- * @param   msg2 pointer to a buffer containing message 2 
- * @param   msg2_len the length of the raw message
- * @param   msg2_struct pointer to a structure for the parsed message
- * @param   err_msg pointer to an error message structure
+ * @brief   			Parses message 2.
+ * @param c 			Initiator context.
+ * @param[in] msg2 		Message 2. 
+ * @param[out] g_y		G_Y ephemeral public key of the responder.
+ * @param[out] c_r		C_R connection identifier of the responder.
+ * @param[out] ciphertext2	Ciphertext 2.
+ * @retval			Ok or error code.
  */
 static inline enum err msg2_parse(struct byte_array *msg2,
 				  struct byte_array *g_y,

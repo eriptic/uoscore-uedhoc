@@ -25,24 +25,19 @@
 #include "cbor/edhoc_decode_id_cred_x.h"
 
 /**
- * @brief 	This function verifies a certificate and copies it to the cred 
- * 		buffer. It also extracts the public key contained in the 
- * 		certificate. 
+ * @brief 			Verifies a certificate and copies it to the cred 
+ * 				buffer. It also extracts the public key
+ * 				contained in the certificate. 
  * 
- * @param static_dh_auth type of the key contained in the certificate -- 
- * 			signature key or static DH key.
- * @param cred_array array containing credentials
- * @param cred_num number of credentials
- * @param label map label of id_cred_x
- * @param cert the certificate
- * @param cert_len length of the certificate
- * @param cred cred buffer
- * @param cred_len length of cred
- * @param pk public key buffer
- * @param pk_len length of pk
- * @param g static DH public key buffer
- * @param g_len length of g
- * @return enum err 
+ * @param static_dh_auth 	Type of the key contained in the certificate -- 
+ * 				signature key or static DH key.
+ * @param cred_array 		array containing credentials.
+ * @param label 		CBOR map label of id_cred_x.
+ * @param[in] cert 		The certificate.
+ * @param[in] cred 		Cred buffer.
+ * @param[in] pk 		Public key.
+ * @param[in] g 		Static DH public key.
+ * @return 			Ok or error code
  */
 static inline enum err
 verify_cert2cred(bool static_dh_auth, struct cred_array *cred_array,
@@ -91,6 +86,17 @@ verify_cert2cred(bool static_dh_auth, struct cred_array *cred_array,
 	return ok;
 }
 
+/**
+ * @brief 			Get the local cred object.
+ * 
+ * @param static_dh_auth 	True if static DH is used for authentication.
+ * @param[in] cred_array 	An array of trust anchors
+ * @param[in] ID_cred 		The ID of the actual credential.
+ * @param[out] cred 		The retrievd credentials	
+ * @param[out] pk 		The retrievd signature authentication public key
+ * @param[out] g 		The retrievd static DH authentication public key
+ * @return 			Ok or error code
+ */
 static enum err get_local_cred(bool static_dh_auth,
 			       struct cred_array *cred_array,
 			       struct byte_array *ID_cred,

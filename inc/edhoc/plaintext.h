@@ -38,20 +38,4 @@ enum err id_cred2kid(const struct byte_array *id_cred, struct byte_array *kid);
 enum err plaintext_split(struct byte_array *ptxt, struct byte_array *id_cred_x,
 			 struct byte_array *sign_or_mac, struct byte_array *ad);
 
-/**
- * @brief   Encodes a plaintext 
- * @param   id_cred ID_CRED_x
- * @param   id_cred_len length of id_cred
- * @param   sign_or_mac signature or mac
- * @param   sign_or_mac_len length of sign_or_mac
- * @param   ad axillary data
- * @param   ad_len length of ad 
- * @param   plaintext pointer to the plaintext
- * @param   plaintext_len length of plaintext
- */
-enum err plaintext_encode(const uint8_t *id_cred, uint32_t id_cred_len,
-			  const uint8_t *sgn_or_mac, uint32_t sgn_or_mac_len,
-			  const uint8_t *ad, uint32_t ad_len,
-			  uint8_t *plaintext, uint32_t *plaintext_len);
-
 #endif
