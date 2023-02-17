@@ -100,6 +100,9 @@ EXTENDED_CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # Generate stack usage information
 EXTENDED_CFLAGS += -fstack-usage
 
+# use C11
+EXTENDED_CFLAGS += -std=c11
+
 #GCC warning flags
 ifeq ($(findstring cc,$(CC)),cc)
 EXTENDED_CFLAGS += -Waddress
