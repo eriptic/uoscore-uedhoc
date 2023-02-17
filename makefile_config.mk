@@ -45,7 +45,7 @@ CBOR_ENGINE += -DZCBOR
 #
 # In deployments where no protected application message is sent from the 
 # Responder to the Initiator, message_4 MUST be used.
-#FEATURES += -DMESSAGE_4
+FEATURES += -DMESSAGE_4
 
 # If EAD is not used set its buffer size to 0
 FEATURES += -DEAD_SIZE=0

@@ -12,6 +12,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "cbor/edhoc_encode_bstr_type_types.h"
+#include "zcbor_common.h"
 
 #ifdef __cplusplus
 extern "C" {

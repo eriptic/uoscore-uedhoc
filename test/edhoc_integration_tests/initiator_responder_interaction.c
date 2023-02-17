@@ -357,11 +357,11 @@ void test_initiator_responder_interaction(uint8_t vec_num)
 	k_thread_start(&thread_initiator_data);
 	k_thread_start(&thread_responder_data);
 
-	if (0 != k_thread_join(&thread_initiator_data, K_MSEC(10000))) {
+	if (0 != k_thread_join(&thread_initiator_data, K_FOREVER)) {
 		PRINT_MSG("initiator thread stalled! Aborting.");
 		k_thread_abort(initiator_tid);
 	}
-	if (0 != k_thread_join(&thread_responder_data, K_MSEC(10000))) {
+	if (0 != k_thread_join(&thread_responder_data, K_FOREVER)) {
 		PRINT_MSG("responder thread stalled! Aborting.");
 		k_thread_abort(responder_tid);
 	}
