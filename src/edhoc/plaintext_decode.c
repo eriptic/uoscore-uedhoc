@@ -25,13 +25,15 @@
 #include "cbor/edhoc_encode_id_cred_x.h"
 
 /**
- * @brief 	Encodes ID_CRED_x as a CBOR map
- * @param	label the map label
- * @param	algo the hash algorithm used in x5t. This parameter kan take any 
- * 			othe value when xchain or kid are used
- * @param	id the actual credential identifier
- * @param	id_len length of id
- * @param	
+ * @brief 			Encodes ID_CRED_x as a CBOR map.
+ * @param label 		The CBOR map label.
+ * @param algo 			The EDHOC hash algorithm used in x5t. This 
+ * 				parameter can take any other value when xchain 
+ * 				or kid are used.
+ * @param id 			The actual credential identifier.
+ * @param id_len 		Length of id.
+ * @param[out] id_cred_x	The encoded value.
+ * @retval			Ok or error.
  */
 static enum err id_cred_x_encode(enum id_cred_x_label label, int algo,
 				 const void *id, uint32_t id_len,

@@ -43,14 +43,14 @@
 #define CBOR_BSTR_TYPE_MAX_VALUE (0x57)
 
 /**
- * @brief   	Parses message 1
- * @param[in]   msg1 buffer containing message 1
- * @param[out]	method method
- * @param[out]	suites_i cypher suites suported by the initiator
- * @param[out]	g_x Public ephemeral key of the initiator
- * @param[out]  c_i connection identifier of the initiator
- * @param[out]  ead1 external authorized data 1
- * @retval an err code
+ * @brief   			Parses message 1.
+ * @param[in] msg1 		Message 1.
+ * @param[out] method 		EDHOC method.
+ * @param[out] suites_i 	Cypher suites suported by the initiator
+ * @param[out] g_x 		Public ephemeral key of the initiator.
+ * @param[out] c_i 		Connection identifier of the initiator.
+ * @param[out] ead1 		External authorized data 1.
+ * @retval 			Ok or error code.
  */
 static inline enum err
 msg1_parse(struct byte_array *msg1, enum method_type *method,
@@ -114,11 +114,12 @@ msg1_parse(struct byte_array *msg1, enum method_type *method,
 }
 
 /**
- * @brief   checks if the selected (the first in the list received from the 
- *          initiator) ciphersute is supported
- * @param   selected the selected suite
- * @param   suites_r the list of suported ciphersuites
- * @retval  true if supported
+ * @brief   			Checks if the selected cipher suite 
+ * 				(the first in the list received from the 
+ * 				initiator) is supported.
+ * @param selected 		The selected suite.
+ * @param[in] suites_r 		The list of suported cipher suites.
+ * @retval  			True if supported.
  */
 static inline bool selected_suite_is_supported(uint8_t selected,
 					       struct byte_array *suites_r)
@@ -133,19 +134,12 @@ static inline bool selected_suite_is_supported(uint8_t selected,
 }
 
 /**
- * @brief   Encodes message 2
- * @param   corr corelation parameter
- * @param   c_i Connection identifier of the initiator
- * @param   c_i_len length of c_i
- * @param   g_y public ephemeral DH key of the responder 
- * @param   g_y_len length of g_y
- * @param   c_r connection identifier of the responder
- * @param   c_r_len length of c_r
- * @param   ciphertext_2 the ciphertext
- * @param   ciphertext_2_len length of ciphertext_2
- * @param   msg2 the encoded message
- * @param   msg2_len length of msg2
- * @retval  an err error code
+ * @brief   			Encodes message 2.
+ * @param[in] g_y 		Public ephemeral DH key of the responder. 
+ * @param[in] c_r 		Connection identifier of the responder.
+ * @param[in] ciphertext_2 	The ciphertext.
+ * @param[out] msg2 		The encoded message.
+ * @retval  			Ok or error code.
  */
 static inline enum err msg2_encode(const struct byte_array *g_y,
 				   struct byte_array *c_r,

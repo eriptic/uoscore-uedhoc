@@ -49,34 +49,3 @@ enum err id_cred2kid(const struct byte_array *id_cred, struct byte_array *kid)
 	return ok;
 }
 
-enum err plaintext_encode(const uint8_t *id_cred, uint32_t id_cred_len,
-			  const uint8_t *sgn_or_mac, uint32_t sgn_or_mac_len,
-			  const uint8_t *ad, uint32_t ad_len,
-			  uint8_t *plaintext, uint32_t *plaintext_len)
-{
-	// uint32_t l;
-	// uint32_t enc_sgn_or_mac_len = sgn_or_mac_len + 2;
-	// uint8_t kid_buf[KID_DEFAULT_SIZE];
-	// uint32_t kid_len = sizeof(kid_buf);
-	// TRY(id_cred2kid(id_cred, id_cred_len, kid_buf, &kid_len));
-
-	// PRINT_ARRAY("kid", kid_buf, kid_len);
-	// if (kid_len != 0) {
-	// 	/*id cred contains a kid*/
-	// 	TRY(_memcpy_s(plaintext, *plaintext_len, kid_buf, kid_len));
-	// 	l = kid_len;
-	// } else {
-	// 	TRY(_memcpy_s(plaintext, *plaintext_len, id_cred, id_cred_len));
-	// 	l = id_cred_len;
-	// }
-
-	// TRY(encode_byte_string(sgn_or_mac, sgn_or_mac_len, plaintext + l,
-	// 		       &enc_sgn_or_mac_len));
-
-	// TRY(_memcpy_s(plaintext + l + enc_sgn_or_mac_len,
-	// 	      *plaintext_len - l - enc_sgn_or_mac_len, ad, ad_len));
-
-	// *plaintext_len = l + enc_sgn_or_mac_len + ad_len;
-
-	return ok;
-}

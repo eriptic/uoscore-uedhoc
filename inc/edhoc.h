@@ -128,7 +128,7 @@ struct other_party_cred {
 	struct byte_array ca_pk; /*use only when certificates are used*/
 };
 
-struct cred_array{
+struct cred_array {
 	uint32_t len;
 	struct other_party_cred *ptr;
 };
@@ -169,144 +169,130 @@ struct edhoc_initiator_context {
 };
 
 /**
- * @brief   Generates public and private ephemeral DH keys from a random seed. 
- *          
- *          IMPORTANT!!! PROVIDE A GOOD RANDOM SEED! 
+ * @brief   			Generates ephemeral DH keys from a random seed. 
+ *			
+ *				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *          			IMPORTANT!!! PROVIDE A GOOD RANDOM SEED! 
+ *				!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  *
- * @param   curve DH curve to used
- * @param   seed a random seed
- * @param   sk pointer to a buffer where the secret key will be stored
- * @param   pk pointer to a buffer where the public key will be stored
- * @param   pk_size pointer to a variable with public key buffer size as input,
- *          and public key length as output.
- * @return 	error code
+ * @param alg			The ECDH algorithm to be used.
+ * @param seed			A random seed.
+ * @param[out] sk 		The newly generated private key.
+ * @param[out] pk 		The newly private private key.
+ * @return 			Ok or error code.
  */
 enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
-				   uint8_t *sk, uint8_t *pk, uint32_t *pk_size);
+				   struct byte_array *sk,
+				   struct byte_array *pk);
 
 /**
- * @brief   Executes the EDHOC protocol on the initiator side
+ * @brief   			Executes EDHOC on the initiator side.
  * 
- * @param[in]   c pointer to a structure containing initialization parameters
- * @param[in]  	cred_r_array containing elements of type other_party_cred 
- * 				used for the retrieval of the other party (the responder)
- * 				parameters at run time
- * @param[out]	err_msg in case that an error message is received its contend is 
- *          	provided to the caller though the err_msg
- * @param[out]	prk_out the derived shared secret
- * @return 		error code
+ * @param[in] c 		Initialization parameters.
+ * @param[in] cred_r_array 	Trust anchors for authenticating the responder.
+ * @param[out] err_msg 		A buffer for an error message.
+ * @param[out] prk_out 		The derived shared secret.
+ * @param tx			A callback function for sending messages.
+ * @param rx			A callback function for receiving messages.
+ * @param ead_process		A callback function for processing EAD.
+ * @return 			Ok or error code.
  */
 enum err edhoc_initiator_run(
 	const struct edhoc_initiator_context *c,
-	struct cred_array *cred_r_array,
-	struct byte_array *err_msg,
+	struct cred_array *cred_r_array, struct byte_array *err_msg,
 	struct byte_array *prk_out,
 	enum err (*tx)(void *sock, struct byte_array *data),
 	enum err (*rx)(void *sock, struct byte_array *data),
 	enum err (*ead_process)(void *params, struct byte_array *ead24));
 
 /**
- * @brief 		Executes the EDHOC protocol on the initiator side and provides 
- * 				access to the received C_R
+ * @brief 			Executes EDHOC on the initiator side and 
+ * 				provides access to the received C_R
  * 
- * @param[in] 	c pointer to a structure containing initialization parameters
- * @param[in] 	cred_r_array containing elements of type other_party_cred used 
- * 				for	the retrieval of the other party (the responder) parameters
- * 				at run time
- * @param[out] 	err_msg in case that an error message is received its contend
- * 				is provided to the caller though the err_msg
- * @param[out] 	c_r_bytes connection identifier of requester
- * @param[out] 	prk_out the derived shared secret
- * @return 		error code
+ * @param[in] c 		Initialization parameters.
+ * @param[in] cred_r_array 	Trust anchors for authenticating the responder.
+ * @param[out] err_msg 		A buffer for an error message.
+ * @param[out] c_r_bytes 	Connection identifier of requester.
+ * @param[out] prk_out 		The derived shared secret.
+ * @param tx			A callback function for sending messages.
+ * @param rx			A callback function for receiving messages.
+ * @param ead_process		A callback function for processing EAD.
+ * @return 			Ok or error code.
  */
 enum err edhoc_initiator_run_extended(
 	const struct edhoc_initiator_context *c,
-	struct cred_array *cred_r_array,
-	struct byte_array *err_msg,
-	struct byte_array *c_r_bytes,
-	struct byte_array *prk_out,
+	struct cred_array *cred_r_array, struct byte_array *err_msg,
+	struct byte_array *c_r_bytes, struct byte_array *prk_out,
 	enum err (*tx)(void *sock, struct byte_array *data),
 	enum err (*rx)(void *sock, struct byte_array *data),
 	enum err (*ead_process)(void *params, struct byte_array *ead24));
 
 /**
- * @brief		Executes the EDHOC protocol on the responder side.
+ * @brief			Executes EDHOC on the responder side.
  * 
- * @param[in]	c pointer to a structure containing initialization parameters
- * @param[in]	cred_i_array containing elements of type other_party_cred used 
- * 				for the retrieval of the other party (the initiator) parameters
- * 				at run time
- * @param[out]	err_msg in case that an error message is received its contend is 
- *          	provided to the caller though the err_msg
- * @param[out]	prk_out the derived shared secret
- * @return 		error code
+ * @param[in] c 		Initialization parameters.
+ * @param[in] cred_i_array 	Trust anchors for authenticating the initiator.
+ * @param[out] err_msg 		A buffer for an error message.
+ * @param[out] prk_out 		The derived shared secret. 
+ * @param tx			A callback function for sending messages.
+ * @param rx			A callback function for receiving messages.
+ * @param ead_process		A callback function for processing EAD.
+ * @return 			Ok or error code.
  */
 enum err edhoc_responder_run(
-	struct edhoc_responder_context *c,
-	struct cred_array *cred_i_array, 
-	struct byte_array *err_msg, 
-	struct byte_array *prk_out,
+	struct edhoc_responder_context *c, struct cred_array *cred_i_array,
+	struct byte_array *err_msg, struct byte_array *prk_out,
 	enum err (*tx)(void *sock, struct byte_array *data),
 	enum err (*rx)(void *sock, struct byte_array *data),
 	enum err (*ead_process)(void *params, struct byte_array *ead13));
 
 /**
- * @brief		Executes the EDHOC protocol on the responder side.
+ * @brief			Executes EDHOC on the responder side and
+ * 				provides access to the received C_I
  * 
- * @param[in]	c pointer to a structure containing initialization parameters
- * @param[in]	cred_i_array containing elements of type other_party_cred used 
- * 				for the retrieval of the other party (the initiator) parameters
- * 				at run time
- * @param[out]	err_msg in case that an error message is received its contend is 
- *          	provided to the caller though the err_msg
- * @param[out]  ead_1 the received in msg1 additional data is provided to the 
- * 				caller through ead_1
- * @param[out]	ead_3 the received in msg3 additional data is provided to the 
- * 				caller through ead_3
- * @param[out]	prk_out the derived shared secret 
- * @param[out]  initiator_pub_key public key of the initiator
- * @param[out]	c_i_bytes connection identifier of the initiator
- * @return 		error code
+ * @param[in] c 		Initialization parameters.
+ * @param[in] cred_i_array 	Trust anchors for authenticating the initiator.
+ * @param[out] err_msg 		A buffer for an error message.
+ * @param[out] prk_out 		The derived shared secret. 
+ * @param[out] initiator_pk 	Public key of the initiator.
+ * @param[out] c_i_bytes 	Connection identifier of the initiator.
+ * @param tx			A callback function for sending messages.
+ * @param rx			A callback function for receiving messages.
+ * @param ead_process		A callback function for processing EAD.
+ * @return 			Ok or error code.
  */
 enum err edhoc_responder_run_extended(
-	struct edhoc_responder_context *c,
-	struct cred_array *cred_i_array, 
-	struct byte_array *err_msg,
-	struct byte_array *prk_out, 
-	struct byte_array *initiator_pub_key,
-	struct byte_array *c_i_bytes,
+	struct edhoc_responder_context *c, struct cred_array *cred_i_array,
+	struct byte_array *err_msg, struct byte_array *prk_out,
+	struct byte_array *initiator_pk, struct byte_array *c_i_bytes,
 	enum err (*tx)(void *sock, struct byte_array *data),
 	enum err (*rx)(void *sock, struct byte_array *data),
 	enum err (*ead_process)(void *params, struct byte_array *ead13));
 
 /**
- * @brief 		Computes PRK_exporter from PRK_out
+ * @brief 			Computes PRK_exporter from PRK_out.
  * 
- * @param 		app_hash_alg the EDHOC hash algorithm
- * @param[in]	prk_out the product of a successful EDHOC execution
- * @param[out] 	prk_exporter pointer where the prk_exporter value will be written
- * @return 		error code
+ * @param app_hash_alg 		The EDHOC hash algorithm.
+ * @param[in] prk_out 		The product of a successful EDHOC execution.
+ * @param[out] prk_exporter 	The result.
+ * @return 			Ok or error code.
  */
-enum err prk_out2exporter(
-	enum hash_alg app_hash_alg,
-	struct byte_array *prk_out,
-	struct byte_array *prk_exporter);
+enum err prk_out2exporter(enum hash_alg app_hash_alg,
+			  struct byte_array *prk_out,
+			  struct byte_array *prk_exporter);
 
 /**
- * @brief Updates PRK_out
+ * @brief 			Updates PRK_out.
  * 
- * @param 		app_hash_alg 	the EDHOC hash algorithm
- * @param[in]	prk_out the product of a successful EDHOC execution 
- * @param[in] 	context	a context on which initiator and responder needs to 
- * 						agree in front
- * @param[out]	prk_out_new pointer where the prk_out_new value will be written
- * @return 		error code
+ * @param app_hash_alg 		The EDHOC hash algorithm.
+ * @param[in] prk_out 		The product of a successful EDHOC execution. 
+ * @param[in] context		A common context known by initiator & responder. 
+ * @param[out] prk_out_new 	The new prk_out value.
+ * @return 			Ok or error code.
  */
-enum err prk_out_update(
-	enum hash_alg app_hash_alg, 
-	struct byte_array *prk_out,
-	struct byte_array *context,
-	struct byte_array *prk_out_new);
+enum err prk_out_update(enum hash_alg app_hash_alg, struct byte_array *prk_out,
+			struct byte_array *context,
+			struct byte_array *prk_out_new);
 
 enum export_label {
 	OSCORE_MASTER_SECRET = 0,
@@ -314,20 +300,19 @@ enum export_label {
 };
 
 /**
- * @brief 		Computes key material to be used within the application, 
- * 				e.g., OSCORE master secret or OSCORE master salt
+ * @brief 			Computes key material to be used within the 
+ * 				application, e.g., OSCORE master secret or 
+ * 				OSCORE master salt.
  * 
- * @param 		app_hash_alg the application hash algorithm
- * @param 		label an uint value defined by the application 
- * @param[in] 	prk_exporter PRK computed with prk_out2exporter()
- * @param[out]	out the result of the computation,
- * 				e.g., OSCORE master secret or OSCORE master salt
- * @return		error code
+ * @param app_hash_alg 		The application hash algorithm.
+ * @param label 		An uint value defined by the application. 
+ * @param[in] prk_exporter 	PRK computed with prk_out2exporter().
+ * @param[out] out 		The result of the computation, e.g., OSCORE 
+ * 				master secret or OSCORE master salt.
+ * @return			Ok or error code.
  */
-enum err edhoc_exporter(
-	enum hash_alg app_hash_alg, 
-	enum export_label label,
-	struct byte_array *prk_exporter,
-	struct byte_array *out);
+enum err edhoc_exporter(enum hash_alg app_hash_alg, enum export_label label,
+			struct byte_array *prk_exporter,
+			struct byte_array *out);
 
 #endif

@@ -24,12 +24,12 @@
 #include "common/memcpy_s.h"
 
 /**
- * @brief Xors two arrays
+ * @brief 			Xors two arrays.
  * 
- * @param in1 an input array
- * @param in2 an input array
- * @param len the lenhgt of the arrays
- * @param out the result
+ * @param[in] in1		An input array.
+ * @param[in] in2 		An input array.
+ * @param[out] out 		The result of the xor operation.
+ * @retval			Ok or error code.
  */
 static inline enum err xor_arrays(const struct byte_array *in1,
 				  const struct byte_array *in2,
@@ -45,23 +45,17 @@ static inline enum err xor_arrays(const struct byte_array *in1,
 }
 
 /**
- * @brief Encrypts a plaintext or decrypts a cyphertext
+ * @brief 			Encrypts a plaintext or decrypts a ciphertext.
  * 
- * @param ctxt CIPHERTEXT2, CIPHERTEXT3 or CIPHERTEXT4
- * @param op ENCRYPT or DECRYPT
- * @param in ciphertext or plaintext 
- * @param in_len lenhgt of in
- * @param key the key used of encrption/decryption
- * @param key_len lenhgt of key
- * @param nonce AEAD nonce
- * @param nonce_len lenhgt of nonce
- * @param aad additional authenticated data for AEAD
- * @param aad_len lenhgt of aad
- * @param out the result
- * @param out_len lenhgt of out
- * @param tag AEAD authentication tag
- * @param tag_len lenhgt of tag
- * @return enum err 
+ * @param ctxt 			CIPHERTEXT2, CIPHERTEXT3 or CIPHERTEXT4.
+ * @param op 			ENCRYPT or DECRYPT.
+ * @param[in] in 		Ciphertext or plaintext. 
+ * @param[in] key 		The key used of encryption/decryption.
+ * @param[in] nonce 		AEAD nonce.
+ * @param[in] aad 		Additional authenticated data for AEAD.
+ * @param[out] out 		The result.
+ * @param[out] tag 		AEAD authentication tag.
+ * @return 			Ok or error code. 
  */
 static enum err ciphertext_encrypt_decrypt(
 	enum ciphertext ctxt, enum aes_operation op,
@@ -79,20 +73,16 @@ static enum err ciphertext_encrypt_decrypt(
 }
 
 /**
- * @brief Computes the keystream for ciphertext 2 and the key and IV for 
- *        ciphertexts 3 and 4. 
+ * @brief 			Computes the key stream for ciphertext 2 and 
+ * 				the key and IV for ciphertext 3 and 4. 
  * 
- * @param ctxt CIPHERTEXT2, CIPHERTEXT3 or CIPHERTEXT4
- * @param edhoc_hash the hash algorithm used in the current edhoc run
- * @param prk pseudoramdom key
- * @param prk_len lenhgt of prk
- * @param th thraskript hash
- * @param th_len lenhgt of th
- * @param key the generated key
- * @param key_len lenhgt of key
- * @param iv the generated iv
- * @param iv_len lenhgt of iv
- * @return enum err 
+ * @param ctxt 			CIPHERTEXT2, CIPHERTEXT3 or CIPHERTEXT4.
+ * @param edhoc_hash 		The EDHOC hash algorithm.
+ * @param prk 			Pseudorandom key.
+ * @param th 			Transcript hash.
+ * @param[out] key 		The generated key/key stream.
+ * @param[out] iv 		The generated iv.
+ * @return 			Ok or error code. 
  */
 static enum err key_gen(enum ciphertext ctxt, enum hash_alg edhoc_hash,
 			struct byte_array *prk, struct byte_array *th,

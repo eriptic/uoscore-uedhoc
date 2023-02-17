@@ -778,7 +778,7 @@ enum err WEAK shared_secret_derive(enum ecdh_alg alg,
 }
 
 enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
-				   uint8_t *sk, uint8_t *pk, uint32_t *pk_size)
+				   struct byte_array *sk, struct byte_array *pk)
 {
 	if (alg == X25519) {
 #ifdef COMPACT25519
@@ -793,28 +793,29 @@ enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
 #elif defined(MBEDTLS) /* TINYCRYPT / MBEDTLS */
 		size_t length;
 		TRY_EXPECT(psa_hash_compute(PSA_ALG_SHA_256, (uint8_t *)&seed,
-					    sizeof(seed), sk, HASH_DEFAULT_SIZE,
-					    &length),
+					    sizeof(seed), sk->ptr,
+					    HASH_DEFAULT_SIZE, &length),
 			   0);
 		if (length != 32) {
 			return sha_failed;
 		}
 #endif
-		compact_x25519_keygen(sk, pk, extended_seed);
-		*pk_size = X25519_KEY_SIZE;
+		compact_x25519_keygen(sk->ptr, pk->ptr, extended_seed);
+		pk->len = X25519_KEY_SIZE;
+		sk->len = X25519_KEY_SIZE;
 #endif
 	} else if (alg == P256) {
 #if defined(TINYCRYPT)
-		if (P_256_PUB_KEY_X_CORD_SIZE > *pk_size) {
+		if (P_256_PUB_KEY_X_CORD_SIZE > pk->len) {
 			return buffer_to_small;
 		}
 		uECC_Curve p256 = uECC_secp256r1();
 		uint8_t pk_decompressed[P_256_PUB_KEY_UNCOMPRESSED_SIZE];
-		TRY_EXPECT(uECC_make_key(pk_decompressed, sk, p256),
+		TRY_EXPECT(uECC_make_key(pk_decompressed, sk->ptr, p256),
 			   TC_CRYPTO_SUCCESS);
-		TRY(_memcpy_s(pk, P_256_PUB_KEY_X_CORD_SIZE, pk_decompressed,
-			      P_256_PUB_KEY_X_CORD_SIZE));
-		*pk_size = P_256_PUB_KEY_X_CORD_SIZE;
+		TRY(_memcpy_s(pk->ptr, P_256_PUB_KEY_X_CORD_SIZE,
+			      pk_decompressed, P_256_PUB_KEY_X_CORD_SIZE));
+		pk->len = P_256_PUB_KEY_X_CORD_SIZE;
 		return ok;
 #elif defined(MBEDTLS) /* TINYCRYPT / MBEDTLS */
 		psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
@@ -826,7 +827,7 @@ enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
 			P_256_PUB_KEY_UNCOMPRESSED_SIZE;
 		uint8_t pub_key_uncompressed[P_256_PUB_KEY_UNCOMPRESSED_SIZE];
 
-		if (P_256_PUB_KEY_X_CORD_SIZE > *pk_size) {
+		if (P_256_PUB_KEY_X_CORD_SIZE > pk->len) {
 			return buffer_to_small;
 		}
 		TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
@@ -849,9 +850,10 @@ enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
 		size_t key_len = 0;
 		size_t public_key_len = 0;
 
-		TRY_EXPECT_PSA(
-			psa_export_key(key_id, sk, priv_key_size, &key_len),
-			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(psa_export_key(key_id, sk->ptr, priv_key_size,
+					      &key_len),
+			       PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 		TRY_EXPECT_PSA(
 			psa_export_public_key(key_id, pub_key_uncompressed,
 					      pub_key_uncompressed_size,
@@ -860,10 +862,10 @@ enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
 		TRY_EXPECT_PSA(public_key_len, P_256_PUB_KEY_UNCOMPRESSED_SIZE,
 			       key_id, unexpected_result_from_ext_lib);
 		/* Prepare output format - only x parameter */
-		memcpy(pk, (pub_key_uncompressed + 1),
+		memcpy(pk->ptr, (pub_key_uncompressed + 1),
 		       P_256_PUB_KEY_X_CORD_SIZE);
 		TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
-		*pk_size = P_256_PUB_KEY_X_CORD_SIZE;
+		pk->len = P_256_PUB_KEY_X_CORD_SIZE;
 #endif
 	} else {
 		return unsupported_ecdh_curve;

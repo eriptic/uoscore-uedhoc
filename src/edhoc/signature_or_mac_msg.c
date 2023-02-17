@@ -27,6 +27,22 @@
 #include "cbor/edhoc_encode_enc_structure.h"
 #include "cbor/edhoc_encode_sig_structure.h"
 
+
+/**
+ * @brief 			Forms a serialized data structure from a set of 
+ * 				data items and computes a MAC over it.
+ * 
+ * @param[in] prk 		The key to be used for the mac.
+ * @param[in] th 		Transcript hash.
+ * @param[in] id_cred 		ID of the credential.
+ * @param[in] cred 		The credential.
+ * @param[in] ead 		External authorization data.
+ * @param mac_label 		An info label.
+ * @param static_dh 		True if static DH is used for authentication.
+ * @param suite 		The used crypto suite.
+ * @param[out] mac 		The computed mac.
+ * @return 			Ok or error code.
+ */
 static enum err mac(const struct byte_array *prk, const struct byte_array *th,
 		    const struct byte_array *id_cred,
 		    const struct byte_array *cred, const struct byte_array *ead,
@@ -76,6 +92,17 @@ static enum err mac(const struct byte_array *prk, const struct byte_array *th,
 	return ok;
 }
 
+/**
+ * @brief 
+ * 
+ * @param th 
+ * @param id_cred 
+ * @param cred 
+ * @param ead 
+ * @param mac 
+ * @param out 
+ * @return enum err 
+ */
 static enum err signature_struct_gen(const struct byte_array *th,
 				     const struct byte_array *id_cred,
 				     const struct byte_array *cred,
