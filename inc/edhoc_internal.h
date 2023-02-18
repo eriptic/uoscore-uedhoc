@@ -40,8 +40,8 @@ void runtime_context_init(struct runtime_context *c);
  * @param[in,out] rc 		Runtime context.
  * @retval			Ok or error code.
  */
-static enum err msg1_gen(const struct edhoc_initiator_context *c,
-			 struct runtime_context *rc);
+enum err msg1_gen(const struct edhoc_initiator_context *c,
+		  struct runtime_context *rc);
 
 /**
  * @brief Generates message 3. This function should by used by on the 

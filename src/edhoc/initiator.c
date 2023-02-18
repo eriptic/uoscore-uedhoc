@@ -66,7 +66,7 @@ static inline enum err msg2_parse(struct byte_array *msg2,
 	PRINT_ARRAY("ciphertext2", ciphertext2->ptr, ciphertext2->len);
 
 	if (m._m2_C_R_choice == _m2_C_R_int) {
-		TRY(encode_int(&m._m2_C_R_int, 1, c_r->ptr, &c_r->len));
+		TRY(encode_int(&m._m2_C_R_int, 1, c_r));
 	} else {
 		TRY(_memcpy_s(c_r->ptr, c_r->len, m._m2_C_R_bstr.value,
 			      (uint32_t)m._m2_C_R_bstr.len));
@@ -109,7 +109,7 @@ enum err msg1_gen(const struct edhoc_initiator_context *c,
 	    ((0x00 <= c->c_i.ptr[0] && c->c_i.ptr[0] < 0x18) ||
 	     (0x1F < c->c_i.ptr[0] && c->c_i.ptr[0] <= 0x37))) {
 		m1._message_1_C_I_choice = _message_1_C_I_int;
-		TRY(decode_int(c->c_i.ptr, 1, &m1._message_1_C_I_int));
+		TRY(decode_int(&c->c_i, &m1._message_1_C_I_int));
 	} else {
 		m1._message_1_C_I_choice = _message_1_C_I_bstr;
 		m1._message_1_C_I_bstr.value = c->c_i.ptr;
@@ -146,7 +146,7 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 {
 	bool static_dh_i = false, static_dh_r = false;
 
-	TRY(authentication_type_get(c->method, &static_dh_i, &static_dh_r));
+	authentication_type_get(c->method, &static_dh_i, &static_dh_r);
 
 	BYTE_ARRAY_NEW(g_y, G_Y_DEFAULT_SIZE,
 		       get_ecdh_pk_len(rc->suite.edhoc_ecdh));

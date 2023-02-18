@@ -14,25 +14,18 @@
 enum ciphertext { CIPHERTEXT2, CIPHERTEXT3, CIPHERTEXT4 };
 
 /**
- * @brief Generates a ciphertext
+ * @brief 			Generates a ciphertext.
  * 
- * @param ctxt CIPHERTEXT2, CIPHERTEXT3 or CIPHERTEXT4
- * @param suite cipher suite
- * @param id_cred ID_CRED
- * @param id_cred_len lenhgt of ID_CRED
- * @param signature_or_mac buffer containing signature or a mac
- * @param signature_or_mac_len lenhgt of signature_or_mac
- * @param ead additional authenticated data
- * @param ead_len lenhgt of ead
- * @param prk pseudo random key
- * @param prk_len lenhgt of prk
- * @param th transkript hash
- * @param th_len lenhgt of th
- * @param plaintext a plaintext constructed from the other input parameters
- * @param plaintext_len length of plaintext
- * @param ciphertext the output
- * @param ciphertext_len lenhgt of the output
- * @return enum err 
+ * @param ctxt 			CIPHERTEXT2, CIPHERTEXT3 or CIPHERTEXT4.
+ * @param suite 		Cipher suite.
+ * @param[in] id_cred 		Id of the credential.
+ * @param[in] signature_or_mac 	Signature or a mac byte_array.
+ * @param[in] ead 		External authorization data.
+ * @param[in] prk 		Pseudo random key.
+ * @param[in] th 		Transcript hash.
+ * @param[out] plaintext 	The plaintext. 
+ * @param[out] ciphertext 	The output.
+ * @return 			Ok or error code. 
  */
 enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
 			const struct byte_array *id_cred,
@@ -42,26 +35,19 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
 			struct byte_array *plaintext);
 
 /**
- * @brief Decrypts a ciphertest and splits the resulting plaintext into its 
- *        components.
+ * @brief 			Decrypts a ciphertext and splits the resulting 
+ * 				plaintext into its components.
  * 
- * @param ctxt CIPHERTEXT2, CIPHERTEXT3 or CIPHERTEXT4
- * @param suite cipher suite
- * @param id_cred ID_CRED
- * @param id_cred_len lenhgt of ID_CRED
- * @param signature_or_mac buffer containing signature or a mac
- * @param signature_or_mac_len lenhgt of signature_or_mac
- * @param ead additional authenticated data
- * @param ead_len lenhgt of ead
- * @param prk pseudo random key
- * @param prk_len lenhgt of prk
- * @param th transkript hash
- * @param th_len lenhgt of th
- * @param ciphertext the input
- * @param ciphertext_len lenhgt of the input
- * @param plaintext the plaintext
- * @param plaintext_len the length of the plaintext
- * @return enum err 
+ * @param ctxt 			CIPHERTEXT2, CIPHERTEXT3 or CIPHERTEXT4
+ * @param suite 		cipher suite
+ * @param[out] id_cred 		Id of the credential.
+ * @param[out] signature_or_mac Signature or a mac byte_array.
+ * @param[out] ead 		External authorization data.
+ * @param[in] prk 		Pseudo random key.
+ * @param[in] th 		Transcript hash.
+ * @param[in] ciphertext 	The input.
+ * @param[out] plaintext 	The plaintext.
+ * @return 			Ok or error code.
  */
 enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
 				  struct byte_array *id_cred,

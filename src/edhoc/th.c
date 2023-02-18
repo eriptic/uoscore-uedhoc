@@ -24,16 +24,14 @@
 #include "cbor/edhoc_encode_th2.h"
 
 /**
- * @brief   Setups a data structure used as input for th2, namely CBOR sequence
- *           H( G_Y, C_R, H(message_1) )
- * @param   hash_msg1 pointer to the hash of message 1
- * @param   hash_msg1_len length of hash_msg1
- * @param   g_y pointer to the public DH parameter
- * @param	g_y_len length of g_y
- * @param   c_r pointer to the conception identifier of the responder
- * @param	c_r_len length of c_r
- * @param   th2_input ouput buffer for the data structure
- * @param   th2_input_len length of th2_input
+ * @brief   			Setups a data structure used as input for th2, 
+ * 				namely CBOR sequence H( G_Y, C_R, H(message_1)).
+ *
+ * @param[in] hash_msg1 	Hash of message 1.
+ * @param[in] g_y 		Ephemeral public DH key.
+ * @param[in] c_r 		Conception identifier of the responder.
+ * @param[out] th2_input	The result.
+ * @retval			Ok or error.
  */
 static inline enum err th2_input_encode(uint8_t *hash_msg1,
 					struct byte_array *g_y,
@@ -55,7 +53,7 @@ static inline enum err th2_input_encode(uint8_t *hash_msg1,
 	if (c_r->len == 1 && (c_r->ptr[0] < 0x18 ||
 			      (0x1F < c_r->ptr[0] && c_r->ptr[0] <= 0x37))) {
 		th2._th2_C_R_choice = _th2_C_R_int;
-		TRY(decode_int(c_r->ptr, 1, &th2._th2_C_R_int));
+		TRY(decode_int(c_r, &th2._th2_C_R_int));
 	} else {
 		th2._th2_C_R_choice = _th2_C_R_bstr;
 		th2._th2_C_R_bstr.value = c_r->ptr;
@@ -74,14 +72,14 @@ static inline enum err th2_input_encode(uint8_t *hash_msg1,
 }
 
 /**
- * @brief   Setups a data structure used as input for th3 or th4
+ * @brief   			Setups a data structure used as input for 
+ * 				th3 or th4.
  * 
- * @param   th23 pointer to a th2/th3
- * @param   th23_len length of th23
- * @param   plaintext_23 Plaintext 2 or plaintext 3
- * @param   plaintext_23_len  length of plaintext_23
- * @param   th34_input data structure to be hashed for TH_3/4
- * @param   th34_input_len length of th34_input
+ * @param[in] th23 		th2 or th3.
+ * @param[in] plaintext_23 	Plaintext 2 or plaintext 3.
+ * @param[in] cred		The credential.
+ * @param[out] th34_input 	The result.
+ * @retval			Ok or error code.
  */
 static enum err th34_input_encode(struct byte_array *th23,
 				  struct byte_array *plaintext_23,
@@ -112,18 +110,16 @@ static enum err th34_input_encode(struct byte_array *th23,
 }
 
 /**
- * @brief Computes TH_3/TH4. Where: 
+ * @brief 			Computes TH_3 or TH4. Where: 
  * 				TH_3 = H(TH_2, PLAINTEXT_2)
  * 				TH_4 = H(TH_3, PLAINTEXT_3)
  * 
- * 
- * @param alg the hash algorithm to be used
- * @param th23 th2 if we compute TH_3 and th3 if we compute TH_4
- * @param th23_len length of th23
- * @param plaintext_23 the plaintext
- * @param plaintext_33_len length of plaintext_23
- * @param th34 the result
- * @return enum err 
+ * @param alg 			The hash algorithm to be used.
+ * @param[in] th23 		th2 if we compute TH_3, th3 if we compute TH_4.
+ * @param[in] plaintext_23 	The plaintext.
+ * @param[in] cred		The credential.
+ * @param[out] th34 		The result.
+ * @return 			Ok or error. 
  */
 enum err th34_calculate(enum hash_alg alg, struct byte_array *th23,
 			struct byte_array *plaintext_23,
