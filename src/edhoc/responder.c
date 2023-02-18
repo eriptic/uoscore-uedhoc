@@ -166,7 +166,7 @@ static inline enum err msg2_encode(const struct byte_array *g_y,
 	if (c_r->len == 1 && (c_r->ptr[0] < 0x18 ||
 			      (0x1F < c_r->ptr[0] && c_r->ptr[0] <= 0x37))) {
 		m._m2_C_R_choice = _m2_C_R_int;
-		TRY(decode_int(c_r->ptr, 1, &m._m2_C_R_int));
+		TRY(decode_int(c_r, &m._m2_C_R_int));
 	} else {
 		m._m2_C_R_choice = _m2_C_R_bstr;
 		m._m2_C_R_bstr.value = c_r->ptr;

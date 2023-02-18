@@ -33,15 +33,15 @@ enum info_label {
 };
 
 /**
- * @brief   Encodes the HKDF Info 
+ * @brief   			Encodes the HKDF Info. 
  * 
- * @param   label an in value indicating what kind of output we are generating
- * @param   context all possible contexts are listed in figure 7 in the spec
- * @param   context_len length of context
- * @param   okm_len the length of the output keying material
- * @param   out out-array
- * @param   out_len length of out
- * @return  err
+ * @param label 		An int value indicating what kind of output we 
+ * 				are generating.
+ * @param[in] context 		All possible contexts are listed in figure 7 
+ * 				in the spec.
+ * @param okm_len 		The length of the output keying material.
+ * @param[out] out 		The result.
+ * @return  			Ok or error code.
  */
 enum err create_hkdf_info(uint8_t label, struct byte_array *context,
 			  uint32_t okm_len, struct byte_array *out);

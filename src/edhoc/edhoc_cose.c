@@ -18,19 +18,18 @@
 #include "cbor/edhoc_encode_enc_structure.h"
 #include "cbor/edhoc_encode_sig_structure.h"
 
-enum err cose_enc_structure_encode(const uint8_t *context, uint32_t context_len,
-				   const uint8_t *protected,
-				   uint32_t protected_len,
-				   const uint8_t *external_aad,
-				   uint32_t external_aad_len, uint8_t *out,
-				   uint32_t *out_len)
+enum err cose_enc_structure_encode(const struct byte_array *context,
+				   const struct byte_array *protected,
+				   const struct byte_array *external_aad,
+				   struct byte_array *out)
 {
 	struct edhoc_enc_structure enc_structure;
 
-	enc_structure._edhoc_enc_structure_context.value = context;
-	enc_structure._edhoc_enc_structure_context.len = context_len;
-	enc_structure._edhoc_enc_structure_external_aad.value = external_aad;
-	enc_structure._edhoc_enc_structure_external_aad.len = external_aad_len;
+	enc_structure._edhoc_enc_structure_context.value = context->ptr;
+	enc_structure._edhoc_enc_structure_context.len = context->len;
+	enc_structure._edhoc_enc_structure_external_aad.value =
+		external_aad->ptr;
+	enc_structure._edhoc_enc_structure_external_aad.len = external_aad->len;
 
 	/* NULL protected with zero size is acceptable from EDHOC point of view,
 	 * but CBOR encoder does not accept NULL as input argument.
@@ -41,24 +40,26 @@ enum err cose_enc_structure_encode(const uint8_t *context, uint32_t context_len,
 	 * is copied to the EDHOC message. */
 	const char dummy_buffer;
 
-	if (NULL == protected) {
-		if (0 != protected_len) {
+	if (NULL == protected->ptr) {
+		if (0 != protected->len) {
 			return wrong_parameter;
 		} else {
 			enc_structure._edhoc_enc_structure_protected.value =
 				(const uint8_t *)&dummy_buffer;
 		}
 	} else {
-		enc_structure._edhoc_enc_structure_protected.value = protected;
+		enc_structure._edhoc_enc_structure_protected.value =
+			protected->ptr;
 	}
 
-	enc_structure._edhoc_enc_structure_protected.len = protected_len;
+	enc_structure._edhoc_enc_structure_protected.len = protected->len;
 
 	size_t payload_len_out;
-	TRY_EXPECT(cbor_encode_edhoc_enc_structure(
-			   out, *out_len, &enc_structure, &payload_len_out),
+	TRY_EXPECT(cbor_encode_edhoc_enc_structure(out->ptr, out->len,
+						   &enc_structure,
+						   &payload_len_out),
 		   0);
-	*out_len = (uint32_t)payload_len_out;
+	out->len = (uint32_t)payload_len_out;
 	return ok;
 }
 

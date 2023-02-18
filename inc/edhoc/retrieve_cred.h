@@ -42,20 +42,18 @@ enum id_cred_x_label {
 };
 
 /**
- * @brief   retrives the credential of the other party and its static DH key 
- *          and when static DH authentication is used or public signature key 
- *          when digital signatures are used 
- * @param   static_dh_auth true if static DH authentication is used
- * @param   cred_array an array containing credentials 
- * @param   cred_num number of elements in cred_array
- * @param   id_cred ID_CRED_x
- * @param   id_cred_len length of id_cred
- * @param   cred CRED_x
- * @param   cred_len length of cred
- * @param   pk public key
- * @param   pk_len length of pk
- * @param   g static DH public key
- * @param   g_len length of g
+ * @brief			Retrieves the credential of the other party and 
+ * 				its static DH key when static DH 
+ * 				authentication is used or public signature key 
+ *				when digital signatures are used. 
+ *
+ * @param static_dh_auth 	True if static DH authentication is used. 
+ * @param cred_array 		An array containing credentials. 
+ * @param[in] id_cred 		ID_CRED_x.
+ * @param[out] cred 		CRED_x.
+ * @param[out] pk 		Public key.
+ * @param[out] g 		Static DH public key.
+ * @retval			Ok or error.
  */
 enum err retrieve_cred(bool static_dh_auth, 
 	struct cred_array *cred_array,

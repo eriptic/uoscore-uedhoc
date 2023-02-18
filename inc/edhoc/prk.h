@@ -17,27 +17,22 @@
 #include "common/oscore_edhoc_error.h"
 
 /**
- * @brief   derives a pseudo random key (prk) form anther prk and static DH 
- *          keys.
- * @param   static_dh_auth true if static DH keys should be used
- * @param   suite the cipher suite used
- * @param   label EDHOC-KDF label 
- * @param   context EDHOC-KDF context
- * @param   context_len length of context
- * @param   prk_in input prk
- * @param   prk_in_len length of prk_in
- * @param   stat_pk static public DH key 
- * @param   stat_pk_len length of stat_pk
- * @param   stat_sk static secret DH key 
- * @param   stat_sk_len length of stat_sk
- * @param   prk_out pointer to the buffer for the newly created PRK
+ * @brief                       Derives a pseudo random key (prk) form anther 
+ *                              prk and static DH keys.
+ * 
+ * @param static_dh_auth        True if static DH keys should be used.
+ * @param suite                 The cipher suite to be used.
+ * @param label                 EDHOC-KDF label. 
+ * @param[in] context           EDHOC-KDF context.
+ * @param[in] prk_in            Input prk.
+ * @param[in] stat_pk           Static public DH key. 
+ * @param[in] stat_sk           Static secret DH key. 
+ * @param[out] prk_out          The result.
+ * @retval                      Ok or error code.
  */
-enum err prk_derive(bool static_dh_auth, 
-   struct suite suite, uint8_t label,
-	struct byte_array *context, 
-	const struct byte_array *prk_in,
-	const struct byte_array *stat_pk,
-	const struct byte_array *stat_sk, 
-   uint8_t *prk_out);
+enum err prk_derive(bool static_dh_auth, struct suite suite, uint8_t label,
+		    struct byte_array *context, const struct byte_array *prk_in,
+		    const struct byte_array *stat_pk,
+		    const struct byte_array *stat_sk, uint8_t *prk_out);
 
 #endif

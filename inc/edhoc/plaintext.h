@@ -16,24 +16,22 @@
 #include "common/oscore_edhoc_error.h"
 
 /**
- * @brief   Decodes id_cred to kid
- * @param   id_cred ID_CRED_x
- * @param   id_cred_len length of id_cred
- * @param   _kid output pointer
- * @param   kid_len length of the kid
+ * @brief                       Decodes id_cred to kid.
+ * 
+ * @param[in] id_cred           ID_CRED_x
+ * @param[out] kid              The result.
+ * @retval                      Ok or error code.
  */
 enum err id_cred2kid(const struct byte_array *id_cred, struct byte_array *kid);
 
 /**
- * @brief   Splits a the plaintext of message 2 to its subfields
- * @param   ptxt pointer to the plaintext
- * @param   ptxt_len length of ptxt
- * @param   id_cred_x ID_CRED_x
- * @param   id_cred_x_len length of id_cred_x_len
- * @param   sign_or_mac signature or mac
- * @param   sign_or_mac_len length of sign_or_mac
- * @param   ad axillary data
- * @param   ad_len length of ad
+ * @brief                       Splits the plaintext of message 2. 
+ *
+ * @param[in] ptxt              Pointer to the plaintext.
+ * @param[out] id_cred_x        ID_CRED_x.
+ * @param[out] sign_or_mac      Signature or mac.
+ * @param[out] ad               Axillary data.
+ * @retval                      Ok or error code.
  */
 enum err plaintext_split(struct byte_array *ptxt, struct byte_array *id_cred_x,
 			 struct byte_array *sign_or_mac, struct byte_array *ad);

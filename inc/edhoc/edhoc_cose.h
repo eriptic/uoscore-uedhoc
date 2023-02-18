@@ -21,37 +21,29 @@ enum cose_context {
 };
 
 /**
- * @brief	Encodes a cose encrypt structure
- * @param	context field in the cose encrypt structure
- * @param	contex_len length of context
- * @param	protected field in the cose encrypt structure
- * @param	protected_len length of protected
- * @param	external_aad field in the cose encrypt structure
- * @param	external_aad_len length of external_aad
- * @param	out the encoded structure
- * @param	out_len length of the encoded structure
- * @retval	err error code
+ * @brief			Encodes a COSE encrypt structure.
+ * 
+ * @param[in] context 		Context field in the COSE encrypt structure.
+ * @param[in] protected 	Protected field in the COSE encrypt structure.
+ * @param[in] external_aad 	External_aad field in the COSE encrypt structure
+ * @param[out] out 		The result.
+ * @retval			Ok or error code.
  */
-enum err cose_enc_structure_encode(const uint8_t *context, uint32_t context_len,
-				   const uint8_t *protected,
-				   uint32_t protected_len,
-				   const uint8_t *external_aad,
-				   uint32_t external_aad_len, uint8_t *out,
-				   uint32_t *out_len);
+enum err cose_enc_structure_encode(const struct byte_array *context,
+				   const struct byte_array *protected,
+				   const struct byte_array *external_aad,
+				   struct byte_array *out);
 
 /**
- * @brief	Encodes a cose signature structure
- * @param	context field in the cose signature structure
- * @param	contex_len length of context
- * @param	protected field in the cose signature structure
- * @param	protected_len length of protected
- * @param	external_aad field in the cose signature structure
- * @param	external_aad_len length of external_aad
- * @param	payload field in the cose signature structure
- * @param	payload_len length of payload
- * @param	out the encoded structure
- * @param	out_len length of the encoded structure
- * @retval	err error code
+ * @brief			Encodes a COSE signature structure.
+ * 
+ * @param[in] context 		Context field in the COSE signature structure.
+ * @param[in] protected 	Protected field in the COSE signature structure.
+ * @param[in] external_aad 	External_aad field in the COSE signature 
+ * 				structure.
+ * @param[in] payload 		Payload field in the COSE signature structure.
+ * @param[out] out 		The encoded structure.
+ * @retval			Ok or error code.
  */
 enum err cose_sig_structure_encode(const struct byte_array *context,
 				   const struct byte_array *protected,
