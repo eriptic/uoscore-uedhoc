@@ -45,15 +45,18 @@ CBOR_ENGINE += -DZCBOR
 ################################################################################
 # RAM optimization
 ################################################################################
+# Compute the length of buffers at runtime (variable length array VLA)
+#FEATURES += -DVLA
+
+################################################################################
+# RAM optimization EDHOC
+################################################################################
 # In deployments where no protected application message is sent from the 
 # Responder to the Initiator, message_4 MUST be used.
 FEATURES += -DMESSAGE_4
 
 # If EAD is not used set its buffer size to 0
 FEATURES += -DEAD_SIZE=0
-
-# Compute the length of buffers at runtime (variable length array VLA)
-#FEATURES += -DVLA
 
 # Size of the connection identifier of the initiator C_I
 FEATURES += -DC_I_SIZE=1
@@ -76,9 +79,21 @@ FEATURES += -DCRED_I_SIZE=293
 # Number of supported suites by the initiator
 FEATURES += -DSUITES_I_SIZE=1 
 
-#
+################################################################################
+# RAM optimization OSCORE
+################################################################################
+# Max size of an OSCORE plaintext
+FEATURES += -DOSCORE_MAX_PLAINTEXT_LEN=1024
+
+# Max size of the E options buffer
+FEATURES += -DE_OPTIONS_BUFF_MAX_LEN=100
+
+# Max size of the I options buffer
+FEATURES += -DI_OPTIONS_BUFF_MAX_LEN=100
+
+################################################################################
 # Crypto engine
-#
+################################################################################
 # The uoscore-uedhoc can be used with different crypto engines. 
 # The user can provide as well additional crypto engines by providing 
 # implementations of the function defined (as week) in the crypto_wrapper file.
