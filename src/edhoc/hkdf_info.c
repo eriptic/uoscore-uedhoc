@@ -19,7 +19,6 @@
 
 #include "cbor/edhoc_encode_info.h"
 
-
 enum err create_hkdf_info(uint8_t label, struct byte_array *context,
 			  uint32_t okm_len, struct byte_array *out)
 {
