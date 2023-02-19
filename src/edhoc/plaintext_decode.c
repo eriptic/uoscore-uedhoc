@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 
-#include "edhoc.h"
+
 
 #include "edhoc/retrieve_cred.h"
 #include "edhoc/plaintext.h"

@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 
-#include "edhoc.h"
+#include "edhoc/buffer_sizes.h"
 #include "edhoc/edhoc_cose.h"
 #include "edhoc/hkdf_info.h"
 #include "edhoc/okm.h"
@@ -49,12 +49,12 @@ static enum err mac(const struct byte_array *prk, const struct byte_array *th,
 		    struct suite *suite, struct byte_array *mac)
 {
 	/*encode th as bstr*/
-	BYTE_ARRAY_NEW(th_enc, HASH_DEFAULT_SIZE + 2, th->len + 2);
+	BYTE_ARRAY_NEW(th_enc, HASH_SIZE + 2, th->len + 2);
 
 	TRY(encode_bstr(th, &th_enc));
 
 	/**/
-	BYTE_ARRAY_NEW(context_mac, CONTEXT_MAC_DEFAULT_SIZE,
+	BYTE_ARRAY_NEW(context_mac, CONTEXT_MAC_SIZE,
 		       id_cred->len + cred->len + ead->len + th_enc.len);
 
 	TRY(_memcpy_s(context_mac.ptr, context_mac.len, id_cred->ptr,
@@ -109,12 +109,12 @@ static enum err signature_struct_gen(const struct byte_array *th,
 				     const struct byte_array *mac,
 				     struct byte_array *out)
 {
-	BYTE_ARRAY_NEW(th_enc, HASH_DEFAULT_SIZE + 2, HASH_DEFAULT_SIZE + 2);
+	BYTE_ARRAY_NEW(th_enc, HASH_SIZE + 2, HASH_SIZE + 2);
 
 	TRY(encode_bstr(th, &th_enc));
 
 	BYTE_ARRAY_NEW(
-		tmp, (CRED_DEFAULT_SIZE + HASH_DEFAULT_SIZE + AD_DEFAULT_SIZE),
+		tmp, (CRED_MAX_SIZE + HASH_SIZE + EAD_SIZE + ENCODING_OVERHEAD),
 		(th_enc.len + cred->len + ead->len));
 
 	memcpy(tmp.ptr, th_enc.ptr, th_enc.len);
@@ -149,9 +149,9 @@ signature_or_mac(enum sgn_or_mac_op op, bool static_dh, struct suite *suite,
 			/*signature_or_mac is mac when the caller of this function authenticates with static DH keys*/
 			return ok;
 		} else {
-			BYTE_ARRAY_NEW(sign_struct,
-				       SIGNATURE_STRUCT_DEFAULT_SIZE,
-				       SIGNATURE_STRUCT_DEFAULT_SIZE);
+			PRINTF("SIG_STRUCT_SIZE: %d\n", SIG_STRUCT_SIZE);
+			BYTE_ARRAY_NEW(sign_struct, SIG_STRUCT_SIZE,
+				       SIG_STRUCT_SIZE);
 
 			TRY(signature_struct_gen(th, id_cred, cred, ead,
 						 signature_or_mac,
@@ -167,7 +167,7 @@ signature_or_mac(enum sgn_or_mac_op op, bool static_dh, struct suite *suite,
 				    signature_or_mac->len);
 		}
 	} else { /*we verify here*/
-		BYTE_ARRAY_NEW(_mac, HASH_DEFAULT_SIZE,
+		BYTE_ARRAY_NEW(_mac, HASH_SIZE,
 			       get_hash_len(suite->edhoc_hash));
 
 		TRY(mac(prk, th, id_cred, cred, ead, mac_label, static_dh,
@@ -182,9 +182,8 @@ signature_or_mac(enum sgn_or_mac_op op, bool static_dh, struct suite *suite,
 			}
 
 		} else {
-			BYTE_ARRAY_NEW(signature_struct,
-				       SIGNATURE_STRUCT_DEFAULT_SIZE,
-				       SIGNATURE_STRUCT_DEFAULT_SIZE);
+			BYTE_ARRAY_NEW(signature_struct, SIG_STRUCT_SIZE,
+				       SIG_STRUCT_SIZE);
 
 			TRY(signature_struct_gen(th, id_cred, cred, ead, &_mac,
 						 &signature_struct));

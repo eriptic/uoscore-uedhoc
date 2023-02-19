@@ -13,7 +13,9 @@
 #define PRK_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
+#include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
 /**

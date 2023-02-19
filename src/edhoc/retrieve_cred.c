@@ -11,7 +11,7 @@
 
 #include <string.h>
 
-#include "edhoc.h"
+
 
 #include "edhoc/cert.h"
 #include "edhoc/bstr_encode_decode.h"

@@ -22,6 +22,7 @@
 
 #include <stdint.h>
 
+#include "edhoc.h"
 #include "edhoc/runtime_context.h"
 
 #include "common/oscore_edhoc_error.h"

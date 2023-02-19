@@ -1,6 +1,6 @@
-#
+################################################################################
 # Toolchain
-#
+################################################################################
 #CC = gcc
 #AR = ar
 #CC = /opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc
@@ -8,41 +8,43 @@
 #CC = clang-13
 
 
-#
+################################################################################
 # Architecture
-#
+################################################################################
 # see for arm flags: https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html
 #ARCH = -m32
 #ARCH = -mtune=cortex-m3
 
-# 
+
+################################################################################ 
 # Compiler optimization
-# 
+################################################################################ 
 OPT = -O0
 
-#
+
+################################################################################
 # Print helpful debug messages
-#
-# Uncomment this to print intermediary results at runtime
+################################################################################
 DEBUG_PRINT += -DDEBUG_PRINT
 
-#
+
+################################################################################
 # Unit testing
-#
+################################################################################
 # Uncomment this to enable building the unit tests
 DUNIT_TEST += -DUNIT_TEST
 
 
-#
+################################################################################
 # CBOR engine
-#
+################################################################################
 # currently only ZCBOR is supported
 CBOR_ENGINE += -DZCBOR
 
 
-#
-# Turn on/off some of the optional features to save RAM on the stack
-#
+################################################################################
+# RAM optimization
+################################################################################
 # In deployments where no protected application message is sent from the 
 # Responder to the Initiator, message_4 MUST be used.
 FEATURES += -DMESSAGE_4
@@ -51,7 +53,28 @@ FEATURES += -DMESSAGE_4
 FEATURES += -DEAD_SIZE=0
 
 # Compute the length of buffers at runtime (variable length array VLA)
-FEATURES += -DVLA
+#FEATURES += -DVLA
+
+# Size of the connection identifier of the initiator C_I
+FEATURES += -DC_I_SIZE=1
+
+# Size of the connection identifier of the initiator C_R
+FEATURES += -DC_R_SIZE=1
+
+# Size of ID_CRED_R
+FEATURES += -DID_CRED_R_SIZE=296 
+
+# Size of ID_CRED_I
+FEATURES += -DID_CRED_I_SIZE=296 
+
+# Size of CRED_R
+FEATURES += -DCRED_R_SIZE=293 
+
+# Size of CRED_I
+FEATURES += -DCRED_I_SIZE=293 
+
+# Number of supported suites by the initiator
+FEATURES += -DSUITES_I_SIZE=1 
 
 #
 # Crypto engine

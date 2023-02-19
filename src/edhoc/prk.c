@@ -11,7 +11,7 @@
 
 #include <string.h>
 
-#include "edhoc.h"
+#include "edhoc/buffer_sizes.h"
 
 #include "edhoc/suites.h"
 #include "edhoc/prk.h"
@@ -28,14 +28,14 @@ enum err prk_derive(bool static_dh_auth, struct suite suite, uint8_t label,
 		    const struct byte_array *stat_sk, uint8_t *prk_out)
 {
 	if (static_dh_auth) {
-		BYTE_ARRAY_NEW(dh_secret, ECDH_SECRET_DEFAULT_SIZE,
-			       ECDH_SECRET_DEFAULT_SIZE);
+		BYTE_ARRAY_NEW(dh_secret, ECDH_SECRET_SIZE,
+			       ECDH_SECRET_SIZE);
 
 		TRY(shared_secret_derive(suite.edhoc_ecdh, stat_sk, stat_pk,
 					 dh_secret.ptr));
 		PRINT_ARRAY("dh_secret", dh_secret.ptr, dh_secret.len);
 
-		BYTE_ARRAY_NEW(salt, HASH_DEFAULT_SIZE,
+		BYTE_ARRAY_NEW(salt, HASH_SIZE,
 			       get_hash_len(suite.edhoc_hash));
 		TRY(edhoc_kdf(suite.edhoc_hash, prk_in, label, context, &salt));
 		PRINT_ARRAY("SALT_3e2m or SALT4e3m", salt.ptr, salt.len);

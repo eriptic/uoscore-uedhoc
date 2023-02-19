@@ -7,19 +7,19 @@ void test_exporter(void)
 {
 	enum err err;
 
-	uint8_t prk_exporter_buf[PRK_DEFAULT_SIZE];
+	uint8_t prk_exporter_buf[32];
 	struct byte_array prk_exporter = { .ptr = prk_exporter_buf,
 					   .len = sizeof(prk_exporter_buf) };
 
-	uint8_t prk_out_new_buf[PRK_DEFAULT_SIZE];
+	uint8_t prk_out_new_buf[32];
 	struct byte_array prk_out_new = { .ptr = prk_out_new_buf,
 					  .len = sizeof(prk_out_new_buf) };
 
-	uint8_t master_secret_buf[OSCORE_MASTER_SECRET_SIZE];
+	uint8_t master_secret_buf[16];
 	struct byte_array master_secret = { .ptr = master_secret_buf,
 					    .len = sizeof(master_secret_buf) };
 
-	uint8_t master_salt_buf[OSCORE_MASTER_SALT_SIZE];
+	uint8_t master_salt_buf[8];
 	struct byte_array master_salt = { .ptr = master_salt_buf,
 					  .len = sizeof(master_salt_buf) };
 

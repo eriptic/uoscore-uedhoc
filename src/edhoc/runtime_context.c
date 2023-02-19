@@ -27,6 +27,9 @@ void runtime_context_init(struct runtime_context *c)
 	c->ead.len = 0;
 	c->ead.ptr = NULL;
 #endif
+	c->msg1_hash.ptr = c->msg1_hash_buf;
+	c->msg1_hash.len = sizeof(c->msg1_hash_buf);
+
 	c->th3.ptr = c->th3_buf;
 	c->th3.len = sizeof(c->th3_buf);
 	c->prk_3e2m.ptr = c->prk_3e2m_buf;
