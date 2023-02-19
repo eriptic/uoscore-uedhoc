@@ -161,17 +161,4 @@ AES keys should never be used more than once with a given nonce, see [RFC5084](h
    ```  
 
 ## Additional configuration options
-Following preprocessor directives allow for better memory usage adjustments:
-
-* **edhoc.h**
-
-   * EDHOC_BUF_SIZES_RPK - select when authentication can be based on raw public keys, or
-   * EDHOC_BUF_SIZES_C509_CERT - select when authentication can be based on CBOR encoded certificates, or
-   * EDHOC_BUF_SIZES_X509_CERT - select when authentication can be based on X.509 certificates
-   * MESSAGE_4 - select when generation of message 4 should be supported
-
-*  **oscore.h**
-
-   * OSCORE_MAX_PLAINTEXT_LEN - expected maximal length of OSCORE packet
-   * E_OPTIONS_BUFF_MAX_LEN - expected maximal length of buffer with all encrypted CoAP options
-   * I_OPTIONS_BUFF_MAX_LEN - expected maximal length of buffer with all not encrypted CoAP options
+The build configuration can be adjusted in the [makefile_config.mk](makefile_config.mk).
