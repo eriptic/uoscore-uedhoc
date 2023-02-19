@@ -19,6 +19,7 @@
 #include "common/memcpy_s.h"
 
 #include "edhoc/suites.h"
+#include "edhoc/buffer_sizes.h"
 
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
 struct edhoc_mock_cb edhoc_crypto_mock_cb;
@@ -371,9 +372,9 @@ enum err WEAK sign(enum sign_alg alg, const struct byte_array *sk,
 	for (uint32_t i = 0; i < edhoc_crypto_mock_cb.sign_in_out_count; i++) {
 		struct edhoc_mock_sign_in_out *predefined_in_out =
 			edhoc_crypto_mock_cb.sign_in_out + i;
-		if (sign_mock_args_match_predefined(
-			    predefined_in_out, sk->ptr, sk->len, pk->ptr,
-			    PK_DEFAULT_SIZE, msg->ptr, msg->len)) {
+		if (sign_mock_args_match_predefined(predefined_in_out, sk->ptr,
+						    sk->len, pk->ptr, PK_SIZE,
+						    msg->ptr, msg->len)) {
 			memcpy(out, predefined_in_out->out.ptr,
 			       predefined_in_out->out.len);
 			return ok;
@@ -431,13 +432,13 @@ enum err WEAK sign(enum sign_alg alg, const struct byte_array *sk,
 			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 
 		size_t signature_length;
-		TRY_EXPECT_PSA(
-			psa_sign_message(key_id, psa_alg, msg->ptr, msg->len,
-					 out, SIGNATURE_DEFAULT_SIZE,
-					 &signature_length),
-			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
+		TRY_EXPECT_PSA(psa_sign_message(key_id, psa_alg, msg->ptr,
+						msg->len, out, SIGNATURE_SIZE,
+						&signature_length),
+			       PSA_SUCCESS, key_id,
+			       unexpected_result_from_ext_lib);
 
-		TRY_EXPECT_PSA(signature_length, SIGNATURE_DEFAULT_SIZE, key_id,
+		TRY_EXPECT_PSA(signature_length, SIGNATURE_SIZE, key_id,
 			       sign_failed);
 		TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
 		return ok;
@@ -470,7 +471,7 @@ enum err WEAK verify(enum sign_alg alg, const struct byte_array *pk,
 		psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
 
 		psa_alg = PSA_ALG_ECDSA(PSA_ALG_SHA_256);
-		bits = PSA_BYTES_TO_BITS(P_256_PRIV_KEY_DEFAULT_SIZE);
+		bits = PSA_BYTES_TO_BITS(P_256_PRIV_KEY_SIZE);
 
 		TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
 			       unexpected_result_from_ext_lib);
@@ -631,11 +632,11 @@ enum err WEAK hkdf_expand(enum hash_alg alg, const struct byte_array *prk,
 
 	size_t combo_len = (32 + (size_t)info->len + 1);
 
-	TRY_EXPECT_PSA(check_buffer_size(INFO_DEFAULT_SIZE,
+	TRY_EXPECT_PSA(check_buffer_size(INFO_MAX_SIZE + 32 + 1,
 					 (uint32_t)combo_len),
 		       ok, key_id, unexpected_result_from_ext_lib);
 
-	uint8_t combo[INFO_DEFAULT_SIZE];
+	uint8_t combo[INFO_MAX_SIZE + 32 + 1];
 	uint8_t tmp_out[32];
 	memset(tmp_out, 0, 32);
 	memcpy(combo + 32, info->ptr, info->len);
@@ -666,7 +667,7 @@ enum err WEAK hkdf_sha_256(struct byte_array *master_secret,
 			   struct byte_array *master_salt,
 			   struct byte_array *info, struct byte_array *out)
 {
-	BYTE_ARRAY_NEW(prk, HASH_DEFAULT_SIZE, HASH_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(prk, HASH_SIZE, HASH_SIZE);
 	TRY(hkdf_extract(SHA_256, master_salt, master_secret, prk.ptr));
 	TRY(hkdf_expand(SHA_256, &prk, info, out));
 	return ok;
@@ -793,8 +794,8 @@ enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
 #elif defined(MBEDTLS) /* TINYCRYPT / MBEDTLS */
 		size_t length;
 		TRY_EXPECT(psa_hash_compute(PSA_ALG_SHA_256, (uint8_t *)&seed,
-					    sizeof(seed), sk->ptr,
-					    HASH_DEFAULT_SIZE, &length),
+					    sizeof(seed), sk->ptr, HASH_SIZE,
+					    &length),
 			   0);
 		if (length != 32) {
 			return sha_failed;
@@ -821,7 +822,7 @@ enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
 		psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
 		psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 		psa_algorithm_t psa_alg = PSA_ALG_ECDH;
-		uint8_t priv_key_size = P_256_PRIV_KEY_DEFAULT_SIZE;
+		uint8_t priv_key_size = P_256_PRIV_KEY_SIZE;
 		size_t bits = PSA_BYTES_TO_BITS((size_t)priv_key_size);
 		size_t pub_key_uncompressed_size =
 			P_256_PUB_KEY_UNCOMPRESSED_SIZE;
@@ -873,25 +874,28 @@ enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
 	return ok;
 }
 
-enum err WEAK hash(enum hash_alg alg, const struct byte_array *in, uint8_t *out)
+enum err WEAK hash(enum hash_alg alg, const struct byte_array *in,
+		   struct byte_array *out)
 {
 	if (alg == SHA_256) {
 #ifdef TINYCRYPT
 		struct tc_sha256_state_struct s;
 		TRY_EXPECT(tc_sha256_init(&s), 1);
 		TRY_EXPECT(tc_sha256_update(&s, in->ptr, in->len), 1);
-		TRY_EXPECT(tc_sha256_final(out, &s), 1);
+		TRY_EXPECT(tc_sha256_final(out->ptr, &s), 1);
+		out->len = HASH_SIZE;
 		return ok;
 #endif
 #ifdef MBEDTLS
 		size_t length;
 		TRY_EXPECT(psa_hash_compute(PSA_ALG_SHA_256, in->ptr, in->len,
-					    out, HASH_DEFAULT_SIZE, &length),
+					    out->ptr, HASH_SIZE, &length),
 			   PSA_SUCCESS);
-		if (length != HASH_DEFAULT_SIZE) {
+		if (length != HASH_SIZE) {
 			return sha_failed;
 		}
-		PRINT_ARRAY("hash", out, HASH_DEFAULT_SIZE);
+		out->len = HASH_SIZE;
+		PRINT_ARRAY("hash", out->ptr, out->len);
 		return ok;
 #endif
 	}

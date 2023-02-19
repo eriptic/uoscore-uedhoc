@@ -9,7 +9,7 @@
    except according to those terms.
 */
 
-#include "edhoc.h"
+#include "edhoc/buffer_sizes.h"
 
 #include "edhoc/th.h"
 #include "edhoc/bstr_encode_decode.h"
@@ -33,7 +33,7 @@
  * @param[out] th2_input	The result.
  * @retval			Ok or error.
  */
-static inline enum err th2_input_encode(uint8_t *hash_msg1,
+static inline enum err th2_input_encode(struct byte_array *hash_msg1,
 					struct byte_array *g_y,
 					struct byte_array *c_r,
 					struct byte_array *th2_input)
@@ -42,8 +42,8 @@ static inline enum err th2_input_encode(uint8_t *hash_msg1,
 	struct th2 th2;
 
 	/*Encode hash_msg1*/
-	th2._th2_hash_msg1.value = hash_msg1;
-	th2._th2_hash_msg1.len = HASH_DEFAULT_SIZE;
+	th2._th2_hash_msg1.value = hash_msg1->ptr;
+	th2._th2_hash_msg1.len = hash_msg1->len;
 
 	/*Encode G_Y*/
 	th2._th2_G_Y.value = g_y->ptr;
@@ -123,27 +123,25 @@ static enum err th34_input_encode(struct byte_array *th23,
  */
 enum err th34_calculate(enum hash_alg alg, struct byte_array *th23,
 			struct byte_array *plaintext_23,
-			const struct byte_array *cred, uint8_t *th34)
+			const struct byte_array *cred, struct byte_array *th34)
 {
-	uint32_t th34_input_len =
-		th23->len + plaintext_23->len + cred->len + ENCODING_OVERHEAD;
-	BYTE_ARRAY_NEW(th34_input, TH34_INPUT_DEFAULT_SIZE, th34_input_len);
+	uint32_t th34_input_len = th23->len + plaintext_23->len + cred->len + 2;
+	BYTE_ARRAY_NEW(th34_input, TH34_INPUT_SIZE, th34_input_len);
 
 	TRY(th34_input_encode(th23, plaintext_23, cred, &th34_input));
 	TRY(hash(alg, &th34_input, th34));
-	PRINT_ARRAY("TH34", th34, HASH_DEFAULT_SIZE);
+	PRINT_ARRAY("TH34", th34->ptr, th34->len);
 	return ok;
 }
 
-enum err th2_calculate(enum hash_alg alg, uint8_t *msg1_hash,
+enum err th2_calculate(enum hash_alg alg, struct byte_array *msg1_hash,
 		       struct byte_array *g_y, struct byte_array *c_r,
-		       uint8_t *th2)
+		       struct byte_array *th2)
 {
-	BYTE_ARRAY_NEW(th2_input, TH2_INPUT_DEFAULT_SIZE,
-		       TH2_INPUT_DEFAULT_SIZE);
-	PRINT_ARRAY("hash_msg1_raw", msg1_hash, HASH_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(th2_input, TH2_DEFAULT_SIZE, TH2_DEFAULT_SIZE);
+	PRINT_ARRAY("hash_msg1_raw", msg1_hash->ptr, msg1_hash->len);
 	TRY(th2_input_encode(msg1_hash, g_y, c_r, &th2_input));
 	TRY(hash(alg, &th2_input, th2));
-	PRINT_ARRAY("TH2", th2, HASH_DEFAULT_SIZE);
+	PRINT_ARRAY("TH2", th2->ptr, th2->len);
 	return ok;
 }

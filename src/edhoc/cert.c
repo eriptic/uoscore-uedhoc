@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "edhoc.h"
+#include "edhoc/buffer_sizes.h"
 
 #include "edhoc/cert.h"
 
@@ -354,7 +354,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 	}
 	int hash_len = mbedtls_md_get_size(md_info);
 
-	BYTE_ARRAY_NEW(sig, SIGNATURE_DEFAULT_SIZE,
+	BYTE_ARRAY_NEW(sig, SIGNATURE_SIZE,
 		       get_signature_len(sign_alg));
 
 	/* get the public key of the CA */
@@ -407,7 +407,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 
 	const uint8_t *tbs_start = cert->ptr;
 	const uint8_t *tbs_end = &cert->ptr[cert->len];
-	BYTE_ARRAY_NEW(sig, SIGNATURE_DEFAULT_SIZE, SIGNATURE_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(sig, SIGNATURE_SIZE, SIGNATURE_SIZE);
 
 	enum err rv = certificate_authentication_failed;
 
@@ -467,7 +467,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 		EXPECTO_TAG(ASN1_INTEGER, cursor, len);
 
 		TRY_EXPECT((cursor + len) <= end, 1);
-		_memcpy_s(sig.ptr, SIGNATURE_DEFAULT_SIZE, cursor,
+		_memcpy_s(sig.ptr, SIGNATURE_SIZE, cursor,
 			  (uint32_t)len);
 		sig.len = len;
 		cursor += len;
@@ -477,7 +477,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 		EXPECTO_TAG(ASN1_INTEGER, cursor, len);
 		TRY_EXPECT((cursor + len) <= end, 1);
 		_memcpy_s(sig.ptr + sig.len,
-			  (uint32_t)(SIGNATURE_DEFAULT_SIZE - sig.len), cursor,
+			  (uint32_t)(SIGNATURE_SIZE - sig.len), cursor,
 			  (uint32_t)len);
 		sig.len += len;
 		rv = ok;

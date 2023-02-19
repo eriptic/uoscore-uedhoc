@@ -20,15 +20,15 @@
  * @brief                       Calculates transcript hash th2. 
  * 
  * @param alg                   Hash algorithm to be used.
- * @param msg1_hash             Hash of Message 1.
+ * @param[in] msg1_hash         Hash of Message 1.
  * @param[in] g_y               Public DH parameter.
  * @param[in] c_r               Conception the identifier of the responder.
  * @param[out] th2              The result.
  * @retval                      Ok or error.
  */
-enum err th2_calculate(enum hash_alg alg, uint8_t *msg1_hash,
+enum err th2_calculate(enum hash_alg alg, struct byte_array *msg1_hash,
 		       struct byte_array *g_y, struct byte_array *c_r,
-		       uint8_t *th2);
+		       struct byte_array *th2);
 
 /**
  * @brief                       Calculates transcript hash th3. 
@@ -42,8 +42,6 @@ enum err th2_calculate(enum hash_alg alg, uint8_t *msg1_hash,
  */
 enum err th34_calculate(enum hash_alg alg, struct byte_array *th23,
 			struct byte_array *plaintext_23,
-			const struct byte_array *cred, uint8_t *th34);
-
-
+			const struct byte_array *cred, struct byte_array *th34);
 
 #endif

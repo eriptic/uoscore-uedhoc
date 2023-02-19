@@ -9,7 +9,7 @@
    except according to those terms.
 */
 
-#include "edhoc.h"
+#include "edhoc/buffer_sizes.h"
 #include "edhoc_internal.h"
 
 #include "common/memcpy_s.h"
@@ -149,8 +149,7 @@ static inline enum err msg2_encode(const struct byte_array *g_y,
 	size_t payload_len_out;
 	struct m2 m;
 
-	BYTE_ARRAY_NEW(g_y_ciphertext_2,
-		       G_Y_DEFAULT_SIZE + CIPHERTEXT2_DEFAULT_SIZE,
+	BYTE_ARRAY_NEW(g_y_ciphertext_2, G_Y_SIZE + CIPHERTEXT2_SIZE,
 		       g_y->len + ciphertext_2->len);
 
 	memcpy(g_y_ciphertext_2.ptr, g_y->ptr, g_y->len);
@@ -187,27 +186,15 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	PRINT_ARRAY("message_1 (CBOR Sequence)", rc->msg.ptr, rc->msg.len);
 
 	enum method_type method = INITIATOR_SK_RESPONDER_SK;
-	BYTE_ARRAY_NEW(suites_i, SUITES_MAX, SUITES_MAX);
-	BYTE_ARRAY_NEW(g_x, G_X_DEFAULT_SIZE, G_X_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(suites_i, SUITES_I_SIZE, SUITES_I_SIZE);
+	BYTE_ARRAY_NEW(g_x, G_X_SIZE, G_X_SIZE);
 
 	TRY(msg1_parse(&rc->msg, &method, &suites_i, &g_x, c_i, &rc->ead));
-
-	// if ((NULL != c_i_bytes->ptr) && (NULL != c_i_bytes->len)) {
-	// 	TRY(_memcpy_s(c_i_bytes->ptr, *c_i_bytes->len, c_i.ptr,
-	// 		      c_i.len));
-	// 	c_i_bytes->len = c_i->len;
-	// }
 
 	// TODO this may be a vulnerability in case suites_i.len is zero
 	if (!(selected_suite_is_supported(suites_i.ptr[suites_i.len - 1],
 					  &c->suites_r))) {
-		// r = tx_err_msg(RESPONDER, method, c_i, c_i_len, NULL, 0,
-		// 	       c->suites_r.ptr, c->suites_r.len);
-		// if (r != ok) {
-		// 	return r;
-		// }
-		/*After an error message is sent the protocol must be discontinued*/
-		// PRINTF("After an error message is sent the protocol must be discontinued");
+		// TODO implement here the sending of an error message
 		return error_message_sent;
 	}
 
@@ -219,20 +206,18 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	authentication_type_get(method, &rc->static_dh_i, &static_dh_r);
 
 	/******************* create and send message 2*************************/
-	BYTE_ARRAY_NEW(th2, HASH_DEFAULT_SIZE,
-		       get_hash_len(rc->suite.edhoc_hash));
-	TRY(hash(rc->suite.edhoc_hash, &rc->msg, rc->msg1_hash));
-	TRY(th2_calculate(rc->suite.edhoc_hash, rc->msg1_hash, &c->g_y, &c->c_r,
-			  th2.ptr));
+	BYTE_ARRAY_NEW(th2, HASH_SIZE, get_hash_len(rc->suite.edhoc_hash));
+	TRY(hash(rc->suite.edhoc_hash, &rc->msg, &rc->msg1_hash));
+	TRY(th2_calculate(rc->suite.edhoc_hash, &rc->msg1_hash, &c->g_y,
+			  &c->c_r, &th2));
 
 	/*calculate the DH shared secret*/
-	BYTE_ARRAY_NEW(g_xy, ECDH_SECRET_DEFAULT_SIZE,
-		       ECDH_SECRET_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(g_xy, ECDH_SECRET_SIZE, ECDH_SECRET_SIZE);
 	TRY(shared_secret_derive(rc->suite.edhoc_ecdh, &c->y, &g_x, g_xy.ptr));
 
 	PRINT_ARRAY("G_XY (ECDH shared secret) ", g_xy.ptr, g_xy.len);
 
-	BYTE_ARRAY_NEW(PRK_2e, PRK_DEFAULT_SIZE, PRK_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(PRK_2e, PRK_SIZE, PRK_SIZE);
 	TRY(hkdf_extract(rc->suite.edhoc_hash, &th2, &g_xy, PRK_2e.ptr));
 	PRINT_ARRAY("PRK_2e", PRK_2e.ptr, PRK_2e.len);
 
@@ -242,7 +227,7 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	PRINT_ARRAY("prk_3e2m", rc->prk_3e2m.ptr, rc->prk_3e2m.len);
 
 	/*compute signature_or_MAC_2*/
-	BYTE_ARRAY_NEW(sign_or_mac_2, SIGNATURE_DEFAULT_SIZE,
+	BYTE_ARRAY_NEW(sign_or_mac_2, SIGNATURE_SIZE,
 		       get_signature_len(rc->suite.edhoc_sign));
 
 	TRY(signature_or_mac(GENERATE, static_dh_r, &rc->suite, &c->sk_r,
@@ -250,10 +235,8 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 			     &c->cred_r, &c->ead_2, MAC_2, &sign_or_mac_2));
 
 	/*compute ciphertext_2*/
-	BYTE_ARRAY_NEW(plaintext_2, PLAINTEXT_DEFAULT_SIZE,
-		       PLAINTEXT_DEFAULT_SIZE);
-	BYTE_ARRAY_NEW(ciphertext_2, CIPHERTEXT2_DEFAULT_SIZE,
-		       CIPHERTEXT2_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(plaintext_2, PLAINTEXT2_SIZE, PLAINTEXT2_SIZE);
+	BYTE_ARRAY_NEW(ciphertext_2, CIPHERTEXT2_SIZE, CIPHERTEXT2_SIZE);
 
 	TRY(ciphertext_gen(CIPHERTEXT2, &rc->suite, &c->id_cred_r,
 			   &sign_or_mac_2, &c->ead_2, &PRK_2e, &th2,
@@ -266,7 +249,7 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	TRY(msg2_encode(&c->g_y, &c->c_r, &ciphertext_2, &rc->msg));
 
 	TRY(th34_calculate(rc->suite.edhoc_hash, &th2, &plaintext_2, &c->cred_r,
-			   rc->th3.ptr));
+			   &rc->th3));
 
 	return ok;
 }
@@ -277,24 +260,27 @@ enum err msg3_process(struct edhoc_responder_context *c,
 		      struct byte_array *prk_out,
 		      struct byte_array *initiator_pk)
 {
-	BYTE_ARRAY_NEW(ctxt3, CIPHERTEXT3_DEFAULT_SIZE,
-		       CIPHERTEXT3_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(ctxt3, CIPHERTEXT3_SIZE, CIPHERTEXT3_SIZE);
 	TRY(decode_bstr(&rc->msg, &ctxt3));
 	PRINT_ARRAY("CIPHERTEXT_3", ctxt3.ptr, ctxt3.len);
 
-	BYTE_ARRAY_NEW(id_cred_i, ID_CRED_DEFAULT_SIZE, ID_CRED_DEFAULT_SIZE);
-	BYTE_ARRAY_NEW(sign_or_mac, SGN_OR_MAC_DEFAULT_SIZE,
-		       SGN_OR_MAC_DEFAULT_SIZE);
-	BYTE_ARRAY_NEW(ptxt3, PLAINTEXT_DEFAULT_SIZE, ctxt3.len);
+	BYTE_ARRAY_NEW(id_cred_i, ID_CRED_I_SIZE, ID_CRED_I_SIZE);
+	BYTE_ARRAY_NEW(sign_or_mac, SIG_OR_MAC_SIZE, SIG_OR_MAC_SIZE);
+
+	PRINTF("PLAINTEXT3_SIZE: %d\n", PLAINTEXT3_SIZE);
+	PRINTF("ctxt3.len: %d\n", ctxt3.len);
+	BYTE_ARRAY_NEW(ptxt3,
+		       PLAINTEXT3_SIZE + get_aead_mac_len(rc->suite.edhoc_aead),
+		       ctxt3.len);
 
 	TRY(ciphertext_decrypt_split(CIPHERTEXT3, &rc->suite, &id_cred_i,
 				     &sign_or_mac, &rc->ead, &rc->prk_3e2m,
 				     &rc->th3, &ctxt3, &ptxt3));
 
 	/*check the authenticity of the initiator*/
-	BYTE_ARRAY_NEW(cred_i, CRED_DEFAULT_SIZE, CRED_DEFAULT_SIZE);
-	BYTE_ARRAY_NEW(pk, PK_DEFAULT_SIZE, PK_DEFAULT_SIZE);
-	BYTE_ARRAY_NEW(g_i, G_I_DEFAULT_SIZE, G_I_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(cred_i, CRED_I_SIZE, CRED_I_SIZE);
+	BYTE_ARRAY_NEW(pk, PK_SIZE, PK_SIZE);
+	BYTE_ARRAY_NEW(g_i, G_I_SIZE, G_I_SIZE);
 
 	TRY(retrieve_cred(rc->static_dh_i, cred_i_array, &id_cred_i, &cred_i,
 			  &pk, &g_i));
@@ -320,7 +306,7 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	/*TH4*/
 	// ptxt3.len = ptxt3.len - get_aead_mac_len(rc->suite.edhoc_aead);
 	TRY(th34_calculate(rc->suite.edhoc_hash, &rc->th3, &ptxt3, &cred_i,
-			   rc->th4.ptr));
+			   &rc->th4));
 
 	/*PRK_out*/
 	TRY(edhoc_kdf(rc->suite.edhoc_hash, &rc->prk_4e3m, PRK_out, &rc->th4,
@@ -332,9 +318,12 @@ enum err msg3_process(struct edhoc_responder_context *c,
 enum err msg4_gen(struct edhoc_responder_context *c, struct runtime_context *rc)
 {
 	/*Ciphertext 4 calculate*/
-	BYTE_ARRAY_NEW(ptxt4, PLAINTEXT_DEFAULT_SIZE, PLAINTEXT_DEFAULT_SIZE);
-	BYTE_ARRAY_NEW(ctxt4, CIPHERTEXT4_DEFAULT_SIZE,
-		       CIPHERTEXT4_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(ctxt4, CIPHERTEXT4_SIZE, CIPHERTEXT4_SIZE);
+#if PLAINTEXT4_SIZE != 0
+	BYTE_ARRAY_NEW(ptxt4, PLAINTEXT4_SIZE, PLAINTEXT4_SIZE);
+#else
+	struct byte_array ptxt4 = BYTE_ARRAY_INIT(NULL, 0);
+#endif
 
 	TRY(ciphertext_gen(CIPHERTEXT4, &rc->suite, &NULL_ARRAY, &NULL_ARRAY,
 			   &c->ead_4, &rc->prk_4e3m, &rc->th4, &ctxt4, &ptxt4));
@@ -387,7 +376,7 @@ enum err edhoc_responder_run(
 	enum err (*rx)(void *sock, struct byte_array *data),
 	enum err (*ead_process)(void *params, struct byte_array *ead13))
 {
-	BYTE_ARRAY_NEW(c_i, C_I_DEFAULT_SIZE, C_I_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(c_i, C_I_SIZE, C_I_SIZE);
 	return edhoc_responder_run_extended(c, cred_i_array, err_msg, prk_out,
 					    &NULL_ARRAY, &c_i, tx, rx,
 					    ead_process);

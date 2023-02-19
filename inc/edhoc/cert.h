@@ -13,6 +13,8 @@
 
 #include <stdint.h>
 
+#include "edhoc.h"
+#include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
 /**

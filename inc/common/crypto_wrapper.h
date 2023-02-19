@@ -92,7 +92,8 @@ enum err hkdf_expand(enum hash_alg alg, const struct byte_array *prk,
  * @param   out the hash 
  * @retval  an err code
  */
-enum err hash(enum hash_alg alg, const struct byte_array *in, uint8_t *out);
+enum err hash(enum hash_alg alg, const struct byte_array *in,
+	      struct byte_array *out);
 
 /**
  * @brief   Verifies an asymmetric signature

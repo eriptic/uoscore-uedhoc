@@ -9,7 +9,7 @@
    except according to those terms.
 */
 
-#include "edhoc.h"
+#include "edhoc/buffer_sizes.h"
 
 #include "edhoc/okm.h"
 #include "edhoc/ciphertext.h"
@@ -131,14 +131,13 @@ enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
 		key_len = get_aead_key_len(suite->edhoc_aead);
 	}
 
-	BYTE_ARRAY_NEW(key, CIPHERTEXT2_DEFAULT_SIZE, key_len);
-	BYTE_ARRAY_NEW(iv, AEAD_IV_DEFAULT_SIZE,
-		       get_aead_iv_len(suite->edhoc_aead));
+	BYTE_ARRAY_NEW(key, CIPHERTEXT2_SIZE, key_len);
+	BYTE_ARRAY_NEW(iv, AEAD_IV_SIZE, get_aead_iv_len(suite->edhoc_aead));
 
 	TRY(key_gen(ctxt, suite->edhoc_hash, prk, th, &key, &iv));
 
 	/*Associated data*/
-	BYTE_ARRAY_NEW(associated_data, AAD_DEFAULT_SIZE, AAD_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(associated_data, AAD_SIZE, AAD_SIZE);
 	TRY(associated_data_encode(th, &associated_data));
 
 	PRINT_ARRAY("associated_data", associated_data.ptr,
@@ -184,13 +183,13 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
 			struct byte_array *plaintext)
 {
 	uint32_t ptxt_buf_len = plaintext->len;
-	BYTE_ARRAY_NEW(signature_or_mac_enc, SGN_OR_MAC_DEFAULT_SIZE,
+	BYTE_ARRAY_NEW(signature_or_mac_enc, SIG_OR_MAC_SIZE + 2,
 		       signature_or_mac->len + 2);
 
 	TRY(encode_bstr(signature_or_mac, &signature_or_mac_enc));
 
 	if (ctxt != CIPHERTEXT4) {
-		BYTE_ARRAY_NEW(kid, KID_DEFAULT_SIZE, KID_DEFAULT_SIZE);
+		BYTE_ARRAY_NEW(kid, KID_SIZE, KID_SIZE);
 		TRY(id_cred2kid(id_cred, &kid));
 
 		PRINT_ARRAY("kid", kid.ptr, kid.len);
@@ -233,23 +232,21 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
 	PRINT_ARRAY("plaintext", plaintext->ptr, plaintext->len);
 
 	/*generate key and iv (no iv in for ciphertext 2)*/
-	BYTE_ARRAY_NEW(key, CIPHERTEXT2_DEFAULT_SIZE, CIPHERTEXT2_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(key, CIPHERTEXT2_SIZE, CIPHERTEXT2_SIZE);
 	if (ctxt == CIPHERTEXT2) {
 		key.len = plaintext->len;
 	} else {
 		key.len = get_aead_key_len(suite->edhoc_aead);
 	}
-	TRY(check_buffer_size(CIPHERTEXT2_DEFAULT_SIZE, key.len));
+	TRY(check_buffer_size(CIPHERTEXT2_SIZE, key.len));
 
-	BYTE_ARRAY_NEW(iv, AEAD_IV_DEFAULT_SIZE,
-		       get_aead_iv_len(suite->edhoc_aead));
+	BYTE_ARRAY_NEW(iv, AEAD_IV_SIZE, get_aead_iv_len(suite->edhoc_aead));
 
 	TRY(key_gen(ctxt, suite->edhoc_hash, prk, th, &key, &iv));
 
 	/*encrypt*/
-	BYTE_ARRAY_NEW(aad, AAD_DEFAULT_SIZE, AAD_DEFAULT_SIZE);
-	BYTE_ARRAY_NEW(tag, MAC_DEFAULT_SIZE,
-		       get_aead_mac_len(suite->edhoc_aead));
+	BYTE_ARRAY_NEW(aad, AAD_SIZE, AAD_SIZE);
+	BYTE_ARRAY_NEW(tag, MAC_SIZE, get_aead_mac_len(suite->edhoc_aead));
 
 	if (ctxt != CIPHERTEXT2) {
 		/*Associated data*/

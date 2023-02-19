@@ -12,44 +12,44 @@
 
 #include "edhoc_test_vectors_p256_v15.h"
 
-uint8_t I_prk_exporter_buf[PRK_DEFAULT_SIZE];
+uint8_t I_prk_exporter_buf[32];
 struct byte_array I_prk_exporter = { .ptr = I_prk_exporter_buf,
 				     .len = sizeof(I_prk_exporter_buf) };
 
-uint8_t I_master_secret_buf[OSCORE_MASTER_SECRET_SIZE];
+uint8_t I_master_secret_buf[16];
 struct byte_array I_master_secret = { .ptr = I_master_secret_buf,
 				      .len = sizeof(I_master_secret_buf) };
 
-uint8_t I_master_salt_buf[OSCORE_MASTER_SALT_SIZE];
+uint8_t I_master_salt_buf[8];
 struct byte_array I_master_salt = { .ptr = I_master_salt_buf,
 				    .len = sizeof(I_master_salt_buf) };
 
-uint8_t I_PRK_out_buf[PRK_DEFAULT_SIZE];
+uint8_t I_PRK_out_buf[32];
 struct byte_array I_PRK_out = { .ptr = I_PRK_out_buf,
 				.len = sizeof(I_PRK_out_buf) };
 
-uint8_t I_err_msg_buf[ERR_MSG_DEFAULT_SIZE];
+uint8_t I_err_msg_buf[0];
 struct byte_array I_err_msg = { .ptr = I_err_msg_buf,
 				.len = sizeof(I_err_msg_buf) };
 /******************************************************************************/
 
-uint8_t R_prk_exporter_buf[PRK_DEFAULT_SIZE];
+uint8_t R_prk_exporter_buf[32];
 struct byte_array R_prk_exporter = { .ptr = R_prk_exporter_buf,
 				     .len = sizeof(R_prk_exporter_buf) };
 
-uint8_t R_master_secret_buf[OSCORE_MASTER_SECRET_SIZE];
+uint8_t R_master_secret_buf[16];
 struct byte_array R_master_secret = { .ptr = R_master_secret_buf,
 				      .len = sizeof(R_master_secret_buf) };
 
-uint8_t R_master_salt_buf[OSCORE_MASTER_SALT_SIZE];
+uint8_t R_master_salt_buf[8];
 struct byte_array R_master_salt = { .ptr = R_master_salt_buf,
 				    .len = sizeof(R_master_salt_buf) };
 
-uint8_t R_PRK_out_buf[PRK_DEFAULT_SIZE];
+uint8_t R_PRK_out_buf[32];
 struct byte_array R_PRK_out = { .ptr = R_PRK_out_buf,
 				.len = sizeof(R_PRK_out_buf) };
 
-uint8_t R_err_msg_buf[ERR_MSG_DEFAULT_SIZE];
+uint8_t R_err_msg_buf[0];
 struct byte_array R_err_msg = { .ptr = R_err_msg_buf,
 				.len = sizeof(R_err_msg_buf) };
 
@@ -67,7 +67,7 @@ K_SEM_DEFINE(tx_initiator_completed, 0, 1);
 K_SEM_DEFINE(tx_responder_completed, 0, 1);
 
 /*message exchange buffer*/
-uint8_t msg_exchange_buf[1024 * 2];
+uint8_t msg_exchange_buf[1024];
 uint32_t msg_exchange_buf_len = sizeof(msg_exchange_buf);
 
 void semaphore_give(struct k_sem *sem)
@@ -125,8 +125,8 @@ enum err tx_responder(void *sock, struct byte_array *data)
 }
 
 enum err rx_initiator(void *sock, struct byte_array *data)
-{	
-	PRINTF("msg_exchange_buf_len: %d\n",msg_exchange_buf_len);
+{
+	PRINTF("msg_exchange_buf_len: %d\n", msg_exchange_buf_len);
 	return semaphore_take(&tx_responder_completed, data->ptr, &data->len);
 }
 enum err rx_responder(void *sock, struct byte_array *data)
@@ -351,8 +351,6 @@ void test_initiator_responder_interaction(uint8_t vec_num)
 		K_THREAD_STACK_SIZEOF(thread_responder_stack_area),
 		thread_responder, (void *)&vec_num, NULL, NULL, PRIORITY, 0,
 		K_NO_WAIT);
-
-	
 
 	k_thread_start(&thread_initiator_data);
 	k_thread_start(&thread_responder_data);

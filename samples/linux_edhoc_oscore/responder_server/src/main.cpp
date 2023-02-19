@@ -216,7 +216,7 @@ int main()
 	uint8_t oscore_master_salt[8];
 
 	/* edhoc declarations */
-	uint8_t PRK_out[PRK_DEFAULT_SIZE];
+	uint8_t PRK_out[PRK_SIZE];
 	uint8_t err_msg[ERR_MSG_DEFAULT_SIZE];
 	uint32_t err_msg_len = sizeof(err_msg);
 	uint8_t ad_1[AD_DEFAULT_SIZE];
