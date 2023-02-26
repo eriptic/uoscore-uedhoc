@@ -79,10 +79,9 @@ The EDHOC protocol requires the exchange of three messages (and an optional mess
  * 
  * @param   sock a pointer used to identify the rx chanel, 
  *          e.g. a socket handler
- * @param   data pointer to the data to be send
- * @param   data_len length of the data
+ * @param   data data to be send
  */
-enum err tx(void *sock, uint8_t *data, uint32_t data_len);
+enum err tx(void *sock, struct byte_array *data);
 
 /**
  * @brief   The user should call inside this function its receive 
@@ -95,12 +94,9 @@ enum err tx(void *sock, uint8_t *data, uint32_t data_len);
  * 
  * @param   sock a pointer used to identify the rx chanel, 
  *          e.g. a socket handler
- * @param   data pointer to a buffer where the edhoc message must be copied 
- * @param   data_len length of the received data. When this function is 
- *          called inside EDHOC <data_len> is initialized with the actual 
- *          available length of the <data>.
+ * @param   data the received message must be copied here
  */
-enum err rx(void *sock, uint8_t *data, uint32_t *data_len);
+enum err rx(void *sock, struct byte_array  *data);
 ```
 
 Note that uEDHOC does not provide correlation of messages. Correlation may be handled on the transport layer completely or partially. In cases when the correlation cannot be handled by the transport protocol the edhoc message needs to be prepended with a connection identifier, that is used on the other side to determine to which session a given message belongs. In order to remain conform with the specification in the cases where the transport cannot handle correlation a connection identifier needs to be prepended in `tx()` function and removed in the `rx()` function.
