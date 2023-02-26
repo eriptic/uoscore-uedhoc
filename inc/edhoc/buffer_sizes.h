@@ -7,6 +7,38 @@
 #ifndef BUFFER_SIZES_H
 #define BUFFER_SIZES_H
 
+#ifndef EAD_SIZE
+#define EAD_SIZE 0
+#endif
+
+#ifndef C_I_SIZE
+#define C_I_SIZE 10
+#endif
+
+#ifndef C_R_SIZE
+#define C_R_SIZE 10
+#endif
+
+#ifndef ID_CRED_I_SIZE
+#define ID_CRED_I_SIZE 400
+#endif
+
+#ifndef ID_CRED_R_SIZE
+#define ID_CRED_R_SIZE 400
+#endif
+
+#ifndef CRED_I_SIZE
+#define CRED_I_SIZE 400
+#endif
+
+#ifndef CRED_R_SIZE
+#define CRED_R_SIZE 400
+#endif
+
+#ifndef SUITES_I_SIZE
+#define SUITES_I_SIZE 6
+#endif
+
 #define BSTR_ENCODING_OVERHEAD(x)                                              \
 	((x) <= 5) ? 1 : ((x) <= UINT8_MAX) ? 2 : ((x) <= UINT16_MAX) ? 3 : 5
 
