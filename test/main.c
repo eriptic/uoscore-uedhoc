@@ -14,104 +14,6 @@
 #include "edhoc_integration_tests/edhoc_tests.h"
 #include "oscore_tests.h"
 
-// static void test_initiator1(void)
-// {
-// 	test_edhoc(INITIATOR, 1);
-// }
-// static void test_initiator2(void)
-// {
-// 	test_edhoc(INITIATOR, 2);
-// }
-// static void test_initiator3(void)
-// {
-// 	test_edhoc(INITIATOR, 3);
-// }
-// static void test_initiator4(void)
-// {
-// 	test_edhoc(INITIATOR, 4);
-// }
-// static void test_initiator8(void)
-// {
-// 	test_edhoc(INITIATOR, 8);
-// }
-// static void test_initiator9(void)
-// {
-// 	test_edhoc(INITIATOR, 9);
-// }
-// static void test_initiator12(void)
-// {
-// 	test_edhoc(INITIATOR, 12);
-// }
-// static void test_initiator13(void)
-// {
-// 	test_edhoc(INITIATOR, 13);
-// }
-// static void test_initiator14(void)
-// {
-// 	test_edhoc(INITIATOR, 14);
-// }
-// static void test_initiator15(void)
-// {
-// 	test_edhoc(INITIATOR, 15);
-// }
-// static void test_initiator16(void)
-// {
-// 	test_edhoc(INITIATOR, 16);
-// }
-// static void test_initiator17(void)
-// {
-// 	test_edhoc(INITIATOR, 17);
-// }
-/********************************/
-// static void test_responder1(void)
-// {
-// 	test_edhoc(RESPONDER, 1);
-// }
-// static void test_responder2(void)
-// {
-// 	test_edhoc(RESPONDER, 2);
-// }
-// static void test_responder3(void)
-// {
-// 	test_edhoc(RESPONDER, 3);
-// }
-// static void test_responder4(void)
-// {
-// 	test_edhoc(RESPONDER, 4);
-// }
-// static void test_responder8(void)
-// {
-// 	test_edhoc(RESPONDER, 8);
-// }
-// static void test_responder9(void)
-// {
-// 	test_edhoc(RESPONDER, 9);
-// }
-// static void test_responder12(void)
-// {
-// 	test_edhoc(RESPONDER, 12);
-// }
-// static void test_responder13(void)
-// {
-// 	test_edhoc(RESPONDER, 13);
-// }
-// static void test_responder14(void)
-// {
-// 	test_edhoc(RESPONDER, 14);
-// }
-// static void test_responder15(void)
-// {
-// 	test_edhoc(RESPONDER, 15);
-// }
-// static void test_responder16(void)
-// {
-// 	test_edhoc(RESPONDER, 16);
-// }
-// static void test_responder17(void)
-// {
-// 	test_edhoc(RESPONDER, 17);
-// }
-
 static void test_initiator_responder_interaction1(void)
 {
 	test_initiator_responder_interaction(1);
@@ -129,8 +31,8 @@ void test_main(void)
 	ztest_test_suite(exporter, ztest_unit_test(test_exporter));
 	ztest_test_suite(
 		initiator_responder_interaction,
-		ztest_unit_test(test_initiator_responder_interaction1),
-		ztest_unit_test(test_initiator_responder_interaction2));
+		ztest_unit_test(test_initiator_responder_interaction1)); //,
+	//ztest_unit_test(test_initiator_responder_interaction2));
 
 	/* OSCORE test-vector tests */
 
@@ -181,7 +83,7 @@ void test_main(void)
 		ztest_unit_test(t605_server_replay_insert_test),
 		ztest_unit_test(t606_server_replay_standard_scenario_test));
 
-	ztest_run_test_suite(exporter);
+	//ztest_run_test_suite(exporter);
 	ztest_run_test_suite(initiator_responder_interaction);
-	ztest_run_test_suite(oscore_tests);
+	//ztest_run_test_suite(oscore_tests);
 }

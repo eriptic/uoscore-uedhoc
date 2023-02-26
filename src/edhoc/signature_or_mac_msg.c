@@ -151,7 +151,11 @@ signature_or_mac(enum sgn_or_mac_op op, bool static_dh, struct suite *suite,
 		} else {
 			PRINTF("SIG_STRUCT_SIZE: %d\n", SIG_STRUCT_SIZE);
 			BYTE_ARRAY_NEW(sign_struct, SIG_STRUCT_SIZE,
-				       SIG_STRUCT_SIZE);
+				       th->len + 2 + COSE_SIGN1_STR_LEN +
+					       id_cred->len + cred->len +
+					       ead->len +
+					       signature_or_mac->len +
+					       ENCODING_OVERHEAD);
 
 			TRY(signature_struct_gen(th, id_cred, cred, ead,
 						 signature_or_mac,
@@ -183,7 +187,10 @@ signature_or_mac(enum sgn_or_mac_op op, bool static_dh, struct suite *suite,
 
 		} else {
 			BYTE_ARRAY_NEW(signature_struct, SIG_STRUCT_SIZE,
-				       SIG_STRUCT_SIZE);
+				       th->len + 2 + COSE_SIGN1_STR_LEN +
+					       id_cred->len + cred->len +
+					       ead->len + _mac.len +
+					       ENCODING_OVERHEAD);
 
 			TRY(signature_struct_gen(th, id_cred, cred, ead, &_mac,
 						 &signature_struct));

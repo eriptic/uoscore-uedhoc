@@ -138,13 +138,11 @@ enum err rx(void *sock, struct byte_array *data)
 int main()
 {
 	int sockfd;
-	BYTE_ARRAY_NEW(prk_exporter, PRK_SIZE, PRK_SIZE);
-	BYTE_ARRAY_NEW(oscore_master_secret, OSCORE_MASTER_SECRET_SIZE,
-		       OSCORE_MASTER_SECRET_SIZE);
-	BYTE_ARRAY_NEW(oscore_master_salt, OSCORE_MASTER_SALT_SIZE,
-		       OSCORE_MASTER_SALT_SIZE);
-	BYTE_ARRAY_NEW(PRK_out, PRK_SIZE, PRK_SIZE);
-	BYTE_ARRAY_NEW(err_msg, ERR_MSG_DEFAULT_SIZE, ERR_MSG_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(prk_exporter, 32, 32);
+	BYTE_ARRAY_NEW(oscore_master_secret, 16, 16);
+	BYTE_ARRAY_NEW(oscore_master_salt, 8, 8);
+	BYTE_ARRAY_NEW(PRK_out, 32, 32);
+	BYTE_ARRAY_NEW(err_msg, 0, 0);
 
 	/* test vector inputs */
 	struct other_party_cred cred_r;

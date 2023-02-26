@@ -235,8 +235,9 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 			     &c->cred_r, &c->ead_2, MAC_2, &sign_or_mac_2));
 
 	/*compute ciphertext_2*/
-	BYTE_ARRAY_NEW(plaintext_2, PLAINTEXT2_SIZE, PLAINTEXT2_SIZE);
-	BYTE_ARRAY_NEW(ciphertext_2, CIPHERTEXT2_SIZE, CIPHERTEXT2_SIZE);
+	BYTE_ARRAY_NEW(plaintext_2, PLAINTEXT2_SIZE,
+		       c->id_cred_r.len + sign_or_mac_2.len + 2 + c->ead_2.len);
+	BYTE_ARRAY_NEW(ciphertext_2, CIPHERTEXT2_SIZE, plaintext_2.len);
 
 	TRY(ciphertext_gen(CIPHERTEXT2, &rc->suite, &c->id_cred_r,
 			   &sign_or_mac_2, &c->ead_2, &PRK_2e, &th2,
@@ -260,7 +261,7 @@ enum err msg3_process(struct edhoc_responder_context *c,
 		      struct byte_array *prk_out,
 		      struct byte_array *initiator_pk)
 {
-	BYTE_ARRAY_NEW(ctxt3, CIPHERTEXT3_SIZE, CIPHERTEXT3_SIZE);
+	BYTE_ARRAY_NEW(ctxt3, CIPHERTEXT3_SIZE, rc->msg.len);
 	TRY(decode_bstr(&rc->msg, &ctxt3));
 	PRINT_ARRAY("CIPHERTEXT_3", ctxt3.ptr, ctxt3.len);
 
