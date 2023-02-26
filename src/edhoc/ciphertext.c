@@ -232,14 +232,14 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
 	PRINT_ARRAY("plaintext", plaintext->ptr, plaintext->len);
 
 	/*generate key and iv (no iv in for ciphertext 2)*/
-	BYTE_ARRAY_NEW(key, CIPHERTEXT2_SIZE, CIPHERTEXT2_SIZE);
+	uint32_t key_len;
 	if (ctxt == CIPHERTEXT2) {
-		key.len = plaintext->len;
+		key_len = plaintext->len;
 	} else {
-		key.len = get_aead_key_len(suite->edhoc_aead);
+		key_len = get_aead_key_len(suite->edhoc_aead);
 	}
-	TRY(check_buffer_size(CIPHERTEXT2_SIZE, key.len));
 
+	BYTE_ARRAY_NEW(key, CIPHERTEXT2_SIZE, key_len);
 	BYTE_ARRAY_NEW(iv, AEAD_IV_SIZE, get_aead_iv_len(suite->edhoc_aead));
 
 	TRY(key_gen(ctxt, suite->edhoc_hash, prk, th, &key, &iv));

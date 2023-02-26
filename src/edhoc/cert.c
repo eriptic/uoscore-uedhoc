@@ -251,8 +251,7 @@ enum err cert_c509_verify(struct const_byte_array *cert,
 	size_t decode_len = 0;
 	struct cert c;
 
-	TRY_EXPECT(cbor_decode_cert(cert->ptr, cert->len, &c, &decode_len),
-		   0);
+	TRY_EXPECT(cbor_decode_cert(cert->ptr, cert->len, &c, &decode_len), 0);
 
 	PRINT_MSG("CBOR certificate parsed.\n");
 	PRINTF("Certificate type: %d\n", c._cert_type);
@@ -354,8 +353,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 	}
 	int hash_len = mbedtls_md_get_size(md_info);
 
-	BYTE_ARRAY_NEW(sig, SIGNATURE_SIZE,
-		       get_signature_len(sign_alg));
+	BYTE_ARRAY_NEW(sig, SIGNATURE_SIZE, get_signature_len(sign_alg));
 
 	/* get the public key of the CA */
 	struct byte_array root_pk;
@@ -407,7 +405,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 
 	const uint8_t *tbs_start = cert->ptr;
 	const uint8_t *tbs_end = &cert->ptr[cert->len];
-	BYTE_ARRAY_NEW(sig, SIGNATURE_SIZE, SIGNATURE_SIZE);
+	BYTE_ARRAY_NEW(sig, SIGNATURE_SIZE, get_signature_len(sign_alg));
 
 	enum err rv = certificate_authentication_failed;
 
@@ -467,8 +465,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 		EXPECTO_TAG(ASN1_INTEGER, cursor, len);
 
 		TRY_EXPECT((cursor + len) <= end, 1);
-		_memcpy_s(sig.ptr, SIGNATURE_SIZE, cursor,
-			  (uint32_t)len);
+		_memcpy_s(sig.ptr, SIGNATURE_SIZE, cursor, (uint32_t)len);
 		sig.len = len;
 		cursor += len;
 		PRINT_ARRAY("Certificate signature - part1", sig,

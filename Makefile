@@ -92,7 +92,7 @@ endif
 EXTENDED_CFLAGS += $(C_INCLUDES)
 
 #generate debug symbols
-EXTENDED_CFLAGS += -g -gdwarf-2
+EXTENDED_CFLAGS += -g3 -gdwarf-4
 
 # Generate dependency information
 EXTENDED_CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"

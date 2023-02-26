@@ -7,6 +7,9 @@
 #ifndef BUFFER_SIZES_H
 #define BUFFER_SIZES_H
 
+#define BSTR_ENCODING_OVERHEAD(x)                                              \
+	((x) <= 5) ? 1 : ((x) <= UINT8_MAX) ? 2 : ((x) <= UINT16_MAX) ? 3 : 5
+
 #define P_256_PRIV_KEY_SIZE 32
 #define P_256_PUB_KEY_COMPRESSED_SIZE 33
 #define P_256_PUB_KEY_UNCOMPRESSED_SIZE 65
@@ -28,12 +31,19 @@
 #define SIG_OR_MAC_SIZE 64
 #define ENCODING_OVERHEAD 10
 #define COSE_SIGN1_STR_LEN 10 /*the length of the string "COSE_Sign1"*/
+#define SIG_OR_MAC_SIZE_ENCODING_OVERHEAD 2
+#define PLAINTEXT3_SIZE_ENCODING_OVERHEAD 3
 
-#define PLAINTEXT2_SIZE (ID_CRED_R_SIZE + (SIG_OR_MAC_SIZE + 2) + EAD_SIZE)
+#define PLAINTEXT2_SIZE                                                        \
+	(ID_CRED_R_SIZE + SIG_OR_MAC_SIZE +                                    \
+	 SIG_OR_MAC_SIZE_ENCODING_OVERHEAD + EAD_SIZE)
 #define CIPHERTEXT2_SIZE PLAINTEXT2_SIZE
 
-#define PLAINTEXT3_SIZE (ID_CRED_I_SIZE + (SIG_OR_MAC_SIZE + 2) + EAD_SIZE)
-#define CIPHERTEXT3_SIZE (PLAINTEXT3_SIZE + ENCODING_OVERHEAD)
+#define PLAINTEXT3_SIZE                                                        \
+	(ID_CRED_I_SIZE + SIG_OR_MAC_SIZE +                                    \
+	 SIG_OR_MAC_SIZE_ENCODING_OVERHEAD + EAD_SIZE)
+#define CIPHERTEXT3_SIZE                                                       \
+	(PLAINTEXT3_SIZE + MAC_SIZE + PLAINTEXT3_SIZE_ENCODING_OVERHEAD)
 
 #define PLAINTEXT4_SIZE EAD_SIZE
 #define CIPHERTEXT4_SIZE (PLAINTEXT4_SIZE + ENCODING_OVERHEAD)

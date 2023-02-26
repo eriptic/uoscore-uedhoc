@@ -138,7 +138,8 @@ enum err th2_calculate(enum hash_alg alg, struct byte_array *msg1_hash,
 		       struct byte_array *g_y, struct byte_array *c_r,
 		       struct byte_array *th2)
 {
-	BYTE_ARRAY_NEW(th2_input, TH2_DEFAULT_SIZE, TH2_DEFAULT_SIZE);
+	BYTE_ARRAY_NEW(th2_input, TH2_DEFAULT_SIZE,
+		       g_y->len + c_r->len + th2->len + ENCODING_OVERHEAD);
 	PRINT_ARRAY("hash_msg1_raw", msg1_hash->ptr, msg1_hash->len);
 	TRY(th2_input_encode(msg1_hash, g_y, c_r, &th2_input));
 	TRY(hash(alg, &th2_input, th2));
