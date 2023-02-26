@@ -31,8 +31,8 @@ void test_main(void)
 	ztest_test_suite(exporter, ztest_unit_test(test_exporter));
 	ztest_test_suite(
 		initiator_responder_interaction,
-		ztest_unit_test(test_initiator_responder_interaction1)); //,
-	//ztest_unit_test(test_initiator_responder_interaction2));
+		ztest_unit_test(test_initiator_responder_interaction1),
+		ztest_unit_test(test_initiator_responder_interaction2));
 
 	/* OSCORE test-vector tests */
 
@@ -83,7 +83,7 @@ void test_main(void)
 		ztest_unit_test(t605_server_replay_insert_test),
 		ztest_unit_test(t606_server_replay_standard_scenario_test));
 
-	//ztest_run_test_suite(exporter);
+	ztest_run_test_suite(exporter);
 	ztest_run_test_suite(initiator_responder_interaction);
-	//ztest_run_test_suite(oscore_tests);
+	ztest_run_test_suite(oscore_tests);
 }
