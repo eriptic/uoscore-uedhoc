@@ -19,6 +19,14 @@
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
+/* Upper limit of SSN that is allowed by AEAD algorithm (AES-CCM-16-64-128) is 2^23-1, according to RFC 9053 p. 4.2.1.
+   Exceeding this value results in constant 4.01 Unauthorized error, so new security context must be established.
+   Note that this value is lower than MAX_PIV_FIELD_VALUE, which only defines maximum value that is writable to the SSN/PIV field.
+*/
+#ifndef OSCORE_SSN_OVERFLOW_VALUE
+#define OSCORE_SSN_OVERFLOW_VALUE 0x7FFFFF
+#endif
+
 enum derive_type {
 	KEY,
 	IV,
@@ -120,6 +128,14 @@ enum err piv2ssn(struct byte_array *piv, uint64_t *ssn);
 enum err update_request_piv_request_kid(struct context *c,
 					struct byte_array *piv,
 					struct byte_array *kid);
+
+/**
+ * @brief Check if given security context is still safe to be used, or a new one must be established.
+ *        For more info, refer to RFC 8613 p. 7.2.1.
+ * @param c security context.
+ * @return enum err 
+ */
+enum err check_context_freshness(struct context *c);
 
 
 #endif

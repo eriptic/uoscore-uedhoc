@@ -1183,3 +1183,49 @@ void t10_oscore_client_server_after_reboot(void)
 	zassert_equal(r, oscore_replay_window_protection_error,
 		      "Error in oscore2coap!");
 }
+
+/**
+ * Test 11:
+ * According to RFC8613 p. 7.2.1, endpoint must not process any more message after reaching its final SSN value.
+ */
+void t11_oscore_ssn_overflow_protection(void)
+{
+	enum err result;
+	struct context security_context;
+	struct oscore_init_params params = {
+		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
+		.master_secret.len = T1__MASTER_SECRET_LEN,
+		.sender_id.ptr = (uint8_t *)T1__SENDER_ID,
+		.sender_id.len = T1__SENDER_ID_LEN,
+		.recipient_id.ptr = (uint8_t *)T1__RECIPIENT_ID,
+		.recipient_id.len = T1__RECIPIENT_ID_LEN,
+		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
+		.master_salt.len = T1__MASTER_SALT_LEN,
+		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
+		.id_context.len = T1__ID_CONTEXT_LEN,
+		.aead_alg = OSCORE_AES_CCM_16_64_128,
+		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = false,
+	};
+
+	uint8_t buf_oscore[256];
+	uint32_t buf_oscore_len = sizeof(buf_oscore);
+	uint8_t buf_coap[256];
+	uint32_t buf_coap_len = sizeof(buf_coap);
+
+	result = oscore_context_init(&params, &security_context);
+	zassert_equal(result, ok, "Error in oscore_context_init");
+
+	/* mimic reaching final value of SSN */
+	security_context.sc.ssn = OSCORE_SSN_OVERFLOW_VALUE;
+
+	/* test SSN overflow protection in coap2oscore */
+	result = coap2oscore((uint8_t *)T1__COAP_REQ, T1__COAP_REQ_LEN,
+			(uint8_t *)&buf_oscore, &buf_oscore_len, &security_context);
+	zassert_equal(result, oscore_ssn_overflow, "SSN overflow not detected in coap2oscore");
+
+	/* test SSN overflow protection in oscore2coap */
+	result = oscore2coap((uint8_t *)T1__OSCORE_RESP, T1__OSCORE_RESP_LEN,
+			(uint8_t *)&buf_coap, &buf_coap_len, &security_context);
+	zassert_equal(result, oscore_ssn_overflow, "SSN overflow not detected in oscore2coap");
+}

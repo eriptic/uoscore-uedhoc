@@ -171,9 +171,27 @@ enum err update_request_piv_request_kid(struct context *c,
 	return ok;
 }
 
+enum err check_context_freshness(struct context *c)
+{
+	if (NULL == c)
+	{
+		return wrong_parameter;
+	}
+
+	/* "If the Sender Sequence Number exceeds the maximum, the endpoint MUST NOT
+	   process any more messages with the given Sender Context."
+	   For more info, refer to RFC 8613 p. 7.2.1. */
+	if (c->sc.ssn >= OSCORE_SSN_OVERFLOW_VALUE )
+	{
+		PRINT_MSG("Sender Sequence Number reached its limit. New security context must be established.\n");
+		return oscore_ssn_overflow;
+	}
+	return ok;
+}
+
 enum err ssn2piv(uint64_t ssn, struct byte_array *piv)
 {
-	if ((NULL == piv) || (NULL == piv->ptr) || (ssn > MAX_SSN_VALUE)) {
+	if ((NULL == piv) || (NULL == piv->ptr) || (ssn > MAX_PIV_FIELD_VALUE)) {
 		return wrong_parameter;
 	}
 
