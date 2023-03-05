@@ -576,7 +576,10 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	buf.len = buf_o_coap_len;
 	buf.ptr = buf_o_coap;
 
-	/*Parse the coap buf into a CoAP struct*/
+	/* Make sure that given context is fresh enough to process the message. */
+	TRY(check_context_freshness(c));
+
+	/* Parse the coap buf into a CoAP struct */
 	memset(&o_coap_pkt, 0, sizeof(o_coap_pkt));
 	TRY(coap_deserialize(&buf, &o_coap_pkt));
 
