@@ -95,7 +95,6 @@ int main()
 	uint8_t buf_oscore[256];
 	uint8_t coap_rx_buf[256];
 	CoapPDU *recvPDU;
-	uint8_t request_payload[] = { "This is some payload" };
 	uint8_t echo_opt_val[12];
 
 	while (1) {
@@ -116,8 +115,6 @@ int main()
 						 echo_opt_val);
 			second_request = false;
 		}
-		protected_pdu->setPayload(request_payload,
-					  sizeof(request_payload));
 
 		if (protected_pdu->validate()) {
 			printf("\n=================================================\n");
