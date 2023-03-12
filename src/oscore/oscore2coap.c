@@ -298,6 +298,9 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 	buf.ptr = buf_in;
 	buf.len = buf_in_len;
 
+	/* Make sure that given context is fresh enough to process the message. */
+	TRY(check_context_freshness(c));
+
 	/*Parse the incoming message (buf_in) into a CoAP struct*/
 	memset(&oscore_packet, 0, sizeof(oscore_packet));
 	TRY(coap_deserialize(&buf, &oscore_packet));

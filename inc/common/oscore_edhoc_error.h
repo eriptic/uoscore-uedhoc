@@ -70,6 +70,7 @@ enum err {
 	oscore_replay_notification_protection_error = 216,
 	no_echo_option = 217,
 	echo_val_mismatch = 218,
+	oscore_ssn_overflow = 219,
 };
 
 /*This macro checks if a function returns an error and if so it propagates 

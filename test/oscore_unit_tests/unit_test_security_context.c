@@ -77,7 +77,7 @@ void t501_piv2ssn(void)
 	test_single_piv2ssn(piv2, sizeof(piv2), 0xFF);
 	test_single_piv2ssn(piv3, sizeof(piv3), 0x02F0);
 	test_single_piv2ssn(piv4, sizeof(piv4), 0xDEADBEEF);
-	test_single_piv2ssn(piv5, sizeof(piv5), MAX_SSN_VALUE);
+	test_single_piv2ssn(piv5, sizeof(piv5), MAX_PIV_FIELD_VALUE);
 	test_single_piv2ssn(NULL, 0, 0);
 	test_single_piv2ssn(NULL, 1, 0);
 
@@ -108,7 +108,7 @@ void t502_ssn2piv(void)
 	test_single_ssn2piv(0x20, piv2, sizeof(piv2));
 	test_single_ssn2piv(0x20AA, piv3, sizeof(piv3));
 	test_single_ssn2piv(0xDEADBEEF, piv4, sizeof(piv4));
-	test_single_ssn2piv(MAX_SSN_VALUE, piv5, sizeof(piv5));
+	test_single_ssn2piv(MAX_PIV_FIELD_VALUE, piv5, sizeof(piv5));
 
 	/*test with invalid parameters*/
 	r = ssn2piv(0, NULL);
@@ -119,7 +119,7 @@ void t502_ssn2piv(void)
 	zassert_equal(r, wrong_parameter, "Error in piv2ssn. r: %d", r); //nullpointer for input value
 
 	struct byte_array piv_ba2 = BYTE_ARRAY_INIT(piv5, sizeof(piv5));
-	r = ssn2piv(MAX_SSN_VALUE + 1, &piv_ba2);
+	r = ssn2piv(MAX_PIV_FIELD_VALUE + 1, &piv_ba2);
 	zassert_equal(r, wrong_parameter, "Error in piv2ssn. r: %d", r); //max value of ssn exceeded
 }
 
@@ -145,4 +145,26 @@ void t503_derive_corner_case(void)
 
 	r = derive(&cc, &id, KEY, &out);
 	zassert_equal(r, oscore_unknown_hkdf, "Error in derive. r: %d", r);
+}
+
+/**
+ * @brief Test catching the SSN overflow event.
+ * 
+ */
+void t504_context_freshness(void)
+{
+	enum err result;
+	struct context security_context;
+
+	result = check_context_freshness(NULL);
+	zassert_equal(result, wrong_parameter, "");
+
+	security_context.sc.ssn = 100;
+	result = check_context_freshness(&security_context);
+	zassert_equal(result, ok, "");
+
+	/* mimic reaching final value of SSN */
+	security_context.sc.ssn = OSCORE_SSN_OVERFLOW_VALUE;
+	result = check_context_freshness(&security_context);
+	zassert_equal(result, oscore_ssn_overflow, "");
 }
