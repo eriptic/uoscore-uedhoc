@@ -110,9 +110,10 @@ STATIC enum err oscore_option_parser(const struct o_coap_option *opt,
 					out->kid_context.len = *val_ptr;
 					out->kid_context.ptr = ++val_ptr;
 					val_ptr += out->kid_context.len;
-					temp_kid_len = (uint8_t)(
-						temp_kid_len -
-						(out->kid_context.len + 1));
+					temp_kid_len =
+						(uint8_t)(temp_kid_len -
+							  (out->kid_context.len +
+							   1));
 				}
 
 				/* Get KID */
@@ -285,6 +286,24 @@ decrypt_wrapper(struct byte_array *ciphertext, struct byte_array *plaintext,
 	return ok;
 }
 
+static inline void set_observe_val(struct o_coap_option *options,
+				   uint8_t options_cnt, struct byte_array *piv)
+{
+	uint16_t len;
+	if (piv->len > 3) {
+		len = 3;
+	} else {
+		len = (uint16_t)piv->len;
+	}
+
+	for (uint8_t i = 0; i < options_cnt; i++) {
+		if (options[i].option_number == OBSERVE) {
+			options[i].value = piv->ptr;
+			options[i].len = len;
+		}
+	}
+}
+
 enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		     uint32_t *buf_out_len, struct context *c)
 {
@@ -400,6 +419,12 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 					&c->rc.notification_num,
 					&c->rc.notification_num_initialized,
 					&oscore_option.piv));
+
+				/*set outer observe option value to the three 
+				least significant bytes of the PIV*/
+				set_observe_val(oscore_packet.options,
+						oscore_packet.options_cnt,
+						&oscore_option.piv);
 			} else {
 				/*Notification without PIV received -- Currently not supported*/
 				return not_supported_feature; //LCOV_EXCL_LINE
