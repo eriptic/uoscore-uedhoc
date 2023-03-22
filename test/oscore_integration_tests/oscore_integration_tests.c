@@ -12,6 +12,37 @@
 
 #include "common/print_util.h"
 
+typedef enum {
+	NORMAL,
+	REVERSED
+} reverse_t;
+
+typedef enum {
+	FRESH,
+	RESTORED
+} freshness_t;
+
+static struct oscore_init_params get_default_params(reverse_t is_reversed, freshness_t is_fresh)
+{
+	struct byte_array sender = { .ptr = (uint8_t *)T1__SENDER_ID, .len = T1__SENDER_ID_LEN };
+	struct byte_array recipient = { .ptr = (uint8_t *)T1__RECIPIENT_ID, .len = T1__RECIPIENT_ID_LEN };
+
+	struct oscore_init_params params = {
+		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
+		.master_secret.len = T1__MASTER_SECRET_LEN,
+		.sender_id = (is_reversed == NORMAL) ? sender : recipient,
+		.recipient_id = (is_reversed == NORMAL) ? recipient : sender,
+		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
+		.master_salt.len = T1__MASTER_SALT_LEN,
+		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
+		.id_context.len = T1__ID_CONTEXT_LEN,
+		.aead_alg = OSCORE_AES_CCM_16_64_128,
+		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = (is_fresh == FRESH),
+	};
+	return params;
+}
+
 /**
  * Test 1:
  * - Client Key derivation with master salt see RFC8613 Appendix C.1.1
@@ -21,21 +52,7 @@ void t1_oscore_client_request_response(void)
 {
 	enum err r;
 	struct context c_client;
-	struct oscore_init_params params = {
-		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
-		.master_secret.len = T1__MASTER_SECRET_LEN,
-		.sender_id.ptr = (uint8_t *)T1__SENDER_ID,
-		.sender_id.len = T1__SENDER_ID_LEN,
-		.recipient_id.ptr = (uint8_t *)T1__RECIPIENT_ID,
-		.recipient_id.len = T1__RECIPIENT_ID_LEN,
-		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
-		.master_salt.len = T1__MASTER_SALT_LEN,
-		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
-		.id_context.len = T1__ID_CONTEXT_LEN,
-		.aead_alg = OSCORE_AES_CCM_16_64_128,
-		.hkdf = OSCORE_SHA_256,
-		.fresh_master_secret_salt = false,
-	};
+	struct oscore_init_params params = get_default_params(NORMAL, RESTORED);
 
 	r = oscore_context_init(&params, &c_client);
 
@@ -205,9 +222,6 @@ void t2_oscore_server_request_response(void)
 	r = oscore_context_init(&params_server, &c_server);
 
 	zassert_equal(r, ok, "Error in oscore_context_init");
-
-	/*we test here the regular behavior not the behaviour after reboot*/
-	c_server.rrc.echo_state_machine = ECHO_SYNCHRONIZED;
 
 	/*Test decrypting of an incoming request*/
 	uint8_t buf_coap[256];
@@ -388,44 +402,14 @@ void t9_oscore_client_server_observe(void)
 	 */
 	enum err r;
 	struct context c_client;
-	struct oscore_init_params params_client = {
-		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
-		.master_secret.len = T1__MASTER_SECRET_LEN,
-		.sender_id.ptr = (uint8_t *)T1__SENDER_ID,
-		.sender_id.len = T1__SENDER_ID_LEN,
-		.recipient_id.ptr = (uint8_t *)T1__RECIPIENT_ID,
-		.recipient_id.len = T1__RECIPIENT_ID_LEN,
-		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
-		.master_salt.len = T1__MASTER_SALT_LEN,
-		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
-		.id_context.len = T1__ID_CONTEXT_LEN,
-		.aead_alg = OSCORE_AES_CCM_16_64_128,
-		.hkdf = OSCORE_SHA_256,
-		.fresh_master_secret_salt = true,
-	};
+	struct oscore_init_params params_client = get_default_params(NORMAL, FRESH);
 	r = oscore_context_init(&params_client, &c_client);
 	zassert_equal(r, ok, "Error in oscore_context_init for client");
 
 	struct context c_server;
-	struct oscore_init_params params_server = {
-		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
-		.master_secret.len = T1__MASTER_SECRET_LEN,
-		.recipient_id.ptr = (uint8_t *)T1__SENDER_ID,
-		.recipient_id.len = T1__SENDER_ID_LEN,
-		.sender_id.ptr = (uint8_t *)T1__RECIPIENT_ID,
-		.sender_id.len = T1__RECIPIENT_ID_LEN,
-		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
-		.master_salt.len = T1__MASTER_SALT_LEN,
-		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
-		.id_context.len = T1__ID_CONTEXT_LEN,
-		.aead_alg = OSCORE_AES_CCM_16_64_128,
-		.hkdf = OSCORE_SHA_256,
-		.fresh_master_secret_salt = true,
-	};
+	struct oscore_init_params params_server = get_default_params(REVERSED, FRESH);
 	r = oscore_context_init(&params_server, &c_server);
 	zassert_equal(r, ok, "Error in oscore_context_init for server");
-	/*we test the general case not the case after reboot*/
-	c_server.rrc.echo_state_machine = ECHO_SYNCHRONIZED;
 
 	/*
 	 *
@@ -597,8 +581,8 @@ void t9_oscore_client_server_observe(void)
 }
 
 /**
- * @brief	This function test the behavior of a server and a client after 
- * 			reboot of the server and the rejection of a replayed request
+ * @brief	This function test the behavior of a server and a client for contexts
+ * 			stored in FLASH, after reboot of the server and the rejection of a replayed request.
  *
  *		   client				 				 		server
  *		  ---------			        				---------
@@ -626,9 +610,9 @@ void t9_oscore_client_server_observe(void)
  * 
  * 
  * 1) 	The client send a first request. The server responds with ECHO option. 
- *		This flow is mandatory and should be executed after every reboot of the 
- *		server. Then the client should send the ECHO option that it received in 
- *		the next request.
+ *		This flow is mandatory for contexts restored from FLASH and should be executed after
+ *		every reboot of the server. Then the client should send the ECHO option that it 
+ *		received in the next request.
  *
  * 2)	The client sends a new request without an ECHO option. This may happen 
  * 		if for some reason the client did not received the first ECHO option.
@@ -648,40 +632,12 @@ void t10_oscore_client_server_after_reboot(void)
 	 */
 	enum err r;
 	struct context cc; //context of the client
-	struct oscore_init_params params_client = {
-		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
-		.master_secret.len = T1__MASTER_SECRET_LEN,
-		.sender_id.ptr = (uint8_t *)T1__SENDER_ID,
-		.sender_id.len = T1__SENDER_ID_LEN,
-		.recipient_id.ptr = (uint8_t *)T1__RECIPIENT_ID,
-		.recipient_id.len = T1__RECIPIENT_ID_LEN,
-		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
-		.master_salt.len = T1__MASTER_SALT_LEN,
-		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
-		.id_context.len = T1__ID_CONTEXT_LEN,
-		.aead_alg = OSCORE_AES_CCM_16_64_128,
-		.hkdf = OSCORE_SHA_256,
-		.fresh_master_secret_salt = true,
-	};
+	struct oscore_init_params params_client = get_default_params(NORMAL, RESTORED);
 	r = oscore_context_init(&params_client, &cc);
 	zassert_equal(r, ok, "Error in oscore_context_init for client");
 
 	struct context cs; //context of the server
-	struct oscore_init_params params_server = {
-		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
-		.master_secret.len = T1__MASTER_SECRET_LEN,
-		.recipient_id.ptr = (uint8_t *)T1__SENDER_ID,
-		.recipient_id.len = T1__SENDER_ID_LEN,
-		.sender_id.ptr = (uint8_t *)T1__RECIPIENT_ID,
-		.sender_id.len = T1__RECIPIENT_ID_LEN,
-		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
-		.master_salt.len = T1__MASTER_SALT_LEN,
-		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
-		.id_context.len = T1__ID_CONTEXT_LEN,
-		.aead_alg = OSCORE_AES_CCM_16_64_128,
-		.hkdf = OSCORE_SHA_256,
-		.fresh_master_secret_salt = true,
-	};
+	struct oscore_init_params params_server = get_default_params(REVERSED, RESTORED);
 	r = oscore_context_init(&params_server, &cs);
 	zassert_equal(r, ok, "Error in oscore_context_init for server");
 
@@ -694,53 +650,19 @@ void t10_oscore_client_server_after_reboot(void)
 	uint32_t conv_coap_pkt_len;
 
 	/*Expected OSCORE values*/
-	const uint8_t OSCORE_REQ1[] = { 0x41, 0x02, 0x00, 0x00, 0x4A, 0x92,
-					0x09, 0x00, 0xFF, 0xAE, 0x82, 0x2A,
-					0x10, 0x7C, 0x9C, 0x48, 0xE4, 0xDF,
-					0xF2, 0xA3, 0x0E, 0xA7, 0xAC, 0x85,
-					0x92, 0xBE, 0x8B, 0x75, 0x09, 0xFB };
+	const uint8_t OSCORE_REQ1[] = { 0x41, 0x02, 0x00, 0x00, 0x4A, 0x92, 0x09, 0x14, 0xFF, 0x61, 0x27, 0x10, 0x81, 0xAD, 0xF0, 0x0E, 0xEA, 0x55, 0xF1, 0x52, 0x39, 0x6C, 0xA3, 0x72, 0x46, 0x96, 0x73, 0xB2, 0x09, 0xF7 };
 
-	const uint8_t OSCORE_RESP1[] = { 0x61, 0x44, 0x00, 0x00, 0x4A, 0x93,
-					 0x09, 0x00, 0x01, 0xFF, 0x89, 0x6F,
-					 0xB4, 0x03, 0xFE, 0xEA, 0xDA, 0x57,
-					 0x06, 0xDB, 0xC3, 0x73, 0x32, 0xC5,
-					 0x36, 0x3D, 0x4F, 0x4A, 0xB6, 0xAB,
-					 0xFD, 0xE2, 0x15 };
+	const uint8_t OSCORE_RESP1[] = { 0x61, 0x44, 0x00, 0x00, 0x4A, 0x93, 0x09, 0x14, 0x01, 0xFF, 0xBC, 0xB9, 0x3C, 0xA6, 0x0E, 0xF7, 0x11, 0x52, 0x39, 0x45, 0x1B, 0xEA, 0x4C, 0x81, 0x90, 0xCA, 0x60, 0x38, 0x76, 0xD6, 0x09, 0xDE, 0x46 };
 
-	const uint8_t OSCORE_RESP2[] = { 0x61, 0x44, 0x00, 0x00, 0x4A, 0x93,
-					 0x09, 0x01, 0x01, 0xFF, 0x96, 0x3F,
-					 0x4C, 0x0B, 0xD3, 0x21, 0x22, 0x6F,
-					 0x38, 0xF1, 0x4A, 0x13, 0xB0, 0xFE,
-					 0x26, 0xEE, 0xC0, 0x56, 0x7A, 0x90,
-					 0x36, 0x91, 0xF9 };
+	const uint8_t OSCORE_RESP2[] = { 0x61, 0x44, 0x00, 0x00, 0x4A, 0x93, 0x09, 0x15, 0x01, 0xFF, 0x97, 0xA4, 0x25, 0x7B, 0x17, 0x39, 0xC0, 0x1D, 0x5E, 0x9D, 0xDA, 0x02, 0x74, 0xDB, 0xD4, 0xBF, 0xE6, 0x82, 0x18, 0x9B, 0x3B, 0xBF, 0x0E };
 
-	const uint8_t OSCORE_REQ3[] = {
-		0x41, 0x02, 0x00, 0x00, 0x4B, 0x92, 0x09, 0x02, 0xFF,
-		0x8E, 0x45, 0x39, 0x6A, 0xCF, 0x67, 0x1E, 0x0A, 0x1C,
-		0x38, 0xFB, 0x54, 0x9B, 0xF2, 0x5F, 0x44, 0xA2, 0xAD,
-		0x10, 0xDB, 0x1F, 0x55, 0xB2, 0xAC, 0x26, 0xF1, 0x55,
-		0x3F, 0x7C, 0xF0, 0xF9, 0x24, 0xEA, 0x40, 0x88
-	};
+	const uint8_t OSCORE_REQ3[] = { 0x41, 0x02, 0x00, 0x00, 0x4B, 0x92, 0x09, 0x16, 0xFF, 0x8C, 0x2F, 0xED, 0xB3, 0xBB, 0xCD, 0xEE, 0x17, 0xB0, 0x12, 0x03, 0x95, 0x74, 0xD8, 0x08, 0x55, 0x40, 0x53, 0x82, 0x2B, 0x3C, 0x79, 0xA5, 0x1B, 0xCA, 0xFC, 0xC9, 0xD0, 0xC6, 0x35, 0x50, 0xDC, 0x5D, 0x1D, 0x13 };
 
-	const uint8_t OSCORE_RESP3[] = { 0x61, 0x44, 0x00, 0x00, 0x4B, 0x93,
-					 0x09, 0x02, 0x01, 0xFF, 0xF3, 0x0C,
-					 0x34, 0x94, 0xBF, 0x31, 0x24, 0x9A,
-					 0xCB, 0x73, 0xB6, 0xE8, 0x0E, 0x1E,
-					 0xB4, 0x1E, 0x1F, 0x73, 0x23, 0x0F,
-					 0x2A, 0x12, 0x83 };
+	const uint8_t OSCORE_RESP3[] = { 0x61, 0x44, 0x00, 0x00, 0x4B, 0x93, 0x09, 0x16, 0x01, 0xFF, 0x9B, 0xE4, 0x04, 0x05, 0x9F, 0x1C, 0xCE, 0x6A, 0x43, 0x85, 0xD2, 0xD7, 0x12, 0x52, 0x49, 0xB2, 0x8A, 0xD7, 0xD5, 0x0A, 0x67, 0x09, 0x82 };
 
-	const uint8_t OSCORE_REQ4[] = {
-		0x41, 0x02, 0x00, 0x00, 0x4B, 0x92, 0x09, 0x03, 0xFF,
-		0x7D, 0xD7, 0xE3, 0x39, 0xF0, 0xC0, 0xFC, 0x7D, 0xEB,
-		0x61, 0xC3, 0x71, 0xAB, 0xFE, 0xC3, 0x8C, 0x9E, 0xFC,
-		0x12, 0x48, 0x48, 0xD4, 0x77, 0x9B, 0x59, 0x6B, 0x36,
-		0xD2, 0x82, 0x23, 0xE6, 0x2A, 0x42, 0xAB, 0x9F
-	};
+	const uint8_t OSCORE_REQ4[] = { 0x41, 0x02, 0x00, 0x00, 0x4B, 0x92, 0x09, 0x17, 0xFF, 0xCD, 0x4A, 0x87, 0x1E, 0xCD, 0xE0, 0x07, 0xD2, 0xCB, 0xF5, 0xC4, 0x76, 0x84, 0x1E, 0x4C, 0x94, 0x39, 0xCE, 0x82, 0x6F, 0x1A, 0xF6, 0xB4, 0xC1, 0x68, 0xE6, 0xB3, 0xBB, 0xDB, 0x8B, 0x84, 0x4F, 0xDE, 0x95, 0x94 };
 
-	const uint8_t OSCORE_RESP4[] = { 0x61, 0x44, 0x00, 0x00, 0x4B, 0x90,
-					 0xFF, 0x2B, 0x8F, 0x62, 0x41, 0x31,
-					 0x9B, 0x7B, 0x1C, 0x90, 0x37, 0x9E,
-					 0x83, 0x93, 0x4B };
+	const uint8_t OSCORE_RESP4[] = { 0x61, 0x44, 0x00, 0x00, 0x4B, 0x90, 0xFF, 0x5E, 0x04, 0x3E, 0xD6, 0x11, 0x1F, 0xE7, 0xF7, 0x9D, 0x1E, 0x5F, 0x30, 0x27, 0x30 };
 
 	/**************************************************************************/
 	/* 		1)	|------request----------------------------->|				  */
@@ -786,10 +708,9 @@ void t10_oscore_client_server_after_reboot(void)
 	r = coap2oscore(coap_pkt, coap_pkt_len, oscore_pkt, &oscore_pkt_len,
 			&cc);
 	zassert_equal(r, ok, "Error in coap2oscore!");
+	PRINT_ARRAY("OSCORE req1", oscore_pkt, oscore_pkt_len);
 	zassert_mem_equal__(oscore_pkt, OSCORE_REQ1, sizeof(OSCORE_REQ1),
 			    "coap2oscore failed");
-
-	PRINT_ARRAY("OSCORE req1", oscore_pkt, oscore_pkt_len);
 
 	conv_coap_pkt_len = sizeof(conv_coap_pkt);
 	r = oscore2coap(oscore_pkt, oscore_pkt_len, conv_coap_pkt,
@@ -843,6 +764,7 @@ void t10_oscore_client_server_after_reboot(void)
 			&cs);
 	zassert_equal(r, ok, "Error in coap2oscore!");
 
+	PRINT_ARRAY("OSCORE resp1", oscore_pkt, oscore_pkt_len);
 	zassert_mem_equal__(oscore_pkt, OSCORE_RESP1, sizeof(OSCORE_RESP1),
 			    "coap2oscore failed");
 
@@ -914,6 +836,7 @@ void t10_oscore_client_server_after_reboot(void)
 			&cs);
 	zassert_equal(r, ok, "Error in coap2oscore!");
 
+	PRINT_ARRAY("OSCORE resp2", oscore_pkt, oscore_pkt_len);
 	zassert_mem_equal__(oscore_pkt, OSCORE_RESP2, oscore_pkt_len,
 			    "coap2oscore failed");
 
@@ -972,6 +895,8 @@ void t10_oscore_client_server_after_reboot(void)
 	r = coap2oscore(coap_pkt, coap_pkt_len, oscore_pkt, &oscore_pkt_len,
 			&cc);
 	zassert_equal(r, ok, "Error in coap2oscore!");
+	
+	PRINT_ARRAY("OSCORE req3", oscore_pkt, oscore_pkt_len);
 	zassert_mem_equal__(oscore_pkt, OSCORE_REQ3, oscore_pkt_len,
 			    "coap2oscore failed");
 
@@ -1016,6 +941,7 @@ void t10_oscore_client_server_after_reboot(void)
 			&cs);
 	zassert_equal(r, ok, "Error in coap2oscore!");
 
+	PRINT_ARRAY("OSCORE resp3", oscore_pkt, oscore_pkt_len);
 	zassert_mem_equal__(oscore_pkt, OSCORE_RESP3, oscore_pkt_len,
 			    "coap2oscore failed");
 
@@ -1074,6 +1000,7 @@ void t10_oscore_client_server_after_reboot(void)
 			&cc);
 	zassert_equal(r, ok, "Error in coap2oscore!");
 
+	PRINT_ARRAY("OSCORE req4", oscore_pkt, oscore_pkt_len);
 	zassert_mem_equal__(oscore_pkt, OSCORE_REQ4, oscore_pkt_len,
 			    "coap2oscore failed");
 
@@ -1115,6 +1042,7 @@ void t10_oscore_client_server_after_reboot(void)
 			&cs);
 	zassert_equal(r, ok, "Error in coap2oscore!");
 
+	PRINT_ARRAY("OSCORE resp4", oscore_pkt, oscore_pkt_len);
 	zassert_mem_equal__(oscore_pkt, OSCORE_RESP4, oscore_pkt_len,
 			    "coap2oscore failed");
 
@@ -1191,21 +1119,7 @@ void t11_oscore_ssn_overflow_protection(void)
 {
 	enum err result;
 	struct context security_context;
-	struct oscore_init_params params = {
-		.master_secret.ptr = (uint8_t *)T1__MASTER_SECRET,
-		.master_secret.len = T1__MASTER_SECRET_LEN,
-		.sender_id.ptr = (uint8_t *)T1__SENDER_ID,
-		.sender_id.len = T1__SENDER_ID_LEN,
-		.recipient_id.ptr = (uint8_t *)T1__RECIPIENT_ID,
-		.recipient_id.len = T1__RECIPIENT_ID_LEN,
-		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
-		.master_salt.len = T1__MASTER_SALT_LEN,
-		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
-		.id_context.len = T1__ID_CONTEXT_LEN,
-		.aead_alg = OSCORE_AES_CCM_16_64_128,
-		.hkdf = OSCORE_SHA_256,
-		.fresh_master_secret_salt = false,
-	};
+	struct oscore_init_params params = get_default_params(NORMAL, RESTORED);
 
 	uint8_t buf_oscore[256];
 	uint32_t buf_oscore_len = sizeof(buf_oscore);

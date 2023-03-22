@@ -457,14 +457,17 @@ static enum err generate_new_ssn(struct context *c)
 
 	c->sc.ssn++;
 
-	struct nvm_key_t nvm_key = { .sender_id = c->sc.sender_id,
-				     .recipient_id = c->rc.recipient_id,
-				     .id_context = c->cc.id_context };
-	bool is_storable = c->sc.ssn_in_nvm;
-	bool echo_sync_in_progress =
-		(ECHO_SYNCHRONIZED != c->rrc.echo_state_machine);
-	return ssn_store_in_nvm(&nvm_key, c->sc.ssn, is_storable,
-				echo_sync_in_progress);
+	#ifdef OSCORE_NVM_SUPPORT
+		struct nvm_key_t nvm_key = { .sender_id = c->sc.sender_id,
+						.recipient_id = c->rc.recipient_id,
+						.id_context = c->cc.id_context };
+		bool echo_sync_in_progress =
+			(ECHO_SYNCHRONIZED != c->rrc.echo_state_machine);
+		return ssn_store_in_nvm(&nvm_key, c->sc.ssn,
+					echo_sync_in_progress);
+	#else
+		return ok;
+	#endif
 }
 
 /**

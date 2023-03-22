@@ -62,7 +62,6 @@ struct sender_context {
 	struct byte_array sender_key;
 	uint8_t sender_key_buf[SENDER_KEY_LEN_];
 	uint64_t ssn;
-	bool ssn_in_nvm;
 };
 
 /* Recipient Context used to decrypt inbound messages */
