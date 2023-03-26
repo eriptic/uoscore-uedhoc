@@ -65,6 +65,9 @@ msg1_parse(struct byte_array *msg1, enum method_type *method,
 		   0);
 
 	/*METHOD*/
+	if ((m._message_1_METHOD > 4) || (m._message_1_METHOD < 0)) {
+		return wrong_parameter;
+	}
 	*method = (enum method_type)m._message_1_METHOD;
 	PRINTF("msg1 METHOD: %d\n", (int)*method);
 
