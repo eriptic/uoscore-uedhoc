@@ -52,6 +52,8 @@ enum err oscore_option_generate(struct byte_array *piv, struct byte_array *kid,
 enum err derive(struct common_context *cc, struct byte_array *id,
 		enum derive_type type, struct byte_array *out);
 
+void set_observe_val(struct o_coap_option *options, uint8_t options_cnt,
+		     struct byte_array *piv);
 #else
 #define STATIC static
 #endif

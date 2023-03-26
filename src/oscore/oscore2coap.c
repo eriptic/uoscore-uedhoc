@@ -192,14 +192,42 @@ options_reorder(struct o_coap_option *U_options, uint8_t U_options_cnt,
 }
 
 /**
+ * @brief 		Set the value of the inner observe option to the three least 
+ * 			significant bytes of the partial IV, see RFC8613 4.1.3.5.2
+ * 
+ * @param options 	array of all inner options
+ * @param options_cnt 	number of options
+ * @param piv 		PIV
+ */
+STATIC void set_observe_val(struct o_coap_option *options,
+				   uint8_t options_cnt, struct byte_array *piv)
+{
+	uint16_t len;
+	if (piv->len > 3) {
+		len = 3;
+	} else {
+		len = (uint16_t)piv->len;
+	}
+
+	for (uint8_t i = 0; i < options_cnt; i++) {
+		if (options[i].option_number == OBSERVE) {
+			options[i].value = piv->ptr;
+			options[i].len = len;
+		}
+	}
+}
+
+/**
  * @brief Generate CoAP packet from OSCORE packet
  * @param decrypted_payload: decrypted OSCORE payload, which contains code, E-options and original unprotected CoAP payload
  * @param oscore_pkt:  input OSCORE packet
+ * @param piv: PIV to be used only in the case of observe notification
  * @param out: pointer to output CoAP packet
  * @return
  */
 static inline enum err o_coap_pkg_generate(struct byte_array *decrypted_payload,
 					   struct o_coap_packet *oscore_pkt,
+					   struct byte_array *piv,
 					   struct o_coap_packet *out)
 {
 	uint8_t code = 0;
@@ -211,6 +239,10 @@ static inline enum err o_coap_pkg_generate(struct byte_array *decrypted_payload,
 	TRY(oscore_decrypted_payload_parser(decrypted_payload, &code, E_options,
 					    &E_options_cnt,
 					    &unprotected_o_coap_payload));
+
+	/*set inner observe option value to the three least significant bytes 
+	of the PIV*/
+	set_observe_val(&E_options, E_options_cnt, piv);
 
 	/* Copy each items from OSCORE packet to CoAP packet */
 	/* Header */
@@ -284,24 +316,6 @@ decrypt_wrapper(struct byte_array *ciphertext, struct byte_array *plaintext,
 	}
 
 	return ok;
-}
-
-static inline void set_observe_val(struct o_coap_option *options,
-				   uint8_t options_cnt, struct byte_array *piv)
-{
-	uint16_t len;
-	if (piv->len > 3) {
-		len = 3;
-	} else {
-		len = (uint16_t)piv->len;
-	}
-
-	for (uint8_t i = 0; i < options_cnt; i++) {
-		if (options[i].option_number == OBSERVE) {
-			options[i].value = piv->ptr;
-			options[i].len = len;
-		}
-	}
 }
 
 enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
@@ -419,12 +433,6 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 					&c->rc.notification_num,
 					&c->rc.notification_num_initialized,
 					&oscore_option.piv));
-
-				/*set outer observe option value to the three 
-				least significant bytes of the PIV*/
-				set_observe_val(oscore_packet.options,
-						oscore_packet.options_cnt,
-						&oscore_option.piv);
 			} else {
 				/*Notification without PIV received -- Currently not supported*/
 				return not_supported_feature; //LCOV_EXCL_LINE
@@ -445,7 +453,8 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 
 	/* Generate corresponding CoAP packet */
 	struct o_coap_packet o_coap_packet;
-	TRY(o_coap_pkg_generate(&plaintext, &oscore_packet, &o_coap_packet));
+	TRY(o_coap_pkg_generate(&plaintext, &oscore_packet, &oscore_option.piv,
+				&o_coap_packet));
 
 	/*Convert to byte string*/
 	return coap_serialize(&o_coap_packet, buf_out, buf_out_len);

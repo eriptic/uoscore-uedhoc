@@ -368,14 +368,14 @@ void t8_oscore_server_response_simple_ack(void)
  * @brief	This function test the behavior of a server and a client in a typical
  * 			observe exchange as depicted:
  *
- *			client							server
- *			---------						---------
- *				|								|
+ *			      client			     server
+ *			     ---------			    ---------
+ *				|				|
  *				|------registration------------>|
- *				|								|
+ *				|				|
  *				|<-----notification1------------|
- * rejected msg	| x---replayed notification1----|
- *				|								|
+ * 		rejected msg	| x---replayed notification1----|
+ *				|				|
  *
  * 			See as well Appendix A.1. in RFC7641
  */
@@ -579,7 +579,7 @@ void t9_oscore_client_server_observe(void)
 
 	zassert_equal(r, ok, "Error in oscore2coap!");
 	uint8_t EXPECTED_CONVERTED_COAP[] = {
-		0x61, 0x45, 0x00, 0x00, 0x4A, 0x60
+		0x61, 0x45, 0x00, 0x00, 0x4A, 0x61, 0x00
 	};
 	zassert_mem_equal__(&ser_conv_coap_pkt, EXPECTED_CONVERTED_COAP,
 			    sizeof(EXPECTED_CONVERTED_COAP),
@@ -600,23 +600,23 @@ void t9_oscore_client_server_observe(void)
  * @brief	This function test the behavior of a server and a client after 
  * 			reboot of the server and the rejection of a replayed request
  *
- *		   client				 				 		server
- *		  ---------			        				---------
- *			|                                   		|
+ *		   client				 	 server
+ *		  ---------					---------
+ *			|                                           |
  *		1)	|------request----------------------------->|
  *			|<-----response with ECHO option (ECHO1)----|
- *			|                                   		|
+ *			|                                           |
  *		2)	|------new request without ECHO opt-------->| 
  *			|<-----response with new ECHO option (ECHO2)|
- *			|              		            			|
+ *			|                                           |
  *		3)	|------request with old ECHO option-(ECHO1)>|
  * 			|<-----response with new ECHO option (ECHO3)|
- * 			|											|
+ * 			|                                           |
  *		4)	|------request with ECHO option-(ECHO3)---->|
  * 			|<-----response-----------------------------|
- *			|											|
+ *			|                                           |
  *		5)	|------request----------------------------->|
- * 			|------replayed request----------X			| rejected message
+ * 			|------replayed request----------X          | rejected message
  *
  * 			See as RFC8613 Appendix B1.2 and RFC9175
  * 

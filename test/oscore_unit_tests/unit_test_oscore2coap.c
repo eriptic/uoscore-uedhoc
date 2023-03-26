@@ -186,3 +186,55 @@ void t303_options_reorder(void)
 			      "wrong option_number");
 	}
 }
+
+void t304_set_observe_val(void)
+{
+	uint32_t i;
+
+	//test not having a observe option in the list of options
+	// -> nothing is happening
+	struct o_coap_option options[] = {
+		{ .delta = 2, .len = 0, .value = NULL, .option_number = 2 },
+		{ .delta = 2, .len = 0, .value = NULL, .option_number = 4 },
+	};
+	uint8_t PIV1[] = { 0x00 };
+
+	struct byte_array piv1 = BYTE_ARRAY_INIT(PIV1, sizeof(PIV1));
+
+	set_observe_val(options, sizeof(options) / sizeof(options[0]), &piv1);
+
+	for (i = 0; i < sizeof(options) / sizeof(options[0]); i++) {
+		zassert_equal(options[i].delta, 2, "wrong delta");
+		zassert_equal(options[i].len, 0, "wrong len");
+		zassert_equal(options[i].value, NULL, "wrong value");
+		zassert_equal(options[i].option_number, 2 + i * 2,
+			      "wrong option_number");
+	}
+
+	//test having a single observe option and piv of 2 byte
+	uint8_t PIV2[] = { 0xaa, 0xaa };
+	struct byte_array piv2 = BYTE_ARRAY_INIT(PIV2, sizeof(PIV2));
+	struct o_coap_option option2 = {
+		.delta = 6, .len = 0, .value = NULL, .option_number = OBSERVE
+	};
+
+	set_observe_val(&option2, 1, &piv2);
+	zassert_equal(option2.delta, 6, "wrong delta");
+	zassert_equal(option2.len, 2, "wrong len");
+	zassert_equal(option2.option_number, 6, "wrong option_number");
+	zassert_mem_equal__(option2.value, piv2.ptr, piv2.len, "wrong value");
+
+	//test having a single observe option and piv of 4 byte
+	uint8_t PIV3[] = { 0xaa, 0xaa, 0xaa, 0xaa };
+	struct byte_array piv3 = BYTE_ARRAY_INIT(PIV3, sizeof(PIV3));
+	struct o_coap_option option3 = {
+		.delta = 6, .len = 0, .value = NULL, .option_number = OBSERVE
+	};
+
+	set_observe_val(&option3, 1, &piv3);
+	zassert_equal(option3.delta, 6, "wrong delta");
+	zassert_equal(option3.len, 3, "wrong len");
+	zassert_equal(option3.option_number, 6, "wrong option_number");
+	zassert_mem_equal__(option3.value, piv3.ptr, option3.len,
+			    "wrong value");
+}
