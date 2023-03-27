@@ -82,8 +82,8 @@ struct oscore_init_params {
 	const enum AEAD_algorithm aead_alg;
 	/*kdf is optional (default HKDF-SHA-256)*/
 	const enum hkdf hkdf;
-	/*True if the combination of master secret and master salt are unique at 
-	every boot of the device, e.g., they are computed with EDHOC*/
+	/*True if the combination of master secret and master salt are unique at every boot of the device, e.g., they are computed with EDHOC.
+	If not, OSCORE_NVM_SUPPORT flag must be defined, for proper non-volatile memory management.*/
 	const bool fresh_master_secret_salt;
 };
 

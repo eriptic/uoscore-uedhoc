@@ -140,13 +140,13 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	c->sc.sender_id = params->sender_id;
 	c->sc.sender_key.len = sizeof(c->sc.sender_key_buf);
 	c->sc.sender_key.ptr = c->sc.sender_key_buf;
-	c->sc.ssn_in_nvm = !params->fresh_master_secret_salt;
 	struct nvm_key_t nvm_key = {
 		.sender_id = c->sc.sender_id,
 		.recipient_id = c->rc.recipient_id,
 		.id_context = c->cc.id_context
 	};
-	TRY(ssn_init(&nvm_key, &c->sc.ssn, c->sc.ssn_in_nvm));
+
+	TRY(ssn_init(&nvm_key, &c->sc.ssn, params->fresh_master_secret_salt));
 	TRY(derive_sender_key(&c->cc, &c->sc));
 
 	/*set up the request response context**********************************/
@@ -158,7 +158,10 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	c->rrc.request_piv.ptr = c->rrc.request_piv_buf;
 	c->rrc.echo_opt_val.len = sizeof(c->rrc.echo_opt_val_buf);
 	c->rrc.echo_opt_val.ptr = c->rrc.echo_opt_val_buf;
-	c->rrc.echo_state_machine = ECHO_REBOOT;
+
+	/* no ECHO challenge needed if the context is fresh */
+	c->rrc.echo_state_machine = (params->fresh_master_secret_salt ? ECHO_SYNCHRONIZED : ECHO_REBOOT);
+	
 	return ok;
 }
 

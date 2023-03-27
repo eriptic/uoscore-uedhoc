@@ -21,6 +21,9 @@ DUNIT_TEST += -DUNIT_TEST
 # currently only ZCBOR is supported
 CBOR_ENGINE += -DZCBOR
 
+# Uncomment to enable Non-volatile memory (NVM) support for storing security context between device reboots
+OSCORE_NVM_SUPPORT += -DOSCORE_NVM_SUPPORT
+
 # The uoscore-uedhoc can be used with different crypto angines. 
 # The user can provide as well additinal cryptoengines by providing 
 # implementations of the function defined (as week) in the crypto_wrapper file.

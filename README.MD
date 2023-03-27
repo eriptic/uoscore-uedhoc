@@ -133,9 +133,12 @@ The logic of uOSCORE and uEDHOC is independent form the cryptographic library, i
 
 ## Preventing Nonce Reuse Attacks in OSCORE
 
-AES keys should never be used more than once with a given nonce, see [RFC5084](https://datatracker.ietf.org/doc/html/rfc5084). In order to avoid this situation the user should set:
-   * `fresh_master_secret_salt = true` in case that after each reboot of the device it uses fresh master secret/salt which can be derived, e.g., with EDHOC.
-   * `fresh_master_secret_salt = false` in case the same master secret and salt are used in subsequent reboots. In this case the user should implement in addition two functions that require access to Non-volatile Memory (NVM):
+AES keys should never be used more than once with a given nonce, see [RFC5084](https://datatracker.ietf.org/doc/html/rfc5084). In order to avoid this situation, the user has 2 options while creating context structure:
+- setting `fresh_master_secret_salt = true`, when given context is new (freshly obtained e.g. with EDHOC)
+- setting `fresh_master_secret_salt = false`, when the same context is used between reboots/reconnections. In this case, the user must enable Non-volatile Memory support (see `OSCORE_NVM_SUPPORT` in `makefile_config.mk`) and implement two functions that require access to NVM (see below).
+
+Note that using NVM support is independent of the parameter above. Although it is required for using the same context multiple times, it will also be utilized (if enabled) to store context obtained with EDHOC, enabling the user to reuse it after the reboot. This behaviour is useful in situations where multiple sessions need to be stored on a device, while at the same time being able to start a completely new session with EDHOC. When such feature is not needed, `OSCORE_NVM_SUPPORT` can be disabled so only fresh sessions are acceptable.
+
    ```c
    /**
    * @brief When the same OSCORE master secret and salt are reused through

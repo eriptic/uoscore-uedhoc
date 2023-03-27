@@ -26,6 +26,7 @@ struct nvm_key_t {
 	struct byte_array id_context;
 };
 
+#ifdef OSCORE_NVM_SUPPORT
 /**
 * @brief When the same OSCORE master secret and salt are reused through
 *        several reboots of the device, e.g., no fresh shared secret is
@@ -53,21 +54,21 @@ enum err nvm_read_ssn(const struct nvm_key_t *nvm_key, uint64_t *ssn);
  * 
  * @param nvm_key part of the context that is permitted to be used for identifying the right store slot in NVM.
  * @param ssn SSN to be written in NVM.
- * @param is_storable Indicates if it is necessary to store the SSN.
  * @param echo_sync_in_progress Indicates if the device is still in the ECHO synchronization mode.
  * @return enum err 
  */
 enum err ssn_store_in_nvm(const struct nvm_key_t *nvm_key, uint64_t ssn,
-			  bool is_storable, bool echo_sync_in_progress);
+			  bool echo_sync_in_progress);
+#endif
 
 /**
- * @brief Initializes the SSN after reboot (if needed).
+ * @brief Initializes the SSN depending on context freshness.
  * @param nvm_key part of the context that is permitted to be used for identifying the right store slot in NVM.
  * @param ssn Pointer which will be updated with the value read from NVM.
- * @param is_storable Indicates if the value needs to be retrievd from SSN.
+ * @param is_context_fresh Indicates if the context is fresh, or the value needs to be retrieved from NVM.
  * @retval error code
 */
 enum err ssn_init(const struct nvm_key_t *nvm_key, uint64_t *ssn,
-		  bool is_storable);
+		  bool is_context_fresh);
 
 #endif

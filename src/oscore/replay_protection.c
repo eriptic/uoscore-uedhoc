@@ -16,7 +16,7 @@
  * @param position [in] index to place new number (all older elements will be left-shifted)
  */
 static void server_replay_window_insert(uint64_t seq_number,
-					server_replay_window_t *replay_window,
+					struct server_replay_window_t *replay_window,
 					size_t position)
 {
 	uint64_t *window = replay_window->window;
@@ -29,7 +29,7 @@ static void server_replay_window_insert(uint64_t seq_number,
 	window[position] = seq_number;
 }
 
-enum err server_replay_window_init(server_replay_window_t *replay_window)
+enum err server_replay_window_init(struct server_replay_window_t *replay_window)
 {
 	if (NULL == replay_window) {
 		return wrong_parameter;
@@ -42,7 +42,7 @@ enum err server_replay_window_init(server_replay_window_t *replay_window)
 }
 
 enum err server_replay_window_reinit(uint64_t current_sequence_number,
-				     server_replay_window_t *replay_window)
+				     struct server_replay_window_t *replay_window)
 {
 	if (NULL == replay_window) {
 		return wrong_parameter;
@@ -64,7 +64,7 @@ enum err server_replay_window_reinit(uint64_t current_sequence_number,
 }
 
 bool server_is_sequence_number_valid(uint64_t seq_number,
-				     server_replay_window_t *replay_window)
+				     struct server_replay_window_t *replay_window)
 {
 	if (NULL == replay_window) {
 		return false;
@@ -97,7 +97,7 @@ bool server_is_sequence_number_valid(uint64_t seq_number,
 }
 
 bool server_replay_window_update(uint64_t seq_number,
-				 server_replay_window_t *replay_window)
+				 struct server_replay_window_t *replay_window)
 {
 	/* Although sequence number should be checked before by the calling function, do it again to prevent possible security issues in case it was not. */
 	bool is_valid =

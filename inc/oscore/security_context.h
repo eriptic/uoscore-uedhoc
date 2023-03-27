@@ -62,7 +62,6 @@ struct sender_context {
 	struct byte_array sender_key;
 	uint8_t sender_key_buf[SENDER_KEY_LEN_];
 	uint64_t ssn;
-	bool ssn_in_nvm;
 };
 
 /* Recipient Context used to decrypt inbound messages */
@@ -71,7 +70,7 @@ struct recipient_context {
 	struct byte_array recipient_key;
 	uint8_t recipient_key_buf[RECIPIENT_KEY_LEN_];
 	uint8_t recipient_id_buf[RECIPIENT_ID_BUFF_LEN];
-	server_replay_window_t replay_window;
+	struct server_replay_window_t replay_window;
 	uint64_t notification_num;
 	bool notification_num_initialized; /* this is only used to skip the first notification check after the reboot */
 };

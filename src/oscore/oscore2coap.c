@@ -361,8 +361,10 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 			   If not, repeat the whole process until normal operation can be started. */
 			if (ok == echo_val_is_fresh(&c->rrc.echo_opt_val,
 						    &plaintext)) {
+				uint64_t ssn;
+				piv2ssn(&oscore_option.piv, &ssn);
 				TRY(server_replay_window_reinit(
-					*oscore_option.piv.ptr,
+					ssn,
 					&c->rc.replay_window));
 				c->rrc.echo_state_machine = ECHO_SYNCHRONIZED;
 			} else {
