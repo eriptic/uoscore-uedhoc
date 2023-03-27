@@ -12,17 +12,17 @@
 
 #include "common/print_util.h"
 
-typedef enum {
+enum reverse_t {
 	NORMAL,
 	REVERSED
-} reverse_t;
+};
 
-typedef enum {
+enum freshness_t {
 	FRESH,
 	RESTORED
-} freshness_t;
+};
 
-static struct oscore_init_params get_default_params(reverse_t is_reversed, freshness_t is_fresh)
+static struct oscore_init_params get_default_params(enum reverse_t is_reversed, enum freshness_t is_fresh)
 {
 	struct byte_array sender = { .ptr = (uint8_t *)T1__SENDER_ID, .len = T1__SENDER_ID_LEN };
 	struct byte_array recipient = { .ptr = (uint8_t *)T1__RECIPIENT_ID, .len = T1__RECIPIENT_ID_LEN };

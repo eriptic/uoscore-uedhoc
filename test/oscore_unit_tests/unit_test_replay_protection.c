@@ -18,16 +18,16 @@
 #define DUMMY_BYTE 10
 #define WINDOW_SIZE_BYTES (WINDOW_SIZE * sizeof(uint64_t))
 
-static server_replay_window_t replay_window;
+static struct server_replay_window_t replay_window;
 
-static void _copy_window(server_replay_window_t *dest,
-			 const server_replay_window_t *src)
+static void _copy_window(struct server_replay_window_t *dest,
+			 const struct server_replay_window_t *src)
 {
-	memcpy(dest, src, sizeof(server_replay_window_t));
+	memcpy(dest, src, sizeof(struct server_replay_window_t));
 }
 
-static void _compare_windows(server_replay_window_t *current,
-			     const server_replay_window_t *expected)
+static void _compare_windows(struct server_replay_window_t *current,
+			     const struct server_replay_window_t *expected)
 {
 	zassert_mem_equal(current->window, expected->window, WINDOW_SIZE_BYTES,
 			  "");
@@ -37,7 +37,7 @@ static void _compare_windows(server_replay_window_t *current,
 
 static void
 _update_window_and_check_result(uint64_t seq_num,
-				server_replay_window_t *replay_window,
+				struct server_replay_window_t *replay_window,
 				bool expected_result)
 {
 	bool result = server_replay_window_update(seq_num, replay_window);
@@ -46,7 +46,7 @@ _update_window_and_check_result(uint64_t seq_num,
 
 static void
 _validate_window_and_check_result(uint64_t seq_num,
-				  server_replay_window_t *replay_window,
+				  struct server_replay_window_t *replay_window,
 				  bool expected_result)
 {
 	bool result = server_is_sequence_number_valid(seq_num, replay_window);
@@ -58,7 +58,7 @@ _validate_window_and_check_result(uint64_t seq_num,
  */
 void t600_server_replay_init_test(void)
 {
-	static server_replay_window_t compare_window = { 0 };
+	static struct server_replay_window_t compare_window = { 0 };
 
 	/* set random data to all fields */
 	memset(replay_window.window, DUMMY_BYTE, WINDOW_SIZE_BYTES);
@@ -81,13 +81,13 @@ void t600_server_replay_init_test(void)
  */
 void t601_server_replay_reinit_test(void)
 {
-	static const server_replay_window_t compare_window_1 = {
+	static const struct server_replay_window_t compare_window_1 = {
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6 },
 		true
 	};
 
-	static const server_replay_window_t compare_window_2 = {
+	static const struct server_replay_window_t compare_window_2 = {
 		{ 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
 		  111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
 		  122, 123, 124, 125, 126, 127, 128, 129, 130, 131 },
@@ -121,7 +121,7 @@ void t602_server_replay_check_at_start_test(void)
 	// SN 5 is delayed = OK
 	// SN 0 is delayed and still in the window range = OK
 
-	static const server_replay_window_t starting_point = {
+	static const struct server_replay_window_t starting_point = {
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 6, 7, 8, 10 },
 		false
@@ -151,7 +151,7 @@ void t603_server_replay_check_in_progress_test(void)
 	// missing Sequence Numbers in starting_point: 126, 127, 133
 	// SN 99 and below are behind the window = NOT OK
 
-	static const server_replay_window_t starting_point = {
+	static const struct server_replay_window_t starting_point = {
 		{ 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
 		  111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
 		  122, 123, 124, 125, 128, 129, 130, 131, 132, 134 },
@@ -180,9 +180,9 @@ void t603_server_replay_check_in_progress_test(void)
  */
 void t604_server_replay_insert_zero_test(void)
 {
-	static const server_replay_window_t compare_window_1 = { { 0 }, true };
+	static const struct server_replay_window_t compare_window_1 = { { 0 }, true };
 
-	static const server_replay_window_t compare_window_2 = {
+	static const struct server_replay_window_t compare_window_2 = {
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
 		true
@@ -228,32 +228,32 @@ void t604_server_replay_insert_zero_test(void)
  */
 void t605_server_replay_insert_test(void)
 {
-	static const server_replay_window_t starting_point = {
+	static const struct server_replay_window_t starting_point = {
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 6, 7, 8, 10 },
 		false
 	};
-	static const server_replay_window_t compare_window_1 = {
+	static const struct server_replay_window_t compare_window_1 = {
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 6, 7, 8, 10 },
 		false
 	};
-	static const server_replay_window_t compare_window_2 = {
+	static const struct server_replay_window_t compare_window_2 = {
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 5, 6, 7, 8, 10 },
 		false
 	};
-	static const server_replay_window_t compare_window_3 = {
+	static const struct server_replay_window_t compare_window_3 = {
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		  0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 5, 6, 7, 8, 9, 10 },
 		false
 	};
-	static const server_replay_window_t compare_window_4 = {
+	static const struct server_replay_window_t compare_window_4 = {
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	0,
 		  0, 0, 0, 0, 0, 0, 0, 1, 4, 5, 6, 7, 8, 9, 10, 12 },
 		false
 	};
-	static const server_replay_window_t compare_window_5 = {
+	static const struct server_replay_window_t compare_window_5 = {
 		{ 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
 		  80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
 		  91, 92, 93, 94, 95, 96, 97, 98, 99, 100 },
@@ -285,13 +285,13 @@ void t605_server_replay_insert_test(void)
  */
 void t606_server_replay_standard_scenario_test(void)
 {
-	static const server_replay_window_t compare_window_1 = {
+	static const struct server_replay_window_t compare_window_1 = {
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5 },
 		true
 	};
 
-	static const server_replay_window_t compare_window_2 = {
+	static const struct server_replay_window_t compare_window_2 = {
 		{ 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
 		  30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
 		  41, 42, 43, 44, 45, 46, 47, 48, 49, 50 },
