@@ -19,7 +19,8 @@
 #define MAX_KID_LEN 8
 #define MAX_AAD_LEN 30
 #define MAX_INFO_LEN 50
-#define MAX_PIV_FIELD_VALUE 0xFFFFFFFFFF /* maximum possible value of SSN/PIV field is 2^40-1, according to RFC 8613 p. 7.2.1.*/
+#define MAX_PIV_FIELD_VALUE                                                    \
+	0xFFFFFFFFFF /* maximum possible value of SSN/PIV field is 2^40-1, according to RFC 8613 p. 7.2.1.*/
 
 /**
  * @brief Maximum URI Path (resource name) size in bytes.
@@ -74,11 +75,11 @@
  * @brief Possible coap message types.
  */
 enum o_coap_msg {
-   COAP_MSG_REQUEST = 0, /* Regular request */
-   COAP_MSG_REGISTRATION, /* Request with OBSERVE option set to 0 */
-   COAP_MSG_CANCELLATION, /* Request with OBSERVE option set to 1 */
-   COAP_MSG_RESPONSE, /* Regular response */
-   COAP_MSG_NOTIFICATION, /* Response with OBSERVE option */
+	COAP_MSG_REQUEST = 0, /* Regular request */
+	COAP_MSG_REGISTRATION, /* Request with OBSERVE option set to 0 */
+	COAP_MSG_CANCELLATION, /* Request with OBSERVE option set to 1 */
+	COAP_MSG_RESPONSE, /* Regular response */
+	COAP_MSG_NOTIFICATION, /* Response with OBSERVE option */
 };
 
 #endif

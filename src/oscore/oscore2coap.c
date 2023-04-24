@@ -250,12 +250,12 @@ static inline enum err o_coap_pkg_generate(struct byte_array *decrypted_payload,
  * @param output_coap Output decrypted coap packet.
  * @return enum err 
  */
-static enum err decrypt_wrapper(struct byte_array *ciphertext, 
-		struct byte_array *plaintext,
+static enum err
+decrypt_wrapper(struct byte_array *ciphertext, struct byte_array *plaintext,
 		struct context *c,
 		struct compressed_oscore_option *new_nonce_oscore_option,
-		struct o_coap_packet * input_oscore,
-		struct o_coap_packet * output_coap)
+		struct o_coap_packet *input_oscore,
+		struct o_coap_packet *output_coap)
 {
 	BYTE_ARRAY_NEW(new_nonce, NONCE_LEN, NONCE_LEN);
 	struct byte_array nonce;
@@ -263,17 +263,19 @@ static enum err decrypt_wrapper(struct byte_array *ciphertext,
 	/* Read necessary fields from the input packet. */
 	enum o_coap_msg msg_type_oscore;
 	TRY(coap_get_message_type(input_oscore, &msg_type_oscore));
-	struct byte_array token = BYTE_ARRAY_INIT(input_oscore->token, input_oscore->header.TKL);
+	struct byte_array token =
+		BYTE_ARRAY_INIT(input_oscore->token, input_oscore->header.TKL);
 
 	/* Read Request PIV and KID fields from OSCORE option, if available. Update using interactions wrapper. */
 	struct byte_array request_piv;
 	struct byte_array request_kid;
-	if (NULL != new_nonce_oscore_option)
-	{
+	if (NULL != new_nonce_oscore_option) {
 		request_piv = new_nonce_oscore_option->piv;
 		request_kid = new_nonce_oscore_option->kid;
 	}
-	TRY(oscore_interactions_read_wrapper(msg_type_oscore, &token, c->rrc.interactions, &request_piv, &request_kid));
+	TRY(oscore_interactions_read_wrapper(msg_type_oscore, &token,
+					     c->rrc.interactions, &request_piv,
+					     &request_kid));
 	/* Message type read from encrypted packet can be invalid due to external OBSERVE option change,
 	   but it is sufficient enough for the interactions read wrapper to work properly,
 	   as it only need to know whether the packet is any kind of response. */
@@ -292,7 +294,8 @@ static enum err decrypt_wrapper(struct byte_array *ciphertext,
 	/* compute AAD */
 	uint8_t aad_buf[MAX_AAD_LEN];
 	struct byte_array aad = BYTE_ARRAY_INIT(aad_buf, sizeof(aad_buf));
-	TRY(create_aad(NULL, 0, c->cc.aead_alg, &request_kid, &request_piv, &aad));
+	TRY(create_aad(NULL, 0, c->cc.aead_alg, &request_kid, &request_piv,
+		       &aad));
 
 	/* Decrypt the ciphertext */
 	TRY(oscore_cose_decrypt(ciphertext, plaintext, &nonce, &aad,
@@ -310,9 +313,13 @@ static enum err decrypt_wrapper(struct byte_array *ciphertext,
 	   Decrypted packet is used for URI Paths and message type, as original values are modified while encrypting. */
 	enum o_coap_msg msg_type;
 	TRY(coap_get_message_type(output_coap, &msg_type));
-	BYTE_ARRAY_NEW(uri_paths, OSCORE_MAX_URI_PATH_LEN, OSCORE_MAX_URI_PATH_LEN);
-	TRY(uri_path_create(output_coap->options, output_coap->options_cnt, uri_paths.ptr, &(uri_paths.len)));
-	TRY(oscore_interactions_update_wrapper(msg_type, &token, &uri_paths, c->rrc.interactions, &request_piv, &request_kid));
+	BYTE_ARRAY_NEW(uri_paths, OSCORE_MAX_URI_PATH_LEN,
+		       OSCORE_MAX_URI_PATH_LEN);
+	TRY(uri_path_create(output_coap->options, output_coap->options_cnt,
+			    uri_paths.ptr, &(uri_paths.len)));
+	TRY(oscore_interactions_update_wrapper(msg_type, &token, &uri_paths,
+					       c->rrc.interactions,
+					       &request_piv, &request_kid));
 
 	return ok;
 }
@@ -380,7 +387,8 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 		}
 
 		/* Decrypt packet using new nonce based on the packet */
-		TRY(decrypt_wrapper(ciphertext, &plaintext, c, &oscore_option, &oscore_packet, &output_coap));
+		TRY(decrypt_wrapper(ciphertext, &plaintext, c, &oscore_option,
+				    &oscore_packet, &output_coap));
 
 		if (ECHO_REBOOT == c->rrc.echo_state_machine) {
 			/* Abort the execution if this is the the first request after reboot.
@@ -398,8 +406,7 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 				uint64_t ssn;
 				piv2ssn(&oscore_option.piv, &ssn);
 				TRY(server_replay_window_reinit(
-					ssn,
-					&c->rc.replay_window));
+					ssn, &c->rc.replay_window));
 				c->rrc.echo_state_machine = ECHO_SYNCHRONIZED;
 			} else {
 				PRINT_MSG(
@@ -428,7 +435,10 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 					&oscore_option.piv));
 
 				/* Decrypt packet using new nonce based on the packet */
-				TRY(decrypt_wrapper(ciphertext, &plaintext, c, &oscore_option, &oscore_packet, &output_coap));
+				TRY(decrypt_wrapper(ciphertext, &plaintext, c,
+						    &oscore_option,
+						    &oscore_packet,
+						    &output_coap));
 
 				/*update replay protection value in context*/
 				TRY(notification_number_update(
@@ -443,10 +453,15 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 			/*regular response received*/
 			if (oscore_option.piv.len != 0) {
 				/*response with PIV*/
-				TRY(decrypt_wrapper(ciphertext, &plaintext, c, &oscore_option, &oscore_packet, &output_coap));
+				TRY(decrypt_wrapper(ciphertext, &plaintext, c,
+						    &oscore_option,
+						    &oscore_packet,
+						    &output_coap));
 			} else {
 				/*response without PIV*/
-				TRY(decrypt_wrapper(ciphertext, &plaintext, c, NULL, &oscore_packet, &output_coap));
+				TRY(decrypt_wrapper(ciphertext, &plaintext, c,
+						    NULL, &oscore_packet,
+						    &output_coap));
 			}
 		}
 	}

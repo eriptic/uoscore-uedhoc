@@ -19,7 +19,7 @@
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
-#define	OPT_SERIAL_OVERHEAD 5
+#define OPT_SERIAL_OVERHEAD 5
 
 enum o_num {
 	IF_MATCH = 1,
@@ -120,7 +120,8 @@ bool is_observe(struct o_coap_option *options, uint8_t options_cnt);
  *               Set to NULL if not found.
  * @return true if found, false if not.
  */
-bool get_observe_value(struct o_coap_option *options, uint8_t options_cnt, struct byte_array * output);
+bool get_observe_value(struct o_coap_option *options, uint8_t options_cnt,
+		       struct byte_array *output);
 
 /**
  * @brief	Saves an ECHO option value to be compared later with an ECHO value 
@@ -169,6 +170,7 @@ enum err oscore_decrypted_payload_parser(struct byte_array *in_payload,
  * @param uri_path_size Maximum size of the allocated URI Path buffer (input), actual URI Path length (output).
  * @return ok or error code
  */
-enum err uri_path_create(struct o_coap_option *options, uint32_t options_size, uint8_t * uri_path, uint32_t * uri_path_size);
+enum err uri_path_create(struct o_coap_option *options, uint32_t options_size,
+			 uint8_t *uri_path, uint32_t *uri_path_size);
 
 #endif

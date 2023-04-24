@@ -32,8 +32,7 @@ static const char external_runtime_error_message[] = {
 void print_array(const uint8_t *in_data, uint32_t in_len)
 {
 	printf(" (size %lu):", (unsigned long)in_len);
-	if (NULL != in_data)
-	{
+	if (NULL != in_data) {
 		for (uint32_t i = 0; i < in_len; i++) {
 			if (i % 16 == 0)
 				printf("\n\t%02X ", in_data[i]);

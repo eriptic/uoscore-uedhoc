@@ -122,5 +122,4 @@ enum err piv2ssn(struct byte_array *piv, uint64_t *ssn);
  */
 enum err check_context_freshness(struct context *c);
 
-
 #endif

@@ -77,7 +77,7 @@ enum err coap_deserialize(struct byte_array *in, struct o_coap_packet *out);
  * @return  err
  */
 enum err coap_serialize(struct o_coap_packet *in, uint8_t *out_byte_string,
-		  uint32_t *out_byte_string_len);
+			uint32_t *out_byte_string_len);
 
 /**
  * @brief   Convert input options into byte string
@@ -122,6 +122,7 @@ uint8_t opt_extra_bytes(uint16_t delta_or_len);
  * @param msg_type message type
  * @return ok or error code
  */
-enum err coap_get_message_type(struct o_coap_packet * coap_packet,  enum o_coap_msg * msg_type);
+enum err coap_get_message_type(struct o_coap_packet *coap_packet,
+			       enum o_coap_msg *msg_type);
 
 #endif

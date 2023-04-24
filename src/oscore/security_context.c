@@ -141,11 +141,9 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	c->sc.sender_id = params->sender_id;
 	c->sc.sender_key.len = sizeof(c->sc.sender_key_buf);
 	c->sc.sender_key.ptr = c->sc.sender_key_buf;
-	struct nvm_key_t nvm_key = {
-		.sender_id = c->sc.sender_id,
-		.recipient_id = c->rc.recipient_id,
-		.id_context = c->cc.id_context
-	};
+	struct nvm_key_t nvm_key = { .sender_id = c->sc.sender_id,
+				     .recipient_id = c->rc.recipient_id,
+				     .id_context = c->cc.id_context };
 
 	TRY(ssn_init(&nvm_key, &c->sc.ssn, params->fresh_master_secret_salt));
 	TRY(derive_sender_key(&c->cc, &c->sc));
@@ -158,24 +156,25 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	c->rrc.echo_opt_val.ptr = c->rrc.echo_opt_val_buf;
 
 	/* no ECHO challenge needed if the context is fresh */
-	c->rrc.echo_state_machine = (params->fresh_master_secret_salt ? ECHO_SYNCHRONIZED : ECHO_REBOOT);
-	
+	c->rrc.echo_state_machine =
+		(params->fresh_master_secret_salt ? ECHO_SYNCHRONIZED :
+						    ECHO_REBOOT);
+
 	return ok;
 }
 
 enum err check_context_freshness(struct context *c)
 {
-	if (NULL == c)
-	{
+	if (NULL == c) {
 		return wrong_parameter;
 	}
 
 	/* "If the Sender Sequence Number exceeds the maximum, the endpoint MUST NOT
 	   process any more messages with the given Sender Context."
 	   For more info, refer to RFC 8613 p. 7.2.1. */
-	if (c->sc.ssn >= OSCORE_SSN_OVERFLOW_VALUE )
-	{
-		PRINT_MSG("Sender Sequence Number reached its limit. New security context must be established.\n");
+	if (c->sc.ssn >= OSCORE_SSN_OVERFLOW_VALUE) {
+		PRINT_MSG(
+			"Sender Sequence Number reached its limit. New security context must be established.\n");
 		return oscore_ssn_overflow;
 	}
 	return ok;
@@ -183,7 +182,8 @@ enum err check_context_freshness(struct context *c)
 
 enum err ssn2piv(uint64_t ssn, struct byte_array *piv)
 {
-	if ((NULL == piv) || (NULL == piv->ptr) || (ssn > MAX_PIV_FIELD_VALUE)) {
+	if ((NULL == piv) || (NULL == piv->ptr) ||
+	    (ssn > MAX_PIV_FIELD_VALUE)) {
 		return wrong_parameter;
 	}
 
@@ -199,10 +199,9 @@ enum err ssn2piv(uint64_t ssn, struct byte_array *piv)
 		//if the sender seq number is 0 piv has value 0 and length 1
 		piv->ptr[0] = 0;
 		piv->len = 1;
-	}
-	else {
+	} else {
 		//PIV is encoded in big endian
-		for (uint8_t pos=0; pos<len; pos++) {
+		for (uint8_t pos = 0; pos < len; pos++) {
 			piv->ptr[pos] = tmp_piv[len - 1 - pos];
 		}
 		piv->len = len;
@@ -218,17 +217,16 @@ enum err piv2ssn(struct byte_array *piv, uint64_t *ssn)
 
 	uint8_t *value = piv->ptr;
 	uint32_t len = piv->len;
-	if (len > MAX_PIV_LEN)
-	{
+	if (len > MAX_PIV_LEN) {
 		return wrong_parameter;
 	}
 
 	uint64_t result = 0;
-	if (NULL != value)
-	{
+	if (NULL != value) {
 		//PIV is encoded in big endian
 		for (uint32_t pos = 0; pos < len; pos++) {
-			result += (uint64_t)(value[pos]) << (8 * (len - 1 - pos));
+			result += (uint64_t)(value[pos])
+				  << (8 * (len - 1 - pos));
 		}
 	}
 	*ssn = result;

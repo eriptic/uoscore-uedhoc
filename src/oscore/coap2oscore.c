@@ -83,9 +83,8 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			* Inner option has value NULL if notification or the original value 
 			* in the coap packet if registration/cancellation.
 			*/
-			e_options[*e_options_cnt].delta =
-				(uint16_t)(temp_option_nr -
-					   temp_E_option_delta_sum);
+			e_options[*e_options_cnt].delta = (uint16_t)(
+				temp_option_nr - temp_E_option_delta_sum);
 			if (is_request(in_o_coap)) {
 				/*registrations/cancellations are requests */
 				e_options[*e_options_cnt].len = temp_len;
@@ -119,9 +118,8 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			/*
 			*outer option (value as in the original coap packet
 			*/
-			U_options[*U_options_cnt].delta =
-				(uint16_t)(temp_option_nr -
-					   temp_U_option_delta_sum);
+			U_options[*U_options_cnt].delta = (uint16_t)(
+				temp_option_nr - temp_U_option_delta_sum);
 			U_options[*U_options_cnt].len = temp_len;
 			U_options[*U_options_cnt].value =
 				in_o_coap->options[i].value;
@@ -152,10 +150,9 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 					temp_option_nr;
 
 				/* Update delta sum of E-options */
-				temp_E_option_delta_sum =
-					(uint8_t)(temp_E_option_delta_sum +
-						  e_options[*e_options_cnt]
-							  .delta);
+				temp_E_option_delta_sum = (uint8_t)(
+					temp_E_option_delta_sum +
+					e_options[*e_options_cnt].delta);
 
 				/* Increment E-options count */
 				(*e_options_cnt)++;
@@ -175,10 +172,9 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 					temp_option_nr;
 
 				/* Update delta sum of E-options */
-				temp_U_option_delta_sum =
-					(uint8_t)(temp_U_option_delta_sum +
-						  U_options[*U_options_cnt]
-							  .delta);
+				temp_U_option_delta_sum = (uint8_t)(
+					temp_U_option_delta_sum +
+					U_options[*U_options_cnt].delta);
 
 				/* Increment E-options count */
 				(*U_options_cnt)++;
@@ -305,9 +301,9 @@ STATIC enum err oscore_option_generate(struct byte_array *piv,
 				(uint8_t)(oscore_option->value[0] | piv->len);
 			/* copy PIV (sender sequence) */
 
-			dest_size = (uint32_t)(oscore_option->len -
-					       (temp_ptr + 1 -
-						oscore_option->value));
+			dest_size = (uint32_t)(
+				oscore_option->len -
+				(temp_ptr + 1 - oscore_option->value));
 			TRY(_memcpy_s(++temp_ptr, dest_size, piv->ptr,
 				      piv->len));
 
@@ -322,9 +318,9 @@ STATIC enum err oscore_option_generate(struct byte_array *piv,
 			/* Copy length and context value */
 			*temp_ptr = (uint8_t)(kid_context->len);
 
-			dest_size = (uint32_t)(oscore_option->len -
-					       (temp_ptr + 1 -
-						oscore_option->value));
+			dest_size = (uint32_t)(
+				oscore_option->len -
+				(temp_ptr + 1 - oscore_option->value));
 			TRY(_memcpy_s(++temp_ptr, dest_size, kid_context->ptr,
 				      kid_context->len));
 
@@ -457,17 +453,16 @@ static enum err generate_new_ssn(struct context *c)
 
 	c->sc.ssn++;
 
-	#ifdef OSCORE_NVM_SUPPORT
-		struct nvm_key_t nvm_key = { .sender_id = c->sc.sender_id,
-						.recipient_id = c->rc.recipient_id,
-						.id_context = c->cc.id_context };
-		bool echo_sync_in_progress =
-			(ECHO_SYNCHRONIZED != c->rrc.echo_state_machine);
-		return ssn_store_in_nvm(&nvm_key, c->sc.ssn,
-					echo_sync_in_progress);
-	#else
-		return ok;
-	#endif
+#ifdef OSCORE_NVM_SUPPORT
+	struct nvm_key_t nvm_key = { .sender_id = c->sc.sender_id,
+				     .recipient_id = c->rc.recipient_id,
+				     .id_context = c->cc.id_context };
+	bool echo_sync_in_progress =
+		(ECHO_SYNCHRONIZED != c->rrc.echo_state_machine);
+	return ssn_store_in_nvm(&nvm_key, c->sc.ssn, echo_sync_in_progress);
+#else
+	return ok;
+#endif
 }
 
 /**
@@ -516,7 +511,8 @@ static enum err encrypt_wrapper(struct byte_array *plaintext,
 	/* Read necessary fields from the input packet. */
 	enum o_coap_msg msg_type;
 	TRY(coap_get_message_type(input_coap, &msg_type));
-	struct byte_array token = BYTE_ARRAY_INIT(input_coap->token, input_coap->header.TKL);
+	struct byte_array token =
+		BYTE_ARRAY_INIT(input_coap->token, input_coap->header.TKL);
 
 	/* Generate new PIV/nonce if needed. */
 	bool use_new_piv = needs_new_piv(msg_type, c->rrc.echo_state_machine);
@@ -543,8 +539,11 @@ static enum err encrypt_wrapper(struct byte_array *plaintext,
 	BYTE_ARRAY_NEW(aad, MAX_AAD_LEN, MAX_AAD_LEN);
 	struct byte_array request_piv = piv;
 	struct byte_array request_kid = kid;
-	TRY(oscore_interactions_read_wrapper(msg_type, &token, c->rrc.interactions, &request_piv, &request_kid));
-	TRY(create_aad(NULL, 0, c->cc.aead_alg, &request_kid, &request_piv, &aad));
+	TRY(oscore_interactions_read_wrapper(msg_type, &token,
+					     c->rrc.interactions, &request_piv,
+					     &request_kid));
+	TRY(create_aad(NULL, 0, c->cc.aead_alg, &request_kid, &request_piv,
+		       &aad));
 
 	/* Encrypt the plaintext */
 	TRY(oscore_cose_encrypt(plaintext, ciphertext, &nonce, &aad,
@@ -556,10 +555,14 @@ static enum err encrypt_wrapper(struct byte_array *plaintext,
 	}
 
 	/* Handle OSCORE interactions after successful encryption. */
-	BYTE_ARRAY_NEW(uri_paths, OSCORE_MAX_URI_PATH_LEN, OSCORE_MAX_URI_PATH_LEN);
-	TRY(uri_path_create(input_coap->options, input_coap->options_cnt, uri_paths.ptr, &(uri_paths.len)));
-	TRY(oscore_interactions_update_wrapper(msg_type, &token, &uri_paths, c->rrc.interactions, &request_piv, &request_kid));
-	
+	BYTE_ARRAY_NEW(uri_paths, OSCORE_MAX_URI_PATH_LEN,
+		       OSCORE_MAX_URI_PATH_LEN);
+	TRY(uri_path_create(input_coap->options, input_coap->options_cnt,
+			    uri_paths.ptr, &(uri_paths.len)));
+	TRY(oscore_interactions_update_wrapper(msg_type, &token, &uri_paths,
+					       c->rrc.interactions,
+					       &request_piv, &request_kid));
+
 	return ok;
 }
 
@@ -637,15 +640,16 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 	BYTE_ARRAY_NEW(ciphertext, MAX_CIPHERTEXT_LEN,
 		       plaintext.len + AUTH_TAG_LEN);
 
-	if (ECHO_VERIFY == c->rrc.echo_state_machine)
-	{
+	if (ECHO_VERIFY == c->rrc.echo_state_machine) {
 		/* A server prepares a response with ECHO challenge after the reboot. */
-		TRY(cache_echo_val(&c->rrc.echo_opt_val, e_options, e_options_cnt));
+		TRY(cache_echo_val(&c->rrc.echo_opt_val, e_options,
+				   e_options_cnt));
 	}
 
 	/* Encrypt data using either a freshly generated nonce (if needed), or the one cached from the corresponding request. */
 	struct oscore_option oscore_option;
-	TRY(encrypt_wrapper(&plaintext, &ciphertext, c, &o_coap_pkt, &oscore_option));
+	TRY(encrypt_wrapper(&plaintext, &ciphertext, c, &o_coap_pkt,
+			    &oscore_option));
 
 	/*create an OSCORE packet*/
 	struct o_coap_packet oscore_pkt;
