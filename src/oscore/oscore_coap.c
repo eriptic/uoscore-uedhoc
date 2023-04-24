@@ -23,6 +23,9 @@
 #include "common/print_util.h"
 #include "common/unit_test.h"
 
+#define OSCORE_OBSERVE_REGISTRATION_VALUE 0
+#define OSCORE_OBSERVE_CANCELLATION_VALUE 1
+
 uint8_t opt_extra_bytes(uint16_t delta_or_len)
 {
 	if (delta_or_len < 13) {
@@ -341,4 +344,44 @@ bool is_request(struct o_coap_packet *packet)
 	} else {
 		return false;
 	}
+}
+
+enum err coap_get_message_type(struct o_coap_packet * coap_packet,  enum o_coap_msg * msg_type)
+{
+	if ((NULL == coap_packet) || (NULL == msg_type))
+	{
+		return wrong_parameter;
+	}
+
+	enum o_coap_msg result;
+	struct byte_array observe;
+	bool observe_valid = get_observe_value(coap_packet->options, coap_packet->options_cnt, &observe);
+	bool request = is_request(coap_packet);
+	if (request)
+	{
+		// packet can be a request, a registration or a cancellation
+		result = COAP_MSG_REQUEST;
+		if (observe_valid)
+		{
+			if ((0 == observe.len) || 
+			   ((1 == observe.len) && (OSCORE_OBSERVE_REGISTRATION_VALUE == observe.ptr[0])))
+			{
+				/* Empty uint option is interpreted as a value 0.
+				   For more info, see RFC 7252 section 3.2. */
+				result = COAP_MSG_REGISTRATION;
+			}
+			else if ((1 == observe.len) && (OSCORE_OBSERVE_CANCELLATION_VALUE == observe.ptr[0]))
+			{
+				result = COAP_MSG_CANCELLATION;
+			}
+		}
+	}
+	else
+	{
+		// packet can be a regular response or a notification
+		result = (observe_valid ? COAP_MSG_NOTIFICATION : COAP_MSG_RESPONSE);
+	}
+
+	*msg_type = result;
+	return ok;
 }

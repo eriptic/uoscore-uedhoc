@@ -19,6 +19,7 @@
 #include "oscore/nonce.h"
 #include "oscore/oscore_coap.h"
 #include "oscore/oscore_hkdf_info.h"
+#include "oscore/oscore_interactions.h"
 #include "oscore/security_context.h"
 #include "oscore/nvm.h"
 
@@ -150,27 +151,15 @@ enum err oscore_context_init(struct oscore_init_params *params,
 	TRY(derive_sender_key(&c->cc, &c->sc));
 
 	/*set up the request response context**********************************/
+	oscore_interactions_init(c->rrc.interactions);
 	c->rrc.nonce.len = sizeof(c->rrc.nonce_buf);
 	c->rrc.nonce.ptr = c->rrc.nonce_buf;
-	c->rrc.request_kid.len = sizeof(c->rrc.request_kid_buf);
-	c->rrc.request_kid.ptr = c->rrc.request_kid_buf;
-	c->rrc.request_piv.len = sizeof(c->rrc.request_piv_buf);
-	c->rrc.request_piv.ptr = c->rrc.request_piv_buf;
 	c->rrc.echo_opt_val.len = sizeof(c->rrc.echo_opt_val_buf);
 	c->rrc.echo_opt_val.ptr = c->rrc.echo_opt_val_buf;
 
 	/* no ECHO challenge needed if the context is fresh */
 	c->rrc.echo_state_machine = (params->fresh_master_secret_salt ? ECHO_SYNCHRONIZED : ECHO_REBOOT);
 	
-	return ok;
-}
-
-enum err update_request_piv_request_kid(struct context *c,
-					struct byte_array *piv,
-					struct byte_array *kid)
-{
-	TRY(byte_array_cpy(&c->rrc.request_kid, kid, MAX_KID_LEN));
-	TRY(byte_array_cpy(&c->rrc.request_piv, piv, MAX_PIV_LEN));
 	return ok;
 }
 

@@ -15,6 +15,7 @@
 #include "supported_algorithm.h"
 #include "oscore_coap.h"
 #include "oscore/replay_protection.h"
+#include "oscore/oscore_interactions.h"
 
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
@@ -81,11 +82,7 @@ struct req_resp_context {
 	struct byte_array nonce;
 	uint8_t nonce_buf[NONCE_LEN];
 
-	struct byte_array request_kid;
-	uint8_t request_kid_buf[MAX_KID_LEN];
-
-	struct byte_array request_piv;
-	uint8_t request_piv_buf[MAX_PIV_LEN];
+	struct oscore_interaction_t interactions[OSCORE_INTERACTIONS_COUNT];
 
 	struct byte_array echo_opt_val;
 	uint8_t echo_opt_val_buf[ECHO_OPT_VALUE_LEN];
@@ -116,17 +113,6 @@ enum err ssn2piv(uint64_t ssn, struct byte_array *piv);
  * @param ssn Sender Sequence Number
  */
 enum err piv2ssn(struct byte_array *piv, uint64_t *ssn);
-
-/**
- * @brief	Updates the request_piv and the request_kid
- * @param	c the context
- * @param	piv	the new PIV
- * @param 	kid the new KID
- * @retval 	error code
-*/
-enum err update_request_piv_request_kid(struct context *c,
-					struct byte_array *piv,
-					struct byte_array *kid);
 
 /**
  * @brief Check if given security context is still safe to be used, or a new one must be established.
