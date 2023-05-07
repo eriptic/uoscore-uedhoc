@@ -81,9 +81,9 @@ CXXFLAGS += -DLINUX_SOCKETS
 
 # use AddressSanitizer to find memory bugs
 # comment this out for better speed
-CFLAGS += -fsanitize=address -fno-omit-frame-pointer
-CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
-LDFLAGS += -fsanitize=address -static-libasan
+#CFLAGS += -fsanitize=address -fno-omit-frame-pointer
+#CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
+#LDFLAGS += -fsanitize=address -static-libasan
 
 USOCORE_UEDHOC_OBJ = $(wildcard $(USOCORE_UEDHOC_PATH)/*.o) 
 
