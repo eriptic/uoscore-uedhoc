@@ -16,6 +16,30 @@
 
 #include "common/memcpy_s.h"
 
+/**
+ * @brief Securely append a substring to given buffer.
+ * 
+ * @param buffer Buffer to have the substring appended.
+ * @param current_size Current size of the buffer content. Updated after successfull append.
+ * @param max_size Memory size allocated for the buffer.
+ * @param substring Substring buffer to be appended.
+ * @param substring_size Substring size.
+ * @return ok or error
+ */
+static enum err buffer_append(uint8_t *buffer, uint32_t *current_size,
+			      uint32_t max_size, const uint8_t *substring,
+			      uint32_t substring_size)
+{
+	uint8_t *destination =
+		&buffer[*current_size]; //pointer to current end of the content
+	uint32_t remaining_size =
+		max_size -
+		(*current_size); //how many bytes in the buffer are still available
+	TRY(_memcpy_s(destination, remaining_size, substring, substring_size));
+	*current_size += substring_size;
+	return ok;
+}
+
 bool is_class_e(uint16_t code)
 {
 	// blacklist, because OSCORE dictates that unknown options SHALL be processed as class E
@@ -30,6 +54,26 @@ bool is_observe(struct o_coap_option *options, uint8_t options_cnt)
 			return true;
 		}
 	}
+	return false;
+}
+
+bool get_observe_value(struct o_coap_option *options, uint8_t options_cnt,
+		       struct byte_array *output)
+{
+	if ((NULL == options) || (NULL == output)) {
+		return false;
+	}
+
+	for (uint8_t i = 0; i < options_cnt; i++) {
+		if (OBSERVE != options[i].option_number) {
+			continue;
+		}
+
+		output->ptr = options[i].value;
+		output->len = options[i].len;
+		return true;
+	}
+	output = NULL;
 	return false;
 }
 
@@ -48,15 +92,6 @@ enum err cache_echo_val(struct byte_array *dest, struct o_coap_option *options,
 	return no_echo_option;
 }
 
-/**
- * @brief Parse the decrypted OSCORE payload into code, E-options and original unprotected CoAP payload
- * @param in_payload: input decrypted payload
- * @param out_code: pointer to code number of the request
- * @param out_E_options: output pointer to an array of E-options
- * @param E_options_cnt: count number of E-options
- * @param out_o_coap_payload: output pointer original unprotected CoAP payload
- * @return  err
- */
 enum err oscore_decrypted_payload_parser(struct byte_array *in_payload,
 					 uint8_t *out_code,
 					 struct o_coap_option *out_E_options,
@@ -106,4 +141,47 @@ enum err echo_val_is_fresh(struct byte_array *cache_val,
 	}
 
 	return no_echo_option;
+}
+
+enum err uri_path_create(struct o_coap_option *options, uint32_t options_size,
+			 uint8_t *uri_path, uint32_t *uri_path_size)
+{
+	if ((NULL == options) || (NULL == uri_path) ||
+	    (NULL == uri_path_size)) {
+		return wrong_parameter;
+	}
+
+	uint32_t current_size = 0;
+	uint32_t max_size = *uri_path_size;
+	memset(uri_path, 0, max_size);
+
+	const uint8_t delimiter = '/';
+	const uint32_t delimiter_size = 1;
+
+	for (uint32_t index = 0; index < options_size; index++) {
+		struct o_coap_option *option = &options[index];
+		if (URI_PATH != option->option_number) {
+			continue;
+		}
+		if ((0 != option->len) && (NULL == option->value)) {
+			return oscore_wrong_uri_path;
+		}
+
+		TRY(buffer_append(uri_path, &current_size, max_size,
+				  option->value, option->len));
+		TRY(buffer_append(uri_path, &current_size, max_size, &delimiter,
+				  delimiter_size));
+	}
+
+	/* Remove last '/' character, or add a single one if the path is empty */
+	if (current_size > 0) {
+		uri_path[current_size] = 0;
+		current_size--;
+	} else {
+		uri_path[0] = delimiter;
+		current_size = delimiter_size;
+	}
+
+	*uri_path_size = current_size;
+	return ok;
 }

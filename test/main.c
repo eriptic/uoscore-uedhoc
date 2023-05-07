@@ -161,6 +161,7 @@ void test_main(void)
 		ztest_unit_test(t200_options_serialize_deserialize),
 		ztest_unit_test(t201_coap_serialize_deserialize),
 		ztest_unit_test(t202_options_deserialize_corner_cases),
+		ztest_unit_test(t203_coap_get_message_type),
 		ztest_unit_test(t300_oscore_option_parser_no_piv),
 		ztest_unit_test(t301_oscore_option_parser_wrong_n),
 		ztest_unit_test(t302_oscore_option_parser_no_kid),
@@ -168,6 +169,8 @@ void test_main(void)
 		ztest_unit_test(t400_is_class_e),
 		ztest_unit_test(t401_cache_echo_val),
 		ztest_unit_test(t402_echo_val_is_fresh),
+		ztest_unit_test(t403_uri_path_create),
+		ztest_unit_test(t404_get_observe_value),
 		ztest_unit_test(t500_oscore_context_init_corner_cases),
 		ztest_unit_test(t501_piv2ssn),
 		ztest_unit_test(t502_ssn2piv),
@@ -179,7 +182,13 @@ void test_main(void)
 		ztest_unit_test(t603_server_replay_check_in_progress_test),
 		ztest_unit_test(t604_server_replay_insert_zero_test),
 		ztest_unit_test(t605_server_replay_insert_test),
-		ztest_unit_test(t606_server_replay_standard_scenario_test));
+		ztest_unit_test(t606_server_replay_standard_scenario_test),
+		ztest_unit_test(t700_interactions_init_test),
+		ztest_unit_test(t701_interactions_set_record_test),
+		ztest_unit_test(t702_interactions_get_record_test),
+		ztest_unit_test(t703_interactions_remove_record_test),
+		ztest_unit_test(t704_interactions_usecases_test)
+		);
 
 	ztest_run_test_suite(exporter);
 	ztest_run_test_suite(initiator_responder_interaction);

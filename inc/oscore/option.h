@@ -19,7 +19,7 @@
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
-#define	OPT_SERIAL_OVERHEAD 5
+#define OPT_SERIAL_OVERHEAD 5
 
 enum o_num {
 	IF_MATCH = 1,
@@ -113,6 +113,17 @@ enum err encode_options(struct o_coap_option *options, uint16_t opt_num,
 bool is_observe(struct o_coap_option *options, uint8_t options_cnt);
 
 /**
+ * @brief Returns the value of OBSERVE option.
+ * @param options Options array.
+ * @param options_cnt Number of entries in the array.
+ * @param output Pointer to byte array which will point to the value buffer.
+ *               Set to NULL if not found.
+ * @return true if found, false if not.
+ */
+bool get_observe_value(struct o_coap_option *options, uint8_t options_cnt,
+		       struct byte_array *output);
+
+/**
  * @brief	Saves an ECHO option value to be compared later with an ECHO value 
  * 			received from the client.
  * @param	dest location to save the ECHO value
@@ -149,5 +160,17 @@ enum err oscore_decrypted_payload_parser(struct byte_array *in_payload,
 					 struct o_coap_option *out_E_options,
 					 uint8_t *E_options_cnt,
 					 struct byte_array *out_o_coap_payload);
+
+/**
+ * @brief Compose URI Path (resource name) from given options array.
+ * Implemented based on RFC7252 section 6.5 (partial compliance limited to the library's needs only).
+ * @param options Options array.
+ * @param options_size Options array size (number of items).
+ * @param uri_path Output pointer to write composed URI Path into.
+ * @param uri_path_size Maximum size of the allocated URI Path buffer (input), actual URI Path length (output).
+ * @return ok or error code
+ */
+enum err uri_path_create(struct o_coap_option *options, uint32_t options_size,
+			 uint8_t *uri_path, uint32_t *uri_path_size);
 
 #endif

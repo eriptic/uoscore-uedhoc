@@ -71,6 +71,10 @@ enum err {
 	no_echo_option = 217,
 	echo_val_mismatch = 218,
 	oscore_ssn_overflow = 219,
+	oscore_max_interactions = 220,
+	oscore_interaction_duplicated_token = 221,
+	oscore_interaction_not_found = 222,
+	oscore_wrong_uri_path = 223,
 };
 
 /*This macro checks if a function returns an error and if so it propagates 

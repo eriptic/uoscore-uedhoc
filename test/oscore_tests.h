@@ -35,6 +35,7 @@ void t106_oscore_option_generate_no_piv(void);
 void t200_options_serialize_deserialize(void);
 void t201_coap_serialize_deserialize(void);
 void t202_options_deserialize_corner_cases(void);
+void t203_coap_get_message_type(void);
 
 void t300_oscore_option_parser_no_piv(void);
 void t301_oscore_option_parser_wrong_n(void);
@@ -44,6 +45,8 @@ void t303_options_reorder(void);
 void t400_is_class_e(void);
 void t401_cache_echo_val(void);
 void t402_echo_val_is_fresh(void);
+void t403_uri_path_create(void);
+void t404_get_observe_value(void);
 
 void t500_oscore_context_init_corner_cases(void);
 void t501_piv2ssn(void);
@@ -58,5 +61,11 @@ void t603_server_replay_check_in_progress_test(void);
 void t604_server_replay_insert_zero_test(void);
 void t605_server_replay_insert_test(void);
 void t606_server_replay_standard_scenario_test(void);
+
+void t700_interactions_init_test(void);
+void t701_interactions_set_record_test(void);
+void t702_interactions_get_record_test(void);
+void t703_interactions_remove_record_test(void);
+void t704_interactions_usecases_test(void);
 
 #endif

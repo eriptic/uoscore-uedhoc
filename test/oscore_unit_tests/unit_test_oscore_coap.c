@@ -20,6 +20,29 @@
 #include "oscore/oscore_coap.h"
 #include "oscore/option.h"
 
+static void coap_get_message_type_and_compare(struct o_coap_packet * coap_packet,  enum o_coap_msg * msg_type, enum err expected_result, enum o_coap_msg expected_msg_type)
+{
+	PRINTF("coap_get_message_type; expected result = %d\n", expected_result);
+	enum err result = coap_get_message_type(coap_packet, msg_type);
+	zassert_equal(expected_result, result, "unexpected result: %d", result);
+
+	if (ok == result)
+	{
+		zassert_equal(*msg_type, expected_msg_type, "");
+	}
+}
+
+static struct o_coap_packet generate_test_packet(uint8_t code, uint8_t options_count, uint8_t * observe_value, uint16_t observe_len)
+{
+	struct o_coap_packet result;
+	result.header.code = code;
+	result.options_cnt = options_count;
+	result.options[0].option_number = OBSERVE;
+	result.options[0].value = observe_value;
+	result.options[0].len = observe_len;
+	return result;
+};
+
 static void serialization_test(struct o_coap_option *options, uint8_t opt_cnt,
 			       struct byte_array *expected)
 {
@@ -486,4 +509,31 @@ void t202_options_deserialize_corner_cases(void)
 
 	zassert_equal(r, too_many_options,
 		      "Error in options_deserialize. r: %d", r);
+}
+
+void t203_coap_get_message_type(void)
+{
+	struct o_coap_packet packet_request_1 = generate_test_packet(CODE_REQ_GET, 0, NULL, 0); //no OBSERVE option
+	struct o_coap_packet packet_request_2 = generate_test_packet(CODE_REQ_POST, 1, "\x01\x02\x03", 3);
+	struct o_coap_packet packet_registration_1 = generate_test_packet(CODE_REQ_GET, 1, "\x00", 1);
+	struct o_coap_packet packet_registration_2 = generate_test_packet(CODE_REQ_POST, 1, NULL, 0); //empty OBSERVE option
+	struct o_coap_packet packet_cancellation = generate_test_packet(CODE_REQ_GET, 1, "\x01", 1);
+	struct o_coap_packet packet_response = generate_test_packet(CODE_RESP_CONTENT, 0, NULL, 0);
+	struct o_coap_packet packet_notification_1 = generate_test_packet(CODE_RESP_CONTENT, 1, NULL, 0);
+	struct o_coap_packet packet_notification_2 = generate_test_packet(CODE_RESP_CONTENT, 1, "\x01\x02", 2);
+	
+	/* Test null pointers. */
+	enum o_coap_msg msg_type;
+	coap_get_message_type_and_compare(NULL, &msg_type, wrong_parameter, 0);
+	coap_get_message_type_and_compare(&packet_request_1, NULL, wrong_parameter, 0);
+
+	/* Test different valid packets. */
+	coap_get_message_type_and_compare(&packet_request_1, &msg_type, ok, COAP_MSG_REQUEST);
+	coap_get_message_type_and_compare(&packet_request_2, &msg_type, ok, COAP_MSG_REQUEST);
+	coap_get_message_type_and_compare(&packet_registration_1, &msg_type, ok, COAP_MSG_REGISTRATION);
+	coap_get_message_type_and_compare(&packet_registration_2, &msg_type, ok, COAP_MSG_REGISTRATION);
+	coap_get_message_type_and_compare(&packet_cancellation, &msg_type, ok, COAP_MSG_CANCELLATION);
+	coap_get_message_type_and_compare(&packet_response, &msg_type, ok, COAP_MSG_RESPONSE);
+	coap_get_message_type_and_compare(&packet_notification_1, &msg_type, ok, COAP_MSG_NOTIFICATION);
+	coap_get_message_type_and_compare(&packet_notification_2, &msg_type, ok, COAP_MSG_NOTIFICATION);
 }
