@@ -278,6 +278,8 @@ enum err msg3_gen(const struct edhoc_initiator_context *c,
 	TRY(check_buffer_size(CIPHERTEXT3_DEFAULT_SIZE,
 			      ciphertext_len + ENCODING_OVERHEAD));
 
+	memset(rc->msg, 0, rc->msg_len);
+	rc->msg_len = sizeof(rc->msg);
 	TRY(encode_byte_string(ciphertext, ciphertext_len, rc->msg,
 			       &rc->msg_len));
 	PRINT_ARRAY("msg3", rc->msg, rc->msg_len);

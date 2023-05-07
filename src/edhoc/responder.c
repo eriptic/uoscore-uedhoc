@@ -309,15 +309,6 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	uint8_t ciphertext_3[CIPHERTEXT3_DEFAULT_SIZE];
 	uint32_t ciphertext_3_len = sizeof(ciphertext_3);
 
-	// if (r == error_message_received) {
-	// 	/*provide the error message to the caller*/
-	// 	r = _memcpy_s(err_msg, *err_msg_len, msg3, msg3_len);
-	// 	if (r != ok) {
-	// 		return r;
-	// 	}
-	// 	*err_msg_len = msg3_len;
-	// 	return error_message_received;
-	// }
 	TRY(decode_byte_string(rc->msg, rc->msg_len, ciphertext_3,
 			       &ciphertext_3_len));
 	PRINT_ARRAY("CIPHERTEXT_3", ciphertext_3, ciphertext_3_len);
@@ -397,6 +388,8 @@ enum err msg4_gen(struct edhoc_responder_context *c, struct runtime_context *rc)
 			   rc->prk_4e3m_len, rc->th4, rc->th4_len, ciphertext_4,
 			   &ciphertext_4_len, plaintext_4, &plaintext_4_len));
 
+	memset(rc->msg, 0, rc->msg_len);
+	rc->msg_len = sizeof(rc->msg);
 	TRY(encode_byte_string(ciphertext_4, ciphertext_4_len, rc->msg,
 			       &rc->msg_len));
 
