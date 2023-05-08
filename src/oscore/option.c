@@ -77,6 +77,27 @@ bool get_observe_value(struct o_coap_option *options, uint8_t options_cnt,
 	return false;
 }
 
+bool get_no_response_value(struct o_coap_option *options, uint8_t options_cnt, 
+				struct byte_array * output)
+{
+	if ((NULL == options) || (NULL == output))
+	{
+		return false;
+	}
+
+	for (uint8_t i = 0; i < options_cnt; i++) {
+		if (NO_RESPONSE != options[i].option_number) {
+			continue;
+		}
+
+		output->ptr = options[i].value;
+		output->len = options[i].len;
+		return true;
+	}
+	output = NULL;
+	return false;
+}
+
 enum err cache_echo_val(struct byte_array *dest, struct o_coap_option *options,
 			uint8_t options_cnt)
 {

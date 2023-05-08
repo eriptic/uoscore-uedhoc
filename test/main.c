@@ -145,6 +145,10 @@ void test_main(void)
 		ztest_unit_test(t9_oscore_client_server_observe),
 		ztest_unit_test(t10_oscore_client_server_after_reboot),
 		ztest_unit_test(t11_oscore_ssn_overflow_protection),
+		ztest_unit_test(t12_oscore_client_server_no_response_message_class_2),
+		ztest_unit_test(t13_oscore_client_server_no_response_message_class_4),
+		ztest_unit_test(t14_oscore_client_server_no_response_message_class_5),
+		ztest_unit_test(t15_oscore_client_server_no_response_message_class_5_respond),
 		ztest_unit_test(
 			t100_inner_outer_option_split__no_special_options),
 		ztest_unit_test(
@@ -158,6 +162,8 @@ void test_main(void)
 		ztest_unit_test(
 			t105_inner_outer_option_split__too_many_options),
 		ztest_unit_test(t106_oscore_option_generate_no_piv),
+		ztest_unit_test(
+			t107_inner_outer_option_split__with_no_response_option),
 		ztest_unit_test(t200_options_serialize_deserialize),
 		ztest_unit_test(t201_coap_serialize_deserialize),
 		ztest_unit_test(t202_options_deserialize_corner_cases),
@@ -171,6 +177,7 @@ void test_main(void)
 		ztest_unit_test(t402_echo_val_is_fresh),
 		ztest_unit_test(t403_uri_path_create),
 		ztest_unit_test(t404_get_observe_value),
+		ztest_unit_test(t405_get_no_response_value),
 		ztest_unit_test(t500_oscore_context_init_corner_cases),
 		ztest_unit_test(t501_piv2ssn),
 		ztest_unit_test(t502_ssn2piv),

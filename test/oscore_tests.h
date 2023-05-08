@@ -22,6 +22,10 @@ void t8_oscore_server_response_simple_ack(void);
 void t9_oscore_client_server_observe(void);
 void t10_oscore_client_server_after_reboot(void);
 void t11_oscore_ssn_overflow_protection(void);
+void t12_oscore_client_server_no_response_message_class_2(void);
+void t13_oscore_client_server_no_response_message_class_4(void);
+void t14_oscore_client_server_no_response_message_class_5(void);
+void t15_oscore_client_server_no_response_message_class_5_respond(void);
 
 /*unit tests*/
 void t100_inner_outer_option_split__no_special_options(void);
@@ -31,6 +35,7 @@ void t103_oscore_pkg_generate__request_with_observe_registration(void);
 void t104_oscore_pkg_generate__request_with_observe_notification(void);
 void t105_inner_outer_option_split__too_many_options(void);
 void t106_oscore_option_generate_no_piv(void);
+void t107_inner_outer_option_split__with_no_response_option(void);
 
 void t200_options_serialize_deserialize(void);
 void t201_coap_serialize_deserialize(void);
@@ -47,6 +52,7 @@ void t401_cache_echo_val(void);
 void t402_echo_val_is_fresh(void);
 void t403_uri_path_create(void);
 void t404_get_observe_value(void);
+void t405_get_no_response_value(void);
 
 void t500_oscore_context_init_corner_cases(void);
 void t501_piv2ssn(void);

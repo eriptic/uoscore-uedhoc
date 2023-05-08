@@ -43,6 +43,129 @@ static struct oscore_init_params get_default_params(enum reverse_t is_reversed, 
 	return params;
 }
 
+static void prepare_request_with_no_response(struct context *c_client, struct context *c_server, uint8_t * token,
+	uint8_t * ser_oscore_pkt, uint32_t * ser_oscore_pkt_len)
+{
+	PRINT_MSG("\n\n |------request---->| \n\n");
+	uint8_t uri_path_val[] = { 't', 'e', 'm', 'p', 'e', 'r',
+				   'a', 't', 'u', 'r', 'e' };
+	uint8_t no_response[] = { 0x1a };
+	uint8_t ser_coap_pkt_request[40];
+	uint32_t ser_coap_pkt_request_len =
+		sizeof(ser_coap_pkt_request);
+	memset(ser_coap_pkt_request, 0, ser_coap_pkt_request_len);
+	memset(ser_oscore_pkt, 0, *ser_oscore_pkt_len);
+
+	struct o_coap_packet coap_pkt_request = {
+		.header = {
+			.ver = 1,
+			.type = TYPE_NON,
+			.TKL = 1,
+			.code = CODE_REQ_POST,
+			.MID = 0x0
+		},
+		.token = token,
+		.options_cnt = 2,
+		.options = {
+				{ .delta = 11,
+			       .len = sizeof(uri_path_val),
+			       .value = uri_path_val,
+			       .option_number = URI_PATH},/*E, opt num 11*/
+				{ .delta = 247,
+			       .len = sizeof(no_response),
+			       .value = no_response,
+			       .option_number = NO_RESPONSE},/*EU, opt num 258*/
+				},
+		.payload.len = 0,
+		.payload.ptr = NULL,
+	};
+
+	enum err r = coap_serialize(&coap_pkt_request, ser_coap_pkt_request,
+			   &ser_coap_pkt_request_len);
+	zassert_equal(
+		r, ok,
+		"Error in coap_serialize during request packet serialization!");
+
+	PRINT_ARRAY("CoAP request", ser_coap_pkt_request,
+		    ser_coap_pkt_request_len);
+
+	r = coap2oscore(ser_coap_pkt_request,
+			ser_coap_pkt_request_len, ser_oscore_pkt,
+			ser_oscore_pkt_len, c_client);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	uint8_t EXPECTED_OSCORE_REQUEST[] = {
+		0x51, 0x02, 0x00, 0x00, 0x4A, 0x92, 0x09, 0x00,
+	 	0xFF, 0xAD, 0x82, 0x2A, 0x10, 0x7C, 0x9C, 0x48, 
+        0xE4, 0xDF, 0xF2, 0xA3, 0x0E, 0xA7, 0x30, 0xB8,
+		0x59, 0x48, 0x38, 0x96, 0x69, 0x4F, 0x0C, 0xD6, 
+        0x9C 
+	};
+	zassert_mem_equal__(ser_oscore_pkt, EXPECTED_OSCORE_REQUEST,
+			    sizeof(EXPECTED_OSCORE_REQUEST),
+			    "coap2oscore failed");
+
+	PRINT_ARRAY("OSCORE request", ser_oscore_pkt,
+		    *ser_oscore_pkt_len);
+
+	uint8_t ser_conv_coap_pkt[40];
+	uint32_t ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
+
+	// Prepare request for message class 2 test
+
+	r = oscore2coap(ser_oscore_pkt, *ser_oscore_pkt_len, ser_conv_coap_pkt,
+			&ser_conv_coap_pkt_len, c_server);
+	zassert_equal(r, ok, "Error in oscore2coap!");
+	/*check if we recovered the coap packet that the client sent*/
+	zassert_mem_equal__(ser_coap_pkt_request, ser_conv_coap_pkt,
+			    ser_conv_coap_pkt_len, "oscore2coap failed");
+
+	PRINT_ARRAY("Converted CoAP request", ser_conv_coap_pkt,
+		    ser_conv_coap_pkt_len);
+}
+
+static enum err prepare_response_no_response(struct context *c_server, uint8_t * token, uint8_t * ser_oscore_pkt, 
+	uint32_t * ser_oscore_pkt_len, uint8_t code)
+{
+	PRINT_MSG("\n\n |<-----response----| \n\n");
+
+	uint8_t ser_coap_pkt_response[40];
+	uint32_t ser_coap_pkt_response_len =
+		sizeof(ser_coap_pkt_response);
+	uint8_t ser_oscore_pkt_response[40];
+	uint32_t ser_oscore_pkt_response_len =
+		sizeof(ser_oscore_pkt_response);
+	memset(ser_coap_pkt_response, 0, ser_coap_pkt_response_len);
+	memset(ser_oscore_pkt_response, 0,
+	       ser_oscore_pkt_response_len);
+
+	struct o_coap_packet coap_pkt_response = {
+		.header = { .ver = 1,
+			    .type = TYPE_NON,
+			    .TKL = 1,
+			    .code = code,
+			    .MID = 0x0 },
+		.token = token,
+		.options_cnt = 0,
+		.options = {},
+		.payload.len = 0,
+		.payload.ptr = NULL,
+	};
+
+	enum err r = coap_serialize(&coap_pkt_response, ser_coap_pkt_response,
+			   &ser_coap_pkt_response_len);
+	zassert_equal(
+		r, ok,
+		"Error in coap_serialize during response packet serialization!");
+
+	PRINT_ARRAY("CoAP response", ser_coap_pkt_response,
+		    ser_coap_pkt_response_len);
+
+	return coap2oscore(ser_coap_pkt_response,
+			ser_coap_pkt_response_len, ser_oscore_pkt,
+			ser_oscore_pkt_len, c_server);
+}
+
 /**
  * Test 1:
  * - Client Key derivation with master salt see RFC8613 Appendix C.1.1
@@ -513,7 +636,6 @@ void t9_oscore_client_server_observe(void)
 	/*RFC7641: To provide an order among notifications for the client, the server
    	sets the value of the Observe Option in each notification to the 24
    	least significant bits of a strictly increasing sequence number.*/
-	uint32_t observe_sequence_number = 0;
 	uint32_t val = 0;
 	struct o_coap_packet coap_pkt_notification1 = {
 		.header = { .ver = 1,
@@ -1141,4 +1263,272 @@ void t11_oscore_ssn_overflow_protection(void)
 	result = oscore2coap((uint8_t *)T1__OSCORE_RESP, T1__OSCORE_RESP_LEN,
 			(uint8_t *)&buf_coap, &buf_coap_len, &security_context);
 	zassert_equal(result, oscore_ssn_overflow, "SSN overflow not detected in oscore2coap");
+}
+
+/**
+ * @brief	This function test the behavior of a server and a client when
+ * 			No-Response option is set by client and server would respond
+ * 			with message 2 class.
+ *
+ *			client							server
+ *			---------						---------
+ *				|								|
+ *				|---request(NO_RESPONSE = 26)-->|
+ *				|								|
+ *				
+ *				No response is sent.
+ *
+ * No-Response set to 26 means - Not interested in any response.
+ *
+ */
+void t12_oscore_client_server_no_response_message_class_2(void)
+{
+	/*
+	 *
+	 * Initialize contexts for the client and server
+	 *
+	 */
+	enum err r;
+	struct context c_client;
+	struct oscore_init_params params_client = get_default_params(NORMAL, FRESH);
+	r = oscore_context_init(&params_client, &c_client);
+	zassert_equal(r, ok, "Error in oscore_context_init for client");
+
+	struct context c_server;
+	struct oscore_init_params params_server = get_default_params(REVERSED, FRESH);
+	r = oscore_context_init(&params_server, &c_server);
+	zassert_equal(r, ok, "Error in oscore_context_init for server");
+
+	uint8_t token[] = { 0x4a };	
+	uint8_t ser_oscore_pkt[40];
+	uint32_t ser_oscore_pkt_len =
+		sizeof(ser_oscore_pkt);
+	prepare_request_with_no_response(&c_client, &c_server, token, ser_oscore_pkt, &ser_oscore_pkt_len);
+
+	// test the class 2 response
+	r = prepare_response_no_response(&c_server, token, ser_oscore_pkt, &ser_oscore_pkt_len, CODE_RESP_CONTENT);
+	zassert_equal(r, oscore_no_response, "Error in coap2oscore!");
+
+	PRINT_MSG("No response for class 2 message\n");
+}
+
+/**
+ * @brief	This function test the behavior of a server and a client when
+ * 			No-Response option is set by client and server would respond
+ * 			with message 4 class.
+ *
+ *			client							server
+ *			---------						---------
+ *				|								|
+ *				|---request(NO_RESPONSE = 26)-->|
+ *				|								|
+ *				
+ *				No response is sent.
+ *
+ * No-Response set to 26 means - Not interested in any response.
+ *
+ */
+void t13_oscore_client_server_no_response_message_class_4(void)
+{
+	/*
+	 *
+	 * Initialize contexts for the client and server
+	 *
+	 */
+	enum err r;
+	struct context c_client;
+	struct oscore_init_params params_client = get_default_params(NORMAL, FRESH);
+	r = oscore_context_init(&params_client, &c_client);
+	zassert_equal(r, ok, "Error in oscore_context_init for client");
+
+	struct context c_server;
+	struct oscore_init_params params_server = get_default_params(REVERSED, FRESH);
+	r = oscore_context_init(&params_server, &c_server);
+	zassert_equal(r, ok, "Error in oscore_context_init for server");
+
+	uint8_t token[] = { 0x4a };	
+	uint8_t ser_oscore_pkt[40];
+	uint32_t ser_oscore_pkt_len =
+		sizeof(ser_oscore_pkt);
+	prepare_request_with_no_response(&c_client, &c_server, token, ser_oscore_pkt, &ser_oscore_pkt_len);
+
+	//test the class 4 response
+	r = prepare_response_no_response(&c_server, token, ser_oscore_pkt, &ser_oscore_pkt_len, CODE_RESP_UNAUTHORIZED);
+	zassert_equal(r, oscore_no_response, "Error in coap2oscore!");
+
+	PRINT_MSG("No response for class 4 message\n");
+}
+
+/**
+ * @brief	This function test the behavior of a server and a client when
+ * 			No-Response option is set by client and server would respond
+ * 			with message 5 class.
+ *
+ *			client							server
+ *			---------						---------
+ *				|								|
+ *				|---request(NO_RESPONSE = 26)-->|
+ *				|								|
+ *				
+ *				No response is sent.
+ *
+ * No-Response sent to 26 means - Not interested in any response.
+ *
+ */
+void t14_oscore_client_server_no_response_message_class_5(void)
+{
+	/*
+	 *
+	 * Initialize contexts for the client and server
+	 *
+	 */
+	enum err r;
+	struct context c_client;
+	struct oscore_init_params params_client = get_default_params(NORMAL, FRESH);
+	r = oscore_context_init(&params_client, &c_client);
+	zassert_equal(r, ok, "Error in oscore_context_init for client");
+
+	struct context c_server;
+	struct oscore_init_params params_server = get_default_params(REVERSED, FRESH);
+	r = oscore_context_init(&params_server, &c_server);
+	zassert_equal(r, ok, "Error in oscore_context_init for server");
+
+	uint8_t token[] = { 0x4a };	
+	uint8_t ser_oscore_pkt[40];
+	uint32_t ser_oscore_pkt_len =
+		sizeof(ser_oscore_pkt);
+	prepare_request_with_no_response(&c_client, &c_server, token, ser_oscore_pkt, &ser_oscore_pkt_len);
+
+	// test the class 5 response
+	r = prepare_response_no_response(&c_server, token, ser_oscore_pkt, &ser_oscore_pkt_len, CODE_RESP_NOT_IMPLEMENTED);
+	zassert_equal(r, oscore_no_response, "Error in coap2oscore!");
+
+	PRINT_MSG("No response for class 5 message\n");
+}
+
+/**
+ * @brief	This function test the behavior of a server and a client when
+ * 			No-Response option is set by client and server would respond
+ * 			with message 5 class.
+ *
+ *			client							server
+ *			---------						---------
+ *				|								|
+ *				|---request(NO_RESPONSE = 0)--->|
+ *				|								|
+ *				|-----------response----------->|
+ *				|								|
+ *				
+ *
+ * No-Response sent to 0 means - Interested in all responses.
+ *
+ */
+void t15_oscore_client_server_no_response_message_class_5_respond(void)
+{
+	/*
+	 *
+	 * Initialize contexts for the client and server
+	 *
+	 */
+	enum err r;
+	struct context c_client;
+	struct oscore_init_params params_client = get_default_params(NORMAL, FRESH);
+	r = oscore_context_init(&params_client, &c_client);
+	zassert_equal(r, ok, "Error in oscore_context_init for client");
+
+	struct context c_server;
+	struct oscore_init_params params_server = get_default_params(REVERSED, FRESH);
+	r = oscore_context_init(&params_server, &c_server);
+	zassert_equal(r, ok, "Error in oscore_context_init for server");
+
+	/*
+	 *
+	 * Prepare request
+	 *
+	 */
+	PRINT_MSG("\n\n |------request---->| \n\n");
+	uint8_t uri_path_val[] = { 't', 'e', 'm', 'p', 'e', 'r',
+				   'a', 't', 'u', 'r', 'e' };
+	uint8_t token[] = { 0x4a };
+	uint8_t no_response[] = { 0x0 };
+	uint8_t ser_coap_pkt_request[40];
+	uint32_t ser_coap_pkt_request_len =
+		sizeof(ser_coap_pkt_request);
+	uint8_t ser_oscore_pkt[40];
+	uint32_t ser_oscore_pkt_len = sizeof(ser_oscore_pkt);
+	memset(ser_coap_pkt_request, 0, ser_coap_pkt_request_len);
+	memset(ser_oscore_pkt, 0, ser_oscore_pkt_len);
+
+	struct o_coap_packet coap_pkt_request = {
+		.header = {
+			.ver = 1,
+			.type = TYPE_NON,
+			.TKL = 1,
+			.code = CODE_REQ_POST,
+			.MID = 0x0
+		},
+		.token = token,
+		.options_cnt = 2,
+		.options = {
+				{ .delta = 11,
+			       .len = sizeof(uri_path_val),
+			       .value = uri_path_val,
+			       .option_number = URI_PATH},/*E, opt num 11*/
+				{ .delta = 247,
+			       .len = sizeof(no_response),
+			       .value = no_response,
+			       .option_number = NO_RESPONSE},/*EU, opt num 258*/
+				},
+		.payload.len = 0,
+		.payload.ptr = NULL,
+	};
+
+	r = coap_serialize(&coap_pkt_request, ser_coap_pkt_request,
+			   &ser_coap_pkt_request_len);
+	zassert_equal(
+		r, ok,
+		"Error in coap_serialize during request packet serialization!");
+
+	PRINT_ARRAY("CoAP request", ser_coap_pkt_request,
+		    ser_coap_pkt_request_len);
+
+	r = coap2oscore(ser_coap_pkt_request,
+			ser_coap_pkt_request_len, ser_oscore_pkt,
+			&ser_oscore_pkt_len, &c_client);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	uint8_t EXPECTED_OSCORE_REQUEST[] = {
+		0x51, 0x02, 0x00, 0x00, 0x4A, 0x92, 0x09, 0x00,
+	 	0xFF, 0xAD, 0x82, 0x2A, 0x10, 0x7C, 0x9C, 0x48, 
+        0xE4, 0xDF, 0xF2, 0xA3, 0x0E, 0xA7, 0x30, 0xB8,
+		0x43, 0xDA, 0x21, 0x7B, 0x73, 0x53, 0xBA, 0x33, 
+        0x6C 
+	};
+	zassert_mem_equal__(&ser_oscore_pkt, EXPECTED_OSCORE_REQUEST,
+			    sizeof(EXPECTED_OSCORE_REQUEST),
+			    "coap2oscore failed");
+
+	PRINT_ARRAY("OSCORE request", ser_oscore_pkt,
+		    ser_oscore_pkt_len);
+
+	uint8_t ser_conv_coap_pkt[40];
+	uint32_t ser_conv_coap_pkt_len = sizeof(ser_conv_coap_pkt);
+
+	// Prepare request for message class 5 test
+
+	r = oscore2coap(ser_oscore_pkt, ser_oscore_pkt_len, ser_conv_coap_pkt,
+			&ser_conv_coap_pkt_len, &c_server);
+	zassert_equal(r, ok, "Error in oscore2coap!");
+	/*check if we recovered the coap packet that the client sent*/
+	zassert_mem_equal__(ser_coap_pkt_request, ser_conv_coap_pkt,
+			    ser_conv_coap_pkt_len, "oscore2coap failed");
+
+	PRINT_ARRAY("Converted CoAP request", ser_conv_coap_pkt,
+		    ser_conv_coap_pkt_len);
+
+	// test the class 5 response
+	r = prepare_response_no_response(&c_server, token, ser_oscore_pkt, &ser_oscore_pkt_len, CODE_RESP_NOT_IMPLEMENTED);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	PRINT_MSG("Response for class 5 message sent\n");
 }

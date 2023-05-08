@@ -75,6 +75,7 @@ enum err {
 	oscore_interaction_duplicated_token = 221,
 	oscore_interaction_not_found = 222,
 	oscore_wrong_uri_path = 223,
+	oscore_no_response = 224,
 };
 
 /*This macro checks if a function returns an error and if so it propagates 

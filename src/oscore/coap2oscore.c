@@ -475,6 +475,31 @@ static bool needs_new_piv(enum o_coap_msg msg_type, enum echo_state echo_state)
 }
 
 /**
+ *  @brief Check if the response should be sent.
+ *  	   Based on No-Response option and message code, server can decide whether
+ *         to send response or not [RFC7967].
+ * 
+ * @param no_response_value No-Response option value.
+ * @param coap_packet Coap packet.
+ * @return true   The response should be sent.
+ * @return false  The response should not be sent.
+ */
+static bool should_send_response( uint8_t no_response_value, struct o_coap_packet *coap_packet )
+{
+	uint8_t messageClass = GET_MESSAGE_CLASS( coap_packet->header.code );
+
+	// Granular control over response suppression (See section 2.1 of [RFC7967]).
+	if ( ( ( RESPONSE_CLASS_2 == messageClass ) && ( NO_RESPONSE_OPTION_CLASS_2 & no_response_value ) ) ||
+			( ( RESPONSE_CLASS_4 == messageClass ) && ( NO_RESPONSE_OPTION_CLASS_4 & no_response_value ) ) ||
+			( ( RESPONSE_CLASS_5 == messageClass ) && ( NO_RESPONSE_OPTION_CLASS_5 & no_response_value ) ) )
+	{
+		return false;
+	}
+
+	return true;
+}
+
+/**
  * @brief Wrapper function with common operations for encrypting the payload.
  *        These operations are shared in all possible scenarios.
  *        For more info, see RFC8616 8.1 and 8.3.
@@ -530,9 +555,18 @@ static enum err encrypt_wrapper(struct byte_array *plaintext,
 	BYTE_ARRAY_NEW(aad, MAX_AAD_LEN, MAX_AAD_LEN);
 	struct byte_array request_piv = piv;
 	struct byte_array request_kid = kid;
+	uint8_t no_response_value = 0;
 	TRY(oscore_interactions_read_wrapper(msg_type, &token,
 					     c->rrc.interactions, &request_piv,
-					     &request_kid));
+					     &request_kid, &no_response_value));
+	
+	if ( !should_send_response(no_response_value, input_coap))
+	{
+		// Response should not be sent, so interaction can be removed
+		TRY(oscore_interactions_remove_record( c->rrc.interactions, token.ptr, token.len ));
+		return oscore_no_response;
+	}
+
 	TRY(create_aad(NULL, 0, c->cc.aead_alg, &request_kid, &request_piv,
 		       &aad));
 
@@ -546,12 +580,8 @@ static enum err encrypt_wrapper(struct byte_array *plaintext,
 	}
 
 	/* Handle OSCORE interactions after successful encryption. */
-	BYTE_ARRAY_NEW(uri_paths, OSCORE_MAX_URI_PATH_LEN,
-		       OSCORE_MAX_URI_PATH_LEN);
-	TRY(uri_path_create(input_coap->options, input_coap->options_cnt,
-			    uri_paths.ptr, &(uri_paths.len)));
-	TRY(oscore_interactions_update_wrapper(msg_type, &token, &uri_paths,
-					       c->rrc.interactions,
+	TRY(oscore_interactions_update_wrapper(msg_type, input_coap,
+					       &token, c->rrc.interactions,
 					       &request_piv, &request_kid));
 
 	return ok;
@@ -639,8 +669,13 @@ enum err coap2oscore(uint8_t *buf_o_coap, uint32_t buf_o_coap_len,
 
 	/* Encrypt data using either a freshly generated nonce (if needed), or the one cached from the corresponding request. */
 	struct oscore_option oscore_option;
-	TRY(encrypt_wrapper(&plaintext, &ciphertext, c, &o_coap_pkt,
-			    &oscore_option));
+	/* TRY function should not be used, because encrypt_wrapper can return oscore_no_response,
+	   which is not an error and it should not be handled as runtime error */
+	enum err ret = encrypt_wrapper(&plaintext, &ciphertext, c, &o_coap_pkt, &oscore_option);
+	if( ok != ret )
+	{
+		return ret;
+	}
 
 	/*create an OSCORE packet*/
 	struct o_coap_packet oscore_pkt;

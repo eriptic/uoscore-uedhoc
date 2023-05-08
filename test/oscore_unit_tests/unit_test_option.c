@@ -45,6 +45,18 @@ static void get_observe_value_and_compare(struct o_coap_option *options, uint8_t
 	}
 }
 
+static void get_no_response_value_and_compare(struct o_coap_option *options, uint8_t options_cnt, struct byte_array * output, bool expected_result, struct byte_array * expected_output)
+{
+	PRINTF("get_no_response_value; expected result = %d\n", expected_result);
+	bool result = get_no_response_value(options, options_cnt, output);
+	zassert_equal(expected_result, result, "unexpected result: %d", result);
+
+	if (NULL != expected_output)
+	{
+		zassert_equal(true, array_equals(output, expected_output), "");
+	}
+}
+
 void t400_is_class_e(void)
 {
 	enum o_num not_e_opt_nums[] = { URI_HOST, URI_PORT, OSCORE, PROXY_URI,
@@ -211,4 +223,43 @@ void t404_get_observe_value(void)
 
 	/* Test non-existing OBSERVE option. */
 	get_observe_value_and_compare(options_no_observe, GET_ARRAY_SIZE(options_no_observe), &output, false, NULL);
+}
+
+void t405_get_no_response_value(void)
+{
+	struct o_coap_option options_default[] = {
+		{ .option_number = IF_NONE_MATCH },
+		{ .option_number = OSCORE },
+		{ .option_number = NO_RESPONSE, .value = "\x00", .len = 1 },
+	};
+	struct o_coap_option options_long_no_response[] = {
+		{ .option_number = IF_NONE_MATCH },
+		{ .option_number = OSCORE },
+		{ .option_number = NO_RESPONSE, .value = "\x00\x01\x02\x04", .len = 4 },
+	};
+	struct o_coap_option options_empty_no_response[] = {
+		{ .option_number = IF_NONE_MATCH },
+		{ .option_number = OSCORE },
+		{ .option_number = NO_RESPONSE },
+	};
+	struct o_coap_option options_no_no_response[] = {
+		{ .option_number = IF_NONE_MATCH },
+		{ .option_number = OSCORE },
+	};
+
+	/* Test null pointers. */
+	struct byte_array output = BYTE_ARRAY_INIT(NULL, 0);
+	get_no_response_value_and_compare(NULL, 0, &output, false, NULL);
+	get_no_response_value_and_compare(options_default, 0, NULL, false, NULL);
+
+	/* Test different valid values of the NO_RESPONSE option. */
+	struct byte_array expected_default = BYTE_ARRAY_INIT("\x00", 1);
+	struct byte_array expected_long_no_response = BYTE_ARRAY_INIT("\x00\x01\x02\x04", 4);
+	struct byte_array expected_empty_no_response = BYTE_ARRAY_INIT(NULL, 0);
+	get_no_response_value_and_compare(options_default, GET_ARRAY_SIZE(options_default), &output, true, &expected_default);
+	get_no_response_value_and_compare(options_long_no_response, GET_ARRAY_SIZE(options_long_no_response), &output, true, &expected_long_no_response);
+	get_no_response_value_and_compare(options_empty_no_response, GET_ARRAY_SIZE(options_empty_no_response), &output, true, &expected_empty_no_response);
+
+	/* Test non-existing NO_RESPONSE option. */
+	get_no_response_value_and_compare(options_no_no_response, GET_ARRAY_SIZE(options_no_no_response), &output, false, NULL);
 }

@@ -147,31 +147,34 @@ void t303_options_reorder(void)
 
 	struct o_coap_option u_options[] = {
 		{ .delta = 7, .len = 0, .value = NULL, .option_number = 7 },
-		{ .delta = 5, .len = 0, .value = NULL, .option_number = 12 }
+		{ .delta = 5, .len = 0, .value = NULL, .option_number = 12 },
+		{ .delta = 246, .len = 0, .value = NULL, .option_number = NO_RESPONSE }
 	};
 
 	struct o_coap_option e_options[] = {
 		{ .delta = 2, .len = 0, .value = NULL, .option_number = 2 },
-		{ .delta = 2, .len = 0, .value = NULL, .option_number = 4 }
+		{ .delta = 2, .len = 0, .value = NULL, .option_number = 4 },
+		{ .delta = 254, .len = 0, .value = NULL, .option_number = NO_RESPONSE }
 	};
 
 	struct o_coap_option expected[] = {
 		{ .delta = 2, .len = 0, .value = NULL, .option_number = 2 },
 		{ .delta = 2, .len = 0, .value = NULL, .option_number = 4 },
 		{ .delta = 3, .len = 0, .value = NULL, .option_number = 7 },
-		{ .delta = 5, .len = 0, .value = NULL, .option_number = 12 }
+		{ .delta = 5, .len = 0, .value = NULL, .option_number = 12 },
+		{ .delta = 246, .len = 0, .value = NULL, .option_number = NO_RESPONSE }
 	};
 
-	struct o_coap_option out[4];
+	struct o_coap_option out[5];
 	memset(&out, 0, sizeof(out));
 	uint8_t out_cnt;
 
-	r = options_reorder(u_options, 2, e_options, 2, out, &out_cnt);
+	r = options_reorder(u_options, 3, e_options, 3, out, &out_cnt);
 
 	zassert_equal(r, ok, "Error in options_reorder. r: %d", r);
 
-	//PRINT_ARRAY("out", out, sizeof(out));
-	//PRINT_ARRAY("expected", expected, sizeof(expected));
+	// PRINT_ARRAY("out", out, sizeof(out));
+	// PRINT_ARRAY("expected", expected, sizeof(expected));
 
 	uint8_t i;
 	uint8_t len = sizeof(out) / sizeof(out[0]);

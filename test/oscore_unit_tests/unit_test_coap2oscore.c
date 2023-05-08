@@ -693,3 +693,115 @@ void t106_oscore_option_generate_no_piv(void)
 			    oscore_option.len, "wrong oscore option value");
 	;
 }
+
+/**
+ * @brief   Tests the function inner_outer_option_split with No-Response option.
+ * 			This function tests the behavior of the server preparing a response.
+ * 			No-Response should be discarded from outer options.
+ */
+void t107_inner_outer_option_split__with_no_response_option(void)
+{
+	enum err r;
+
+	struct o_coap_header header = {
+		.ver = 1,
+		.type = TYPE_CON,
+		.TKL = 0,
+		.code = CODE_REQ_POST,
+		.MID = 0x0,
+	};
+
+	struct o_coap_packet coap_pkt = {
+		.header = header,
+		.token = NULL,
+		.options_cnt = 5,
+		.options = { 
+                /*If-Match (opt num 1, E)*/
+                { .delta = 1,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = IF_MATCH },
+                /*Etag (opt num 4, E)*/
+			    { .delta = 3,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = ETAG },
+                /*Content-Format (opt num 12, E)*/
+			    { .delta = 8,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = 12 } , 
+                /*Proxy-Uri (opt num 35, U)*/
+			    { .delta = 23,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = PROXY_URI }, 
+                /*No-Response(opt num 258, EU)*/
+			    { .delta = 223,
+			       .len = 0,
+			       .value = NULL,
+			       .option_number = NO_RESPONSE }
+                   },
+		.payload.len = 0,
+		.payload.ptr = NULL,
+	};
+
+	struct o_coap_option inner_options[5];
+	struct o_coap_option outer_options[5];
+	memset(inner_options, 0, sizeof(inner_options));
+	memset(outer_options, 0, sizeof(outer_options));
+	uint16_t inner_options_len = 0;
+	uint8_t inner_options_cnt = 0;
+	uint8_t outer_options_cnt = 0;
+	uint8_t expected_inner_options_cnt;
+	uint8_t expected_outer_options_cnt;
+
+	struct o_coap_option expected_inner_options[] = {
+		/*If-Match (opt num 1, E)*/
+		{ .delta = 1,
+		  .len = 0,
+		  .value = NULL,
+		  .option_number = IF_MATCH },
+		/*Etag (opt num 4, E)*/
+		{ .delta = 3, .len = 0, .value = NULL, .option_number = ETAG },
+		/*Content-Format (opt num 12, E)*/
+		{ .delta = 8,
+		  .len = 0,
+		  .value = NULL,
+		  .option_number = CONTENT_FORMAT }, 
+		/*No-Response(opt num 258, EU)*/
+		{ .delta = 246,
+		  .len = 0,
+		  .value = NULL,
+		  .option_number = NO_RESPONSE }
+	};
+	expected_inner_options_cnt = sizeof(expected_inner_options) /
+				     sizeof(expected_inner_options[0]);
+
+	struct o_coap_option expected_outer_options[] = {
+		/*Proxy-Uri (opt num 35, U)*/
+		{ .delta = 35,
+		  .len = 0,
+		  .value = NULL,
+		  .option_number = PROXY_URI }
+	};
+	expected_outer_options_cnt = sizeof(expected_outer_options) /
+				     sizeof(expected_outer_options[0]);
+
+	r = inner_outer_option_split(&coap_pkt, inner_options,
+				     &inner_options_cnt, &inner_options_len,
+				     outer_options, &outer_options_cnt);
+
+	PRINT_MSG("\ninner options\n");
+	print_options(inner_options, inner_options_cnt);
+	PRINT_MSG("\nouter options\n");
+	print_options(outer_options, outer_options_cnt);
+
+	zassert_equal(r, ok, "Error in inner_outer_option_split. r: %d", r);
+
+	assert_options(inner_options, expected_inner_options, inner_options_cnt,
+		       expected_inner_options_cnt);
+
+	assert_options(outer_options, expected_outer_options, outer_options_cnt,
+		       expected_outer_options_cnt);
+}

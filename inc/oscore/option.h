@@ -43,6 +43,7 @@ enum o_num {
 	PROXY_SCHEME = 39,
 	SIZE1 = 60,
 	ECHO = 252,
+	NO_RESPONSE = 258,
 };
 
 enum option_class {
@@ -50,6 +51,11 @@ enum option_class {
 	CLASS_I, /*integrity protected only*/
 	CLASS_E, /*encrypted and integrity protected*/
 };
+
+// Granular control over response suppression (See section 2.1 of [RFC7967]).
+#define NO_RESPONSE_OPTION_CLASS_2 ( 0b00000010 ) // Not interested in 2.xx responses
+#define NO_RESPONSE_OPTION_CLASS_4 ( 0b00001000 ) // Not interested in 4.xx responses
+#define NO_RESPONSE_OPTION_CLASS_5 ( 0b00010000 ) // Not interested in 5.xx responses
 
 /**
  * @brief   Returns whether the CoAP Option with given `code` is a 
@@ -122,6 +128,16 @@ bool is_observe(struct o_coap_option *options, uint8_t options_cnt);
  */
 bool get_observe_value(struct o_coap_option *options, uint8_t options_cnt,
 		       struct byte_array *output);
+
+/**
+ * @brief Returns the value of No-Response option.
+ * @param options Pointer to an array of options.
+ * @param options_cnt Number of entries in the array.
+ * @param output Pointer to byte array which will point to the value buffer.
+ *               Set to NULL if not found.
+ * @return true if found, false if not.
+ */
+bool get_no_response_value(struct o_coap_option *options, uint8_t options_cnt, struct byte_array * output);
 
 /**
  * @brief	Saves an ECHO option value to be compared later with an ECHO value 
