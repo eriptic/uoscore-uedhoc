@@ -52,10 +52,10 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 	/* Initialize to 0 */
 	*e_options_len = 0;
 
-	uint8_t temp_option_nr = 0;
+	uint16_t temp_option_nr = 0;
 	uint16_t temp_len = 0;
-	uint8_t temp_E_option_delta_sum = 0;
-	uint8_t temp_U_option_delta_sum = 0;
+	uint16_t temp_E_option_delta_sum = 0;
+	uint16_t temp_U_option_delta_sum = 0;
 
 	if (MAX_OPTION_COUNT < in_o_coap->options_cnt) {
 		return too_many_options;
@@ -66,8 +66,7 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			opt_extra_bytes(in_o_coap->options[i].delta) +
 			opt_extra_bytes(in_o_coap->options[i].len);
 
-		temp_option_nr =
-			(uint8_t)(temp_option_nr + in_o_coap->options[i].delta);
+		temp_option_nr = temp_option_nr + in_o_coap->options[i].delta;
 		temp_len = in_o_coap->options[i].len;
 
 		/* process special options, see 4.1.3 in RFC8613*/
@@ -83,8 +82,8 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			* Inner option has value NULL if notification or the original value 
 			* in the coap packet if registration/cancellation.
 			*/
-			e_options[*e_options_cnt].delta = (uint16_t)(
-				temp_option_nr - temp_E_option_delta_sum);
+			e_options[*e_options_cnt].delta = temp_option_nr -
+					   temp_E_option_delta_sum;
 			if (is_request(in_o_coap)) {
 				/*registrations/cancellations are requests */
 				e_options[*e_options_cnt].len = temp_len;
@@ -108,9 +107,8 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 				temp_option_nr;
 
 			/* Update delta sum of E-options */
-			temp_E_option_delta_sum =
-				(uint8_t)(temp_E_option_delta_sum +
-					  e_options[*e_options_cnt].delta);
+			temp_E_option_delta_sum = temp_E_option_delta_sum +
+					  e_options[*e_options_cnt].delta;
 
 			/* Increment E-options count */
 			(*e_options_cnt)++;
@@ -118,8 +116,8 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			/*
 			*outer option (value as in the original coap packet
 			*/
-			U_options[*U_options_cnt].delta = (uint16_t)(
-				temp_option_nr - temp_U_option_delta_sum);
+			U_options[*U_options_cnt].delta = temp_option_nr -
+					   temp_U_option_delta_sum;
 			U_options[*U_options_cnt].len = temp_len;
 			U_options[*U_options_cnt].value =
 				in_o_coap->options[i].value;
@@ -127,9 +125,8 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 				temp_option_nr;
 
 			/* Update delta sum of E-options */
-			temp_U_option_delta_sum =
-				(uint8_t)(temp_U_option_delta_sum +
-					  U_options[*U_options_cnt].delta);
+			temp_U_option_delta_sum = temp_U_option_delta_sum +
+					  U_options[*U_options_cnt].delta;
 
 			/* Increment E-options count */
 			(*U_options_cnt)++;
@@ -140,9 +137,8 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			/* check delta, whether current option U or E */
 			if (is_class_e(temp_option_nr) == 1) {
 				/* E-options, which will be copied in plaintext to be encrypted*/
-				e_options[*e_options_cnt].delta =
-					(uint16_t)(temp_option_nr -
-						   temp_E_option_delta_sum);
+				e_options[*e_options_cnt].delta = temp_option_nr -
+						   temp_E_option_delta_sum;
 				e_options[*e_options_cnt].len = temp_len;
 				e_options[*e_options_cnt].value =
 					in_o_coap->options[i].value;
@@ -150,9 +146,8 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 					temp_option_nr;
 
 				/* Update delta sum of E-options */
-				temp_E_option_delta_sum = (uint8_t)(
-					temp_E_option_delta_sum +
-					e_options[*e_options_cnt].delta);
+				temp_E_option_delta_sum = temp_E_option_delta_sum +
+						  e_options[*e_options_cnt].delta;
 
 				/* Increment E-options count */
 				(*e_options_cnt)++;
@@ -162,9 +157,8 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 						   extra_bytes + temp_len);
 			} else {
 				/* U-options */
-				U_options[*U_options_cnt].delta =
-					(uint16_t)(temp_option_nr -
-						   temp_U_option_delta_sum);
+				U_options[*U_options_cnt].delta = temp_option_nr -
+						   temp_U_option_delta_sum;
 				U_options[*U_options_cnt].len = temp_len;
 				U_options[*U_options_cnt].value =
 					in_o_coap->options[i].value;
@@ -172,9 +166,8 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 					temp_option_nr;
 
 				/* Update delta sum of E-options */
-				temp_U_option_delta_sum = (uint8_t)(
-					temp_U_option_delta_sum +
-					U_options[*U_options_cnt].delta);
+				temp_U_option_delta_sum = temp_U_option_delta_sum +
+						  U_options[*U_options_cnt].delta;
 
 				/* Increment E-options count */
 				(*U_options_cnt)++;
@@ -403,24 +396,22 @@ STATIC enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 	/* Update options count number to output*/
 	out_oscore->options_cnt = (uint8_t)(1 + u_options_cnt);
 
-	uint8_t temp_opt_number_sum = 0;
+	uint16_t temp_opt_number_sum = 0;
 	/* Show the position of U-options */
 	uint8_t u_opt_pos = 0;
 	for (uint8_t i = 0; i < u_options_cnt + 1; i++) {
 		if (i == oscore_opt_pos) {
 			/* OSCORE_option */
-			out_oscore->options[i].delta =
-				(uint16_t)(oscore_option->option_number -
-					   temp_opt_number_sum);
+			out_oscore->options[i].delta = oscore_option->option_number -
+					   temp_opt_number_sum;
 			out_oscore->options[i].len = oscore_option->len;
 			out_oscore->options[i].option_number =
 				oscore_option->option_number;
 			out_oscore->options[i].value = oscore_option->value;
 		} else {
 			/* U-options */
-			out_oscore->options[i].delta =
-				(uint16_t)(u_options[u_opt_pos].option_number -
-					   temp_opt_number_sum);
+			out_oscore->options[i].delta = u_options[u_opt_pos].option_number -
+					   temp_opt_number_sum;
 			out_oscore->options[i].len = u_options[u_opt_pos].len;
 			out_oscore->options[i].option_number =
 				u_options[u_opt_pos].option_number;
@@ -429,8 +420,8 @@ STATIC enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 
 			u_opt_pos++;
 		}
-		temp_opt_number_sum = (uint8_t)(temp_opt_number_sum +
-						out_oscore->options[i].delta);
+		temp_opt_number_sum = temp_opt_number_sum +
+						out_oscore->options[i].delta;
 	}
 
 	/* Protected Payload */
