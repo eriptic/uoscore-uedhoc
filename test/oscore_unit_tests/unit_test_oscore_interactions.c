@@ -81,7 +81,11 @@ static void get_record_and_compare(struct oscore_interaction_t * interactions, s
 static void remove_record_and_expect(struct oscore_interaction_t * interactions, uint8_t * token, uint8_t token_len, enum err expected_result)
 {
 	PRINTF("remove_record; expected result = %d\n", expected_result);
-	enum err result = oscore_interactions_remove_record(interactions, token, token_len);
+	// Dummy coap packet
+	struct o_coap_packet coap_packet = {};
+	coap_packet.token = token, 
+	coap_packet.header.TKL = token_len;
+	enum err result = oscore_interactions_remove_record(interactions, &coap_packet);
 	zassert_equal(expected_result, result, "");
 }
 

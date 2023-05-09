@@ -262,12 +262,6 @@ decrypt_wrapper(struct byte_array *ciphertext, struct byte_array *plaintext,
 	BYTE_ARRAY_NEW(new_nonce, NONCE_LEN, NONCE_LEN);
 	struct byte_array nonce;
 
-	/* Read necessary fields from the input packet. */
-	enum o_coap_msg msg_type_oscore;
-	TRY(coap_get_message_type(input_oscore, &msg_type_oscore));
-	struct byte_array token =
-		BYTE_ARRAY_INIT(input_oscore->token, input_oscore->header.TKL);
-
 	/* Read Request PIV and KID fields from OSCORE option, if available. Update using interactions wrapper. */
 	struct byte_array request_piv;
 	struct byte_array request_kid;
@@ -275,8 +269,8 @@ decrypt_wrapper(struct byte_array *ciphertext, struct byte_array *plaintext,
 		request_piv = new_nonce_oscore_option->piv;
 		request_kid = new_nonce_oscore_option->kid;
 	}
-	TRY(oscore_interactions_read_wrapper(msg_type_oscore, &token,
-					     c->rrc.interactions, &request_piv,
+	TRY(oscore_interactions_read_wrapper(c->rrc.interactions,
+					     input_oscore, &request_piv,
 					     &request_kid, NULL));
 	/* Message type read from encrypted packet can be invalid due to external OBSERVE option change,
 	   but it is sufficient enough for the interactions read wrapper to work properly,
@@ -313,10 +307,7 @@ decrypt_wrapper(struct byte_array *ciphertext, struct byte_array *plaintext,
 
 	/* Handle OSCORE interactions after successful decryption.
 	   Decrypted packet is used for URI Paths and message type, as original values are modified while encrypting. */
-	enum o_coap_msg msg_type;
-	TRY(coap_get_message_type(output_coap, &msg_type));
-	TRY(oscore_interactions_update_wrapper(msg_type, output_coap, &token,
-					       c->rrc.interactions,
+	TRY(oscore_interactions_update_wrapper(c->rrc.interactions, output_coap,
 					       &request_piv, &request_kid));
 
 	return ok;

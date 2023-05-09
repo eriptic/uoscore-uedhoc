@@ -527,8 +527,6 @@ static enum err encrypt_wrapper(struct byte_array *plaintext,
 	/* Read necessary fields from the input packet. */
 	enum o_coap_msg msg_type;
 	TRY(coap_get_message_type(input_coap, &msg_type));
-	struct byte_array token =
-		BYTE_ARRAY_INIT(input_coap->token, input_coap->header.TKL);
 
 	/* Generate new PIV/nonce if needed. */
 	bool use_new_piv = needs_new_piv(msg_type, c->rrc.echo_state_machine);
@@ -556,14 +554,14 @@ static enum err encrypt_wrapper(struct byte_array *plaintext,
 	struct byte_array request_piv = piv;
 	struct byte_array request_kid = kid;
 	uint8_t no_response_value = 0;
-	TRY(oscore_interactions_read_wrapper(msg_type, &token,
-					     c->rrc.interactions, &request_piv,
+	TRY(oscore_interactions_read_wrapper(c->rrc.interactions,
+					     input_coap, &request_piv,
 					     &request_kid, &no_response_value));
 	
 	if ( !should_send_response(no_response_value, input_coap))
 	{
 		// Response should not be sent, so interaction can be removed
-		TRY(oscore_interactions_remove_record( c->rrc.interactions, token.ptr, token.len ));
+		TRY(oscore_interactions_remove_record( c->rrc.interactions, input_coap ));
 		return oscore_no_response;
 	}
 
@@ -580,8 +578,7 @@ static enum err encrypt_wrapper(struct byte_array *plaintext,
 	}
 
 	/* Handle OSCORE interactions after successful encryption. */
-	TRY(oscore_interactions_update_wrapper(msg_type, input_coap,
-					       &token, c->rrc.interactions,
+	TRY(oscore_interactions_update_wrapper(c->rrc.interactions, input_coap,
 					       &request_piv, &request_kid));
 
 	return ok;

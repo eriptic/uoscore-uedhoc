@@ -92,44 +92,39 @@ oscore_interactions_get_record(struct oscore_interaction_t *interactions,
  * @brief Remove a record that matches given URI paths field.
  * @note To be used while de-registering to given resource.
  * @param interactions Interactions array, MUST have exactly OSCORE_INTERACTIONS_COUNT elements.
- * @param token Token buffer to match.
- * @param token_len Token buffer size.
+ * @param coap_packet CoAP packet.
  * @return enum err ok, or error if failed.
  */
 enum err
 oscore_interactions_remove_record(struct oscore_interaction_t *interactions,
-				  uint8_t *token, uint8_t token_len);
+				  struct o_coap_packet * coap_packet);
 
 /**
  * @brief Wrapper for handling OSCORE interactions to be executed before main encryption/decryption logic.
  * 
- * @param msg_type Message type of the packet.
- * @param token Token byte array. MUST NOT be NULL, but can be empty.
  * @param interactions Interactions array, MUST have exactly OSCORE_INTERACTIONS_COUNT elements.
+ * @param coap_packet CoAP packet.
  * @param request_piv Output request_piv (to be updated if needed).
  * @param request_kid Output request_kid (to be updated if needed).
  * @param no_response_value If not NULL, output value of No-Response option.
  * @return enum err ok, or error if failed.
  */
 enum err oscore_interactions_read_wrapper(
-	enum o_coap_msg msg_type, struct byte_array *token,
 	struct oscore_interaction_t *interactions,
+	struct o_coap_packet * coap_packet,
 	struct byte_array *request_piv, struct byte_array *request_kid,
 	uint8_t * no_response_value);
 
 /**
  * @brief Wrapper for handling OSCORE interactions to be executed after main encryption/decryption logic.
  * 
- * @param msg_type Message type of the packet.
- * @param coap_packet CoAP packet.
- * @param token Token byte array. MUST NOT be NULL, but can be empty.
  * @param interactions Interactions array, MUST have exactly OSCORE_INTERACTIONS_COUNT elements.
+ * @param coap_packet CoAP packet.
  * @param request_piv Current value of request_piv.
  * @param request_kid Current value of request_kid.
  * @return enum err ok, or error if failed.
  */
 enum err oscore_interactions_update_wrapper(
-	enum o_coap_msg msg_type, struct o_coap_packet * coap_packet,
-	struct byte_array *token, struct oscore_interaction_t *interactions,
+	struct oscore_interaction_t *interactions, struct o_coap_packet * coap_packet,
 	struct byte_array *request_piv, struct byte_array *request_kid);
 #endif
