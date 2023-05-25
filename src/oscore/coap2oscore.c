@@ -486,6 +486,12 @@ static bool needs_new_piv(enum o_coap_msg msg_type, enum echo_state echo_state)
  */
 static bool should_send_response( uint8_t no_response_value, struct o_coap_packet *coap_packet )
 {
+	if( TYPE_ACK == coap_packet->header.type )
+	{
+		// No-Response option is not applicable for ACK messages
+		return true;
+	}
+
 	uint8_t messageClass = GET_MESSAGE_CLASS( coap_packet->header.code );
 
 	// Granular control over response suppression (See section 2.1 of [RFC7967]).
