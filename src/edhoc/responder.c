@@ -82,6 +82,10 @@ static inline enum err msg1_parse(uint8_t *msg1, uint32_t msg1_len,
 		suites_i[0] = (uint8_t)m._message_1_SUITES_I_int;
 		*suites_i_len = 1;
 	} else {
+		if (0 == m._SUITES_I__suite_suite_count) {
+			return suites_i_list_empty;
+		}
+
 		/*the initiator supports more than one suite*/
 		if (m._SUITES_I__suite_suite_count > *suites_i_len) {
 			return suites_i_list_to_long;
