@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.6.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -12,7 +12,6 @@
 #include <stddef.h>
 #include <string.h>
 #include "cbor/edhoc_encode_bstr_type_types.h"
-#include "zcbor_common.h"
 
 #ifdef __cplusplus
 extern "C" {

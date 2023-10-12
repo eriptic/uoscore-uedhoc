@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.6.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -38,7 +38,7 @@ struct data_2_C_I_ {
 
 struct data_2 {
 	struct data_2_C_I_ _data_2_C_I;
-	uint_fast32_t _data_2_C_I_present;
+	bool _data_2_C_I_present;
 	struct zcbor_string _data_2_G_Y;
 	union {
 		int32_t _data_2_C_R_int;
