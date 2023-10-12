@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.6.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -86,23 +86,23 @@ struct map_c5u {
 
 struct map {
 	struct map_kid_ _map_kid;
-	uint_fast32_t _map_kid_present;
+	bool _map_kid_present;
 	struct map_x5bag _map_x5bag;
-	uint_fast32_t _map_x5bag_present;
+	bool _map_x5bag_present;
 	struct map_x5chain _map_x5chain;
-	uint_fast32_t _map_x5chain_present;
+	bool _map_x5chain_present;
 	struct map_x5t_ _map_x5t;
-	uint_fast32_t _map_x5t_present;
+	bool _map_x5t_present;
 	struct map_x5u _map_x5u;
-	uint_fast32_t _map_x5u_present;
+	bool _map_x5u_present;
 	struct map_c5b _map_c5b;
-	uint_fast32_t _map_c5b_present;
+	bool _map_c5b_present;
 	struct map_c5c _map_c5c;
-	uint_fast32_t _map_c5c_present;
+	bool _map_c5c_present;
 	struct map_c5t_ _map_c5t;
-	uint_fast32_t _map_c5t_present;
+	bool _map_c5t_present;
 	struct map_c5u _map_c5u;
-	uint_fast32_t _map_c5u_present;
+	bool _map_c5u_present;
 };
 
 struct plaintext {
@@ -118,7 +118,7 @@ struct plaintext {
 	} _plaintext_ID_CRED_x_choice;
 	struct zcbor_string _plaintext_SGN_or_MAC_x;
 	struct zcbor_string _plaintext_AD_x;
-	uint_fast32_t _plaintext_AD_x_present;
+	bool _plaintext_AD_x_present;
 };
 
 #ifdef __cplusplus
