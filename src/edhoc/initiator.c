@@ -9,6 +9,7 @@
    except according to those terms.
 */
 
+#include <stdbool.h>
 #include "edhoc_internal.h"
 
 #include "common/crypto_wrapper.h"
@@ -122,7 +123,7 @@ enum err msg1_gen(const struct edhoc_initiator_context *c,
 		m1._message_1_ead_1.len = c->ead_1.len;
 		m1._message_1_ead_1_present = true;
 	} else {
-		m1._message_1_ead_1_present = 0;
+		m1._message_1_ead_1_present = false;
 	}
 
 	size_t payload_len_out;

@@ -10,7 +10,7 @@
 */
 
 #include <stdint.h>
-
+#include <stdbool.h>
 
 
 #include "edhoc/retrieve_cred.h"
