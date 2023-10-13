@@ -27,14 +27,14 @@
 
 enum err id_cred2kid(const struct byte_array *id_cred, struct byte_array *kid)
 {
-	struct id_cred_x_map map;
+	struct id_cred_x_map map = {0};
 	size_t payload_len_out;
 	size_t decode_len = 0;
 	TRY_EXPECT(cbor_decode_id_cred_x_map(id_cred->ptr, id_cred->len, &map,
 					     &decode_len),
 		   0);
 
-	if (map._id_cred_x_map_kid_present != 0) {
+	if (map._id_cred_x_map_kid_present) {
 		TRY_EXPECT(
 			cbor_encode_int_type_i(
 				kid->ptr, kid->len,
