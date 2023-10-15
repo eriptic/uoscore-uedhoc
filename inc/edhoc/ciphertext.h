@@ -23,8 +23,8 @@ enum ciphertext { CIPHERTEXT2, CIPHERTEXT3, CIPHERTEXT4 };
  * @param[in] ead 		External authorization data.
  * @param[in] prk 		Pseudo random key.
  * @param[in] th 		Transcript hash.
+ * @param[out] ciphertext 	The ciphertext.
  * @param[out] plaintext 	The plaintext. 
- * @param[out] ciphertext 	The output.
  * @return 			Ok or error code. 
  */
 enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,

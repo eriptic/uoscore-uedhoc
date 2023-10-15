@@ -37,25 +37,36 @@ extern struct byte_array EMPTY_ARRAY;
 extern struct byte_array NULL_ARRAY;
 
 /**
- * @brief   Compares if the given two arrays have an equal content.
+ * @brief			Compares if the given two arrays have equal
+ * 				content.
  *
- *          Handles null-arrays correctly
- * @param   left first array
- * @param   right second array
- * @return  if the contents of given arrays are equal
+ * @param[in] a 		Array "a".
+ * @param[in] b 		Array "b".
+ * @return  			True if the contents of both arrays is equal.
  */
-bool array_equals(const struct byte_array *left,
-		  const struct byte_array *right);
+bool array_equals(const struct byte_array *a, const struct byte_array *b);
 
+/**
+ * @brief 			Creates a copy of a byte array.
+ * 
+ * @param[out] dest 		The destination byte array.
+ * @param[in] src		The source byte array. 
+ * @param dest_max_len 		The maximal length of the destination array.
+ * @return enum err 		Ok or error code.
+ */
 enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src,
 			const uint32_t dest_max_len);
 
 /**
- * @brief   Sets the pointer and the length of a byte_array variable to a given array
-*/
-#define BYTE_ARRAY_INIT(PTR, SIZE)                                             \
+ * @brief   			Initializes a byte array variable with a 
+ * 				pointer to a buffer and length of the buffer.
+ *
+ * @param PTR			pointer
+ * @param LEN			Length of the buffer in bytes 
+ */
+#define BYTE_ARRAY_INIT(PTR, LEN)                                              \
 	{                                                                      \
-		.len = SIZE, .ptr = PTR                                        \
+		.len = LEN, .ptr = PTR                                         \
 	}
 
 /**

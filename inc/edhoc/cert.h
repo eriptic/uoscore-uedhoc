@@ -23,7 +23,7 @@
  * @param[in] cert              A native CBOR encoded certificate.
  * @param[in] cred_array        An array containing credentials. 
  * @param[out] pk               Public key contained in the certificate.
- * @param verified              True if verification successful.
+ * @param verified              True if the verification is successful.
  * @retval                      Ok or error code.
  */
 enum err cert_c509_verify(struct const_byte_array *cert,
@@ -31,12 +31,12 @@ enum err cert_c509_verify(struct const_byte_array *cert,
 			  struct byte_array *pk, bool *verified);
 
 /**
- * @brief                       Verifies a c509 certificate.
+ * @brief                       Verifies a x509 certificate.
  * 
- * @param[in] cert              A native CBOR encoded certificate.
+ * @param[in] cert              A X.509 encoded certificate.
  * @param[in] cred_array        An array containing credentials. 
  * @param[out] pk               Public key contained in the certificate.
- * @param verified              True if verification successful.
+ * @param verified              True if the verification is successful.
  * @retval                      Ok or error code.
  */
 enum err cert_x509_verify(struct const_byte_array *cert,
