@@ -1,6 +1,6 @@
 name: build & test
 
-on: push
+on: [push, pull_request]
 
 jobs:
 # This workflow contains 2 jobs build and test
