@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0 or MIT
  */
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/ztest.h>
 #include <zephyr/debug/thread_analyzer.h>
 

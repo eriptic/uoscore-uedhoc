@@ -1,9 +1,6 @@
 
 #include <stdio.h>
-//#include <zephyr/posix/netinet/in.h>
-//#include <netinet/in.h>
-
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/ztest.h>
 #include "oscore.h"
 
