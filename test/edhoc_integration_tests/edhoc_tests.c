@@ -10,7 +10,7 @@
 */
 
 #include <stdio.h>
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/ztest.h>
 
 #include <edhoc.h>
@@ -23,8 +23,6 @@ struct messages m;
 //todo check that as well that the AD are correct
 int test_edhoc(enum role p, uint8_t vec_num)
 {
-
-
 	// rx_init();
 
 	// m.m1_len = test_vectors[vec_num].message_1_len;

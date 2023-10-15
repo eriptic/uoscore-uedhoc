@@ -9,7 +9,7 @@
    except according to those terms.
 */
 
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/ztest.h>
 #include <string.h>
 
