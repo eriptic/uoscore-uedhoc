@@ -26,7 +26,7 @@
  * @param[in] label             Predefined integer value.
  * @param[in] context           Relevant only for MAC_2 and MAC_3.
  * @param[out] okm              The result.
- * @retval                      Or or error code.
+ * @retval                      Ok or error code.
  */
 enum err edhoc_kdf(enum hash_alg hash_alg, const struct byte_array *prk,
 		   uint8_t label, struct byte_array *context,

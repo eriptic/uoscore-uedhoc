@@ -40,9 +40,9 @@ enum method_type {
  *                              and responder.
  * 
  * @param m                     The method.
- * @param static_dh_i           True if the initiator authenticates with static 
+ * @param[out] static_dh_i      True if the initiator authenticates with static 
  *                              DH key.
- * @param static_dh_r           True if the responder authenticates with static 
+ * @param[out] static_dh_r      True if the responder authenticates with static 
  *                              DH key.
  * @retval                      None.
  */

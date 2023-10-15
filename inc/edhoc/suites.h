@@ -60,6 +60,7 @@ struct suite {
 /**
  * @brief   			Retrieves the algorithms corrsponding to a 
  * 				given suite label.
+ * 
  * @param label 		The label of the suite.
  * @param suite 		The algorithms corrsponding to label.
  * @retval			Ok or error.

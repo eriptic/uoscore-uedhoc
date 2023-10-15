@@ -22,7 +22,7 @@
  * @param alg                   Hash algorithm to be used.
  * @param[in] msg1_hash         Hash of Message 1.
  * @param[in] g_y               Public DH parameter.
- * @param[in] c_r               Conception the identifier of the responder.
+ * @param[in] c_r               Connection identifier of the responder.
  * @param[out] th2              The result.
  * @retval                      Ok or error.
  */
@@ -31,8 +31,9 @@ enum err th2_calculate(enum hash_alg alg, struct byte_array *msg1_hash,
 		       struct byte_array *th2);
 
 /**
- * @brief                       Calculates transcript hash th3. 
- *                              TH_3 = H(TH_2, PLAINTEXT_2). 
+ * @brief                       Calculates transcript hash th3/th4 
+ *                              TH_3 = H(TH_2, PLAINTEXT_2) 
+ *                              TH_4 = H(TH_3, PLAINTEXT_3) 
  * 
  * @param alg                   Hash algorithm to be used.
  * @param[in] th23              th2 ot th3.
