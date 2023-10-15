@@ -39,6 +39,8 @@
 #define SUITES_I_SIZE 6
 #endif
 
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
 #define BSTR_ENCODING_OVERHEAD(x)                                              \
 	((x) <= 5) ? 1 : ((x) <= UINT8_MAX) ? 2 : ((x) <= UINT16_MAX) ? 3 : 5
 
@@ -85,9 +87,9 @@
 #define MSG_3_SIZE CIPHERTEXT3_SIZE
 #define MSG_4_SIZE CIPHERTEXT4_SIZE
 
-#define MSG12_MAX (((MSG_1_SIZE) > (MSG_2_SIZE)) ? (MSG_1_SIZE) : (MSG_2_SIZE))
-#define MSG34_MAX (((MSG_3_SIZE) > (MSG_4_SIZE)) ? (MSG_3_SIZE) : (MSG_4_SIZE))
-#define MSG_MAX_SIZE (((MSG12_MAX) > (MSG34_MAX)) ? (MSG12_MAX) : (MSG34_MAX))
+#define MSG12_MAX MAX(MSG_1_SIZE, MSG_2_SIZE)
+#define MSG34_MAX MAX(MSG_3_SIZE, MSG_4_SIZE)
+#define MSG_MAX_SIZE MAX(MSG12_MAX, MSG34_MAX)
 
 #define PLAINTEXT23_MAX_SIZE                                                   \
 	(((PLAINTEXT2_SIZE) > (PLAINTEXT3_SIZE)) ? (PLAINTEXT2_SIZE) :         \
