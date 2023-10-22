@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.0
+ * Generated using zcbor version 0.7.99
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -26,16 +26,16 @@ extern "C" {
 #define DEFAULT_MAX_QTY 3
 
 struct th2 {
-	struct zcbor_string _th2_G_Y;
+	struct zcbor_string th2_G_Y;
 	union {
-		struct zcbor_string _th2_C_R_bstr;
-		int32_t _th2_C_R_int;
+		struct zcbor_string th2_C_R_bstr;
+		int32_t th2_C_R_int;
 	};
 	enum {
-		_th2_C_R_bstr,
-		_th2_C_R_int,
-	} _th2_C_R_choice;
-	struct zcbor_string _th2_hash_msg1;
+		th2_C_R_bstr_c,
+		th2_C_R_int_c,
+	} th2_C_R_choice;
+	struct zcbor_string th2_hash_msg1;
 };
 
 #ifdef __cplusplus

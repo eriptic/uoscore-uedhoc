@@ -28,7 +28,7 @@ extern "C" {
 #define USE_IPV4
 //#define USE_IPV6
 /*comment this out to use DH keys from the test vectors*/
-//#define USE_RANDOM_EPHEMERAL_DH_KEY
+#define USE_RANDOM_EPHEMERAL_DH_KEY
 
 /**
  * @brief	Initializes sockets for CoAP client.
@@ -195,9 +195,8 @@ int main()
 
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY
 	uint32_t seed;
-	uint8_t G_X_random[32];
-	uint8_t X_random[32];
-	uint32_t G_X_random_len = sizeof(G_X_random);
+	BYTE_ARRAY_NEW(X_random, 32, 32);
+	BYTE_ARRAY_NEW(G_X_random, 32, 32);
 
 	/*create a random seed*/
 	FILE *fp;
@@ -207,12 +206,11 @@ int main()
 	PRINT_ARRAY("seed", (uint8_t *)&seed, seed_len);
 
 	/*create ephemeral DH keys from seed*/
-	TRY(ephemeral_dh_key_gen(P256, seed, X_random, G_X_random,
-				 &G_X_random_len));
-	c_i.g_x.ptr = G_X_random;
-	c_i.g_x.len = sizeof(G_X_random);
-	c_i.x.ptr = X_random;
-	c_i.x.len = sizeof(X_random);
+	TRY(ephemeral_dh_key_gen(P256, seed, &X_random, &G_X_random));
+	c_i.g_x.ptr = G_X_random.ptr;
+	c_i.g_x.len = G_X_random.len;
+	c_i.x.ptr = X_random.ptr;
+	c_i.x.len = X_random.len;
 	PRINT_ARRAY("secret ephemeral DH key", c_i.g_x.ptr, c_i.g_x.len);
 	PRINT_ARRAY("public ephemeral DH key", c_i.x.ptr, c_i.x.len);
 

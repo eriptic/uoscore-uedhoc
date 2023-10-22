@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.0
+ * Generated using zcbor version 0.7.99
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -23,9 +23,9 @@ static bool encode_m2(
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = (((((zcbor_bstr_encode(state, (&(*input)._m2_G_Y_CIPHERTEXT_2))))
-	&& ((((*input)._m2_C_R_choice == _m2_C_R_int) ? ((zcbor_int32_encode(state, (&(*input)._m2_C_R_int))))
-	: (((*input)._m2_C_R_choice == _m2_C_R_bstr) ? ((zcbor_bstr_encode(state, (&(*input)._m2_C_R_bstr))))
+	bool tmp_result = (((((zcbor_bstr_encode(state, (&(*input).m2_G_Y_CIPHERTEXT_2))))
+	&& ((((*input).m2_C_R_choice == m2_C_R_int_c) ? ((zcbor_int32_encode(state, (&(*input).m2_C_R_int))))
+	: (((*input).m2_C_R_choice == m2_C_R_bstr_c) ? ((zcbor_bstr_encode(state, (&(*input).m2_C_R_bstr))))
 	: false))))));
 
 	if (!tmp_result)
@@ -43,20 +43,6 @@ int cbor_encode_m2(
 {
 	zcbor_state_t states[3];
 
-	zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), payload, payload_len, 2);
-
-	bool ret = encode_m2(states, input);
-
-	if (ret && (payload_len_out != NULL)) {
-		*payload_len_out = MIN(payload_len,
-				(size_t)states[0].payload - (size_t)payload);
-	}
-
-	if (!ret) {
-		int err = zcbor_pop_error(states);
-
-		zcbor_print("Return error: %d\r\n", err);
-		return (err == ZCBOR_SUCCESS) ? ZCBOR_ERR_UNKNOWN : err;
-	}
-	return ZCBOR_SUCCESS;
+	return zcbor_entry_function(payload, payload_len, (void *)input, payload_len_out, states,
+		(zcbor_decoder_t *)encode_m2, sizeof(states) / sizeof(zcbor_state_t), 2);
 }
