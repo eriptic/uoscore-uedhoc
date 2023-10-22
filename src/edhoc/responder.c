@@ -46,7 +46,7 @@
  * @brief   			Parses message 1.
  * @param[in] msg1 		Message 1.
  * @param[out] method 		EDHOC method.
- * @param[out] suites_i 	Cypher suites suported by the initiator
+ * @param[out] suites_i 	Cipher suites suported by the initiator
  * @param[out] g_x 		Public ephemeral key of the initiator.
  * @param[out] c_i 		Connection identifier of the initiator.
  * @param[out] ead1 		External authorized data 1.
@@ -240,7 +240,9 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 
 	/*compute ciphertext_2*/
 	BYTE_ARRAY_NEW(plaintext_2, PLAINTEXT2_SIZE,
-		       c->id_cred_r.len + sign_or_mac_2.len + 2 + c->ead_2.len);
+		       c->id_cred_r.len + sign_or_mac_2.len +
+			       SIG_OR_MAC_SIZE_ENCODING_OVERHEAD +
+			       c->ead_2.len);
 	BYTE_ARRAY_NEW(ciphertext_2, CIPHERTEXT2_SIZE, plaintext_2.len);
 
 	TRY(ciphertext_gen(CIPHERTEXT2, &rc->suite, &c->id_cred_r,
