@@ -19,7 +19,7 @@
 #include "common/byte_array.h"
 #include "common/oscore_edhoc_error.h"
 
-#define	OPT_SERIAL_OVERHEAD 5
+#define OPT_SERIAL_OVERHEAD 5
 
 enum o_num {
 	IF_MATCH = 1,

@@ -24,7 +24,8 @@
 #define MAX_KID_LEN 8
 #define MAX_AAD_LEN 30
 #define MAX_INFO_LEN 50
-#define MAX_SSN_VALUE 0xFFFFFFFFFF /* maximum SSN value is 2^40-1, according to RFC 8613 p. 7.2.1.*/
+#define MAX_SSN_VALUE                                                          \
+	0xFFFFFFFFFF /* maximum SSN value is 2^40-1, according to RFC 8613 p. 7.2.1.*/
 
 /* Mask and offset for first byte in CoAP/OSCORE header*/
 #define HEADER_LEN 4
@@ -127,7 +128,7 @@ enum err coap_deserialize(struct byte_array *in, struct o_coap_packet *out);
  * @return  err
  */
 enum err coap_serialize(struct o_coap_packet *in, uint8_t *out_byte_string,
-		  uint32_t *out_byte_string_len);
+			uint32_t *out_byte_string_len);
 
 /**
  * @brief   Convert input options into byte string

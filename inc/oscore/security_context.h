@@ -121,5 +121,4 @@ enum err update_request_piv_request_kid(struct context *c,
 					struct byte_array *piv,
 					struct byte_array *kid);
 
-
 #endif

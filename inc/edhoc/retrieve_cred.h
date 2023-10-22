@@ -21,7 +21,7 @@
 enum id_cred_x_label {
 	/*ID_CRED_x contains a key ID used to identify a pre established RPK*/
 	kid = 4,
-	
+
 	/* ID_CRED_x contains an unordered bag of X.509 certificates*/
 	x5bag = 32,
 	/* ID_CRED_x contains an certificate chain*/
@@ -30,7 +30,7 @@ enum id_cred_x_label {
 	x5t = 34,
 	/*ID_CRED_x contains an uri used to identify a pre established cert*/
 	x5u = 35,
-	
+
 	/* ID_CRED_x contains an unordered bag of C509 certificates*/
 	c5b = 52,
 	/* ID_CRED_x contains an certificate chain of C509 certificates*/
@@ -38,7 +38,7 @@ enum id_cred_x_label {
 	/*ID_CRED_x contains a hash used to identify a pre established C509 cert*/
 	c5t = 54,
 	/*ID_CRED_x contains an uri used to identify a pre established C509 cert*/
-	c5u = 55,	
+	c5u = 55,
 };
 
 /**
@@ -55,11 +55,8 @@ enum id_cred_x_label {
  * @param[out] g 		Static DH public key.
  * @retval			Ok or error.
  */
-enum err retrieve_cred(bool static_dh_auth, 
-	struct cred_array *cred_array,
-	struct byte_array *id_cred, 
-	struct byte_array *cred, 
-	struct byte_array *pk,
-	struct byte_array *g);
+enum err retrieve_cred(bool static_dh_auth, struct cred_array *cred_array,
+		       struct byte_array *id_cred, struct byte_array *cred,
+		       struct byte_array *pk, struct byte_array *g);
 
 #endif

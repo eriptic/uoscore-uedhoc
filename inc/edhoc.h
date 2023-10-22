@@ -23,8 +23,6 @@
 #include "common/byte_array.h"
 #include "common/print_util.h"
 
-
-
 #ifdef _WIN32
 #define WEAK
 #else

@@ -41,7 +41,6 @@ enum err server_replay_window_init(server_replay_window_t *replay_window);
 enum err server_replay_window_reinit(uint64_t current_sequence_number,
 				     server_replay_window_t *replay_window);
 
-
 /**
  * @brief Check whether given sequence number is valid in terms of server replay protection.
  *
