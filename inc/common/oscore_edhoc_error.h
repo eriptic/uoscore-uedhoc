@@ -26,6 +26,7 @@ enum err {
 	/*indicates that transport layer is not initialized*/
 	transport_deinitialized = 7,
 	not_implemented = 8,
+	vla_insufficient_size = 9,
 
 	/*EDHOC specific errors*/
 	/*todo implement error messages*/

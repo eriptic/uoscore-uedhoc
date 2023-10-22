@@ -78,6 +78,9 @@ enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src,
 */
 #ifdef VLA
 #define BYTE_ARRAY_NEW(NAME, BUF_SIZE, SIZE)                                   \
+	if (SIZE <= 0) {                                                       \
+		return vla_insufficient_size                                   \
+	}                                                                      \
 	uint8_t NAME##_buf[SIZE];                                              \
 	struct byte_array NAME = BYTE_ARRAY_INIT(NAME##_buf, SIZE);
 #else
