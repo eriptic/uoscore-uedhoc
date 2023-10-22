@@ -367,6 +367,7 @@ enum err edhoc_responder_run_extended(
 	rc.msg.len = sizeof(rc.msg_buf);
 	TRY(rx(c->sock, &rc.msg));
 	TRY(msg3_process(c, &rc, cred_i_array, prk_out, initiator_pub_key));
+	TRY(ead_process(c->params_ead_process, &rc.ead));
 
 	/*create and send message 4*/
 #ifdef MESSAGE_4
