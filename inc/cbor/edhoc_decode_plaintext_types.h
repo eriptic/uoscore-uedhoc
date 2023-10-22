@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.0
+ * Generated using zcbor version 0.7.99
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -25,100 +25,100 @@ extern "C" {
  */
 #define DEFAULT_MAX_QTY 3
 
-struct map_kid_ {
+struct map_kid_r {
 	union {
-		int32_t _map_kid_int;
-		struct zcbor_string _map_kid_bstr;
+		int32_t map_kid_int;
+		struct zcbor_string map_kid_bstr;
 	};
 	enum {
-		_map_kid_int,
-		_map_kid_bstr,
-	} _map_kid_choice;
+		map_kid_int_c,
+		map_kid_bstr_c,
+	} map_kid_choice;
 };
 
 struct map_x5bag {
-	struct zcbor_string _map_x5bag;
+	struct zcbor_string map_x5bag;
 };
 
 struct map_x5chain {
-	struct zcbor_string _map_x5chain;
+	struct zcbor_string map_x5chain;
 };
 
-struct map_x5t_ {
+struct map_x5t_r {
 	union {
-		int32_t _map_x5t_alg_int;
-		struct zcbor_string _map_x5t_alg_tstr;
+		int32_t map_x5t_alg_int;
+		struct zcbor_string map_x5t_alg_tstr;
 	};
 	enum {
-		_map_x5t_alg_int,
-		_map_x5t_alg_tstr,
-	} _map_x5t_alg_choice;
-	struct zcbor_string _map_x5t_hash;
+		map_x5t_alg_int_c,
+		map_x5t_alg_tstr_c,
+	} map_x5t_alg_choice;
+	struct zcbor_string map_x5t_hash;
 };
 
 struct map_x5u {
-	struct zcbor_string _map_x5u;
+	struct zcbor_string map_x5u;
 };
 
 struct map_c5b {
-	struct zcbor_string _map_c5b;
+	struct zcbor_string map_c5b;
 };
 
 struct map_c5c {
-	struct zcbor_string _map_c5c;
+	struct zcbor_string map_c5c;
 };
 
-struct map_c5t_ {
+struct map_c5t_r {
 	union {
-		int32_t _map_c5t_alg_int;
-		struct zcbor_string _map_c5t_alg_tstr;
+		int32_t map_c5t_alg_int;
+		struct zcbor_string map_c5t_alg_tstr;
 	};
 	enum {
-		_map_c5t_alg_int,
-		_map_c5t_alg_tstr,
-	} _map_c5t_alg_choice;
-	struct zcbor_string _map_c5t_hash;
+		map_c5t_alg_int_c,
+		map_c5t_alg_tstr_c,
+	} map_c5t_alg_choice;
+	struct zcbor_string map_c5t_hash;
 };
 
 struct map_c5u {
-	struct zcbor_string _map_c5u;
+	struct zcbor_string map_c5u;
 };
 
 struct map {
-	struct map_kid_ _map_kid;
-	bool _map_kid_present;
-	struct map_x5bag _map_x5bag;
-	bool _map_x5bag_present;
-	struct map_x5chain _map_x5chain;
-	bool _map_x5chain_present;
-	struct map_x5t_ _map_x5t;
-	bool _map_x5t_present;
-	struct map_x5u _map_x5u;
-	bool _map_x5u_present;
-	struct map_c5b _map_c5b;
-	bool _map_c5b_present;
-	struct map_c5c _map_c5c;
-	bool _map_c5c_present;
-	struct map_c5t_ _map_c5t;
-	bool _map_c5t_present;
-	struct map_c5u _map_c5u;
-	bool _map_c5u_present;
+	struct map_kid_r map_kid;
+	bool map_kid_present;
+	struct map_x5bag map_x5bag;
+	bool map_x5bag_present;
+	struct map_x5chain map_x5chain;
+	bool map_x5chain_present;
+	struct map_x5t_r map_x5t;
+	bool map_x5t_present;
+	struct map_x5u map_x5u;
+	bool map_x5u_present;
+	struct map_c5b map_c5b;
+	bool map_c5b_present;
+	struct map_c5c map_c5c;
+	bool map_c5c_present;
+	struct map_c5t_r map_c5t;
+	bool map_c5t_present;
+	struct map_c5u map_c5u;
+	bool map_c5u_present;
 };
 
 struct plaintext {
 	union {
-		struct map _plaintext_ID_CRED_x__map;
-		struct zcbor_string _plaintext_ID_CRED_x_bstr;
-		int32_t _plaintext_ID_CRED_x_int;
+		struct map plaintext_ID_CRED_x_map_m;
+		struct zcbor_string plaintext_ID_CRED_x_bstr;
+		int32_t plaintext_ID_CRED_x_int;
 	};
 	enum {
-		_plaintext_ID_CRED_x__map,
-		_plaintext_ID_CRED_x_bstr,
-		_plaintext_ID_CRED_x_int,
-	} _plaintext_ID_CRED_x_choice;
-	struct zcbor_string _plaintext_SGN_or_MAC_x;
-	struct zcbor_string _plaintext_AD_x;
-	bool _plaintext_AD_x_present;
+		plaintext_ID_CRED_x_map_m_c,
+		plaintext_ID_CRED_x_bstr_c,
+		plaintext_ID_CRED_x_int_c,
+	} plaintext_ID_CRED_x_choice;
+	struct zcbor_string plaintext_SGN_or_MAC_x;
+	struct zcbor_string plaintext_AD_x;
+	bool plaintext_AD_x_present;
 };
 
 #ifdef __cplusplus

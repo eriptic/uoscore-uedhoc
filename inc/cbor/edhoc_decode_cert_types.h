@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.0
+ * Generated using zcbor version 0.7.99
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -26,17 +26,17 @@ extern "C" {
 #define DEFAULT_MAX_QTY 3
 
 struct cert {
-	int32_t _cert_type;
-	int32_t _cert_serial_number;
-	struct zcbor_string _cert_issuer;
-	int32_t _cert_validity_not_before;
-	int32_t _cert_validity_not_after;
-	struct zcbor_string _cert_subject;
-	int32_t _cert_subject_public_key_algorithm;
-	struct zcbor_string _cert_pk;
-	int32_t _cert_extensions;
-	int32_t _cert_issuer_signature_algorithm;
-	struct zcbor_string _cert_signature;
+	int32_t cert_type;
+	int32_t cert_serial_number;
+	struct zcbor_string cert_issuer;
+	int32_t cert_validity_not_before;
+	int32_t cert_validity_not_after;
+	struct zcbor_string cert_subject;
+	int32_t cert_subject_public_key_algorithm;
+	struct zcbor_string cert_pk;
+	int32_t cert_extensions;
+	int32_t cert_issuer_signature_algorithm;
+	struct zcbor_string cert_signature;
 };
 
 #ifdef __cplusplus

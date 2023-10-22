@@ -65,53 +65,53 @@ msg1_parse(struct byte_array *msg1, enum method_type *method,
 		   0);
 
 	/*METHOD*/
-	if ((m._message_1_METHOD > INITIATOR_SDHK_RESPONDER_SDHK) ||
-	    (m._message_1_METHOD < INITIATOR_SK_RESPONDER_SK)) {
+	if ((m.message_1_METHOD > INITIATOR_SDHK_RESPONDER_SDHK) ||
+	    (m.message_1_METHOD < INITIATOR_SK_RESPONDER_SK)) {
 		return wrong_parameter;
 	}
-	*method = (enum method_type)m._message_1_METHOD;
+	*method = (enum method_type)m.message_1_METHOD;
 	PRINTF("msg1 METHOD: %d\n", (int)*method);
 
 	/*SUITES_I*/
-	if (m._message_1_SUITES_I_choice == _message_1_SUITES_I_int) {
+	if (m.message_1_SUITES_I_choice == message_1_SUITES_I_int_c) {
 		/*the initiator supports only one suite*/
-		suites_i->ptr[0] = (uint8_t)m._message_1_SUITES_I_int;
+		suites_i->ptr[0] = (uint8_t)m.message_1_SUITES_I_int;
 		suites_i->len = 1;
 	} else {
 		/*the initiator supports more than one suite*/
-		if (m._SUITES_I__suite_suite_count > suites_i->len) {
+		if (m.SUITES_I_suite_l_suite_count > suites_i->len) {
 			return suites_i_list_to_long;
 		}
 
-		for (i = 0; i < m._SUITES_I__suite_suite_count; i++) {
-			suites_i->ptr[i] = (uint8_t)m._SUITES_I__suite_suite[i];
+		for (i = 0; i < m.SUITES_I_suite_l_suite_count; i++) {
+			suites_i->ptr[i] = (uint8_t)m.SUITES_I_suite_l_suite[i];
 		}
-		suites_i->len = (uint32_t)m._SUITES_I__suite_suite_count;
+		suites_i->len = (uint32_t)m.SUITES_I_suite_l_suite_count;
 	}
 	PRINT_ARRAY("msg1 SUITES_I", suites_i->ptr, suites_i->len);
 
 	/*G_X*/
-	TRY(_memcpy_s(g_x->ptr, g_x->len, m._message_1_G_X.value,
-		      (uint32_t)m._message_1_G_X.len));
-	g_x->len = (uint32_t)m._message_1_G_X.len;
+	TRY(_memcpy_s(g_x->ptr, g_x->len, m.message_1_G_X.value,
+		      (uint32_t)m.message_1_G_X.len));
+	g_x->len = (uint32_t)m.message_1_G_X.len;
 	PRINT_ARRAY("msg1 G_X", g_x->ptr, g_x->len);
 
 	/*C_I*/
-	if (m._message_1_C_I_choice == _message_1_C_I_int) {
-		c_i->ptr[0] = (uint8_t)m._message_1_C_I_int;
+	if (m.message_1_C_I_choice == message_1_C_I_int_c) {
+		c_i->ptr[0] = (uint8_t)m.message_1_C_I_int;
 		c_i->len = 1;
 	} else {
-		TRY(_memcpy_s(c_i->ptr, c_i->len, m._message_1_C_I_bstr.value,
-			      (uint32_t)m._message_1_C_I_bstr.len));
-		c_i->len = (uint32_t)m._message_1_C_I_bstr.len;
+		TRY(_memcpy_s(c_i->ptr, c_i->len, m.message_1_C_I_bstr.value,
+			      (uint32_t)m.message_1_C_I_bstr.len));
+		c_i->len = (uint32_t)m.message_1_C_I_bstr.len;
 	}
 	PRINT_ARRAY("msg1 C_I_raw", c_i->ptr, c_i->len);
 
 	/*ead_1*/
-	if (m._message_1_ead_1_present) {
-		TRY(_memcpy_s(ead1->ptr, ead1->len, m._message_1_ead_1.value,
-			      (uint32_t)m._message_1_ead_1.len));
-		ead1->len = (uint32_t)m._message_1_ead_1.len;
+	if (m.message_1_ead_1_present) {
+		TRY(_memcpy_s(ead1->ptr, ead1->len, m.message_1_ead_1.value,
+			      (uint32_t)m.message_1_ead_1.len));
+		ead1->len = (uint32_t)m.message_1_ead_1.len;
 		PRINT_ARRAY("msg1 ead_1", ead1->ptr, ead1->len);
 	}
 	return ok;
@@ -161,19 +161,19 @@ static inline enum err msg2_encode(const struct byte_array *g_y,
 	       ciphertext_2->len);
 
 	/*Encode g_y_ciphertext_2*/
-	m._m2_G_Y_CIPHERTEXT_2.value = g_y_ciphertext_2.ptr;
-	m._m2_G_Y_CIPHERTEXT_2.len = g_y_ciphertext_2.len;
+	m.m2_G_Y_CIPHERTEXT_2.value = g_y_ciphertext_2.ptr;
+	m.m2_G_Y_CIPHERTEXT_2.len = g_y_ciphertext_2.len;
 
 	/*Encode C_R*/
 	PRINT_ARRAY("C_R", c_r->ptr, c_r->len);
 	if (c_r->len == 1 && (c_r->ptr[0] < 0x18 ||
 			      (0x1F < c_r->ptr[0] && c_r->ptr[0] <= 0x37))) {
-		m._m2_C_R_choice = _m2_C_R_int;
-		TRY(decode_int(c_r, &m._m2_C_R_int));
+		m.m2_C_R_choice = m2_C_R_int_c;
+		TRY(decode_int(c_r, &m.m2_C_R_int));
 	} else {
-		m._m2_C_R_choice = _m2_C_R_bstr;
-		m._m2_C_R_bstr.value = c_r->ptr;
-		m._m2_C_R_bstr.len = c_r->len;
+		m.m2_C_R_choice = m2_C_R_bstr_c;
+		m.m2_C_R_bstr.value = c_r->ptr;
+		m.m2_C_R_bstr.len = c_r->len;
 	}
 
 	TRY_EXPECT(cbor_encode_m2(msg2->ptr, msg2->len, &m, &payload_len_out),

@@ -35,7 +35,7 @@ char buffer[MAXLINE];
 CoapPDU *rxPDU;
 
 /*comment this out to use DH keys from the test vectors*/
-//#define USE_RANDOM_EPHEMERAL_DH_KEY
+#define USE_RANDOM_EPHEMERAL_DH_KEY
 
 #ifdef USE_IPV6
 struct sockaddr_in6 client_addr;
@@ -228,12 +228,12 @@ int main()
 
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY
 	uint32_t seed;
-	uint8_t G_Y_random[32];
-	uint8_t Y_random[32];
-	c_r.g_y.ptr = G_Y_random;
-	c_r.g_y.len = sizeof(G_Y_random);
-	c_r.y.ptr = Y_random;
-	c_r.y.len = sizeof(Y_random);
+	BYTE_ARRAY_NEW(Y_random, 32, 32);
+	BYTE_ARRAY_NEW(G_Y_random, 32, 32);
+	c_r.g_y.ptr = G_Y_random.ptr;
+	c_r.g_y.len = G_Y_random.len;
+	c_r.y.ptr = Y_random.ptr;
+	c_r.y.len = Y_random.len;
 #endif
 
 	while (1) {
@@ -242,14 +242,12 @@ int main()
 		/*create a random seed*/
 		FILE *fp;
 		fp = fopen("/dev/urandom", "r");
-		uint32_t G_Y_random_len = sizeof(G_Y_random);
 		uint64_t seed_len =
 			fread((uint8_t *)&seed, 1, sizeof(seed), fp);
 		fclose(fp);
 		PRINT_ARRAY("seed", (uint8_t *)&seed, seed_len);
 
-		TRY(ephemeral_dh_key_gen(P256, seed, Y_random, G_Y_random,
-					 &G_Y_random_len));
+		TRY(ephemeral_dh_key_gen(P256, seed, &Y_random, &G_Y_random));
 		PRINT_ARRAY("secret ephemeral DH key", c_r.g_y.ptr,
 			    c_r.g_y.len);
 		PRINT_ARRAY("public ephemeral DH key", c_r.y.ptr, c_r.y.len);
