@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0 or MIT
  */
 
+#include "zcbor_common.h"
 #include "cbor/edhoc_encode_bstr_type.h"
 #include "cbor/edhoc_decode_bstr_type.h"
-#include "zcbor_common.h"
 
 #include "common/oscore_edhoc_error.h"
 #include "common/print_util.h"

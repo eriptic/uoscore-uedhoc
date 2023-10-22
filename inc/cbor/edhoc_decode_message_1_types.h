@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.6.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -30,7 +30,7 @@ struct message_1 {
 	union {
 		struct {
 			int32_t _SUITES_I__suite_suite[10];
-			uint_fast32_t _SUITES_I__suite_suite_count;
+			size_t _SUITES_I__suite_suite_count;
 		};
 		int32_t _message_1_SUITES_I_int;
 	};
@@ -48,7 +48,7 @@ struct message_1 {
 		_message_1_C_I_bstr,
 	} _message_1_C_I_choice;
 	struct zcbor_string _message_1_ead_1;
-	uint_fast32_t _message_1_ead_1_present;
+	bool _message_1_ead_1_present;
 };
 
 #ifdef __cplusplus
