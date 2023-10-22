@@ -72,9 +72,9 @@ enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src,
 /**
  * @brief   Creates a variable of type byte_array.
  *          In addition a buffer is created to hold the data.
- *          Before the creation of the buffer it is checked if the size of the 
- *          buffer (BUF_SIZE) will be sufficient for the size of the byte_array 
- *          (SIZE). 
+ *          If Variable Length Array (VLA) is NOT used, before the creation of 
+ *          the buffer it is checked if the size of the buffer (BUF_SIZE) will 
+ *          be sufficient for the size of the byte_array (SIZE). 
 */
 #ifdef VLA
 #define BYTE_ARRAY_NEW(NAME, BUF_SIZE, SIZE)                                   \
