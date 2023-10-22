@@ -40,5 +40,3 @@ enum err decode_bstr(const struct byte_array *in, struct byte_array *out)
 
 	return ok;
 }
-
-
