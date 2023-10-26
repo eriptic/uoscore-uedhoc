@@ -101,7 +101,7 @@ static enum err get_local_cred(bool static_dh_auth,
 			       struct byte_array *cred, struct byte_array *pk,
 			       struct byte_array *g)
 {
-	for (uint16_t i = 0; i < cred_array->len; i++) {
+	for (uint32_t i = 0; i < cred_array->len; i++) {
 		if ((cred_array->ptr[i].id_cred.len == ID_cred->len) &&
 		    (0 == memcmp(cred_array->ptr[i].id_cred.ptr, ID_cred->ptr,
 				 ID_cred->len))) {
