@@ -55,23 +55,23 @@ static inline enum err msg2_parse(struct byte_array *msg2,
 	struct m2 m;
 
 	TRY_EXPECT(cbor_decode_m2(msg2->ptr, msg2->len, &m, &decode_len), 0);
-	TRY(_memcpy_s(g_y->ptr, g_y->len, m.m2_G_Y_CIPHERTEXT_2.value,
+	TRY(_memcpy_s(g_y->ptr, g_y->len, m._m2_G_Y_CIPHERTEXT_2.value,
 		      g_y->len));
 	PRINT_ARRAY("g_y", g_y->ptr, g_y->len);
 
 	TRY(_memcpy_s(ciphertext2->ptr, ciphertext2->len,
-		      m.m2_G_Y_CIPHERTEXT_2.value + g_y->len,
-		      (uint32_t)(m.m2_G_Y_CIPHERTEXT_2.len - g_y->len)));
+		      m._m2_G_Y_CIPHERTEXT_2.value + g_y->len,
+		      (uint32_t)(m._m2_G_Y_CIPHERTEXT_2.len - g_y->len)));
 
-	ciphertext2->len = (uint32_t)m.m2_G_Y_CIPHERTEXT_2.len - g_y->len;
+	ciphertext2->len = (uint32_t)m._m2_G_Y_CIPHERTEXT_2.len - g_y->len;
 	PRINT_ARRAY("ciphertext2", ciphertext2->ptr, ciphertext2->len);
 
-	if (m.m2_C_R_choice == m2_C_R_int_c) {
-		TRY(encode_int(&m.m2_C_R_int, 1, c_r));
+	if (m._m2_C_R_choice == _m2_C_R_int) {
+		TRY(encode_int(&m._m2_C_R_int, 1, c_r));
 	} else {
-		TRY(_memcpy_s(c_r->ptr, c_r->len, m.m2_C_R_bstr.value,
-			      (uint32_t)m.m2_C_R_bstr.len));
-		c_r->len = (uint32_t)m.m2_C_R_bstr.len;
+		TRY(_memcpy_s(c_r->ptr, c_r->len, m._m2_C_R_bstr.value,
+			      (uint32_t)m._m2_C_R_bstr.len));
+		c_r->len = (uint32_t)m._m2_C_R_bstr.len;
 	}
 	PRINT_ARRAY("C_R_raw", c_r->ptr, c_r->len);
 
@@ -84,46 +84,46 @@ enum err msg1_gen(const struct edhoc_initiator_context *c,
 	struct message_1 m1;
 
 	/*METHOD_CORR*/
-	m1.message_1_METHOD = (int32_t)c->method;
+	m1._message_1_METHOD = (int32_t)c->method;
 
 	/*SUITES_I*/
 	if (c->suites_i.len == 1) {
 		/* only one suite, encode into int */
-		m1.message_1_SUITES_I_choice = message_1_SUITES_I_int_c;
-		m1.message_1_SUITES_I_int = c->suites_i.ptr[0];
+		m1._message_1_SUITES_I_choice = _message_1_SUITES_I_int;
+		m1._message_1_SUITES_I_int = c->suites_i.ptr[0];
 	} else if (c->suites_i.len > 1) {
 		/* more than one suites, encode into array */
-		m1.message_1_SUITES_I_choice = SUITES_I_suite_l_c;
-		m1.SUITES_I_suite_l_suite_count = c->suites_i.len;
+		m1._message_1_SUITES_I_choice = _SUITES_I__suite;
+		m1._SUITES_I__suite_suite_count = c->suites_i.len;
 		for (uint32_t i = 0; i < c->suites_i.len; i++) {
-			m1.SUITES_I_suite_l_suite[i] = c->suites_i.ptr[i];
+			m1._SUITES_I__suite_suite[i] = c->suites_i.ptr[i];
 		}
 	}
 
 	/* G_X ephemeral public key */
-	m1.message_1_G_X.value = c->g_x.ptr;
-	m1.message_1_G_X.len = c->g_x.len;
+	m1._message_1_G_X.value = c->g_x.ptr;
+	m1._message_1_G_X.len = c->g_x.len;
 
 	/* C_I connection ID  of the initiator*/
 	PRINT_ARRAY("C_I", c->c_i.ptr, c->c_i.len);
 	if (c->c_i.len == 1 &&
 	    ((0x00 <= c->c_i.ptr[0] && c->c_i.ptr[0] < 0x18) ||
 	     (0x1F < c->c_i.ptr[0] && c->c_i.ptr[0] <= 0x37))) {
-		m1.message_1_C_I_choice = message_1_C_I_int_c;
-		TRY(decode_int(&c->c_i, &m1.message_1_C_I_int));
+		m1._message_1_C_I_choice = _message_1_C_I_int;
+		TRY(decode_int(&c->c_i, &m1._message_1_C_I_int));
 	} else {
-		m1.message_1_C_I_choice = message_1_C_I_bstr_c;
-		m1.message_1_C_I_bstr.value = c->c_i.ptr;
-		m1.message_1_C_I_bstr.len = c->c_i.len;
+		m1._message_1_C_I_choice = _message_1_C_I_bstr;
+		m1._message_1_C_I_bstr.value = c->c_i.ptr;
+		m1._message_1_C_I_bstr.len = c->c_i.len;
 	}
 
 	if (c->ead_1.len != 0) {
 		/* ead_1 unprotected opaque auxiliary data */
-		m1.message_1_ead_1.value = c->ead_1.ptr;
-		m1.message_1_ead_1.len = c->ead_1.len;
-		m1.message_1_ead_1_present = true;
+		m1._message_1_ead_1.value = c->ead_1.ptr;
+		m1._message_1_ead_1.len = c->ead_1.len;
+		m1._message_1_ead_1_present = true;
 	} else {
-		m1.message_1_ead_1_present = false;
+		m1._message_1_ead_1_present = false;
 	}
 
 	size_t payload_len_out;

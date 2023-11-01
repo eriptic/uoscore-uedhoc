@@ -254,35 +254,36 @@ enum err cert_c509_verify(struct const_byte_array *cert,
 	TRY_EXPECT(cbor_decode_cert(cert->ptr, cert->len, &c, &decode_len), 0);
 
 	PRINT_MSG("CBOR certificate parsed.\n");
-	PRINTF("Certificate type: %d\n", c.cert_type);
-	PRINT_ARRAY("issuer", c.cert_issuer.value, (uint32_t)c.cert_issuer.len);
-	PRINTF("validity_not_before: %d\n", c.cert_validity_not_before);
-	PRINTF("validity_not_after: %d\n", c.cert_validity_not_after);
-	PRINT_ARRAY("subject", c.cert_subject.value,
-		    (uint32_t)c.cert_subject.len);
-	PRINT_ARRAY("PK", c.cert_pk.value, (uint32_t)c.cert_pk.len);
-	PRINTF("extensions: %d\n", c.cert_extensions);
+	PRINTF("Certificate type: %d\n", c._cert_type);
+	PRINT_ARRAY("issuer", c._cert_issuer.value,
+		    (uint32_t)c._cert_issuer.len);
+	PRINTF("validity_not_before: %d\n", c._cert_validity_not_before);
+	PRINTF("validity_not_after: %d\n", c._cert_validity_not_after);
+	PRINT_ARRAY("subject", c._cert_subject.value,
+		    (uint32_t)c._cert_subject.len);
+	PRINT_ARRAY("PK", c._cert_pk.value, (uint32_t)c._cert_pk.len);
+	PRINTF("extensions: %d\n", c._cert_extensions);
 	PRINTF("issuer_signature_algorithm: %d\n",
-	       c.cert_issuer_signature_algorithm);
-	PRINT_ARRAY("Signature", c.cert_signature.value,
-		    (uint32_t)c.cert_signature.len);
+	       c._cert_issuer_signature_algorithm);
+	PRINT_ARRAY("Signature", c._cert_signature.value,
+		    (uint32_t)c._cert_signature.len);
 
 	/*get the CA's public key*/
 	struct byte_array root_pk;
-	TRY(ca_pk_get(cred_array, c.cert_issuer.value, &root_pk));
+	TRY(ca_pk_get(cred_array, c._cert_issuer.value, &root_pk));
 
 	/*verify the certificates signature*/
 	struct const_byte_array m = BYTE_ARRAY_INIT(
-		cert->ptr, cert->len - 2 - (uint32_t)c.cert_signature.len);
+		cert->ptr, cert->len - 2 - (uint32_t)c._cert_signature.len);
 	struct const_byte_array sgn = BYTE_ARRAY_INIT(
-		c.cert_signature.value, (uint32_t)c.cert_signature.len);
+		c._cert_signature.value, (uint32_t)c._cert_signature.len);
 
-	TRY(verify((enum sign_alg)c.cert_issuer_signature_algorithm, &root_pk,
+	TRY(verify((enum sign_alg)c._cert_issuer_signature_algorithm, &root_pk,
 		   &m, &sgn, verified));
 
-	TRY(_memcpy_s(pk->ptr, pk->len, c.cert_pk.value,
-		      (uint32_t)c.cert_pk.len));
-	pk->len = (uint32_t)c.cert_pk.len;
+	TRY(_memcpy_s(pk->ptr, pk->len, c._cert_pk.value,
+		      (uint32_t)c._cert_pk.len));
+	pk->len = (uint32_t)c._cert_pk.len;
 
 	return ok;
 }
