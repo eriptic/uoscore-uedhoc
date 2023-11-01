@@ -380,3 +380,13 @@ void test_initiator_responder_interaction(uint8_t vec_num)
 	zassert_mem_equal__(I_master_salt.ptr, R_master_salt.ptr,
 			    R_master_salt.len, "wrong master_salt");
 }
+
+void t_initiator_responder_interaction1()
+{
+	test_initiator_responder_interaction(1);
+}
+
+void t_initiator_responder_interaction2()
+{
+	test_initiator_responder_interaction(2);
+}

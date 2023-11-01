@@ -52,4 +52,7 @@ void test_exporter(void);
  * @param		vec_num the test vector number
  */
 void test_initiator_responder_interaction(uint8_t vec_num);
+
+void t_initiator_responder_interaction1();
+void t_initiator_responder_interaction2();
 #endif
