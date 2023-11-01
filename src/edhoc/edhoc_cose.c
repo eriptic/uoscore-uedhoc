@@ -25,11 +25,11 @@ enum err cose_enc_structure_encode(const struct byte_array *context,
 {
 	struct edhoc_enc_structure enc_structure;
 
-	enc_structure.edhoc_enc_structure_context.value = context->ptr;
-	enc_structure.edhoc_enc_structure_context.len = context->len;
-	enc_structure.edhoc_enc_structure_external_aad.value =
+	enc_structure._edhoc_enc_structure_context.value = context->ptr;
+	enc_structure._edhoc_enc_structure_context.len = context->len;
+	enc_structure._edhoc_enc_structure_external_aad.value =
 		external_aad->ptr;
-	enc_structure.edhoc_enc_structure_external_aad.len = external_aad->len;
+	enc_structure._edhoc_enc_structure_external_aad.len = external_aad->len;
 
 	/* NULL protected with zero size is acceptable from EDHOC point of view,
 	 * but CBOR encoder does not accept NULL as input argument.
@@ -44,15 +44,15 @@ enum err cose_enc_structure_encode(const struct byte_array *context,
 		if (0 != protected->len) {
 			return wrong_parameter;
 		} else {
-			enc_structure.edhoc_enc_structure_protected.value =
+			enc_structure._edhoc_enc_structure_protected.value =
 				(const uint8_t *)&dummy_buffer;
 		}
 	} else {
-		enc_structure.edhoc_enc_structure_protected.value =
+		enc_structure._edhoc_enc_structure_protected.value =
 			protected->ptr;
 	}
 
-	enc_structure.edhoc_enc_structure_protected.len = protected->len;
+	enc_structure._edhoc_enc_structure_protected.len = protected->len;
 
 	size_t payload_len_out;
 	TRY_EXPECT(cbor_encode_edhoc_enc_structure(out->ptr, out->len,
@@ -71,14 +71,14 @@ enum err cose_sig_structure_encode(const struct byte_array *context,
 {
 	struct sig_structure sig_structure;
 
-	sig_structure.sig_structure_context.value = context->ptr;
-	sig_structure.sig_structure_context.len = context->len;
-	sig_structure.sig_structure_protected.value = protected->ptr;
-	sig_structure.sig_structure_protected.len = protected->len;
-	sig_structure.sig_structure_external_aad.value = external_aad->ptr;
-	sig_structure.sig_structure_external_aad.len = external_aad->len;
-	sig_structure.sig_structure_payload.value = payload->ptr;
-	sig_structure.sig_structure_payload.len = payload->len;
+	sig_structure._sig_structure_context.value = context->ptr;
+	sig_structure._sig_structure_context.len = context->len;
+	sig_structure._sig_structure_protected.value = protected->ptr;
+	sig_structure._sig_structure_protected.len = protected->len;
+	sig_structure._sig_structure_external_aad.value = external_aad->ptr;
+	sig_structure._sig_structure_external_aad.len = external_aad->len;
+	sig_structure._sig_structure_payload.value = payload->ptr;
+	sig_structure._sig_structure_payload.len = payload->len;
 
 	size_t payload_len_out;
 	TRY_EXPECT(cbor_encode_sig_structure(out->ptr, out->len, &sig_structure,

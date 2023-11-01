@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -23,9 +23,9 @@ static bool encode_edhoc_enc_structure(
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = (((zcbor_list_start_encode(state, 3) && ((((zcbor_tstr_encode(state, (&(*input).edhoc_enc_structure_context))))
-	&& ((zcbor_bstr_encode(state, (&(*input).edhoc_enc_structure_protected))))
-	&& ((zcbor_bstr_encode(state, (&(*input).edhoc_enc_structure_external_aad))))) || (zcbor_list_map_end_force_encode(state), false)) && zcbor_list_end_encode(state, 3))));
+	bool tmp_result = (((zcbor_list_start_encode(state, 3) && ((((zcbor_tstr_encode(state, (&(*input)._edhoc_enc_structure_context))))
+	&& ((zcbor_bstr_encode(state, (&(*input)._edhoc_enc_structure_protected))))
+	&& ((zcbor_bstr_encode(state, (&(*input)._edhoc_enc_structure_external_aad))))) || (zcbor_list_map_end_force_encode(state), false)) && zcbor_list_end_encode(state, 3))));
 
 	if (!tmp_result)
 		zcbor_trace();
@@ -42,6 +42,20 @@ int cbor_encode_edhoc_enc_structure(
 {
 	zcbor_state_t states[3];
 
-	return zcbor_entry_function(payload, payload_len, (void *)input, payload_len_out, states,
-		(zcbor_decoder_t *)encode_edhoc_enc_structure, sizeof(states) / sizeof(zcbor_state_t), 1);
+	zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), payload, payload_len, 1);
+
+	bool ret = encode_edhoc_enc_structure(states, input);
+
+	if (ret && (payload_len_out != NULL)) {
+		*payload_len_out = MIN(payload_len,
+				(size_t)states[0].payload - (size_t)payload);
+	}
+
+	if (!ret) {
+		int err = zcbor_pop_error(states);
+
+		zcbor_print("Return error: %d\r\n", err);
+		return (err == ZCBOR_SUCCESS) ? ZCBOR_ERR_UNKNOWN : err;
+	}
+	return ZCBOR_SUCCESS;
 }

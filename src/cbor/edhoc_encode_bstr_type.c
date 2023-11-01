@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -40,6 +40,20 @@ int cbor_encode_bstr_type_b_str(
 {
 	zcbor_state_t states[2];
 
-	return zcbor_entry_function(payload, payload_len, (void *)input, payload_len_out, states,
-		(zcbor_decoder_t *)encode_bstr_type_b_str, sizeof(states) / sizeof(zcbor_state_t), 1);
+	zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), payload, payload_len, 1);
+
+	bool ret = encode_bstr_type_b_str(states, input);
+
+	if (ret && (payload_len_out != NULL)) {
+		*payload_len_out = MIN(payload_len,
+				(size_t)states[0].payload - (size_t)payload);
+	}
+
+	if (!ret) {
+		int err = zcbor_pop_error(states);
+
+		zcbor_print("Return error: %d\r\n", err);
+		return (err == ZCBOR_SUCCESS) ? ZCBOR_ERR_UNKNOWN : err;
+	}
+	return ZCBOR_SUCCESS;
 }
