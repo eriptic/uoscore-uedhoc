@@ -90,17 +90,9 @@
 #define MSG12_MAX MAX(MSG_1_SIZE, MSG_2_SIZE)
 #define MSG34_MAX MAX(MSG_3_SIZE, MSG_4_SIZE)
 #define MSG_MAX_SIZE MAX(MSG12_MAX, MSG34_MAX)
-
-#define PLAINTEXT23_MAX_SIZE                                                   \
-	(((PLAINTEXT2_SIZE) > (PLAINTEXT3_SIZE)) ? (PLAINTEXT2_SIZE) :         \
-						   (PLAINTEXT3_SIZE))
-
-#define CRED_MAX_SIZE                                                          \
-	(((CRED_R_SIZE) > (CRED_I_SIZE)) ? (CRED_R_SIZE) : (CRED_I_SIZE))
-
-#define ID_CRED_MAX_SIZE                                                       \
-	(((ID_CRED_R_SIZE) > (ID_CRED_I_SIZE)) ? (ID_CRED_R_SIZE) :            \
-						 (ID_CRED_I_SIZE))
+#define PLAINTEXT23_MAX_SIZE MAX(PLAINTEXT2_SIZE, PLAINTEXT3_SIZE)
+#define CRED_MAX_SIZE MAX(CRED_R_SIZE, CRED_I_SIZE)
+#define ID_CRED_MAX_SIZE MAX(ID_CRED_R_SIZE, ID_CRED_I_SIZE)
 
 #define SIG_STRUCT_SIZE                                                        \
 	((2 + HASH_SIZE) + COSE_SIGN1_STR_LEN + ID_CRED_MAX_SIZE +             \
