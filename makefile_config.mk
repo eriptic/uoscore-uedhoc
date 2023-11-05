@@ -27,12 +27,16 @@ OPT = -O0
 ################################################################################
 DEBUG_PRINT += -DDEBUG_PRINT
 
+################################################################################
+# Use Address Sanitizer, e.g. with native_posix
+################################################################################
+#ASAN += -DASAN
 
 ################################################################################
 # Unit testing
 ################################################################################
 # Uncomment this to enable building the unit tests
-DUNIT_TEST += -DUNIT_TEST
+UNIT_TEST += -DUNIT_TEST
 
 
 ################################################################################
@@ -53,7 +57,7 @@ CBOR_ENGINE += -DZCBOR
 ################################################################################
 # In deployments where no protected application message is sent from the 
 # Responder to the Initiator, message_4 MUST be used.
-FEATURES += -DMESSAGE_4
+#FEATURES += -DMESSAGE_4
 
 # If EAD is not used set its buffer size to 0
 FEATURES += -DEAD_SIZE=0

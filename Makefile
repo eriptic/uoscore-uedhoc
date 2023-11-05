@@ -81,7 +81,7 @@ EXTENDED_CFLAGS += $(DEBUG_PRINT)
 EXTENDED_CFLAGS += $(CBOR_ENGINE)
 EXTENDED_CFLAGS += $(OSCORE_NVM_SUPPORT)
 EXTENDED_CFLAGS += $(CRYPTO_ENGINE)
-EXTENDED_CFLAGS += $(DUNIT_TEST)
+EXTENDED_CFLAGS += $(UNIT_TEST)
 
 # Unit tests require NVM support regardless of user settings
 ifeq ($(findstring UNIT_TEST,$(DUNIT_TEST)),UNIT_TEST)
@@ -147,11 +147,10 @@ EXTENDED_CFLAGS += -Wconversion
 #EXTENDED_CFLAGS += -Werror
 endif
 
-# use AddressSanitizer to find memory bugs
-# comment this out for better speed
+ifeq ($(findstring ASAN,$(ASAN)),ASAN)
 EXTENDED_CFLAGS += -fsanitize=address -fomit-frame-pointer
-CXXFLAGS += -fsanitize=address -fomit-frame-pointer
-LDFLAGS += -fsanitize=address -static-libasan
+endif
+
 
 $(info    EXTENDED_CFLAGS are $(EXTENDED_CFLAGS))
 ################################################################################

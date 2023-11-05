@@ -5,7 +5,9 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project(auto_test)
 
+if(COMMAND_LINE_FLAGS MATCHES "ASAN")
 target_compile_options(app PRIVATE -fsanitize=address -fomit-frame-pointer)
+endif()
 
 FILE(GLOB app_sources
   *.c
