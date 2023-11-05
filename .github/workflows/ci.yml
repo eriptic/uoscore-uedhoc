@@ -52,7 +52,7 @@ jobs:
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
            cd test/
-           ./test_build_options.sh
+           bash test_build_options.sh
 
       - name: Archive static lib
         uses: actions/upload-artifact@v2
