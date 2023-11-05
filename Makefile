@@ -122,7 +122,7 @@ EXTENDED_CFLAGS += -Wconversion
 EXTENDED_CFLAGS += -Wpedantic
 #EXTENDED_CFLAGS += -Werror
 
-#Clang warning flahs
+#Clang warning flags
 else ifeq ($(findstring clang,$(CC)),clang)
 EXTENDED_CFLAGS += -Wcast-qual
 EXTENDED_CFLAGS += -Wconversion
@@ -144,9 +144,9 @@ endif
 
 # use AddressSanitizer to find memory bugs
 # comment this out for better speed
-#EXTENDED_CFLAGS += -fsanitize=address -fno-omit-frame-pointer
-#CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
-#LDFLAGS += -fsanitize=address -static-libasan
+EXTENDED_CFLAGS += -fsanitize=address -fomit-frame-pointer
+CXXFLAGS += -fsanitize=address -fomit-frame-pointer
+LDFLAGS += -fsanitize=address -static-libasan
 
 $(info    EXTENDED_CFLAGS are $(EXTENDED_CFLAGS))
 ################################################################################
