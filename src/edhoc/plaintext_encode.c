@@ -38,7 +38,7 @@ enum err id_cred2kid(const struct byte_array *id_cred, struct byte_array *kid)
 				kid->ptr, kid->len,
 				&map._id_cred_x_map_kid._id_cred_x_map_kid_int,
 				&payload_len_out),
-			true);
+			ZCBOR_SUCCESS);
 		kid->len = (uint32_t)payload_len_out;
 	} else {
 		kid->len = 0;
