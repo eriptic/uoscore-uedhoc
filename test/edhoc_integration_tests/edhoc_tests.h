@@ -51,7 +51,7 @@ void test_exporter(void);
  * 				results with pre computed values.  
  * @param		vec_num the test vector number
  */
-void test_initiator_responder_interaction(uint8_t vec_num);
+void test_initiator_responder_interaction(int vec_num);
 
 void t_initiator_responder_interaction1();
 void t_initiator_responder_interaction2();

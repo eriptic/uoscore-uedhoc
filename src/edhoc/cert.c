@@ -208,7 +208,6 @@ static enum err ca_pk_get(const struct cred_array *cred_array,
 
 		PRINT_ARRAY("cred_array[i].ca.ptr", cred_array->ptr[i].ca.ptr,
 			    cred_array->ptr[i].ca.len);
-		PRINT_ARRAY("issuer", issuer, cred_array->ptr[i].ca.len);
 
 		mbedtls_x509_crt m_cert;
 		mbedtls_x509_crt_init(&m_cert);

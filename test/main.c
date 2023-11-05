@@ -60,7 +60,7 @@
 
 // in order to execute only a specific tes set this macro to a specific
 // test macro and comment out EXECUTE_ALL_TESTS
-#define EXECUTE_ONLY_TEST TEST_EDHOC_EXPORTER
+#define EXECUTE_ONLY_TEST T10_OSCORE_CLIENT_SERVER_AFTER_REBOOT
 
 /**
  * @brief       This function allows to skip a given test if only one other test 

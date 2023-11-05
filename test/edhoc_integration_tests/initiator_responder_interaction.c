@@ -151,8 +151,8 @@ void thread_initiator(void *vec_num, void *dummy2, void *dummy3)
 	ARG_UNUSED(dummy3);
 
 	PRINT_MSG("Initiator thread started!\n");
+	int vec_num_i = *((int *)vec_num) - 1;
 
-	uint8_t vec_num_i = *((int *)vec_num) - 1;
 	enum err r;
 
 	struct other_party_cred cred_r;
@@ -251,7 +251,7 @@ void thread_responder(void *vec_num, void *dummy2, void *dummy3)
 
 	PRINT_MSG("Responder thread started!\n");
 	enum err r;
-	uint8_t vec_num_i = *((int *)vec_num) - 1;
+	int vec_num_i = *((int *)vec_num) - 1;
 
 	/* test vector inputs */
 	struct other_party_cred cred_i;
@@ -334,7 +334,7 @@ end:
 	PRINTF("An error has occurred. Error code: %d\n", r);
 }
 
-void test_initiator_responder_interaction(uint8_t vec_num)
+void test_initiator_responder_interaction(int vec_num)
 {
 	PRINT_MSG("start initiator_responder_interaction\n");
 

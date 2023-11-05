@@ -212,7 +212,7 @@ enum err options_deserialize(struct byte_array *in_data,
 		/* Update parameters*/
 		i = (uint16_t)(i + temp_option_header_len + temp_option_len);
 		temp_options_ptr += temp_option_len;
-		if (MAX_OPTION_COUNT > temp_options_count) {
+		if ((MAX_OPTION_COUNT - 1) > temp_options_count) {
 			temp_options_count++;
 		} else {
 			return too_many_options;
