@@ -85,11 +85,14 @@ enum err tx(void *sock, struct byte_array *data);
 
 /**
  * @brief   The user should call inside this function its receive 
- *          function and copy the received data in the buffer <data>.
- *          The length of the buffer <data> must be 
- *          checked before copying into it by using <data_len>. 
- *          After copying the length of the received data should be written 
- *          in <data_len>.
+ *          function. The user should copy the received data in \p data.
+ *          
+ *          THE USER MUST MAKE SURE THAT HE/SHE IS NOT WRITING DATA OUTSIDE THE 
+ *          RECEIVE BUFFER, I.E., THE LENGTH OF THE RECEIVED DATA IS SMALLER 
+ *          THAN \p data->len. 
+ * 
+ *          After copying, the length of the received data should be written 
+ *          in \p data->len.
  *
  * 
  * @param   sock a pointer used to identify the rx chanel, 
