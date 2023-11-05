@@ -5,6 +5,10 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project(auto_test)
 
+if(COMMAND_LINE_FLAGS MATCHES "ASAN")
+target_compile_options(app PRIVATE -fsanitize=address -fomit-frame-pointer)
+endif()
+
 FILE(GLOB app_sources
   *.c
   edhoc_integration_tests/*.c
@@ -41,8 +45,15 @@ zephyr_get_system_include_directories_for_lang_as_string(C system_includes)
 zephyr_get_compile_definitions_for_lang_as_string(C definitions)
 zephyr_get_compile_options_for_lang_as_string(C options)
 
+#message("C includes is: ${includes}")
+#message("C system_includes is: ${system_includes}")
+#message("C definitions is: ${definitions}")
+#message("C options is: ${options}")
+
+# To provide flags with west use COMMAND_LINE_FLAGS, e.g.:
+# west build -b native_posix -- -DCOMMAND_LINE_FLAGS="-DVLA"
 set(external_project_cflags
-  "${includes} ${definitions} ${options} ${system_includes}"
+  "${COMMAND_LINE_FLAGS} ${includes} ${definitions} ${options} ${system_includes}"
 )
 
 include(ExternalProject)

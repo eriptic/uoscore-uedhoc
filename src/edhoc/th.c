@@ -42,22 +42,22 @@ static inline enum err th2_input_encode(struct byte_array *hash_msg1,
 	struct th2 th2;
 
 	/*Encode hash_msg1*/
-	th2.th2_hash_msg1.value = hash_msg1->ptr;
-	th2.th2_hash_msg1.len = hash_msg1->len;
+	th2._th2_hash_msg1.value = hash_msg1->ptr;
+	th2._th2_hash_msg1.len = hash_msg1->len;
 
 	/*Encode G_Y*/
-	th2.th2_G_Y.value = g_y->ptr;
-	th2.th2_G_Y.len = g_y->len;
+	th2._th2_G_Y.value = g_y->ptr;
+	th2._th2_G_Y.len = g_y->len;
 
 	/*Encode C_R as int or byte*/
 	if (c_r->len == 1 && (c_r->ptr[0] < 0x18 ||
 			      (0x1F < c_r->ptr[0] && c_r->ptr[0] <= 0x37))) {
-		th2.th2_C_R_choice = th2_C_R_int_c;
-		TRY(decode_int(c_r, &th2.th2_C_R_int));
+		th2._th2_C_R_choice = _th2_C_R_int;
+		TRY(decode_int(c_r, &th2._th2_C_R_int));
 	} else {
-		th2.th2_C_R_choice = th2_C_R_bstr_c;
-		th2.th2_C_R_bstr.value = c_r->ptr;
-		th2.th2_C_R_bstr.len = c_r->len;
+		th2._th2_C_R_choice = _th2_C_R_bstr;
+		th2._th2_C_R_bstr.value = c_r->ptr;
+		th2._th2_C_R_bstr.len = c_r->len;
 	}
 	TRY_EXPECT(cbor_encode_th2(th2_input->ptr, th2_input->len, &th2,
 				   &payload_len_out),

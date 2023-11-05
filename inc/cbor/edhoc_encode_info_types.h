@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -26,9 +26,9 @@ extern "C" {
 #define DEFAULT_MAX_QTY 3
 
 struct info {
-	uint32_t info_label;
-	struct zcbor_string info_context;
-	uint32_t info_length;
+	uint32_t _info_label;
+	struct zcbor_string _info_context;
+	uint32_t _info_length;
 };
 
 #ifdef __cplusplus

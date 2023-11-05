@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -23,11 +23,11 @@ static bool encode_th2(
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = (((((zcbor_bstr_encode(state, (&(*input).th2_G_Y))))
-	&& ((((*input).th2_C_R_choice == th2_C_R_bstr_c) ? ((zcbor_bstr_encode(state, (&(*input).th2_C_R_bstr))))
-	: (((*input).th2_C_R_choice == th2_C_R_int_c) ? ((zcbor_int32_encode(state, (&(*input).th2_C_R_int))))
+	bool tmp_result = (((((zcbor_bstr_encode(state, (&(*input)._th2_G_Y))))
+	&& ((((*input)._th2_C_R_choice == _th2_C_R_bstr) ? ((zcbor_bstr_encode(state, (&(*input)._th2_C_R_bstr))))
+	: (((*input)._th2_C_R_choice == _th2_C_R_int) ? ((zcbor_int32_encode(state, (&(*input)._th2_C_R_int))))
 	: false)))
-	&& ((zcbor_bstr_encode(state, (&(*input).th2_hash_msg1)))))));
+	&& ((zcbor_bstr_encode(state, (&(*input)._th2_hash_msg1)))))));
 
 	if (!tmp_result)
 		zcbor_trace();
@@ -44,6 +44,20 @@ int cbor_encode_th2(
 {
 	zcbor_state_t states[3];
 
-	return zcbor_entry_function(payload, payload_len, (void *)input, payload_len_out, states,
-		(zcbor_decoder_t *)encode_th2, sizeof(states) / sizeof(zcbor_state_t), 3);
+	zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), payload, payload_len, 3);
+
+	bool ret = encode_th2(states, input);
+
+	if (ret && (payload_len_out != NULL)) {
+		*payload_len_out = MIN(payload_len,
+				(size_t)states[0].payload - (size_t)payload);
+	}
+
+	if (!ret) {
+		int err = zcbor_pop_error(states);
+
+		zcbor_print("Return error: %d\r\n", err);
+		return (err == ZCBOR_SUCCESS) ? ZCBOR_ERR_UNKNOWN : err;
+	}
+	return ZCBOR_SUCCESS;
 }

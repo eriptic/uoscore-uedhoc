@@ -80,7 +80,7 @@ EXTENDED_CFLAGS += $(OPT)
 EXTENDED_CFLAGS += $(DEBUG_PRINT)
 EXTENDED_CFLAGS += $(CBOR_ENGINE)
 EXTENDED_CFLAGS += $(CRYPTO_ENGINE)
-EXTENDED_CFLAGS += $(DUNIT_TEST)
+EXTENDED_CFLAGS += $(UNIT_TEST)
 
 
 #add include paths
@@ -122,7 +122,7 @@ EXTENDED_CFLAGS += -Wconversion
 EXTENDED_CFLAGS += -Wpedantic
 #EXTENDED_CFLAGS += -Werror
 
-#Clang warning flahs
+#Clang warning flags
 else ifeq ($(findstring clang,$(CC)),clang)
 EXTENDED_CFLAGS += -Wcast-qual
 EXTENDED_CFLAGS += -Wconversion
@@ -142,11 +142,10 @@ EXTENDED_CFLAGS += -Wconversion
 #EXTENDED_CFLAGS += -Werror
 endif
 
-# use AddressSanitizer to find memory bugs
-# comment this out for better speed
-#EXTENDED_CFLAGS += -fsanitize=address -fno-omit-frame-pointer
-#CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
-#LDFLAGS += -fsanitize=address -static-libasan
+ifeq ($(findstring ASAN,$(ASAN)),ASAN)
+EXTENDED_CFLAGS += -fsanitize=address -fomit-frame-pointer
+endif
+
 
 $(info    EXTENDED_CFLAGS are $(EXTENDED_CFLAGS))
 ################################################################################

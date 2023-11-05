@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -26,24 +26,24 @@ extern "C" {
 #define DEFAULT_MAX_QTY 3
 
 struct oscore_info {
-	struct zcbor_string oscore_info_id;
+	struct zcbor_string _oscore_info_id;
 	union {
-		struct zcbor_string oscore_info_id_context_bstr;
+		struct zcbor_string _oscore_info_id_context_bstr;
 	};
 	enum {
-		oscore_info_id_context_bstr_c,
-		oscore_info_id_context_nil_c,
-	} oscore_info_id_context_choice;
+		_oscore_info_id_context_bstr,
+		_oscore_info_id_context_nil,
+	} _oscore_info_id_context_choice;
 	union {
-		int32_t oscore_info_alg_aead_int;
-		struct zcbor_string oscore_info_alg_aead_tstr;
+		int32_t _oscore_info_alg_aead_int;
+		struct zcbor_string _oscore_info_alg_aead_tstr;
 	};
 	enum {
-		oscore_info_alg_aead_int_c,
-		oscore_info_alg_aead_tstr_c,
-	} oscore_info_alg_aead_choice;
-	struct zcbor_string oscore_info_type;
-	uint32_t oscore_info_L;
+		_oscore_info_alg_aead_int,
+		_oscore_info_alg_aead_tstr,
+	} _oscore_info_alg_aead_choice;
+	struct zcbor_string _oscore_info_type;
+	uint32_t _oscore_info_L;
 };
 
 #ifdef __cplusplus

@@ -24,7 +24,7 @@ enum err create_hkdf_info(uint8_t label, struct byte_array *context,
 {
 	struct info info;
 
-	info.info_label = label;
+	info._info_label = label;
 
 	/* NULL context with zero size is acceptable from EDHOC point of view,
 	 * but CBOR encoder does not accept NULL as input argument.
@@ -39,16 +39,16 @@ enum err create_hkdf_info(uint8_t label, struct byte_array *context,
 		if (0 != context->len) {
 			return wrong_parameter;
 		} else {
-			info.info_context.value =
+			info._info_context.value =
 				(const uint8_t *)&dummy_buffer;
 		}
 	} else {
-		info.info_context.value = context->ptr;
+		info._info_context.value = context->ptr;
 	}
 
-	info.info_context.len = context->len;
+	info._info_context.len = context->len;
 
-	info.info_length = okm_len;
+	info._info_length = okm_len;
 
 	size_t payload_len_out = 0;
 	TRY_EXPECT(cbor_encode_info(out->ptr, out->len, &info,
