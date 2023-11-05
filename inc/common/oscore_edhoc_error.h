@@ -28,6 +28,7 @@ enum err {
 	not_implemented = 8,
 	vla_insufficient_size = 9,
 
+
 	/*EDHOC specific errors*/
 	/*todo implement error messages*/
 	error_message_received = 101,

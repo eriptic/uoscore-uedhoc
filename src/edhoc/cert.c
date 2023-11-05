@@ -499,5 +499,5 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 	return rv;
 
 #endif /* MBEDTLS */
-	return ok;
+
 }
