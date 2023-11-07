@@ -276,9 +276,15 @@ enum err msg3_process(struct edhoc_responder_context *c,
 
 	PRINTF("PLAINTEXT3_SIZE: %d\n", PLAINTEXT3_SIZE);
 	PRINTF("ctxt3.len: %d\n", ctxt3.len);
+#if defined(_WIN32)
+	BYTE_ARRAY_NEW(ptxt3,
+		       PLAINTEXT3_SIZE + 16, // 16 is max aead mac length
+		       ctxt3.len);
+#else
 	BYTE_ARRAY_NEW(ptxt3,
 		       PLAINTEXT3_SIZE + get_aead_mac_len(rc->suite.edhoc_aead),
 		       ctxt3.len);
+#endif
 
 	TRY(ciphertext_decrypt_split(CIPHERTEXT3, &rc->suite, &id_cred_i,
 				     &sign_or_mac, &rc->ead, &rc->prk_3e2m,

@@ -50,6 +50,7 @@ CBOR_ENGINE += -DZCBOR
 # RAM optimization
 ################################################################################
 # Compute the length of buffers at runtime (variable length array VLA)
+# Please note that: we do not support this feature under Windows with MSVC (lack of support for VLA).
 #FEATURES += -DVLA
 
 ################################################################################
