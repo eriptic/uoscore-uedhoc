@@ -75,6 +75,7 @@ EXTENDED_CFLAGS = $(filter-out $(FILTERED_CFLAGS), $(CFLAGS))
 
 #add options form configuration file 
 EXTENDED_CFLAGS += $(FEATURES)
+EXTENDED_CFLAGS += $(FEATURES)
 EXTENDED_CFLAGS += $(ARCH)
 EXTENDED_CFLAGS += $(OPT)
 EXTENDED_CFLAGS += $(DEBUG_PRINT)
@@ -145,6 +146,10 @@ EXTENDED_CFLAGS += -Wpedantic
 EXTENDED_CFLAGS += -Wstack-exhausted
 EXTENDED_CFLAGS += -Wconversion
 #EXTENDED_CFLAGS += -Werror
+endif
+
+ifeq ($(findstring ASAN,$(ASAN)),ASAN)
+EXTENDED_CFLAGS += -fsanitize=address -fomit-frame-pointer
 endif
 
 ifeq ($(findstring ASAN,$(ASAN)),ASAN)
