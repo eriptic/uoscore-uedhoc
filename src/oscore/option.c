@@ -94,9 +94,8 @@ enum err echo_val_is_fresh(struct byte_array *cache_val,
 
 	for (uint8_t i = 0; i < E_options_cnt; i++) {
 		if (E_options[i].option_number == ECHO) {
-			if (0 == memcmp(E_options[i].value, cache_val->ptr,
-					cache_val->len) &&
-			    cache_val->len == E_options[i].len) {
+			if (cache_val->len == E_options[i].len &&
+			    0 == memcmp(E_options[i].value, cache_val->ptr, cache_val->len) ) {
 				PRINT_MSG("ECHO option check -- OK\n");
 				return ok;
 			} else {
