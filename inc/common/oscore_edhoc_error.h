@@ -52,6 +52,7 @@ enum err {
 	cbor_decoding_error = 120,
 	suites_i_list_to_long = 121,
 	xor_error = 122,
+        suites_i_list_empty = 123,
 
 	/*OSCORE specific errors*/
 	not_oscore_pkt = 200,

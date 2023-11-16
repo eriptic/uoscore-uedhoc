@@ -125,4 +125,11 @@ enum err update_request_piv_request_kid(struct context *c,
 					struct byte_array *piv,
 					struct byte_array *kid);
 
+/**
+ * @brief Check if given security context is still safe to be used, or a new one must be established.
+ *        For more info, refer to RFC 8613 p. 7.2.1.
+ * @param c security context.
+ * @return enum err 
+ */
+enum err check_context_freshness(struct context *c);
 #endif

@@ -45,6 +45,8 @@ UNIT_TEST += -DUNIT_TEST
 # currently only ZCBOR is supported
 CBOR_ENGINE += -DZCBOR
 
+# Uncomment to enable Non-volatile memory (NVM) support for storing security context between device reboots
+OSCORE_NVM_SUPPORT += -DOSCORE_NVM_SUPPORT
 
 ################################################################################
 # RAM optimization

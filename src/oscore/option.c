@@ -141,3 +141,47 @@ enum err echo_val_is_fresh(struct byte_array *cache_val,
 
 	return no_echo_option;
 }
+
+
+enum err uri_path_create(struct o_coap_option *options, uint32_t options_size,
+			 uint8_t *uri_path, uint32_t *uri_path_size)
+{
+	if ((NULL == options) || (NULL == uri_path) ||
+	    (NULL == uri_path_size)) {
+		return wrong_parameter;
+	}
+
+	uint32_t current_size = 0;
+	uint32_t max_size = *uri_path_size;
+	memset(uri_path, 0, max_size);
+
+	const uint8_t delimiter = '/';
+	const uint32_t delimiter_size = 1;
+
+	for (uint32_t index = 0; index < options_size; index++) {
+		struct o_coap_option *option = &options[index];
+		if (URI_PATH != option->option_number) {
+			continue;
+		}
+		if ((0 != option->len) && (NULL == option->value)) {
+			return oscore_wrong_uri_path;
+		}
+
+		TRY(buffer_append(uri_path, &current_size, max_size,
+				  option->value, option->len));
+		TRY(buffer_append(uri_path, &current_size, max_size, &delimiter,
+				  delimiter_size));
+	}
+
+	/* Remove last '/' character, or add a single one if the path is empty */
+	if (current_size > 0) {
+		uri_path[current_size] = 0;
+		current_size--;
+	} else {
+		uri_path[0] = delimiter;
+		current_size = delimiter_size;
+	}
+
+	*uri_path_size = current_size;
+	return ok;
+}

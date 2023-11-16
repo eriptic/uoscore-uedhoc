@@ -39,7 +39,7 @@ static void print_interaction_field(const char *name, uint8_t *buffer,
 			PRINTF("%02x ", buffer[index]);
 		}
 	}
-	PRINTF("\n");
+	PRINT_MSG("\n");
 }
 
 /**
@@ -286,7 +286,8 @@ enum err oscore_interactions_read_wrapper(
 		/* Server sends / Client receives any response (notification included) - read the record from interactions array and update request_piv and request_kid. */
 		struct oscore_interaction_t *record;
 		TRY(oscore_interactions_get_record(interactions, token->ptr,
-						   token->len, &record));
+						   (uint8_t)token->len,
+						   &record));
 		request_piv->ptr = record->request_piv;
 		request_piv->len = record->request_piv_len;
 		request_kid->ptr = record->request_kid;
@@ -316,10 +317,10 @@ enum err oscore_interactions_update_wrapper(
 		/* Server receives / client sends any request (including registration and cancellation) - add the record to the interactions array.
 		   Request_piv and request_kid not updated - current values of PIV and KID (Sender ID) are used. */
 		struct oscore_interaction_t record = {
-			.request_piv_len = request_piv->len,
-			.request_kid_len = request_kid->len,
-			.token_len = token->len,
-			.uri_paths_len = uri_paths->len,
+			.request_piv_len = (uint8_t)request_piv->len,
+			.request_kid_len = (uint8_t)request_kid->len,
+			.token_len = (uint8_t)token->len,
+			.uri_paths_len = (uint8_t)uri_paths->len,
 			.request_type = msg_type
 		};
 		TRY(_memcpy_s(record.request_piv, MAX_PIV_LEN, request_piv->ptr,
@@ -335,7 +336,7 @@ enum err oscore_interactions_update_wrapper(
 		/* Server sends / client receives a regular response - remove the record. */
 		//TODO removing records must be taken into account when No-Response support will be added.
 		TRY(oscore_interactions_remove_record(interactions, token->ptr,
-						      token->len));
+						      (uint8_t)token->len));
 	}
 
 	return ok;
