@@ -36,12 +36,17 @@ enum method_type {
 };
 
 /**
- * @brief   Retrieves the authentication type of initiator and responder.
- * @param   m the method
- * @param   static_dh_i true if the initiator authenticates with static DH key
- * @param   static_dh_r true if the responder authenticates with static DH key
+ * @brief                       Retrieves the authentication type of initiator 
+ *                              and responder.
+ * 
+ * @param m                     The method.
+ * @param[out] static_dh_i      True if the initiator authenticates with static 
+ *                              DH key.
+ * @param[out] static_dh_r      True if the responder authenticates with static 
+ *                              DH key.
+ * @retval                      None.
  */
-enum err authentication_type_get(enum method_type m, volatile bool *static_dh_i,
+void authentication_type_get(enum method_type m, volatile bool *static_dh_i,
 				 volatile bool *static_dh_r);
 
 #endif

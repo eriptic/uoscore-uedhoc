@@ -1,34 +1,109 @@
-# provide here your tool chain
+################################################################################
+# Toolchain
+################################################################################
 #CC = gcc
 #AR = ar
-#CC = /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-gcc
-#AR = /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-ar
+#CC = /opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc
+#AR = /opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-ar
 #CC = clang-13
 
-#architecture
-#ARCH = -m32
 
-# the library is compiled with the folowing optimization 
+################################################################################
+# Architecture
+################################################################################
+# see for arm flags: https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html
+#ARCH = -m32
+#ARCH = -mtune=cortex-m3
+
+
+################################################################################ 
+# Compiler optimization
+################################################################################ 
 OPT = -O0
 
-# Uncomment this to print intermediery results at runtime
+
+################################################################################
+# Print helpful debug messages
+################################################################################
 DEBUG_PRINT += -DDEBUG_PRINT
 
-# Uncomment this to enable building the unit tests
-DUNIT_TEST += -DUNIT_TEST
+################################################################################
+# Use Address Sanitizer, e.g. with native_posix
+################################################################################
+#ASAN += -DASAN
 
+################################################################################
+# Unit testing
+################################################################################
+# Uncomment this to enable building the unit tests
+UNIT_TEST += -DUNIT_TEST
+
+
+################################################################################
 # CBOR engine
+################################################################################
 # currently only ZCBOR is supported
 CBOR_ENGINE += -DZCBOR
 
-# Uncomment to enable Non-volatile memory (NVM) support for storing security context between device reboots
-OSCORE_NVM_SUPPORT += -DOSCORE_NVM_SUPPORT
 
-# The uoscore-uedhoc can be used with different crypto angines. 
-# The user can provide as well additinal cryptoengines by providing 
+################################################################################
+# RAM optimization
+################################################################################
+# Compute the length of buffers at runtime (variable length array VLA)
+# Please note that: we do not support this feature under Windows with MSVC (lack of support for VLA).
+#FEATURES += -DVLA
+
+################################################################################
+# RAM optimization EDHOC
+################################################################################
+# In deployments where no protected application message is sent from the 
+# Responder to the Initiator, message_4 MUST be used.
+#FEATURES += -DMESSAGE_4
+
+# If EAD is not used set its buffer size to 0
+FEATURES += -DEAD_SIZE=0
+
+# Size of the connection identifier of the initiator C_I
+FEATURES += -DC_I_SIZE=1
+
+# Size of the connection identifier of the initiator C_R
+FEATURES += -DC_R_SIZE=1
+
+# Size of ID_CRED_R
+FEATURES += -DID_CRED_R_SIZE=296 
+
+# Size of ID_CRED_I
+FEATURES += -DID_CRED_I_SIZE=296 
+
+# Size of CRED_R
+FEATURES += -DCRED_R_SIZE=293 
+
+# Size of CRED_I
+FEATURES += -DCRED_I_SIZE=293 
+
+# Number of supported suites by the initiator
+FEATURES += -DSUITES_I_SIZE=1 
+
+################################################################################
+# RAM optimization OSCORE
+################################################################################
+# Max size of an OSCORE plaintext
+FEATURES += -DOSCORE_MAX_PLAINTEXT_LEN=1024
+
+# Max size of the E options buffer
+FEATURES += -DE_OPTIONS_BUFF_MAX_LEN=100
+
+# Max size of the I options buffer
+FEATURES += -DI_OPTIONS_BUFF_MAX_LEN=100
+
+################################################################################
+# Crypto engine
+################################################################################
+# The uoscore-uedhoc can be used with different crypto engines. 
+# The user can provide as well additional crypto engines by providing 
 # implementations of the function defined (as week) in the crypto_wrapper file.
-# Curretnly we have build in support for the following engines which 
-# allow fowing modes of operation and suites:
+# Currently we have build in support for the following engines which 
+# allow fowling modes of operation and suites:
 #
 # EDHOC suites: 
 # Value: 0

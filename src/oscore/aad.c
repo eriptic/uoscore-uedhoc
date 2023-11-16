@@ -49,7 +49,7 @@ enum err create_aad(struct o_coap_option *options, uint16_t opt_num,
 	size_t payload_len_out;
 	TRY_EXPECT(cbor_encode_aad_array(out->ptr, out->len, &aad_array,
 					 &payload_len_out),
-		   true);
+		   0);
 
 	out->len = (uint32_t)payload_len_out;
 	PRINT_ARRAY("AAD", out->ptr, out->len);

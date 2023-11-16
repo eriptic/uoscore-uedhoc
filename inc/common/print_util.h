@@ -14,12 +14,34 @@
 
 #include <stdint.h>
 #include <stdio.h>
+
 /**
- *@brief prints an array for debug pourposes 
+ *@brief			Prints an array for debug purposes.
+ *@param[in] in_data		The array to be printed.
+ *@param in_len			The length of the array.
  */
 void print_array(const uint8_t *in_data, uint32_t in_len);
+
+/**
+ * @brief 			In case of an error this function prints where 
+ * 				the error occurred.
+ * 
+ * @param error_code 		The error code to be printed.
+ * @param file_name 		The file name where the error occurred.
+ * @param line 			The line at which the error occurred.
+ */
 void handle_runtime_error(int error_code, const char *file_name,
 			  const int line);
+		
+/**
+ * @brief 			In case of an error in a function belonging to 
+ * 				an external library this function prints where 
+ * 				the error occurred.
+ * 
+ * @param error_code 		The error code to be printed.
+ * @param file_name 		The file name where the error occurred.
+ * @param line 			The line at which the error occurred.
+ */		
 void handle_external_runtime_error(int error_code, const char *file_name,
 				   const int line);
 #ifdef DEBUG_PRINT

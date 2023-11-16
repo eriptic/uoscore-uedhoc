@@ -16,14 +16,13 @@
 #include "common/oscore_edhoc_error.h"
 
 /**
- * @brief   Encodes associated data for message 3. (COSE "Encrypt0") data 
- *          structure is used 
- * @param   th can be th2 or th3
- * @param   th_len the length of th
- * @param   out pointer to hold the encoded data
- * @param   out_len length of the encoded data
+ * @brief                       Encodes associated data for message 3. 
+ *                              (COSE "Encrypt0") data structure is used.
+ * 
+ * @param[in] th                Can be th2 or th3.
+ * @param[out] out              The encoded data.
+ * @retval                      Ok or error code.
  */
-enum err associated_data_encode(uint8_t *th, const uint32_t th_len,
-				uint8_t *out, uint32_t *out_len);
+enum err associated_data_encode(struct byte_array *thX, struct byte_array *out);
 
 #endif

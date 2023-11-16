@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.3.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -10,8 +10,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <string.h>
-#include "zcbor_encode.h"
+#include <zcbor_common.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** Which value for --default-max-qty this file was created with.
  *
@@ -37,7 +40,7 @@ struct message_error_SUITES_R_ {
 	union {
 		struct {
 			int32_t _SUITES_R__supported_supported[10];
-			uint_fast32_t _SUITES_R__supported_supported_count;
+			size_t _SUITES_R__supported_supported_count;
 		};
 		int32_t _message_error_SUITES_R_int;
 	};
@@ -49,11 +52,14 @@ struct message_error_SUITES_R_ {
 
 struct message_error {
 	struct message_error_C_x_ _message_error_C_x;
-	uint_fast32_t _message_error_C_x_present;
+	bool _message_error_C_x_present;
 	struct zcbor_string _message_error_DIAG_MSG;
 	struct message_error_SUITES_R_ _message_error_SUITES_R;
-	uint_fast32_t _message_error_SUITES_R_present;
+	bool _message_error_SUITES_R_present;
 };
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EDHOC_ENCODE_MESSAGE_ERROR_TYPES_H__ */

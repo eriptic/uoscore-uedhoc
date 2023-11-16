@@ -1,7 +1,6 @@
 
 #include <stdio.h>
-
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/ztest.h>
 #include "oscore.h"
 
@@ -513,7 +512,7 @@ void t9_oscore_client_server_observe(void)
 	/*RFC7641: To provide an order among notifications for the client, the server
    	sets the value of the Observe Option in each notification to the 24
    	least significant bits of a strictly increasing sequence number.*/
-	uint32_t observe_sequence_number = 0;
+	//uint32_t observe_sequence_number = 0;
 	uint32_t val = 0;
 	struct o_coap_packet coap_pkt_notification1 = {
 		.header = { .ver = 1,
@@ -664,10 +663,10 @@ void t10_oscore_client_server_after_reboot(void)
 
 	const uint8_t OSCORE_RESP4[] = { 0x61, 0x44, 0x00, 0x00, 0x4B, 0x90, 0xFF, 0x5E, 0x04, 0x3E, 0xD6, 0x11, 0x1F, 0xE7, 0xF7, 0x9D, 0x1E, 0x5F, 0x30, 0x27, 0x30 };
 
-	/**************************************************************************/
-	/* 		1)	|------request----------------------------->|				  */
-	/*			|<-----response with ECHO option (ECHO1)----|				  */
-	/**************************************************************************/
+	/**********************************************************************/
+	/*1)	|------request----------------------------->|		      */
+	/*	|<-----response with ECHO option (ECHO1)----|		      */
+	/**********************************************************************/
 	/*
 	 *
 	 * First request

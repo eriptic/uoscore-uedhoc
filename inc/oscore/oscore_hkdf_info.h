@@ -30,9 +30,8 @@
  * @return  err
  */
 enum err oscore_create_hkdf_info(struct byte_array *id,
-				   struct byte_array *id_context,
-				   enum AEAD_algorithm aead_alg,
-				   enum derive_type type,
-				   struct byte_array *out);
+				 struct byte_array *id_context,
+				 enum AEAD_algorithm aead_alg,
+				 enum derive_type type, struct byte_array *out);
 
 #endif

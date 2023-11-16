@@ -19,10 +19,8 @@
 
 #include "cbor/edhoc_encode_info.h"
 
-enum err create_hkdf_info(
-			  uint8_t label, uint8_t *context,
-			  uint32_t context_len, uint32_t okm_len, uint8_t *out,
-			  uint32_t *out_len)
+enum err create_hkdf_info(uint8_t label, struct byte_array *context,
+			  uint32_t okm_len, struct byte_array *out)
 {
 	struct info info;
 
@@ -37,27 +35,27 @@ enum err create_hkdf_info(
 	 * is copied to the EDHOC message. */
 	const char dummy_buffer;
 
-	if (NULL == context) {
-		if (0 != context_len) {
+	if (NULL == context->ptr) {
+		if (0 != context->len) {
 			return wrong_parameter;
+		} else {
+			info._info_context.value =
+				(const uint8_t *)&dummy_buffer;
 		}
-		else {
-			info._info_context.value = (const uint8_t *) &dummy_buffer;
-		}
-	}
-	else {
-		info._info_context.value = context;
+	} else {
+		info._info_context.value = context->ptr;
 	}
 
-	info._info_context.len = context_len;
+	info._info_context.len = context->len;
 
 	info._info_length = okm_len;
 
 	size_t payload_len_out = 0;
-	TRY_EXPECT(cbor_encode_info(out, *out_len, &info, &payload_len_out),
-		   true);
+	TRY_EXPECT(cbor_encode_info(out->ptr, out->len, &info,
+				    &payload_len_out),
+		   0);
 
-	*out_len = (uint32_t)payload_len_out;
+	out->len = (uint32_t)payload_len_out;
 
 	return ok;
 }

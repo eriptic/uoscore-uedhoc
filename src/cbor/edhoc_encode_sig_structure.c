@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.3.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -15,17 +15,18 @@
 #error "The type file was generated with a different default_max_qty than this file"
 #endif
 
+static bool encode_sig_structure(zcbor_state_t *state, const struct sig_structure *input);
+
 
 static bool encode_sig_structure(
 		zcbor_state_t *state, const struct sig_structure *input)
 {
 	zcbor_print("%s\r\n", __func__);
-	bool int_res;
 
-	bool tmp_result = (((zcbor_list_start_encode(state, 4) && (int_res = (((zcbor_tstr_encode(state, (&(*input)._sig_structure_context))))
+	bool tmp_result = (((zcbor_list_start_encode(state, 4) && ((((zcbor_tstr_encode(state, (&(*input)._sig_structure_context))))
 	&& ((zcbor_bstr_encode(state, (&(*input)._sig_structure_protected))))
 	&& ((zcbor_bstr_encode(state, (&(*input)._sig_structure_external_aad))))
-	&& ((zcbor_bstr_encode(state, (&(*input)._sig_structure_payload))))), ((zcbor_list_end_encode(state, 4)) && int_res)))));
+	&& ((zcbor_bstr_encode(state, (&(*input)._sig_structure_payload))))) || (zcbor_list_map_end_force_encode(state), false)) && zcbor_list_end_encode(state, 4))));
 
 	if (!tmp_result)
 		zcbor_trace();
@@ -35,7 +36,7 @@ static bool encode_sig_structure(
 
 
 
-bool cbor_encode_sig_structure(
+int cbor_encode_sig_structure(
 		uint8_t *payload, size_t payload_len,
 		const struct sig_structure *input,
 		size_t *payload_len_out)
@@ -51,5 +52,11 @@ bool cbor_encode_sig_structure(
 				(size_t)states[0].payload - (size_t)payload);
 	}
 
-	return ret;
+	if (!ret) {
+		int err = zcbor_pop_error(states);
+
+		zcbor_print("Return error: %d\r\n", err);
+		return (err == ZCBOR_SUCCESS) ? ZCBOR_ERR_UNKNOWN : err;
+	}
+	return ZCBOR_SUCCESS;
 }

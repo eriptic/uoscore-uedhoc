@@ -65,13 +65,19 @@ static int start_coap_client(int *sockfd)
 	return 0;
 }
 
+enum err ead_process(void *params, struct byte_array *ead13)
+{
+	/*for this sample we are not using EAD*/
+	/*to save RAM we use FEATURES += -DEAD_SIZE=0*/
+	return ok;
+}
+
 /**
  * @brief	Callback function called inside the frontend when data needs to 
  * 		be send over the network. We use here CoAP as transport 
  * @param	data pointer to the data that needs to be send
- * @param	data_len lenhgt of the data in bytes
  */
-enum err tx(void *sock, uint8_t *data, uint32_t data_len)
+enum err tx(void *sock, struct byte_array *data)
 {
 	/*construct a CoAP packet*/
 	static uint16_t mid = 0;
@@ -84,7 +90,7 @@ enum err tx(void *sock, uint8_t *data, uint32_t data_len)
 	pdu->setToken((uint8_t *)&(++token), sizeof(token));
 	pdu->setMessageID(mid++);
 	pdu->setURI((char *)".well-known/edhoc", 17);
-	pdu->setPayload(data, data_len);
+	pdu->setPayload(data->ptr, data->len);
 
 	send(*(int *)sock, pdu->getPDUPointer(), pdu->getPDULength(), 0);
 
@@ -96,9 +102,8 @@ enum err tx(void *sock, uint8_t *data, uint32_t data_len)
  * @brief	Callback function called inside the frontend when data needs to 
  * 		be received over the network. We use here CoAP as transport 
  * @param	data pointer to the data that needs to be received
- * @param	data_len lenhgt of the data in bytes
  */
-enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
+enum err rx(void *sock, struct byte_array *data)
 {
 	int n;
 	char buffer[MAXLINE];
@@ -116,12 +121,12 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
 	}
 
 	uint32_t payload_len = recvPDU->getPayloadLength();
-	printf("data_len: %d\n", *data_len);
+	printf("data_len: %d\n", data->len);
 	printf("payload_len: %d\n", payload_len);
 
-	if (*data_len >= payload_len) {
-		memcpy(data, recvPDU->getPayloadPointer(), payload_len);
-		*data_len = payload_len;
+	if (data->len >= payload_len) {
+		memcpy(data->ptr, recvPDU->getPayloadPointer(), payload_len);
+		data->len = payload_len;
 	} else {
 		printf("insufficient space in buffer");
 		return buffer_to_small;
@@ -141,28 +146,24 @@ int main()
 	 * 
 	 */
 	int sockfd;
-	uint8_t oscore_master_secret[16];
-	uint8_t oscore_master_salt[8];
-
-	/* edhoc declarations */
-	uint8_t PRK_out[PRK_DEFAULT_SIZE];
-	uint8_t prk_exporter[32];
-	uint8_t err_msg[ERR_MSG_DEFAULT_SIZE];
-	uint32_t err_msg_len = sizeof(err_msg);
+	BYTE_ARRAY_NEW(prk_exporter, 32, 32);
+	BYTE_ARRAY_NEW(oscore_master_secret, 16, 16);
+	BYTE_ARRAY_NEW(oscore_master_salt, 8, 8);
+	BYTE_ARRAY_NEW(PRK_out, 32, 32);
+	BYTE_ARRAY_NEW(err_msg, 0, 0);
 
 	/* test vector inputs */
-	const uint8_t TEST_VEC_NUM = 1;
-	uint16_t cred_num = 1;
 	struct other_party_cred cred_r;
 	struct edhoc_initiator_context c_i;
 
+	const uint8_t TEST_VEC_NUM = 1;
 	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
 	TRY_EXPECT(start_coap_client(&sockfd), 0);
 
+	c_i.sock = &sockfd;
 	c_i.c_i.len = test_vectors[vec_num_i].c_i_len;
 	c_i.c_i.ptr = (uint8_t *)test_vectors[vec_num_i].c_i;
-	c_i.msg4 = true;
 	c_i.method = (enum method_type) * test_vectors[vec_num_i].method;
 	c_i.suites_i.len = test_vectors[vec_num_i].SUITES_I_len;
 	c_i.suites_i.ptr = (uint8_t *)test_vectors[vec_num_i].SUITES_I;
@@ -186,7 +187,6 @@ int main()
 	c_i.sk_i.ptr = (uint8_t *)test_vectors[vec_num_i].sk_i_raw;
 	c_i.pk_i.len = test_vectors[vec_num_i].pk_i_raw_len;
 	c_i.pk_i.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
-	c_i.sock = &sockfd;
 
 	cred_r.id_cred.len = test_vectors[vec_num_i].id_cred_r_len;
 	cred_r.id_cred.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_r;
@@ -201,31 +201,30 @@ int main()
 	cred_r.ca_pk.len = test_vectors[vec_num_i].ca_r_pk_len;
 	cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_r_pk;
 
+	struct cred_array cred_r_array = { .len = 1, .ptr = &cred_r };
+
 #ifdef TINYCRYPT
-		/* Register RNG function */
-		uECC_set_rng(default_CSPRNG);
+	/* Register RNG function */
+	uECC_set_rng(default_CSPRNG);
 #endif
 
-	TRY(edhoc_initiator_run(&c_i, &cred_r, cred_num, err_msg, &err_msg_len,
-				NULL, NULL, NULL, NULL, PRK_out,
-				sizeof(PRK_out), tx, rx));
+	TRY(edhoc_initiator_run(&c_i, &cred_r_array, &err_msg, &PRK_out, tx, rx,
+				ead_process));
 
-	PRINT_ARRAY("PRK_out", PRK_out, sizeof(PRK_out));
+	PRINT_ARRAY("PRK_out", PRK_out.ptr, PRK_out.len);
 
-	TRY(prk_out2exporter(SHA_256, PRK_out, sizeof(PRK_out), prk_exporter));
-	PRINT_ARRAY("prk_exporter", prk_exporter, sizeof(prk_exporter));
+	TRY(prk_out2exporter(SHA_256, &PRK_out, &prk_exporter));
+	PRINT_ARRAY("prk_exporter", prk_exporter.ptr, prk_exporter.len);
 
-	TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SECRET, prk_exporter,
-			   sizeof(prk_exporter), oscore_master_secret,
-			   sizeof(oscore_master_secret)));
-	PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret,
-		    sizeof(oscore_master_secret));
+	TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SECRET, &prk_exporter,
+			   &oscore_master_secret));
+	PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret.ptr,
+		    oscore_master_secret.len);
 
-	TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SALT, prk_exporter,
-			   sizeof(prk_exporter), oscore_master_salt,
-			   sizeof(oscore_master_salt)));
-	PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt,
-		    sizeof(oscore_master_salt));
+	TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SALT, &prk_exporter,
+			   &oscore_master_salt));
+	PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt.ptr,
+		    oscore_master_salt.len);
 
 	/*
 	 *  
@@ -244,16 +243,16 @@ int main()
 
 	/*OSCORE contex initialization*/
 	oscore_init_params params = {
-		sizeof(oscore_master_secret),
-		oscore_master_secret,
+		oscore_master_secret.len,
+		oscore_master_secret.ptr,
 		T1__SENDER_ID_LEN,
 		(uint8_t *)T1__SENDER_ID,
 		T1__RECIPIENT_ID_LEN,
 		(uint8_t *)T1__RECIPIENT_ID,
 		T1__ID_CONTEXT_LEN,
 		(uint8_t *)T1__ID_CONTEXT,
-		sizeof(oscore_master_salt),
-		oscore_master_salt,
+		oscore_master_salt.len,
+		oscore_master_salt.ptr,
 		OSCORE_AES_CCM_16_64_128,
 		OSCORE_SHA_256,
 		true,
@@ -263,7 +262,6 @@ int main()
 	uint8_t buf_oscore[256];
 	uint8_t coap_rx_buf[256];
 	CoapPDU *recvPDU;
-	uint8_t request_payload[] = { "This is some payload" };
 	bool first_response = true;
 	bool second_request = false;
 	uint8_t echo_opt_val[12];
@@ -286,8 +284,7 @@ int main()
 						 echo_opt_val);
 			second_request = false;
 		}
-		protected_pdu->setPayload(request_payload,
-					  sizeof(request_payload));
+
 
 		if (protected_pdu->validate()) {
 			printf("\n=================================================\n");

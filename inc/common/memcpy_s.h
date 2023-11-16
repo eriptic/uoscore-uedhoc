@@ -16,24 +16,25 @@
 #include "oscore_edhoc_error.h"
 
 /**
- * @brief Checks if a buffer has suficent size
+ * @brief			Checks if a buffer has sufficient size.
  * 
- * @param is_size the actual size of the buffer in bytes
- * @param required_size the required size in bytes
- * @return enum err 
+ * @param is_size 		The actual size of the buffer in bytes.
+ * @param required_size 	The required size in bytes.
+ * @return 			Ok or error code.
  */
 enum err check_buffer_size(uint32_t is_size, uint32_t required_size);
 
 /**
- * @brief A save memcpy function equivalent to memcpy_s (see [1]). 
- *        memcpy_s may not be available in some environments thus we 
- *        provide our own implementation.
+ * @brief			A save memcpy function equivalent to memcpy_s 
+ * 				(see [1]). memcpy_s may not be available in some
+ * 				environments thus we provide our own 
+ * 				implementation.
  * 
- * @param dest destination buffer
- * @param dest_len lenhgt of the destination buffer
- * @param source source buffer
- * @param source_len lenhgt of the source buffer
- * @return enum err
+ * @param[out] dest 		Destination buffer.
+ * @param dest_len 		Length of the destination buffer.
+ * @param[in] source 		Source buffer.
+ * @param source_len 		Length of the source buffer.
+ * @return 			Ok or error code.
  * 
  * [1]: https://docs.microsoft.com/de-de/cpp/c-runtime-library/reference/memcpy-s-wmemcpy-s?view=msvc-160
  */

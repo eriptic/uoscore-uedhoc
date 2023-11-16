@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.3.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -10,8 +10,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <string.h>
-#include "zcbor_encode.h"
+#include <zcbor_common.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** Which value for --default-max-qty this file was created with.
  *
@@ -35,7 +38,7 @@ struct data_2_C_I_ {
 
 struct data_2 {
 	struct data_2_C_I_ _data_2_C_I;
-	uint_fast32_t _data_2_C_I_present;
+	bool _data_2_C_I_present;
 	struct zcbor_string _data_2_G_Y;
 	union {
 		int32_t _data_2_C_R_int;
@@ -47,5 +50,8 @@ struct data_2 {
 	} _data_2_C_R_choice;
 };
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EDHOC_ENCODE_DATA_2_TYPES_H__ */

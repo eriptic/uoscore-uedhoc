@@ -24,10 +24,12 @@ enum err {
 	crypto_operation_not_implemented = 5,
 	not_supported_feature = 6,
 	/*indicates that transport layer is not initialized*/
-	transport_deinitialized = 6,
-	not_implemented = 7,
+	transport_deinitialized = 7,
+	not_implemented = 8,
+	vla_insufficient_size = 9,
 
-	/*EDHOC specifc errors*/
+
+	/*EDHOC specific errors*/
 	/*todo implement error messages*/
 	error_message_received = 101,
 	error_message_sent = 102,
@@ -49,7 +51,7 @@ enum err {
 	cbor_encoding_error = 119,
 	cbor_decoding_error = 120,
 	suites_i_list_to_long = 121,
-	suites_i_list_empty = 122,
+	xor_error = 122,
 
 	/*OSCORE specific errors*/
 	not_oscore_pkt = 200,

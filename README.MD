@@ -79,28 +79,27 @@ The EDHOC protocol requires the exchange of three messages (and an optional mess
  * 
  * @param   sock a pointer used to identify the rx chanel, 
  *          e.g. a socket handler
- * @param   data pointer to the data to be send
- * @param   data_len length of the data
+ * @param   data data to be send
  */
-enum err tx(void *sock, uint8_t *data, uint32_t data_len);
+enum err tx(void *sock, struct byte_array *data);
 
 /**
  * @brief   The user should call inside this function its receive 
- *          function and copy the received data in the buffer <data>.
- *          The length of the buffer <data> must be 
- *          checked before copying into it by using <data_len>. 
- *          After copying the length of the received data should be written 
- *          in <data_len>.
+ *          function. The user should copy the received data in \p data.
+ *          
+ *          THE USER MUST MAKE SURE THAT HE/SHE IS NOT WRITING DATA OUTSIDE THE 
+ *          RECEIVE BUFFER, I.E., THE LENGTH OF THE RECEIVED DATA IS SMALLER 
+ *          THAN \p data->len. 
+ * 
+ *          After copying, the length of the received data should be written 
+ *          in \p data->len.
  *
  * 
  * @param   sock a pointer used to identify the rx chanel, 
  *          e.g. a socket handler
- * @param   data pointer to a buffer where the edhoc message must be copied 
- * @param   data_len length of the received data. When this function is 
- *          called inside EDHOC <data_len> is initialized with the actual 
- *          available length of the <data>.
+ * @param   data the received message must be copied here
  */
-enum err rx(void *sock, uint8_t *data, uint32_t *data_len);
+enum err rx(void *sock, struct byte_array  *data);
 ```
 
 Note that uEDHOC does not provide correlation of messages. Correlation may be handled on the transport layer completely or partially. In cases when the correlation cannot be handled by the transport protocol the edhoc message needs to be prepended with a connection identifier, that is used on the other side to determine to which session a given message belongs. In order to remain conform with the specification in the cases where the transport cannot handle correlation a connection identifier needs to be prepended in `tx()` function and removed in the `rx()` function.
@@ -164,17 +163,4 @@ Note that using NVM support is independent of the parameter above. Although it i
    ```  
 
 ## Additional configuration options
-Following preprocessor directives allow for better memory usage adjustments:
-
-* **edhoc.h**
-
-   * EDHOC_BUF_SIZES_RPK - select when authentication can be based on raw public keys, or
-   * EDHOC_BUF_SIZES_C509_CERT - select when authentication can be based on CBOR encoded certificates, or
-   * EDHOC_BUF_SIZES_X509_CERT - select when authentication can be based on X.509 certificates
-   * EDHOC_MESSAGE_4_SUPPORTED - select when generation of message 4 should be supported
-
-*  **oscore.h**
-
-   * OSCORE_MAX_PLAINTEXT_LEN - expected maximal length of OSCORE packet
-   * E_OPTIONS_BUFF_MAX_LEN - expected maximal length of buffer with all encrypted CoAP options
-   * I_OPTIONS_BUFF_MAX_LEN - expected maximal length of buffer with all not encrypted CoAP options
+The build configuration can be adjusted in the [makefile_config.mk](makefile_config.mk).

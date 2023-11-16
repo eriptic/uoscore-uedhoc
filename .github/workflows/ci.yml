@@ -1,6 +1,6 @@
 name: build & test
 
-on: push
+on: [push, pull_request]
 
 jobs:
 # This workflow contains 2 jobs build and test
@@ -33,11 +33,11 @@ jobs:
           pip install -r ~/zephyrproject/zephyr/scripts/requirements.txt
 
           cd ~
-          wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.15.2/zephyr-sdk-0.15.2_linux-x86_64.tar.gz
-          wget -O - https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.15.2/sha256.sum | shasum --check --ignore-missing
+          wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.3/zephyr-sdk-0.16.3_linux-x86_64.tar.xz
+          wget -O - https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.3/sha256.sum | shasum --check --ignore-missing
 
-          tar xvf zephyr-sdk-0.15.2_linux-x86_64.tar.gz
-          cd zephyr-sdk-0.15.2
+          tar xvf zephyr-sdk-0.16.3_linux-x86_64.tar.xz
+          cd zephyr-sdk-0.16.3
           /bin/bash -c "yes | ./setup.sh"
       
       - name: Checkout code
@@ -52,8 +52,7 @@ jobs:
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
            cd test/
-           west build -b=native_posix
-           west build -t run
+           bash test_build_options.sh
 
       - name: Archive static lib
         uses: actions/upload-artifact@v2

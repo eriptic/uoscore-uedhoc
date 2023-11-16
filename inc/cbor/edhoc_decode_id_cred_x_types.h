@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.3.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -10,8 +10,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <string.h>
-#include "zcbor_decode.h"
+#include <zcbor_common.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** Which value for --default-max-qty this file was created with.
  *
@@ -83,24 +86,27 @@ struct id_cred_x_map_c5u {
 
 struct id_cred_x_map {
 	struct id_cred_x_map_kid_ _id_cred_x_map_kid;
-	uint_fast32_t _id_cred_x_map_kid_present;
+	bool _id_cred_x_map_kid_present;
 	struct id_cred_x_map_x5bag _id_cred_x_map_x5bag;
-	uint_fast32_t _id_cred_x_map_x5bag_present;
+	bool _id_cred_x_map_x5bag_present;
 	struct id_cred_x_map_x5chain _id_cred_x_map_x5chain;
-	uint_fast32_t _id_cred_x_map_x5chain_present;
+	bool _id_cred_x_map_x5chain_present;
 	struct id_cred_x_map_x5t_ _id_cred_x_map_x5t;
-	uint_fast32_t _id_cred_x_map_x5t_present;
+	bool _id_cred_x_map_x5t_present;
 	struct id_cred_x_map_x5u _id_cred_x_map_x5u;
-	uint_fast32_t _id_cred_x_map_x5u_present;
+	bool _id_cred_x_map_x5u_present;
 	struct id_cred_x_map_c5b _id_cred_x_map_c5b;
-	uint_fast32_t _id_cred_x_map_c5b_present;
+	bool _id_cred_x_map_c5b_present;
 	struct id_cred_x_map_c5c _id_cred_x_map_c5c;
-	uint_fast32_t _id_cred_x_map_c5c_present;
+	bool _id_cred_x_map_c5c_present;
 	struct id_cred_x_map_c5t_ _id_cred_x_map_c5t;
-	uint_fast32_t _id_cred_x_map_c5t_present;
+	bool _id_cred_x_map_c5t_present;
 	struct id_cred_x_map_c5u _id_cred_x_map_c5u;
-	uint_fast32_t _id_cred_x_map_c5u_present;
+	bool _id_cred_x_map_c5u_present;
 };
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EDHOC_DECODE_ID_CRED_X_TYPES_H__ */

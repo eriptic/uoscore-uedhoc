@@ -15,9 +15,8 @@
 
 #include "common/oscore_edhoc_error.h"
 
-enum err authentication_type_get(enum method_type m,
-				   volatile bool *static_dh_i,
-				   volatile bool *static_dh_r)
+void authentication_type_get(enum method_type m, volatile bool *static_dh_i,
+			     volatile bool *static_dh_r)
 {
 	switch (m) {
 	case INITIATOR_SK_RESPONDER_SK:
@@ -35,8 +34,5 @@ enum err authentication_type_get(enum method_type m,
 	case INITIATOR_SDHK_RESPONDER_SDHK:
 		*static_dh_i = true;
 		*static_dh_r = true;
-	default:
-		break;
 	}
-	return ok;
 }

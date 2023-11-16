@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.3.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -10,8 +10,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <string.h>
-#include "zcbor_encode.h"
+#include <zcbor_common.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** Which value for --default-max-qty this file was created with.
  *
@@ -35,5 +38,8 @@ struct th2 {
 	struct zcbor_string _th2_hash_msg1;
 };
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EDHOC_ENCODE_TH2_TYPES_H__ */

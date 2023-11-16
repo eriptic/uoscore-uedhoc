@@ -17,12 +17,13 @@
 
 #include "common/oscore_edhoc_error.h"
 #include "common/print_util.h"
+#include "common/byte_array.h"
 
-enum err associated_data_encode(uint8_t *thX, const uint32_t thX_len,
-				uint8_t *out, uint32_t *out_len)
+enum err associated_data_encode(struct byte_array *thX, struct byte_array *out)
 {
 	uint8_t context_str[] = { "Encrypt0" };
-	return cose_enc_structure_encode(context_str,
-					 (uint32_t)strlen((char *)context_str),
-					 NULL, 0, thX, thX_len, out, out_len);
+	struct byte_array context = BYTE_ARRAY_INIT(
+		context_str, (uint32_t)strlen((char *)context_str));
+
+	return cose_enc_structure_encode(&context, &NULL_ARRAY, thX, out);
 }

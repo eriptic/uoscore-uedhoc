@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.3.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -14,6 +14,8 @@
 #if DEFAULT_MAX_QTY != 3
 #error "The type file was generated with a different default_max_qty than this file"
 #endif
+
+static bool decode_cert(zcbor_state_t *state, struct cert *result);
 
 
 static bool decode_cert(
@@ -41,7 +43,7 @@ static bool decode_cert(
 
 
 
-bool cbor_decode_cert(
+int cbor_decode_cert(
 		const uint8_t *payload, size_t payload_len,
 		struct cert *result,
 		size_t *payload_len_out)
@@ -57,5 +59,11 @@ bool cbor_decode_cert(
 				(size_t)states[0].payload - (size_t)payload);
 	}
 
-	return ret;
+	if (!ret) {
+		int err = zcbor_pop_error(states);
+
+		zcbor_print("Return error: %d\r\n", err);
+		return (err == ZCBOR_SUCCESS) ? ZCBOR_ERR_UNKNOWN : err;
+	}
+	return ZCBOR_SUCCESS;
 }

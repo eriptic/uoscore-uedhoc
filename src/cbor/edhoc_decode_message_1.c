@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.3.99
+ * Generated using zcbor version 0.7.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -15,6 +15,8 @@
 #error "The type file was generated with a different default_max_qty than this file"
 #endif
 
+static bool decode_message_1(zcbor_state_t *state, struct message_1 *result);
+
 
 static bool decode_message_1(
 		zcbor_state_t *state, struct message_1 *result)
@@ -23,11 +25,11 @@ static bool decode_message_1(
 	bool int_res;
 
 	bool tmp_result = (((((zcbor_int32_decode(state, (&(*result)._message_1_METHOD))))
-	&& ((zcbor_union_start_code(state) && (int_res = ((((zcbor_list_start_decode(state) && (int_res = (zcbor_multi_decode(2, 10, &(*result)._SUITES_I__suite_suite_count, (zcbor_decoder_t *)zcbor_int32_decode, state, (&(*result)._SUITES_I__suite_suite), sizeof(int32_t))), ((zcbor_list_end_decode(state)) && int_res)))) && (((*result)._message_1_SUITES_I_choice = _SUITES_I__suite) || 1))
-	|| (zcbor_union_elem_code(state) && (((zcbor_int32_decode(state, (&(*result)._message_1_SUITES_I_int)))) && (((*result)._message_1_SUITES_I_choice = _message_1_SUITES_I_int) || 1)))), zcbor_union_end_code(state), int_res)))
+	&& ((zcbor_union_start_code(state) && (int_res = ((((zcbor_list_start_decode(state) && ((zcbor_multi_decode(2, 10, &(*result)._SUITES_I__suite_suite_count, (zcbor_decoder_t *)zcbor_int32_decode, state, (&(*result)._SUITES_I__suite_suite), sizeof(int32_t))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_list_end_decode(state))) && (((*result)._message_1_SUITES_I_choice = _SUITES_I__suite), true))
+	|| (zcbor_union_elem_code(state) && (((zcbor_int32_decode(state, (&(*result)._message_1_SUITES_I_int)))) && (((*result)._message_1_SUITES_I_choice = _message_1_SUITES_I_int), true)))), zcbor_union_end_code(state), int_res)))
 	&& ((zcbor_bstr_decode(state, (&(*result)._message_1_G_X))))
-	&& ((zcbor_union_start_code(state) && (int_res = ((((zcbor_int32_decode(state, (&(*result)._message_1_C_I_int)))) && (((*result)._message_1_C_I_choice = _message_1_C_I_int) || 1))
-	|| (((zcbor_bstr_decode(state, (&(*result)._message_1_C_I_bstr)))) && (((*result)._message_1_C_I_choice = _message_1_C_I_bstr) || 1))), zcbor_union_end_code(state), int_res)))
+	&& ((zcbor_union_start_code(state) && (int_res = ((((zcbor_int32_decode(state, (&(*result)._message_1_C_I_int)))) && (((*result)._message_1_C_I_choice = _message_1_C_I_int), true))
+	|| (((zcbor_bstr_decode(state, (&(*result)._message_1_C_I_bstr)))) && (((*result)._message_1_C_I_choice = _message_1_C_I_bstr), true))), zcbor_union_end_code(state), int_res)))
 	&& zcbor_present_decode(&((*result)._message_1_ead_1_present), (zcbor_decoder_t *)zcbor_bstr_decode, state, (&(*result)._message_1_ead_1)))));
 
 	if (!tmp_result)
@@ -38,7 +40,7 @@ static bool decode_message_1(
 
 
 
-bool cbor_decode_message_1(
+int cbor_decode_message_1(
 		const uint8_t *payload, size_t payload_len,
 		struct message_1 *result,
 		size_t *payload_len_out)
@@ -54,5 +56,11 @@ bool cbor_decode_message_1(
 				(size_t)states[0].payload - (size_t)payload);
 	}
 
-	return ret;
+	if (!ret) {
+		int err = zcbor_pop_error(states);
+
+		zcbor_print("Return error: %d\r\n", err);
+		return (err == ZCBOR_SUCCESS) ? ZCBOR_ERR_UNKNOWN : err;
+	}
+	return ZCBOR_SUCCESS;
 }

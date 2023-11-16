@@ -128,15 +128,22 @@ static int send_coap_reply(void *sock, CoapPDU *pdu)
 	return 0;
 }
 
-enum err tx(void *sock, uint8_t *data, uint32_t data_len)
+enum err ead_process(void *params, struct byte_array *ead13)
+{
+	/*for this sample we are not using EAD*/
+	/*to save RAM we use FEATURES += -DEAD_SIZE=0*/
+	return ok;
+}
+
+enum err tx(void *sock, struct byte_array *data)
 {
 	txPDU->setCode(CoapPDU::COAP_CHANGED);
-	txPDU->setPayload(data, data_len);
+	txPDU->setPayload(data->ptr, data->len);
 	send_coap_reply(sock, txPDU);
 	return ok;
 }
 
-enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
+enum err rx(void *sock, struct byte_array *data)
 {
 	int n;
 
@@ -160,9 +167,9 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
 	// 	    rxPDU->getPayloadLength());
 
 	uint32_t payload_len = rxPDU->getPayloadLength();
-	if (*data_len >= payload_len) {
-		memcpy(data, rxPDU->getPayloadPointer(), payload_len);
-		*data_len = payload_len;
+	if (data->len >= payload_len) {
+		memcpy(data->ptr, rxPDU->getPayloadPointer(), payload_len);
+		data->len = payload_len;
 	} else {
 		printf("insufficient space in buffer");
 	}
@@ -211,45 +218,24 @@ int main()
 	 * 
 	 */
 	int sockfd;
-	uint8_t prk_exporter[32];
-	uint8_t oscore_master_secret[16];
-	uint8_t oscore_master_salt[8];
-
-	/* edhoc declarations */
-	uint8_t PRK_out[PRK_DEFAULT_SIZE];
-	uint8_t err_msg[ERR_MSG_DEFAULT_SIZE];
-	uint32_t err_msg_len = sizeof(err_msg);
-	uint8_t ad_1[AD_DEFAULT_SIZE];
-	uint32_t ad_1_len = sizeof(ad_1);
-	uint8_t ad_3[AD_DEFAULT_SIZE];
-	uint32_t ad_3_len = sizeof(ad_1);
+	BYTE_ARRAY_NEW(prk_exporter, 32, 32);
+	BYTE_ARRAY_NEW(oscore_master_secret, 16, 16);
+	BYTE_ARRAY_NEW(oscore_master_salt, 8, 8);
+	BYTE_ARRAY_NEW(PRK_out, 32, 32);
+	BYTE_ARRAY_NEW(err_msg, 0, 0);
 
 	/* test vector inputs */
-	const uint8_t TEST_VEC_NUM = 1;
-	uint16_t cred_num = 1;
 	struct other_party_cred cred_i;
 	struct edhoc_responder_context c_r;
 
+	const uint8_t TEST_VEC_NUM = 1;
 	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
 	TRY_EXPECT(start_coap_server(&sockfd), 0);
 
-	cred_i.id_cred.len = test_vectors[vec_num_i].id_cred_i_len;
-	cred_i.id_cred.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_i;
-	cred_i.cred.len = test_vectors[vec_num_i].cred_i_len;
-	cred_i.cred.ptr = (uint8_t *)test_vectors[vec_num_i].cred_i;
-	cred_i.g.len = test_vectors[vec_num_i].g_i_raw_len;
-	cred_i.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_i_raw;
-	cred_i.pk.len = test_vectors[vec_num_i].pk_i_raw_len;
-	cred_i.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
-	cred_i.ca.len = test_vectors[vec_num_i].ca_i_len;
-	cred_i.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca_i;
-	cred_i.ca_pk.len = test_vectors[vec_num_i].ca_i_pk_len;
-	cred_i.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_i_pk;
-
+	c_r.sock = &sockfd;
 	c_r.c_r.ptr = (uint8_t *)test_vectors[vec_num_i].c_r;
 	c_r.c_r.len = test_vectors[vec_num_i].c_r_len;
-	c_r.msg4 = true;
 	c_r.suites_r.len = test_vectors[vec_num_i].SUITES_R_len;
 	c_r.suites_r.ptr = (uint8_t *)test_vectors[vec_num_i].SUITES_R;
 	c_r.ead_2.len = test_vectors[vec_num_i].ead_2_len;
@@ -272,37 +258,48 @@ int main()
 	c_r.sk_r.ptr = (uint8_t *)test_vectors[vec_num_i].sk_r_raw;
 	c_r.pk_r.len = test_vectors[vec_num_i].pk_r_raw_len;
 	c_r.pk_r.ptr = (uint8_t *)test_vectors[vec_num_i].pk_r_raw;
-	c_r.sock = &sockfd;
+
+	cred_i.id_cred.len = test_vectors[vec_num_i].id_cred_i_len;
+	cred_i.id_cred.ptr = (uint8_t *)test_vectors[vec_num_i].id_cred_i;
+	cred_i.cred.len = test_vectors[vec_num_i].cred_i_len;
+	cred_i.cred.ptr = (uint8_t *)test_vectors[vec_num_i].cred_i;
+	cred_i.g.len = test_vectors[vec_num_i].g_i_raw_len;
+	cred_i.g.ptr = (uint8_t *)test_vectors[vec_num_i].g_i_raw;
+	cred_i.pk.len = test_vectors[vec_num_i].pk_i_raw_len;
+	cred_i.pk.ptr = (uint8_t *)test_vectors[vec_num_i].pk_i_raw;
+	cred_i.ca.len = test_vectors[vec_num_i].ca_i_len;
+	cred_i.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca_i;
+	cred_i.ca_pk.len = test_vectors[vec_num_i].ca_i_pk_len;
+	cred_i.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_i_pk;
+
+	struct cred_array cred_i_array = { .len = 1, .ptr = &cred_i };
 
 #ifdef TINYCRYPT
-		/* Register RNG function */
-		uECC_set_rng(default_CSPRNG);
+	/* Register RNG function */
+	uECC_set_rng(default_CSPRNG);
 #endif
 
-	TRY(edhoc_responder_run(&c_r, &cred_i, cred_num, err_msg, &err_msg_len,
-				(uint8_t *)&ad_1, &ad_1_len, (uint8_t *)&ad_3,
-				&ad_3_len, PRK_out, sizeof(PRK_out), tx, rx));
-	PRINT_ARRAY("PRK_out", PRK_out, sizeof(PRK_out));
+	TRY(edhoc_responder_run(&c_r, &cred_i_array, &err_msg, &PRK_out, tx, rx,
+				ead_process));
+	PRINT_ARRAY("PRK_out", PRK_out.ptr, PRK_out.len);
 
-	TRY(prk_out2exporter(SHA_256, PRK_out, sizeof(PRK_out), prk_exporter));
-	PRINT_ARRAY("prk_exporter", prk_exporter, sizeof(prk_exporter));
+	TRY(prk_out2exporter(SHA_256, &PRK_out, &prk_exporter));
+	PRINT_ARRAY("prk_exporter", prk_exporter.ptr, prk_exporter.len);
 
-	TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SECRET, prk_exporter,
-			   sizeof(prk_exporter), oscore_master_secret,
-			   sizeof(oscore_master_secret)));
-	PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret,
-		    sizeof(oscore_master_secret));
+	TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SECRET, &prk_exporter,
+			   &oscore_master_secret));
+	PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret.ptr,
+		    oscore_master_secret.len);
 
-	TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SALT, prk_exporter,
-			   sizeof(prk_exporter), oscore_master_salt,
-			   sizeof(oscore_master_salt)));
-	PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt,
-		    sizeof(oscore_master_salt));
+	TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SALT, &prk_exporter,
+			   &oscore_master_salt));
+	PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt.ptr,
+		    oscore_master_salt.len);
 
 	/*
 	 *  
 	 * 
-	 * Protected und unprotect communication over CoAP/OSCORE
+	 * Protected und unprotected communication over CoAP/OSCORE
 	 * 
 	 * 
 	 */
@@ -316,16 +313,16 @@ int main()
 
 	/*OSCORE contex initialization*/
 	oscore_init_params params = {
-		sizeof(oscore_master_secret),
-		oscore_master_secret,
+		oscore_master_secret.len,
+		oscore_master_secret.ptr,
 		T1__RECIPIENT_ID_LEN,
 		(uint8_t *)T1__RECIPIENT_ID,
 		T1__SENDER_ID_LEN,
 		(uint8_t *)T1__SENDER_ID,
 		T1__ID_CONTEXT_LEN,
 		(uint8_t *)T1__ID_CONTEXT,
-		sizeof(oscore_master_salt),
-		oscore_master_salt,
+		oscore_master_salt.len,
+		oscore_master_salt.ptr,
 		OSCORE_AES_CCM_16_64_128,
 		OSCORE_SHA_256,
 		true,

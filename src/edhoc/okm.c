@@ -9,7 +9,7 @@
    except according to those terms.
 */
 
-#include "edhoc.h"
+#include "edhoc/buffer_sizes.h"
 
 #include "edhoc/hkdf_info.h"
 #include "edhoc/okm.h"
@@ -19,17 +19,16 @@
 
 #include "common/print_util.h"
 
-enum err edhoc_kdf(enum hash_alg hash_alg, const uint8_t *prk, uint32_t prk_len,
-		   uint8_t label, uint8_t *context, uint32_t context_len,
-		   uint32_t okm_len, uint8_t *okm)
+enum err edhoc_kdf(enum hash_alg hash_alg, const struct byte_array *prk,
+		   uint8_t label, struct byte_array *context,
+		   struct byte_array *okm)
 {
-	uint8_t info[INFO_DEFAULT_SIZE];
-	uint32_t info_len = sizeof(info);
+	PRINTF("INFO_MAX_SIZE: %d\n", INFO_MAX_SIZE);
+	PRINTF("context->len: %d\n", context->len);
+	BYTE_ARRAY_NEW(info, INFO_MAX_SIZE, context->len + ENCODING_OVERHEAD);
 
-	TRY(create_hkdf_info(label, context, context_len, okm_len,
-			     (uint8_t *)&info, &info_len));
+	TRY(create_hkdf_info(label, context, okm->len, &info));
 
-	PRINT_ARRAY("info", info, info_len);
-	return hkdf_expand(hash_alg, prk, prk_len, (uint8_t *)&info, info_len,
-			   okm, okm_len);
+	PRINT_ARRAY("info", info.ptr, info.len);
+	return hkdf_expand(hash_alg, prk, &info, okm);
 }

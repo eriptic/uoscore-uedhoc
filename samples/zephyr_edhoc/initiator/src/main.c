@@ -16,6 +16,8 @@
 #include "sock.h"
 #include "edhoc_test_vectors_p256_v16.h"
 
+#define URI_PATH 11
+
 /**
  * @brief	Initializes sockets for CoAP client.
  * @param
@@ -36,13 +38,19 @@ static int start_coap_client(int *sockfd)
 	return 0;
 }
 
+enum err ead_process(void *params, struct byte_array *ead13)
+{
+	/*for this sample we are not using EAD*/
+	/*to save RAM we use FEATURES += -DEAD_SIZE=0*/
+	return ok;
+}
+
 /**
  * @brief	Callback function called inside the frontend when data needs to 
  * 		be send over the network. We use here CoAP as transport 
  * @param	data pointer to the data that needs to be send
- * @param	data_len lenhgt of the data in bytes
  */
-enum err tx(void *sock, uint8_t *data, uint32_t data_len)
+enum err tx(void *sock, struct byte_array *data)
 {
 	/* Initialize the CoAP message */
 	char *path = ".well-known/edhoc";
@@ -55,15 +63,16 @@ enum err tx(void *sock, uint8_t *data, uint32_t data_len)
 		   0);
 
 	/* Append options */
-	TRY_EXPECT(coap_packet_append_option(&request, URI_PATH,
-					     path, strlen(path)),
+	TRY_EXPECT(coap_packet_append_option(&request, URI_PATH, path,
+					     strlen(path)),
 		   0);
 
 	/* Append Payload marker if you are going to add payload */
 	TRY_EXPECT(coap_packet_append_payload_marker(&request), 0);
 
 	/* Append payload */
-	TRY_EXPECT(coap_packet_append_payload(&request, data, data_len), 0);
+	TRY_EXPECT(coap_packet_append_payload(&request, data->ptr, data->len),
+		   0);
 
 	PRINT_ARRAY("CoAP packet", request.data, request.offset);
 	ssize_t n = send(*((int *)sock), request.data, request.offset, 0);
@@ -80,9 +89,8 @@ enum err tx(void *sock, uint8_t *data, uint32_t data_len)
  * @brief	Callback function called inside the frontend when data needs to 
  * 		be received over the network. We use here CoAP as transport 
  * @param	data pointer to the data that needs to be received
- * @param	data_len lenhgt of the data in bytes
  */
-enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
+enum err rx(void *sock, struct byte_array *data)
 {
 	int n;
 	char buffer[MAXLINE];
@@ -104,43 +112,37 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
 
 	PRINT_ARRAY("received EDHOC data", edhoc_data_p, edhoc_data_len);
 
-	if (*data_len >= edhoc_data_len) {
-		memcpy(data, edhoc_data_p, edhoc_data_len);
-		*data_len = edhoc_data_len;
+	if (data->len >= edhoc_data_len) {
+		memcpy(data->ptr, edhoc_data_p, edhoc_data_len);
+		data->len = edhoc_data_len;
 	} else {
 		printf("insufficient space in buffer");
 		return buffer_to_small;
 	}
-
 	return ok;
 }
 
-void main(void)
+int internal_main(void)
 {
 	int32_t s = 5000;
-	printf("sleep for %d msecond after connection in order to have time to start wireshark on bt0\n", s);
+	printf("sleep for %d msecond after connection in order to have time to start wireshark on bt0\n",
+	       s);
 	k_msleep(s);
 
-
 	int sockfd;
-	uint8_t prk_exporter[32];
-	uint8_t oscore_master_secret[16];
-	uint8_t oscore_master_salt[8];
-
-	/* edhoc declarations */
-	uint8_t PRK_out[PRK_DEFAULT_SIZE];
-	uint8_t err_msg[ERR_MSG_DEFAULT_SIZE];
-	uint32_t err_msg_len = sizeof(err_msg);
+	BYTE_ARRAY_NEW(prk_exporter, 32, 32);
+	BYTE_ARRAY_NEW(oscore_master_secret, 16, 16);
+	BYTE_ARRAY_NEW(oscore_master_salt, 8, 8);
+	BYTE_ARRAY_NEW(PRK_out, 32, 32);
+	BYTE_ARRAY_NEW(err_msg, 0, 0);
 
 	/* test vector inputs */
-	const uint8_t TEST_VEC_NUM = 2;
-	uint16_t cred_num = 1;
 	struct other_party_cred cred_r;
 	struct edhoc_initiator_context c_i;
 
+	const uint8_t TEST_VEC_NUM = 2;
 	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
-	c_i.msg4 = true;
 	c_i.sock = &sockfd;
 	c_i.c_i.len = test_vectors[vec_num_i].c_i_len;
 	c_i.c_i.ptr = (uint8_t *)test_vectors[vec_num_i].c_i;
@@ -181,27 +183,35 @@ void main(void)
 	cred_r.ca_pk.len = test_vectors[vec_num_i].ca_r_pk_len;
 	cred_r.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_r_pk;
 
+	struct cred_array cred_r_array = { .len = 1, .ptr = &cred_r };
+
 	start_coap_client(&sockfd);
-	edhoc_initiator_run(&c_i, &cred_r, cred_num, err_msg, &err_msg_len,
-				NULL, NULL, NULL, NULL, PRK_out,
-			    sizeof(PRK_out), tx, rx);
+	edhoc_initiator_run(&c_i, &cred_r_array, &err_msg, &PRK_out, tx, rx,
+			    ead_process);
 
-	PRINT_ARRAY("PRK_out", PRK_out, sizeof(PRK_out));
+	PRINT_ARRAY("PRK_out", PRK_out.ptr, PRK_out.len);
 
-	prk_out2exporter(SHA_256, PRK_out, sizeof(PRK_out), prk_exporter);
-	PRINT_ARRAY("prk_exporter", prk_exporter, sizeof(prk_exporter));
+	prk_out2exporter(SHA_256, &PRK_out, &prk_exporter);
+	PRINT_ARRAY("prk_exporter", prk_exporter.ptr, prk_exporter.len);
 
-	edhoc_exporter(SHA_256, OSCORE_MASTER_SECRET, prk_exporter,
-		       sizeof(prk_exporter), oscore_master_secret,
-		       sizeof(oscore_master_secret));
-	PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret,
-		    sizeof(oscore_master_secret));
+	edhoc_exporter(SHA_256, OSCORE_MASTER_SECRET, &prk_exporter,
+		       &oscore_master_secret);
+	PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret.ptr,
+		    oscore_master_secret.len);
 
-	edhoc_exporter(SHA_256, OSCORE_MASTER_SALT, prk_exporter,
-		       sizeof(prk_exporter), oscore_master_salt,
-		       sizeof(oscore_master_salt));
-	PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt,
-		    sizeof(oscore_master_salt));
+	edhoc_exporter(SHA_256, OSCORE_MASTER_SALT, &prk_exporter,
+		       &oscore_master_salt);
+	PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt.ptr,
+		    oscore_master_salt.len);
 
 	close(sockfd);
+	return 0;
+}
+
+void main(void)
+{
+	int r = internal_main();
+	if (r != 0) {
+		printf("error during initiator run. Error code: %d\n", r);
+	}
 }

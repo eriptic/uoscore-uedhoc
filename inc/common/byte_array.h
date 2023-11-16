@@ -25,6 +25,11 @@ struct byte_array {
 	uint8_t *ptr;
 };
 
+struct const_byte_array {
+	uint32_t len;
+	const uint8_t *ptr;
+};
+
 /* Empty Array with len=0 but with a non-null pointer.*/
 extern struct byte_array EMPTY_ARRAY;
 
@@ -32,34 +37,70 @@ extern struct byte_array EMPTY_ARRAY;
 extern struct byte_array NULL_ARRAY;
 
 /**
- * @brief   Compares if the given two arrays have an equal content.
+ * @brief			Compares if the given two arrays have equal
+ * 				content.
  *
- *          Handles null-arrays correctly
- * @param   left first array
- * @param   right second array
- * @return  if the contents of given arrays are equal
+ * @param[in] a 		Array "a".
+ * @param[in] b 		Array "b".
+ * @return  			True if the contents of both arrays is equal.
  */
-bool array_equals(const struct byte_array *left,
-		  const struct byte_array *right);
+bool array_equals(const struct byte_array *a, const struct byte_array *b);
 
+/**
+ * @brief 			Creates a copy of a byte array.
+ * 
+ * @param[out] dest 		The destination byte array.
+ * @param[in] src		The source byte array. 
+ * @param dest_max_len 		The maximal length of the destination array.
+ * @return enum err 		Ok or error code.
+ */
 enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src,
 			const uint32_t dest_max_len);
 
 /**
- * @brief   Sets the pointer and the length of a byte_array variable to a given array
-*/
-#define BYTE_ARRAY_INIT(PTR, SIZE) { .ptr = PTR, .len = SIZE }
+ * @brief   			Initializes a byte array variable with a 
+ * 				pointer to a buffer and length of the buffer.
+ *
+ * @param PTR			pointer
+ * @param LEN			Length of the buffer in bytes 
+ */
+#define BYTE_ARRAY_INIT(PTR, LEN)                                              \
+	{                                                                      \
+		.len = LEN, .ptr = PTR                                         \
+	}
 
 /**
  * @brief   Creates a variable of type byte_array.
  *          In addition a buffer is created to hold the data.
- *          Before the creation of the buffer it is checked if the size of the 
- *          buffer (BUF_SIZE) will be sufficient for the size of the byte_array 
- *          (SIZE). 
+ *          If Variable Length Array (VLA) is NOT used, before the creation of 
+ *          the buffer it is checked if the size of the buffer (BUF_SIZE) will 
+ *          be sufficient for the size of the byte_array (SIZE). 
 */
+#ifdef VLA
+#define BYTE_ARRAY_NEW(NAME, BUF_SIZE, SIZE)                                   \
+	if (SIZE < 0 || SIZE > BUF_SIZE) {                                     \
+		return vla_insufficient_size;                                  \
+	}                                                                      \
+	struct byte_array NAME;                                                \
+	uint8_t NAME##_buf[SIZE];                                              \
+	if (SIZE == 0) {                                                       \
+		NAME = NULL_ARRAY;                                             \
+	} else {                                                               \
+		NAME.ptr = NAME##_buf;                                         \
+		NAME.len = SIZE;                                               \
+	};
+
+#else
 #define BYTE_ARRAY_NEW(NAME, BUF_SIZE, SIZE)                                   \
 	TRY(check_buffer_size(BUF_SIZE, SIZE));                                \
+	struct byte_array NAME;                                                \
 	uint8_t NAME##_buf[BUF_SIZE];                                          \
-	struct byte_array NAME = BYTE_ARRAY_INIT(NAME##_buf, SIZE);
-
+	if (SIZE == 0) {                                                       \
+		NAME = NULL_ARRAY;                                             \
+	} else {                                                               \
+		NAME.ptr = NAME##_buf;                                         \
+		NAME.len = SIZE;                                               \
+	};
 #endif
+
+#endif //BYTE_ARRAY_H

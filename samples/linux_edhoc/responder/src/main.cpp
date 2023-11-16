@@ -35,7 +35,7 @@ char buffer[MAXLINE];
 CoapPDU *rxPDU;
 
 /*comment this out to use DH keys from the test vectors*/
-//#define USE_RANDOM_EPHEMERAL_DH_KEY
+#define USE_RANDOM_EPHEMERAL_DH_KEY
 
 #ifdef USE_IPV6
 struct sockaddr_in6 client_addr;
@@ -106,15 +106,22 @@ static int send_coap_reply(void *sock, CoapPDU *pdu)
 	return 0;
 }
 
-enum err tx(void *sock, uint8_t *data, uint32_t data_len)
+enum err ead_process(void *params, struct byte_array *ead13)
+{
+	/*for this sample we are not using EAD*/
+	/*to save RAM we use FEATURES += -DEAD_SIZE=0*/
+	return ok;
+}
+
+enum err tx(void *sock, struct byte_array *data)
 {
 	txPDU->setCode(CoapPDU::COAP_CHANGED);
-	txPDU->setPayload(data, data_len);
+	txPDU->setPayload(data->ptr, data->len);
 	send_coap_reply(sock, txPDU);
 	return ok;
 }
 
-enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
+enum err rx(void *sock, struct byte_array *data)
 {
 	int n;
 
@@ -138,9 +145,9 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
 		    rxPDU->getPayloadLength());
 
 	uint32_t payload_len = rxPDU->getPayloadLength();
-	if (*data_len >= payload_len) {
-		memcpy(data, rxPDU->getPayloadPointer(), payload_len);
-		*data_len = payload_len;
+	if (data->len >= payload_len) {
+		memcpy(data->ptr, rxPDU->getPayloadPointer(), payload_len);
+		data->len = payload_len;
 	} else {
 		printf("insufficient space in buffer");
 	}
@@ -163,21 +170,13 @@ enum err rx(void *sock, uint8_t *data, uint32_t *data_len)
 int main()
 {
 	int sockfd;
-	uint8_t prk_exporter[32];
-	uint8_t oscore_master_secret[16];
-	uint8_t oscore_master_salt[8];
-
-	/* edhoc declarations */
-	uint8_t PRK_out[PRK_DEFAULT_SIZE];
-	uint8_t err_msg[ERR_MSG_DEFAULT_SIZE];
-	uint32_t err_msg_len = sizeof(err_msg);
-	uint8_t ad_1[AD_DEFAULT_SIZE];
-	uint32_t ad_1_len = sizeof(ad_1);
-	uint8_t ad_3[AD_DEFAULT_SIZE];
-	uint32_t ad_3_len = sizeof(ad_1);
+	BYTE_ARRAY_NEW(prk_exporter, 32, 32);
+	BYTE_ARRAY_NEW(oscore_master_secret, 16, 16);
+	BYTE_ARRAY_NEW(oscore_master_salt, 8, 8);
+	BYTE_ARRAY_NEW(PRK_out, 32, 32);
+	BYTE_ARRAY_NEW(err_msg, 0, 0);
 
 	/* test vector inputs */
-	uint16_t cred_num = 1;
 	struct other_party_cred cred_i;
 	struct edhoc_responder_context c_r;
 
@@ -186,7 +185,6 @@ int main()
 
 	TRY_EXPECT(start_coap_server(&sockfd), 0);
 
-	c_r.msg4 = true;
 	c_r.sock = &sockfd;
 	c_r.c_r.ptr = (uint8_t *)test_vectors[vec_num_i].c_r;
 	c_r.c_r.len = test_vectors[vec_num_i].c_r_len;
@@ -226,14 +224,16 @@ int main()
 	cred_i.ca_pk.len = test_vectors[vec_num_i].ca_i_pk_len;
 	cred_i.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_i_pk;
 
+	struct cred_array cred_i_array = { .len = 1, .ptr = &cred_i };
+
 #ifdef USE_RANDOM_EPHEMERAL_DH_KEY
 	uint32_t seed;
-	uint8_t G_Y_random[32];
-	uint8_t Y_random[32];
-	c_r.g_y.ptr = G_Y_random;
-	c_r.g_y.len = sizeof(G_Y_random);
-	c_r.y.ptr = Y_random;
-	c_r.y.len = sizeof(Y_random);
+	BYTE_ARRAY_NEW(Y_random, 32, 32);
+	BYTE_ARRAY_NEW(G_Y_random, 32, 32);
+	c_r.g_y.ptr = G_Y_random.ptr;
+	c_r.g_y.len = G_Y_random.len;
+	c_r.y.ptr = Y_random.ptr;
+	c_r.y.len = Y_random.len;
 #endif
 
 	while (1) {
@@ -242,14 +242,12 @@ int main()
 		/*create a random seed*/
 		FILE *fp;
 		fp = fopen("/dev/urandom", "r");
-		uint32_t G_Y_random_len = sizeof(G_Y_random);
 		uint64_t seed_len =
 			fread((uint8_t *)&seed, 1, sizeof(seed), fp);
 		fclose(fp);
 		PRINT_ARRAY("seed", (uint8_t *)&seed, seed_len);
 
-		TRY(ephemeral_dh_key_gen(P256, seed, Y_random, G_Y_random,
-					 &G_Y_random_len));
+		TRY(ephemeral_dh_key_gen(P256, seed, &Y_random, &G_Y_random));
 		PRINT_ARRAY("secret ephemeral DH key", c_r.g_y.ptr,
 			    c_r.g_y.len);
 		PRINT_ARRAY("public ephemeral DH key", c_r.y.ptr, c_r.y.len);
@@ -260,27 +258,22 @@ int main()
 		uECC_set_rng(default_CSPRNG);
 #endif
 
-		TRY(edhoc_responder_run(&c_r, &cred_i, cred_num, err_msg,
-					&err_msg_len, (uint8_t *)&ad_1,
-					&ad_1_len, (uint8_t *)&ad_3, &ad_3_len,
-					PRK_out, sizeof(PRK_out), tx, rx));
-		PRINT_ARRAY("PRK_out", PRK_out, sizeof(PRK_out));
+		TRY(edhoc_responder_run(&c_r, &cred_i_array, &err_msg, &PRK_out,
+					tx, rx, ead_process));
+		PRINT_ARRAY("PRK_out", PRK_out.ptr, PRK_out.len);
 
-		TRY(prk_out2exporter(SHA_256, PRK_out, sizeof(PRK_out),
-				     prk_exporter));
-		PRINT_ARRAY("prk_exporter", prk_exporter, sizeof(prk_exporter));
+		TRY(prk_out2exporter(SHA_256, &PRK_out, &prk_exporter));
+		PRINT_ARRAY("prk_exporter", prk_exporter.ptr, prk_exporter.len);
 
-		TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SECRET, prk_exporter,
-				   sizeof(prk_exporter), oscore_master_secret,
-				   sizeof(oscore_master_secret)));
-		PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret,
-			    sizeof(oscore_master_secret));
+		TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SECRET, &prk_exporter,
+				   &oscore_master_secret));
+		PRINT_ARRAY("OSCORE Master Secret", oscore_master_secret.ptr,
+			    oscore_master_secret.len);
 
-		TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SALT, prk_exporter,
-				   sizeof(prk_exporter), oscore_master_salt,
-				   sizeof(oscore_master_salt)));
-		PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt,
-			    sizeof(oscore_master_salt));
+		TRY(edhoc_exporter(SHA_256, OSCORE_MASTER_SALT, &prk_exporter,
+				   &oscore_master_salt));
+		PRINT_ARRAY("OSCORE Master Salt", oscore_master_salt.ptr,
+			    oscore_master_salt.len);
 	}
 
 	close(sockfd);

@@ -9,7 +9,7 @@
    except according to those terms.
 */
 
-#include "edhoc.h"
+#include "edhoc/buffer_sizes.h"
 
 #include "edhoc/okm.h"
 #include "edhoc/ciphertext.h"
@@ -24,176 +24,151 @@
 #include "common/memcpy_s.h"
 
 /**
- * @brief Xors two arrays
+ * @brief 			Xors two arrays.
  * 
- * @param in1 an input array
- * @param in2 an input array
- * @param len the lenhgt of the arrays
- * @param out the result
+ * @param[in] in1		An input array.
+ * @param[in] in2 		An input array.
+ * @param[out] out 		The result of the xor operation.
+ * @retval			Ok or error code.
  */
-static inline void xor_arrays(const uint8_t *in1, const uint8_t *in2,
-			      uint32_t len, uint8_t *out)
+static inline enum err xor_arrays(const struct byte_array *in1,
+				  const struct byte_array *in2,
+				  struct byte_array *out)
 {
-	for (uint32_t i = 0; i < len; i++) {
-		out[i] = in1[i] ^ in2[i];
+	if (in1->len != in2->len) {
+		return xor_error;
 	}
-}
-
-/**
- * @brief Encrypts a plaintext or decrypts a cyphertext
- * 
- * @param ctxt CIPHERTEXT2, CIPHERTEXT3 or CIPHERTEXT4
- * @param op ENCRYPT or DECRYPT
- * @param in ciphertext or plaintext 
- * @param in_len lenhgt of in
- * @param key the key used of encrption/decryption
- * @param key_len lenhgt of key
- * @param nonce AEAD nonce
- * @param nonce_len lenhgt of nonce
- * @param aad additional authenticated data for AEAD
- * @param aad_len lenhgt of aad
- * @param out the result
- * @param out_len lenhgt of out
- * @param tag AEAD authentication tag
- * @param tag_len lenhgt of tag
- * @return enum err 
- */
-static enum err ciphertext_encrypt_decrypt(
-	enum ciphertext ctxt, enum aes_operation op, const uint8_t *in,
-	const uint32_t in_len, const uint8_t *key, const uint32_t key_len,
-	uint8_t *nonce, const uint32_t nonce_len, const uint8_t *aad,
-	const uint32_t aad_len, uint8_t *out, const uint32_t out_len,
-	uint8_t *tag, const uint32_t tag_len)
-{
-	if (ctxt == CIPHERTEXT2) {
-		xor_arrays(in, key, key_len, out);
-	} else {
-		PRINT_ARRAY("in", in, in_len);
-		TRY(aead(op, in, in_len, key, key_len, nonce, nonce_len, aad,
-			 aad_len, out, out_len, tag, tag_len));
+	for (uint32_t i = 0; i < in1->len; i++) {
+		out->ptr[i] = in1->ptr[i] ^ in2->ptr[i];
 	}
 	return ok;
 }
 
 /**
- * @brief Computes the keystream for ciphertext 2 and the key and IV for 
- *        ciphertexts 3 and 4. 
+ * @brief 			Encrypts a plaintext or decrypts a ciphertext.
  * 
- * @param ctxt CIPHERTEXT2, CIPHERTEXT3 or CIPHERTEXT4
- * @param edhoc_hash the hash algorithm used in the current edhoc run
- * @param prk pseudoramdom key
- * @param prk_len lenhgt of prk
- * @param th thraskript hash
- * @param th_len lenhgt of th
- * @param key the generated key
- * @param key_len lenhgt of key
- * @param iv the generated iv
- * @param iv_len lenhgt of iv
- * @return enum err 
+ * @param ctxt 			CIPHERTEXT2, CIPHERTEXT3 or CIPHERTEXT4.
+ * @param op 			ENCRYPT or DECRYPT.
+ * @param[in] in 		Ciphertext or plaintext. 
+ * @param[in] key 		The key used of encryption/decryption.
+ * @param[in] nonce 		AEAD nonce.
+ * @param[in] aad 		Additional authenticated data for AEAD.
+ * @param[out] out 		The result.
+ * @param[out] tag 		AEAD authentication tag.
+ * @return 			Ok or error code. 
+ */
+static enum err ciphertext_encrypt_decrypt(
+	enum ciphertext ctxt, enum aes_operation op,
+	const struct byte_array *in, const struct byte_array *key,
+	struct byte_array *nonce, const struct byte_array *aad,
+	struct byte_array *out, struct byte_array *tag)
+{
+	if (ctxt == CIPHERTEXT2) {
+		xor_arrays(in, key, out);
+	} else {
+		PRINT_ARRAY("in", in->ptr, in->len);
+		TRY(aead(op, in, key, nonce, aad, out, tag));
+	}
+	return ok;
+}
+
+/**
+ * @brief 			Computes the key stream for ciphertext 2 and 
+ * 				the key and IV for ciphertext 3 and 4. 
+ * 
+ * @param ctxt 			CIPHERTEXT2, CIPHERTEXT3 or CIPHERTEXT4.
+ * @param edhoc_hash 		The EDHOC hash algorithm.
+ * @param prk 			Pseudorandom key.
+ * @param th 			Transcript hash.
+ * @param[out] key 		The generated key/key stream.
+ * @param[out] iv 		The generated iv.
+ * @return 			Ok or error code. 
  */
 static enum err key_gen(enum ciphertext ctxt, enum hash_alg edhoc_hash,
-			uint8_t *prk, uint32_t prk_len, uint8_t *th,
-			uint32_t th_len, uint8_t *key, uint32_t key_len,
-			uint8_t *iv, uint32_t iv_len)
+			struct byte_array *prk, struct byte_array *th,
+			struct byte_array *key, struct byte_array *iv)
 {
 	switch (ctxt) {
 	case CIPHERTEXT2:
-		TRY(edhoc_kdf(edhoc_hash, prk, prk_len, KEYSTREAM_2, th, th_len,
-			      key_len, key));
-		PRINT_ARRAY("KEYSTREAM_2", key, key_len);
+		TRY(edhoc_kdf(edhoc_hash, prk, KEYSTREAM_2, th, key));
+		PRINT_ARRAY("KEYSTREAM_2", key->ptr, key->len);
 		break;
 
 	case CIPHERTEXT3:
-		TRY(edhoc_kdf(edhoc_hash, prk, prk_len, K_3, th, th_len,
-			      key_len, key));
+		TRY(edhoc_kdf(edhoc_hash, prk, K_3, th, key));
 
-		PRINT_ARRAY("K_3", key, key_len);
+		PRINT_ARRAY("K_3", key->ptr, key->len);
 
-		TRY(edhoc_kdf(edhoc_hash, prk, prk_len, IV_3, th, th_len,
-			      iv_len, iv));
-		PRINT_ARRAY("IV_3", iv, iv_len);
+		TRY(edhoc_kdf(edhoc_hash, prk, IV_3, th, iv));
+		PRINT_ARRAY("IV_3", iv->ptr, iv->len);
 		break;
 
 	case CIPHERTEXT4:
-		TRY(edhoc_kdf(edhoc_hash, prk, prk_len, K_4, th, th_len,
-			      key_len, key));
-		PRINT_ARRAY("K_4", key, key_len);
-		TRY(edhoc_kdf(edhoc_hash, prk, prk_len, IV_4, th, th_len,
-			      iv_len, iv));
-		PRINT_ARRAY("IV_4", iv, iv_len);
+		PRINT_ARRAY("PRK_4e3m", prk->ptr, prk->len);
+		PRINT_ARRAY("TH_4", th->ptr, th->len);
+		TRY(edhoc_kdf(edhoc_hash, prk, K_4, th, key));
+		PRINT_ARRAY("K_4", key->ptr, key->len);
+		TRY(edhoc_kdf(edhoc_hash, prk, IV_4, th, iv));
+		PRINT_ARRAY("IV_4", iv->ptr, iv->len);
 		break;
 	}
 	return ok;
 }
 
 enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
-				  uint8_t *id_cred, uint32_t *id_cred_len,
-				  uint8_t *signature_or_mac,
-				  uint32_t *signature_or_mac_len, uint8_t *ead,
-				  uint32_t *ead_len, uint8_t *prk,
-				  uint32_t prk_len, uint8_t *th,
-				  uint32_t th_len, uint8_t *ciphertext,
-				  uint32_t ciphertext_len, uint8_t *plaintext,
-				  uint32_t plaintext_len)
+				  struct byte_array *id_cred,
+				  struct byte_array *sig_or_mac,
+				  struct byte_array *ead,
+				  struct byte_array *prk, struct byte_array *th,
+				  struct byte_array *ciphertext,
+				  struct byte_array *plaintext)
 {
 	/*generate key and iv (no iv in for ciphertext 2)*/
 	uint32_t key_len;
-	uint8_t key[CIPHERTEXT2_DEFAULT_SIZE];
 	if (ctxt == CIPHERTEXT2) {
-		key_len = ciphertext_len;
+		key_len = ciphertext->len;
 	} else {
 		key_len = get_aead_key_len(suite->edhoc_aead);
 	}
-	TRY(check_buffer_size(CIPHERTEXT2_DEFAULT_SIZE, key_len));
 
-	uint32_t iv_len = get_aead_iv_len(suite->edhoc_aead);
-	TRY(check_buffer_size(AEAD_IV_DEFAULT_SIZE, iv_len));
-	uint8_t iv[AEAD_IV_DEFAULT_SIZE];
+	BYTE_ARRAY_NEW(key, CIPHERTEXT2_SIZE, key_len);
+	BYTE_ARRAY_NEW(iv, AEAD_IV_SIZE, get_aead_iv_len(suite->edhoc_aead));
 
-	TRY(key_gen(ctxt, suite->edhoc_hash, prk, prk_len, th, th_len, key,
-		    key_len, iv, iv_len));
+	TRY(key_gen(ctxt, suite->edhoc_hash, prk, th, &key, &iv));
 
 	/*Associated data*/
-	uint8_t associated_data[ASSOCIATED_DATA_DEFAULT_SIZE];
-	uint32_t associated_data_len = sizeof(associated_data);
-	TRY(associated_data_encode(th, th_len, (uint8_t *)&associated_data,
-				   &associated_data_len));
+	BYTE_ARRAY_NEW(associated_data, AAD_SIZE, AAD_SIZE);
+	TRY(associated_data_encode(th, &associated_data));
 
-	PRINT_ARRAY("associated_data", associated_data, associated_data_len);
+	PRINT_ARRAY("associated_data", associated_data.ptr,
+		    associated_data.len);
 
 	uint32_t tag_len = get_aead_mac_len(suite->edhoc_aead);
-	// uint32_t plaintext_len = ciphertext_len;
 	if (ctxt != CIPHERTEXT2) {
-		if (plaintext_len < tag_len) {
+		if (plaintext->len < tag_len) {
 			return error_message_received;
 		}
-		plaintext_len -= tag_len;
+		plaintext->len -= tag_len;
 	}
-	// TRY(check_buffer_size(PLAINTEXT_DEFAULT_SIZE, plaintext_len));
-	// uint8_t plaintext[PLAINTEXT_DEFAULT_SIZE];
-	TRY(ciphertext_encrypt_decrypt(
-		ctxt, DECRYPT, ciphertext, ciphertext_len, key, key_len, iv,
-		iv_len, associated_data, associated_data_len, plaintext,
-		plaintext_len, ciphertext - tag_len, tag_len));
+	struct byte_array tag = BYTE_ARRAY_INIT(ciphertext->ptr, tag_len);
+	TRY(ciphertext_encrypt_decrypt(ctxt, DECRYPT, ciphertext, &key, &iv,
+				       &associated_data, plaintext, &tag));
 
-	PRINT_ARRAY("plaintext", plaintext, plaintext_len);
+	PRINT_ARRAY("plaintext", plaintext->ptr, plaintext->len);
 
-	if (ctxt == CIPHERTEXT4 && plaintext_len != 0) {
-		TRY(decode_byte_string(plaintext, plaintext_len, ead, ead_len));
-		PRINT_ARRAY("EAD_4", ead, *ead_len);
-	} else if (ctxt == CIPHERTEXT4 && plaintext_len == 0) {
-		ead = NULL;
-		*ead_len = 0;
+	if (ctxt == CIPHERTEXT4 && plaintext->len != 0) {
+		TRY(decode_bstr(plaintext, ead));
+		PRINT_ARRAY("EAD_4", ead->ptr, ead->len);
+	} else if (ctxt == CIPHERTEXT4 && plaintext->len == 0) {
+		ead->ptr = NULL;
+		ead->len = 0;
 		PRINT_MSG("No EAD_4\n");
 	} else {
-		TRY(plaintext_split(plaintext, plaintext_len, id_cred,
-				    id_cred_len, signature_or_mac,
-				    signature_or_mac_len, ead, ead_len));
-		PRINT_ARRAY("ID_CRED", id_cred, *id_cred_len);
-		PRINT_ARRAY("sign_or_mac", signature_or_mac,
-			    *signature_or_mac_len);
-		if (ead_len != NULL && *ead_len != 0) {
-			PRINT_ARRAY("ead", ead, *ead_len);
+		TRY(plaintext_split(plaintext, id_cred, sig_or_mac, ead));
+		PRINT_ARRAY("ID_CRED", id_cred->ptr, id_cred->len);
+		PRINT_ARRAY("sign_or_mac", sig_or_mac->ptr, sig_or_mac->len);
+		if (ead->len) {
+			PRINT_ARRAY("ead", ead->ptr, ead->len);
 		}
 	}
 
@@ -201,104 +176,92 @@ enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
 }
 
 enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
-			uint8_t *id_cred, uint32_t id_cred_len,
-			uint8_t *signature_or_mac,
-			uint32_t signature_or_mac_len, uint8_t *ead,
-			uint32_t ead_len, uint8_t *prk, uint32_t prk_len,
-			uint8_t *th, uint32_t th_len, uint8_t *ciphertext,
-			uint32_t *ciphertext_len, uint8_t *plaintext,
-			uint32_t *plaintext_len)
+			const struct byte_array *id_cred,
+			struct byte_array *signature_or_mac,
+			const struct byte_array *ead, struct byte_array *prk,
+			struct byte_array *th, struct byte_array *ciphertext,
+			struct byte_array *plaintext)
 {
-	TRY(check_buffer_size(SGN_OR_MAC_DEFAULT_SIZE,
-			      signature_or_mac_len + 2));
-	uint8_t signature_or_mac_enc[SGN_OR_MAC_DEFAULT_SIZE];
-	uint32_t signature_or_mac_enc_len = signature_or_mac_len + 2;
-	TRY(encode_byte_string(signature_or_mac, signature_or_mac_len,
-			       signature_or_mac_enc,
-			       &signature_or_mac_enc_len));
+	uint32_t ptxt_buf_len = plaintext->len;
+	BYTE_ARRAY_NEW(signature_or_mac_enc, SIG_OR_MAC_SIZE + 2,
+		       signature_or_mac->len + 2);
+
+	TRY(encode_bstr(signature_or_mac, &signature_or_mac_enc));
 
 	if (ctxt != CIPHERTEXT4) {
-		uint8_t kid_buf[KID_DEFAULT_SIZE];
-		uint32_t kid_len = sizeof(kid_buf);
-		TRY(id_cred2kid(id_cred, id_cred_len, kid_buf, &kid_len));
+		BYTE_ARRAY_NEW(kid, KID_SIZE, KID_SIZE);
+		TRY(id_cred2kid(id_cred, &kid));
 
-		PRINT_ARRAY("kid", kid_buf, kid_len);
+		PRINT_ARRAY("kid", kid.ptr, kid.len);
 
-		if (kid_len != 0) {
+		if (kid.len != 0) {
 			/*id_cred_x is a KID*/
-			TRY(_memcpy_s(plaintext, *plaintext_len, kid_buf,
-				      kid_len));
+			TRY(_memcpy_s(plaintext->ptr, plaintext->len, kid.ptr,
+				      kid.len));
 
-			TRY(_memcpy_s(plaintext + kid_len,
-				      *plaintext_len - kid_len,
-				      signature_or_mac_enc,
-				      signature_or_mac_enc_len));
+			TRY(_memcpy_s(plaintext->ptr + kid.len,
+				      plaintext->len - kid.len,
+				      signature_or_mac_enc.ptr,
+				      signature_or_mac_enc.len));
 
-			*plaintext_len = signature_or_mac_enc_len + kid_len;
+			plaintext->len = signature_or_mac_enc.len + kid.len;
 		} else {
 			/*id_cred_x is NOT a KID*/
-			TRY(_memcpy_s(plaintext, *plaintext_len, id_cred,
-				      id_cred_len));
+			TRY(_memcpy_s(plaintext->ptr, plaintext->len,
+				      id_cred->ptr, id_cred->len));
 
-			TRY(_memcpy_s(plaintext + id_cred_len,
-				      *plaintext_len - id_cred_len,
-				      signature_or_mac_enc,
-				      signature_or_mac_enc_len));
+			TRY(_memcpy_s(plaintext->ptr + id_cred->len,
+				      plaintext->len - id_cred->len,
+				      signature_or_mac_enc.ptr,
+				      signature_or_mac_enc.len));
 
-			*plaintext_len = id_cred_len + signature_or_mac_enc_len;
+			plaintext->len =
+				id_cred->len + signature_or_mac_enc.len;
 		}
 	} else {
-		*plaintext_len = 0;
+		plaintext->len = 0;
 	}
-	if (ead_len > 0) {
-		TRY(_memcpy_s(plaintext + *plaintext_len,
-			      (uint32_t)sizeof(plaintext) - *plaintext_len, ead,
-			      ead_len));
+	if (ead->len > 0) {
+		TRY(_memcpy_s(plaintext->ptr + plaintext->len,
+			      ptxt_buf_len - plaintext->len, ead->ptr,
+			      ead->len));
 
-		*plaintext_len += ead_len;
+		plaintext->len += ead->len;
 	}
 
-	PRINT_ARRAY("plaintext", plaintext, *plaintext_len);
+	PRINT_ARRAY("plaintext", plaintext->ptr, plaintext->len);
 
 	/*generate key and iv (no iv in for ciphertext 2)*/
 	uint32_t key_len;
-	uint8_t key[CIPHERTEXT2_DEFAULT_SIZE];
 	if (ctxt == CIPHERTEXT2) {
-		key_len = *plaintext_len;
+		key_len = plaintext->len;
 	} else {
 		key_len = get_aead_key_len(suite->edhoc_aead);
 	}
-	TRY(check_buffer_size(CIPHERTEXT2_DEFAULT_SIZE, key_len));
 
-	uint32_t iv_len = get_aead_iv_len(suite->edhoc_aead);
-	TRY(check_buffer_size(AEAD_IV_DEFAULT_SIZE, iv_len));
-	uint8_t iv[AEAD_IV_DEFAULT_SIZE];
+	BYTE_ARRAY_NEW(key, CIPHERTEXT2_SIZE, key_len);
+	BYTE_ARRAY_NEW(iv, AEAD_IV_SIZE, get_aead_iv_len(suite->edhoc_aead));
 
-	TRY(key_gen(ctxt, suite->edhoc_hash, prk, prk_len, th, th_len, key,
-		    key_len, iv, iv_len));
+	TRY(key_gen(ctxt, suite->edhoc_hash, prk, th, &key, &iv));
 
 	/*encrypt*/
-	uint8_t aad[ASSOCIATED_DATA_DEFAULT_SIZE];
-	uint32_t aad_len = sizeof(aad);
-	uint32_t tag_len = get_aead_mac_len(suite->edhoc_aead);
-	TRY(check_buffer_size(MAC_DEFAULT_SIZE, tag_len));
-	uint8_t tag[MAC_DEFAULT_SIZE];
+	BYTE_ARRAY_NEW(aad, AAD_SIZE, AAD_SIZE);
+	BYTE_ARRAY_NEW(tag, MAC_SIZE, get_aead_mac_len(suite->edhoc_aead));
+
 	if (ctxt != CIPHERTEXT2) {
 		/*Associated data*/
-		TRY(associated_data_encode(th, th_len, aad, &aad_len));
-		PRINT_ARRAY("aad_data", aad, aad_len);
+		TRY(associated_data_encode(th, &aad));
+		PRINT_ARRAY("aad_data", aad.ptr, aad.len);
 	} else {
-		tag_len = 0;
+		tag.len = 0;
 	}
 
-	*ciphertext_len = *plaintext_len;
+	ciphertext->len = plaintext->len;
 
-	TRY(ciphertext_encrypt_decrypt(ctxt, ENCRYPT, plaintext, *plaintext_len,
-				       key, key_len, iv, iv_len, aad, aad_len,
-				       ciphertext, *ciphertext_len, tag,
-				       tag_len));
-	*ciphertext_len += tag_len;
+	TRY(ciphertext_encrypt_decrypt(ctxt, ENCRYPT, plaintext, &key, &iv,
+				       &aad, ciphertext, &tag));
+	ciphertext->len += tag.len;
 
-	PRINT_ARRAY("ciphertext_2/3/4", ciphertext, *ciphertext_len);
+	PRINT_ARRAY("ciphertext_2/3/4", ciphertext->ptr, ciphertext->len);
 	return ok;
 }

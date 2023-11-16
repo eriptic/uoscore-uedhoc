@@ -212,7 +212,7 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
 					      E_options[i].len);
 	}
 	/* Setup buffer */
-	BYTE_ARRAY_NEW(e_opt_serial, E_OPTIONS_BUFF_MAX_LEN, e_opt_serial_len);
+	BYTE_ARRAY_NEW(e_opt_serial, E_OPTIONS_BUFF_MAX_LEN, E_OPTIONS_BUFF_MAX_LEN);
 
 	/* Convert all E-options structure to byte string, and copy it to 
 	output*/

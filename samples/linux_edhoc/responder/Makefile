@@ -31,7 +31,7 @@ USOCORE_UEDHOC_BUILD_PATH = $(USOCORE_UEDHOC_PATH)build
 
 ifeq ($(ARCH_32_ONLY), 1)
 # build for 32 bit x68
-# export the varible so that it is availbale in the uoscore-uedhoc Makefile 
+# export the variable so that it is available in the uoscore-uedhoc Makefile 
 ARCH = -m32
 export ARCH
 endif
@@ -47,7 +47,7 @@ CPP_SOURCES += src/main.cpp
 CPP_SOURCES += ../../../externals/cantcoap/cantcoap.cpp
 
 # C sources 
-# rename files avaible with the same name in diferent libraries
+# rename files available with the same name in different libraries
 # todo clean up this
 $(shell mv ../../../externals/compact25519/src/c25519/sha512.c ../../../externals/compact25519/src/c25519/_sha512.c )
 $(shell mv ../../../externals/tinycrypt/lib/source/sha256.c ../../../externals/tinycrypt/lib/source/tc_sha256.c )

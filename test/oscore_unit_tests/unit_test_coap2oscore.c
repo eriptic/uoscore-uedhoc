@@ -8,7 +8,7 @@
    option. This file may not be copied, modified, or distributed
    except according to those terms.
 */
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/ztest.h>
 
 #include "common/unit_test.h"

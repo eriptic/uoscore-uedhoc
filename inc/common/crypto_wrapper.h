@@ -23,119 +23,107 @@ enum aes_operation {
 };
 
 /**
- * @brief   Calculates AEAD encryption decryption
- * @param   op opeartion to be executed (ENCRYPT or DECRYPT)
- * @param   in  input message
- * @param   in_len length of in
- * @param   key the symmetric key to be used
- * @param   key_len length of key
- * @param   nonce the nonce
- * @param   nonce_len length of nonce
- * @param   aad additional authenticated data
- * @param   aad_len length of add
- * @param   out the cipher text
- * @param   out_len the length of out
- * @param   tag the authentication tag
- * @param   tag_len the length of tag
- * @retval  an err code
+ * @brief			Calculates AEAD encryption decryption.
+ * 
+ * @param op 			Operation to be executed (ENCRYPT or DECRYPT).
+ * @param[in] in		Input message.
+ * @param[in] key 		The symmetric key to be used.
+ * @param[in] nonce 		The nonce.
+ * @param[in] aad 		Additional authenticated data.
+ * @param[out] out 		The cipher text.
+ * @param[in,out] tag 		The authentication tag.
+ * @return 			Ok or error code.
  */
-enum err aead(enum aes_operation op, const uint8_t *in, const uint32_t in_len,
-	      const uint8_t *key, const uint32_t key_len, uint8_t *nonce,
-	      const uint32_t nonce_len, const uint8_t *aad,
-	      const uint32_t aad_len, uint8_t *out, const uint32_t out_len,
-	      uint8_t *tag, const uint32_t tag_len);
+enum err aead(enum aes_operation op, const struct byte_array *in,
+	      const struct byte_array *key, struct byte_array *nonce,
+	      const struct byte_array *aad, struct byte_array *out,
+	      struct byte_array *tag);
 
 /**
- * @brief   Derives ECDH shared secret
- * @param   alg the ECDH algorithm
- * @param   sk private key
- * @param   sk_len length of sk
- * @param   pk public key
- * @param   pk_len length of pk
- * @param   shared_secret the result
- * @retval  an err code
+ * @brief			Derives ECDH shared secret.
+ * 
+ * @param alg			The ECDH algorithm to be used.
+ * @param[in] sk 		Private key.
+ * @param[in] pk 		Public key.
+ * @param[out] shared_secret 	The result.
+ * @return 			Ok or error code.
  */
-enum err shared_secret_derive(enum ecdh_alg alg, const uint8_t *sk,
-			      const uint32_t sk_len, const uint8_t *pk,
-			      const uint32_t pk_len, uint8_t *shared_secret);
+enum err shared_secret_derive(enum ecdh_alg alg, const struct byte_array *sk,
+			      const struct byte_array *pk,
+			      uint8_t *shared_secret);
 
 /**
- * @brief   HKDF extract function, see rfc5869
- * @param   alg hash algorithm to be used
- * @param   salt salt value
- * @param   salt_len length of salt
- * @param   ikm input keying material
- * @param   ikm_len length of ikm
- * @param   out result
- * @retval  an err code
+ * @brief			HKDF extract function, see rfc5869.
+ * 
+ * @param alg			Hash algorithm to be used.
+ * @param[in] salt		Salt value.
+ * @param[in] ikm 		Input keying material.
+ * @param[out] out		The result.
+ * @return 			Ok or error code.
  */
-enum err hkdf_extract(enum hash_alg alg, const uint8_t *salt, uint32_t salt_len,
-		      uint8_t *ikm, uint32_t ikm_len, uint8_t *out);
+enum err hkdf_extract(enum hash_alg alg, const struct byte_array *salt,
+		      struct byte_array *ikm, uint8_t *out);
 
 /**
- * @brief   HKDF expand function, see rfc5869
- * @param   alg hash algorithm to be used
- * @param   prk input pseudo random key
- * @param   prk_len length of prk
- * @param   info info input parameter
- * @param   info_len length of info
- * @param   out the result
- * @param   out_len length of out
- * @retval  an err code
+ * @brief			HKDF expand function, see rfc5869.
+ * 
+ * @param alg			Hash algorithm to be used.
+ * @param[in] prk 		Input pseudo random key.
+ * @param[in] info 		Info input parameter.
+ * @param[out] out		The result.
+ * @return 			Ok or error code.
  */
-enum err hkdf_expand(enum hash_alg alg, const uint8_t *prk,
-		     const uint32_t prk_len, const uint8_t *info,
-		     const uint32_t info_len, uint8_t *out, uint32_t out_len);
+enum err hkdf_expand(enum hash_alg alg, const struct byte_array *prk,
+		     const struct byte_array *info, struct byte_array *out);
 
 /**
- * @brief   calculates a hash
- * @param   alg the hash algorithm
- * @param   in input message
- * @param   in_len length of in
- * @param   out the hash 
- * @retval  an err code
+ * @brief			Computes a hash.
+ * 
+ * @param alg 			The hash algorithm to be used.
+ * @param[in] in 		The input message.
+ * @param[out] out 		The hash.
+ * @return 			Ok or error code.
  */
-enum err hash(enum hash_alg alg, const uint8_t *in, const uint32_t in_len,
+enum err hash(enum hash_alg alg, const struct byte_array *in,
+	      struct byte_array *out);
+
+/**
+ * @brief			Verifies an asymmetric signature.
+ * @param alg			Signature algorithm to be used.
+ * @param[in] sk 		Secret key.
+ * @param[in] pk 		Public key.
+ * @param[in] msg 		The message to be signed.
+ * @param[out] out 		Signature.
+ * @return 			Ok or error code.
+ */
+enum err sign(enum sign_alg alg, const struct byte_array *sk,
+	      const struct byte_array *pk, const struct byte_array *msg,
 	      uint8_t *out);
 
 /**
- * @brief   Verifies an asymmetric signature
- * @param   alg signature algorithm to be used
- * @param   sk secret key
- * @param   sk_len length of sk
- * @param   pk public key
- * @param   msg the message to be signed
- * @param   msg_len length of msg
- * @param   out signature
- * @retval  an err code
+ * @brief			Verifies an asymmetric signature.
+ * 
+ * @param alg 			Signature algorithm to be used.
+ * @param[in] pk 		Public key.
+ * @param[in] msg 		The signed message.
+ * @param[in] sgn 		Signature.
+ * @param[out] result 		True if the verification is successfully.
+ * @return 			Ok or error code.
  */
-enum err sign(enum sign_alg alg, const uint8_t *sk, const uint32_t sk_len,
-	      const uint8_t *pk, const uint8_t *msg, const uint32_t msg_len,
-	      uint8_t *out);
+enum err verify(enum sign_alg alg, const struct byte_array *pk,
+		struct const_byte_array *msg, struct const_byte_array *sgn,
+		bool *result);
 
 /**
- * @brief   Verifies an asymmetric signature
- * @param   alg signature algorithm to be used
- * @param   pk public key
- * @param   pk_len length of pk
- * @param   msg the signed message
- * @param   msg_len length of msg
- * @param   sgn signature
- * @param   sgn_len length of sgn
- * @param   result true if the signature verification is successfully
- * @retval  an err code
- */
-enum err verify(enum sign_alg alg, const uint8_t *pk, const uint32_t pk_len,
-		const uint8_t *msg, const uint32_t msg_len, const uint8_t *sgn,
-		const uint32_t sgn_len, bool *result);
-
-/**
- * @brief   HKDF funcion used for the derivation of the Common IV, 
- *          Recipient/Sender keys.
- * @param   master_secret the master secret
- * @param   master_salt the master salt
- * @param   info a CBOR structure containing id, id_context, alg_aead, type, L 
- * @param   out the derived Common IV, Recipient/Sender keys
+ * @brief			HKDF function used for the derivation of the 
+ *				Common IV, Recipient/Sender keys.
+ *
+ * @param[in] master_secret	The master secret.
+ * @param[in] master_salt 	The master salt.
+ * @param[in] info 		A CBOR structure containing id, id_context, 
+ * 				alg_aead, type, L. 
+ * @param[out] out 		The derived Common IV, Recipient/Sender keys
+ * @return 			Ok or error code.
  */
 enum err hkdf_sha_256(struct byte_array *master_secret,
 		      struct byte_array *master_salt, struct byte_array *info,
@@ -143,17 +131,20 @@ enum err hkdf_sha_256(struct byte_array *master_secret,
 
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
 /*
- * Eliptic curve based signature algorithms generate signatures that are not deterministic. In order to test edhoc
- * module against test vectors provided by the RFC authors, a mocking functionality has been added.
+ * Elliptic curve based signature algorithms generate signatures that are not 
+ * deterministic. In order to test edhoc module against test vectors provided 
+ * by the RFC authors, a mocking functionality has been added.
  *
- * When EDHOC_MOCK_CRYPTO_WRAPPER macro is defined, structure edhoc_crypto_mock_cb can be used to define values
- * returned/generated by the sign() and aead() functions. Predefined value will be used only if the function
- * has been called with arguments values matching those provided in
+ * When EDHOC_MOCK_CRYPTO_WRAPPER macro is defined, structure 
+ * edhoc_crypto_mock_cb can be used to define values returned/generated by 
+ * the sign() and aead() functions. Predefined value will be used only if the 
+ * function has been called with arguments values matching those provided in
  * edhoc_crypto_mock_cb.aead_in_out / edhoc_crypto_mock_cb.sign_in_out structure.
  *
- * When there is no matching arguments, the function aead()/sign() will continue normally.
+ * When there is no matching arguments, the function aead()/sign() will 
+ * continue normally.
  */
-struct edhoc_mock_aead_in_out{
+struct edhoc_mock_aead_in_out {
 	struct byte_array out;
 	struct byte_array in;
 	struct byte_array key;
