@@ -10,6 +10,7 @@
 */
 
 #include <stdint.h>
+#include <stddef.h>
 
 #include "edhoc/retrieve_cred.h"
 #include "edhoc/signature_or_mac_msg.h"
@@ -22,6 +23,7 @@
 
 #include "cbor/edhoc_decode_id_cred_x.h"
 #include "cbor/edhoc_encode_int_type.h"
+#include "cbor/edhoc_encode_bstr_type.h"
 
 enum err id_cred2kid(const struct byte_array *id_cred, struct byte_array *kid)
 {
@@ -33,12 +35,30 @@ enum err id_cred2kid(const struct byte_array *id_cred, struct byte_array *kid)
 		   0);
 
 	if (map._id_cred_x_map_kid_present) {
-		TRY_EXPECT(
-			cbor_encode_int_type_i(
-				kid->ptr, kid->len,
-				&map._id_cred_x_map_kid._id_cred_x_map_kid_int,
-				&payload_len_out),
-			ZCBOR_SUCCESS);
+		int32_t kid_as_int = 0;
+		const size_t kid_as_int_len = 
+			(id_cred->len < sizeof(kid_as_int)) ? 
+			id_cred->len : sizeof(kid_as_int);
+		memcpy(&kid_as_int, id_cred->ptr, kid_as_int_len);
+
+		if (_id_cred_x_map_kid_int == map._id_cred_x_map_kid._id_cred_x_map_kid_choice &&
+		    kid_as_int >= ONE_BYTE_CBOR_ENCODED_INT_MIN_VAL &&
+		    kid_as_int <= ONE_BYTE_CBOR_ENCODED_INT_MIN_VAL) {
+			TRY_EXPECT(
+				cbor_encode_int_type_i(
+					kid->ptr, kid->len,
+					&map._id_cred_x_map_kid._id_cred_x_map_kid_int,
+					&payload_len_out),
+				ZCBOR_SUCCESS);
+		} else {
+			TRY_EXPECT(
+				cbor_encode_bstr_type_b_str(
+					kid->ptr, kid->len,
+                   			&map._id_cred_x_map_kid._id_cred_x_map_kid_bstr,
+                   			&payload_len_out),
+               		ZCBOR_SUCCESS);
+		}
+
 		kid->len = (uint32_t)payload_len_out;
 	} else {
 		kid->len = 0;
