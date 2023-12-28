@@ -126,6 +126,13 @@ endif
 ################################################################################
 # C includes
 ################################################################################
+# Set a default crypto engine if non is provided in CRYPTO_ENGINE or CC
+ifneq ($(findstring TINYCRYPT,$(EXTENDED_CFLAGS)),TINYCRYPT) 
+ifneq ($(findstring MBEDTLS,$(EXTENDED_CFLAGS)),MBEDTLS) 
+EXTENDED_CFLAGS += -DTINYCRYPT
+endif
+endif
+
 C_INCLUDES += -Iinc
 
 # Crypto engine
@@ -152,7 +159,6 @@ endif
 
 #add include paths
 EXTENDED_CFLAGS += $(C_INCLUDES)
-
 
 $(info    EXTENDED_CFLAGS are $(EXTENDED_CFLAGS))
 ################################################################################

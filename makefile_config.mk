@@ -98,6 +98,7 @@ FEATURES += -DE_OPTIONS_BUFF_MAX_LEN=100
 # Max size of the I options buffer
 FEATURES += -DI_OPTIONS_BUFF_MAX_LEN=100
 
+
 ################################################################################
 # Crypto engine
 ################################################################################
