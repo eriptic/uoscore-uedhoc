@@ -68,4 +68,5 @@ void t702_interactions_get_record_test(void);
 void t703_interactions_remove_record_test(void);
 void t704_interactions_usecases_test(void);
 
+void t800_oscore_latency_test(void);
 #endif

@@ -25,7 +25,7 @@ OPT = -O0
 ################################################################################
 # Print helpful debug messages
 ################################################################################
-DEBUG_PRINT += -DDEBUG_PRINT
+#DEBUG_PRINT += -DDEBUG_PRINT
 
 ################################################################################
 # Use Address Sanitizer, e.g. with native_posix
@@ -157,5 +157,5 @@ FEATURES += -DI_OPTIONS_BUFF_MAX_LEN=100
 
 
 #CRYPTO_ENGINE += -DTINYCRYPT
-CRYPTO_ENGINE += -DCOMPACT25519
-CRYPTO_ENGINE += -DMBEDTLS
+#CRYPTO_ENGINE += -DCOMPACT25519
+#CRYPTO_ENGINE += -DMBEDTLS

@@ -19,6 +19,7 @@
 #include "common/memcpy_s.h"
 #include "common/oscore_edhoc_error.h"
 #include "common/crypto_wrapper.h"
+#include "common/print_util.h"
 
 #include "cbor/edhoc_decode_cert.h"
 
@@ -48,7 +49,7 @@ static void deser_sign_ctx_init(struct deser_sign_ctx_s *ctx, uint8_t *seek,
 }
 
 static int deser_sign_cb(void *void_ctx, int tag, unsigned char *start,
-			 size_t len)
+			 uint32_t len)
 {
 	if (tag == MBEDTLS_ASN1_INTEGER) {
 		struct deser_sign_ctx_s *ctx = void_ctx;
@@ -62,7 +63,8 @@ static int deser_sign_cb(void *void_ctx, int tag, unsigned char *start,
 	return 0;
 }
 
-static int find_pk_cb(void *void_ppk, int tag, unsigned char *start, size_t len)
+static int find_pk_cb(void *void_ppk, int tag, unsigned char *start,
+		      uint32_t len)
 {
 	(void)len;
 
@@ -111,7 +113,7 @@ enum tag_map_enum {
 /* First bit of length byte contains information, if length
    value shall be concatenated with following byte length. */
 static int mbedtls_asn1_get_len(const unsigned char **p,
-				const unsigned char *end, size_t *len)
+				const unsigned char *end, uint32_t *len)
 {
 	if ((end - *p) < 1)
 		return (buffer_to_small);
@@ -132,7 +134,7 @@ static int mbedtls_asn1_get_len(const unsigned char **p,
 			if ((end - *p) < 3)
 				return (buffer_to_small);
 
-			*len = ((size_t)(*p)[1] << 8) | (*p)[2];
+			*len = ((uint32_t)(*p)[1] << 8) | (*p)[2];
 			(*p) += 3;
 			break;
 
@@ -140,8 +142,8 @@ static int mbedtls_asn1_get_len(const unsigned char **p,
 			if ((end - *p) < 4)
 				return (buffer_to_small);
 
-			*len = ((size_t)(*p)[1] << 16) |
-			       ((size_t)(*p)[2] << 8) | (*p)[3];
+			*len = ((uint32_t)(*p)[1] << 16) |
+			       ((uint32_t)(*p)[2] << 8) | (*p)[3];
 			(*p) += 4;
 			break;
 
@@ -149,9 +151,9 @@ static int mbedtls_asn1_get_len(const unsigned char **p,
 			if ((end - *p) < 5)
 				return (buffer_to_small);
 
-			*len = ((size_t)(*p)[1] << 24) |
-			       ((size_t)(*p)[2] << 16) |
-			       ((size_t)(*p)[3] << 8) | (*p)[4];
+			*len = ((uint32_t)(*p)[1] << 24) |
+			       ((uint32_t)(*p)[2] << 16) |
+			       ((uint32_t)(*p)[3] << 8) | (*p)[4];
 			(*p) += 5;
 			break;
 
@@ -160,7 +162,7 @@ static int mbedtls_asn1_get_len(const unsigned char **p,
 		}
 	}
 
-	if (*len > (size_t)(end - *p))
+	if (*len > (uint32_t)(end - *p))
 		return (buffer_to_small);
 
 	return (0);
@@ -379,7 +381,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 	/* export the public key from certificate */
 	{
 		uint8_t *cpk = NULL;
-		size_t cpk_len = 0;
+		uint32_t cpk_len = 0;
 		uint8_t *pp = m_cert.pk_raw.p;
 		mbedtls_asn1_traverse_sequence_of(&pp, pp + m_cert.pk_raw.len,
 						  0, 0, 0, 0, find_pk_cb, &cpk);
@@ -388,7 +390,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 				++cpk;
 			}
 			cpk_len = m_cert.pk_raw.len -
-				  (size_t)(cpk - m_cert.pk_raw.p);
+				  (uint32_t)(cpk - m_cert.pk_raw.p);
 		}
 		TRY(_memcpy_s(pk->ptr, pk->len, cpk, (uint32_t)cpk_len));
 		pk->len = (uint32_t)cpk_len;
@@ -404,7 +406,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 
 	const uint8_t *tbs_start = cert->ptr;
 	const uint8_t *tbs_end = &cert->ptr[cert->len];
-	BYTE_ARRAY_NEW(sig, SIGNATURE_SIZE, get_signature_len(sign_alg));
+	BYTE_ARRAY_NEW(sig, SIGNATURE_SIZE, get_signature_len(ES256));
 
 	enum err rv = certificate_authentication_failed;
 
@@ -412,7 +414,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 	do {
 		const uint8_t *cursor = cert->ptr;
 		const uint8_t *end = &cert->ptr[cert->len];
-		size_t len;
+		uint32_t len;
 
 		/* Get first tag, which should be first sequence */
 		EXPECTO_TAG(ASN1_SEQUENCE, cursor, len);
@@ -423,7 +425,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 		tbs_end = cursor + len;
 
 		/* Iterate over 6 elements to get to public key according to X.509 schema */
-		for (size_t iter = 0; iter < 6; iter++) {
+		for (uint32_t iter = 0; iter < 6; iter++) {
 			/* TAG shall not be parsed as it is not used */
 			cursor++;
 			/* Get section length */
@@ -443,9 +445,9 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 		EXPECTO_TAG(ASN1_BIT_STRING, cursor, len);
 
 		/* Now cursor points to public key */
-		_memcpy_s(pk, *pk_len, cursor, (uint32_t)len);
-		*pk_len = (uint32_t)len;
-		PRINT_ARRAY("pk from cert", pk, *pk_len);
+		_memcpy_s(pk->ptr, pk->len, cursor, (uint32_t)len);
+		pk->len = (uint32_t)len;
+		PRINT_ARRAY("pk from cert", pk->ptr, pk->len);
 
 		/* We can skip whole TBSCertificate */
 		cursor = tbs_end;
@@ -467,8 +469,8 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 		_memcpy_s(sig.ptr, SIGNATURE_SIZE, cursor, (uint32_t)len);
 		sig.len = len;
 		cursor += len;
-		PRINT_ARRAY("Certificate signature - part1", sig,
-			    (uint32_t)sig_len);
+		PRINT_ARRAY("Certificate signature - part1", sig.ptr,
+			    (uint32_t)sig.len);
 
 		EXPECTO_TAG(ASN1_INTEGER, cursor, len);
 		TRY_EXPECT((cursor + len) <= end, 1);
@@ -483,21 +485,21 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 	} while (0);
 
 	struct byte_array root_pk;
-	struct byte_array m =
+	struct const_byte_array m =
 		BYTE_ARRAY_INIT(tbs_start, (uint32_t)(tbs_end - tbs_start));
 
 	if (ok == rv) {
-		for (size_t iter = 0; iter < cred_num; iter++) {
+		for (uint32_t iter = 0; iter < cred_array->len; iter++) {
 			/* Issuer will not be read from certificate, so no identification is possible within public keys array. */
-			TRY(ca_pk_get(cred_array->ptr + iter, 1, NULL,
-				      &root_pk));
+			TRY(ca_pk_get(&cred_array[iter], NULL, &root_pk));
 			PRINT_ARRAY("pk from cred_list", root_pk.ptr,
 				    root_pk.len);
-			rv = verify(ES256, &root_pk, &m, &sig, verified);
+			struct const_byte_array s = { .ptr = sig.ptr,
+						      .len = sig.len };
+			rv = verify(ES256, &root_pk, &m, &s, verified);
 		}
 	}
 	return rv;
 
 #endif /* MBEDTLS */
-
 }

@@ -506,11 +506,12 @@ enum err WEAK verify(enum sign_alg alg, const struct byte_array *pk,
 		TRY_EXPECT(tc_sha256_update(&ctx_sha256, msg->ptr, msg->len),
 			   1);
 		TRY_EXPECT(tc_sha256_final(hash, &ctx_sha256), 1);
+		uint8_t *pk_ptr = pk->ptr;
 		if ((P_256_PUB_KEY_UNCOMPRESSED_SIZE == pk->len) &&
 		    (0x04 == *pk->ptr)) {
-			pk->ptr++;
+			pk_ptr++;
 		}
-		TRY_EXPECT(uECC_verify(pk->ptr, hash, NUM_ECC_BYTES, sgn->ptr,
+		TRY_EXPECT(uECC_verify(pk_ptr, hash, NUM_ECC_BYTES, sgn->ptr,
 				       p256),
 			   1);
 		*result = true;

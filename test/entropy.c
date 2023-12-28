@@ -51,3 +51,14 @@ int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len,
 
 	return 0;
 }
+
+#if defined(unix) || defined(__linux__) || defined(__unix__) ||                \
+	defined(__unix) | (defined(__APPLE__) && defined(__MACH__)) ||         \
+	defined(uECC_POSIX)
+/*use the entropy source as provided in /tinycrypt/lib/source/ecc_platform_specific.c*/
+#else
+int default_CSPRNG(uint8_t *dest, unsigned int size)
+{
+	return 1;
+}
+#endif

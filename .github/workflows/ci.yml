@@ -52,7 +52,7 @@ jobs:
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
            cd test/
-           bash test_build_options.sh
+           bash ci_scripts/test_build_options.sh
 
       - name: Archive static lib
         uses: actions/upload-artifact@v2
@@ -77,7 +77,7 @@ jobs:
           name: uoscore-uedhoc-x86-64
           path: test/build/uoscore_uedhoc/libuoscore-uedhoc.a
 
-### Generate test coverage report
+### Generate test coverage/stack/flash report
       - name: Build native_posix with coverage information
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
@@ -90,13 +90,27 @@ jobs:
            lcov --capture --directory ./ --output-file lcov.info -q --rc lcov_branch_coverage=1
            genhtml lcov.info --output-directory lcov_html -q --ignore-errors source --branch-coverage --highlight --legend
            tar -zcvf github-pages.tar.gz lcov_html
+           bash ci_scripts/flash_report_gen.sh
+           bash ci_scripts/stack_report_gen.sh
 
       - name: Upload test coverage report
         uses: actions/upload-pages-artifact@v1
         with: 
           name: github-pages  
           path: test/lcov_html
-      
+
+      - name: Upload rom report
+        uses: actions/upload-pages-artifact@v1
+        with: 
+          name: github-pages  
+          path: build_reports/rom_report_nrf91_with_tinycrypt.txt
+
+      - name: Upload stack report
+        uses: actions/upload-pages-artifact@v1
+        with: 
+          name: github-pages  
+          path: build_reports/stack_report.html
+
 
   # Deploy job
   deploy:

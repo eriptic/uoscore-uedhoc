@@ -14,26 +14,33 @@ FILE(GLOB app_sources
   edhoc_integration_tests/*.c
   oscore_integration_tests/*.c
   oscore_unit_tests/*.c
+  oscore_latency_tests/*.c
   mocks/*.c
   ../externals/zcbor/src/*.c
   ../externals/compact25519/src/c25519/*.c
   ../externals/compact25519/src/*.c
-  ../externals/mbedtls/library/*.c)
+  ../externals/mbedtls/library/*.c
+  ../externals/tinycrypt/lib/source/*.c
+  ../test_vectors/*.c)
 target_sources(app PRIVATE ${app_sources})
 
 include_directories(
+  .
   ../inc
   ../test_vectors
   ../externals/zcbor/include
   ../externals/mbedtls/library
   ../externals/mbedtls/include
   ../externals/mbedtls/include/mbedtls
-  ../externals/mbedtls/include/psa)
+  ../externals/mbedtls/include/psa
+  ../externals/tinycrypt/lib/include)
 
 add_definitions(
+  -DMBEDTLS_CONFIG_FILE="mbedtls_config_uoscore_uedhoc.h"
   -DUNIT_TEST
-  -DDEBUG_PRINT
+  #-DDEBUG_PRINT
   -DZCBOR_CANONICAL
+  -DMEASURE_LATENCY_ON
   #-DREPORT_STACK_USAGE
 )
 

@@ -54,13 +54,14 @@
 #define T604_SERVER_REPLAY_INSERT_ZERO_TEST 38
 #define T605_SERVER_REPLAY_INSERT_TEST 39
 #define T606_SERVER_REPLAY_STANDARD_SCENARIO_TEST 40
+#define T800_OSCORE_LATENCY_TEST 41
 
 // if this macro is defined all tests will be executed
 #define EXECUTE_ALL_TESTS
 
 // in order to execute only a specific tes set this macro to a specific
 // test macro and comment out EXECUTE_ALL_TESTS
-#define EXECUTE_ONLY_TEST T10_OSCORE_CLIENT_SERVER_AFTER_REBOOT
+#define EXECUTE_ONLY_TEST T800_OSCORE_LATENCY_TEST
 
 /**
  * @brief       This function allows to skip a given test if only one other test 
@@ -305,3 +306,10 @@ ZTEST(uoscore_uedhoc, t606_oscore)
 	skip(T606_SERVER_REPLAY_STANDARD_SCENARIO_TEST,
 	     t606_server_replay_standard_scenario_test);
 }
+
+#ifdef MEASURE_LATENCY_ON
+ZTEST(uoscore_uedhoc, t800_oscore)
+{
+	skip(T800_OSCORE_LATENCY_TEST, t800_oscore_latency_test);
+}
+#endif /*MEASURE_LATENCY_ON*/

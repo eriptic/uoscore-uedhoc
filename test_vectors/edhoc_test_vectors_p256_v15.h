@@ -6114,7 +6114,7 @@ static const uint8_t test_vector_6_oscore_salt_key_update_raw[] = {
 	0xa9, 0x09, 0x64, 0xa2, 0x1b, 0x80, 0xee, 0xe8};
 
 
-struct test_vector test_vectors[] = {
+const struct test_vector test_vectors[] = {
 
 /*--------------- test_vector_1 ------------*/
  

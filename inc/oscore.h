@@ -110,9 +110,7 @@ enum err oscore_context_init(struct oscore_init_params *params,
  * @param 	buf_out when a OSCORE packet is found and decrypted the 
  * 		resulting CoAP is saved in buf_out
  * @param 	buf_out_len length of the CoAP packet
- * @param	flag  indicates if the 
  * @param 	c pointer to a security context
- * @param 	oscore_pkg indicates if an incoming packet is OSCORE
  * @return	err
  */
 enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,

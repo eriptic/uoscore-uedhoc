@@ -11,6 +11,7 @@
 #include <edhoc.h>
 
 #include "edhoc_test_vectors_p256_v15.h"
+#include "latency.h"
 
 uint8_t I_prk_exporter_buf[32];
 struct byte_array I_prk_exporter = { .ptr = I_prk_exporter_buf,
@@ -54,7 +55,7 @@ struct byte_array R_err_msg = { .ptr = R_err_msg_buf,
 				.len = sizeof(R_err_msg_buf) };
 
 /* size of stack area used by each thread */
-#define STACKSIZE 20000
+#define STACKSIZE 7500
 /* scheduling priority used by each thread */
 #define PRIORITY 7
 K_THREAD_STACK_DEFINE(thread_initiator_stack_area, STACKSIZE);
@@ -205,6 +206,7 @@ void thread_initiator(void *vec_num, void *dummy2, void *dummy3)
 	if (r != ok) {
 		goto end;
 	}
+
 	PRINT_ARRAY("I_PRK_out", I_PRK_out.ptr, I_PRK_out.len);
 
 	r = prk_out2exporter(SHA_256, &I_PRK_out, &I_prk_exporter);
@@ -302,6 +304,7 @@ void thread_responder(void *vec_num, void *dummy2, void *dummy3)
 	if (r != ok) {
 		goto end;
 	}
+
 	PRINT_ARRAY("R_PRK_out", R_PRK_out.ptr, R_PRK_out.len);
 
 	r = prk_out2exporter(SHA_256, &R_PRK_out, &R_prk_exporter);
@@ -334,7 +337,7 @@ end:
 	PRINTF("An error has occurred. Error code: %d\n", r);
 }
 
-void test_initiator_responder_interaction(int vec_num)
+int test_initiator_responder_interaction(int vec_num)
 {
 	PRINT_MSG("start initiator_responder_interaction\n");
 
@@ -379,14 +382,15 @@ void test_initiator_responder_interaction(int vec_num)
 
 	zassert_mem_equal__(I_master_salt.ptr, R_master_salt.ptr,
 			    R_master_salt.len, "wrong master_salt");
+	return 0;
 }
 
 void t_initiator_responder_interaction1()
 {
-	test_initiator_responder_interaction(1);
+	MEASURE_LATENCY(test_initiator_responder_interaction(1));
 }
 
 void t_initiator_responder_interaction2()
 {
-	test_initiator_responder_interaction(2);
+	MEASURE_LATENCY(test_initiator_responder_interaction(2));
 }

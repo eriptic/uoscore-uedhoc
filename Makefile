@@ -38,36 +38,6 @@ C_SOURCES += $(wildcard src/cbor/*.c)
 vpath %.c $(sort $(dir $(C_SOURCES)))
 
 ################################################################################
-# libraries 
-
-
-################################################################################
-# C includes
-C_INCLUDES += -Iinc
-
-# Crypto engine
-ifeq ($(findstring COMPACT25519,$(CRYPTO_ENGINE)),COMPACT25519) 
-C_INCLUDES += -Iexternals/compact25519/src/c25519/ 
-C_INCLUDES += -Iexternals/compact25519/src/ 
-endif
-
-ifeq ($(findstring TINYCRYPT,$(CRYPTO_ENGINE)),TINYCRYPT)
-C_INCLUDES += -Iexternals/tinycrypt/lib/include
-endif
- 
-ifeq ($(findstring MBEDTLS,$(CRYPTO_ENGINE)),MBEDTLS)
-C_INCLUDES += -Iexternals/mbedtls/library 
-C_INCLUDES += -Iexternals/mbedtls/include 
-C_INCLUDES += -Iexternals/mbedtls/include/mbedtls 
-C_INCLUDES += -Iexternals/mbedtls/include/psa 
-endif
-
-# CBOR engine
-ifeq ($(findstring ZCBOR,$(CBOR_ENGINE)),ZCBOR)
-C_INCLUDES += -Iexternals/zcbor/include
-endif
-
-################################################################################
 # CFLAGS
 ################################################################################
 FILTERED_CFLAGS = -Os
@@ -88,9 +58,6 @@ EXTENDED_CFLAGS += $(UNIT_TEST)
 ifeq ($(findstring UNIT_TEST,$(DUNIT_TEST)),UNIT_TEST)
 EXTENDED_CFLAGS += -DOSCORE_NVM_SUPPORT
 endif
-
-#add include paths
-EXTENDED_CFLAGS += $(C_INCLUDES)
 
 #generate debug symbols
 EXTENDED_CFLAGS += -g3 -gdwarf-4
@@ -155,6 +122,36 @@ endif
 ifeq ($(findstring ASAN,$(ASAN)),ASAN)
 EXTENDED_CFLAGS += -fsanitize=address -fomit-frame-pointer
 endif
+
+################################################################################
+# C includes
+################################################################################
+C_INCLUDES += -Iinc
+
+# Crypto engine
+ifeq ($(findstring COMPACT25519,$(EXTENDED_CFLAGS)),COMPACT25519) 
+C_INCLUDES += -Iexternals/compact25519/src/c25519/ 
+C_INCLUDES += -Iexternals/compact25519/src/ 
+endif
+
+ifeq ($(findstring TINYCRYPT,$(EXTENDED_CFLAGS)),TINYCRYPT)
+C_INCLUDES += -Iexternals/tinycrypt/lib/include
+endif
+ 
+ifeq ($(findstring MBEDTLS,$(EXTENDED_CFLAGS)),MBEDTLS)
+C_INCLUDES += -Iexternals/mbedtls/library 
+C_INCLUDES += -Iexternals/mbedtls/include 
+C_INCLUDES += -Iexternals/mbedtls/include/mbedtls 
+C_INCLUDES += -Iexternals/mbedtls/include/psa 
+endif
+
+# CBOR engine
+ifeq ($(findstring ZCBOR,$(EXTENDED_CFLAGS)),ZCBOR)
+C_INCLUDES += -Iexternals/zcbor/include
+endif
+
+#add include paths
+EXTENDED_CFLAGS += $(C_INCLUDES)
 
 
 $(info    EXTENDED_CFLAGS are $(EXTENDED_CFLAGS))

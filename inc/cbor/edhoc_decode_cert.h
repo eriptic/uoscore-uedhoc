@@ -21,12 +21,8 @@ extern "C" {
 #error "The type file was generated with a different default_max_qty than this file"
 #endif
 
-
-int cbor_decode_cert(
-		const uint8_t *payload, size_t payload_len,
-		struct cert *result,
-		size_t *payload_len_out);
-
+int cbor_decode_cert(const uint8_t *payload, size_t payload_len,
+		     struct cert *result, size_t *payload_len_out);
 
 #ifdef __cplusplus
 }
