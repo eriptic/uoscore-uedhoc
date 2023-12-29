@@ -87,12 +87,12 @@ jobs:
            bash ci_scripts/flash_report_gen.sh
 
       - name: Upload rom report
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-artifact@v2
         with: 
           name: github-pages  
           path: test/build_reports/rom_report_nrf91_with_tinycrypt.txt
 
-### Generate test coverage/stack/flash report
+### Generate test coverage report
       - name: Build native_posix with coverage information
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
