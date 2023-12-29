@@ -31,7 +31,7 @@ jobs:
           west zephyr-export
 
           pip install -r ~/zephyrproject/zephyr/scripts/requirements.txt
-          pip install tabulate
+          
 
           cd ~
           wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.3/zephyr-sdk-0.16.3_linux-x86_64.tar.xz
@@ -103,6 +103,7 @@ jobs:
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
+           pip3 install tabulate
            cd test/  
            bash ci_scripts/stack_report_gen.sh
 
