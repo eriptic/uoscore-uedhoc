@@ -16,7 +16,7 @@ Notes:
 
 | uoscore-uedhoc 3.0.x with FLA                 | uoscore-uedhoc 3.0.x with VLA                 | TLS 1.3    | DTLS 1.3   |
 | --------------------------------------------- | --------------------------------------------- | ---------- | ---------- |
-| 6916 Byte (initiator) / 6656 Byte (responder) | 6440 Byte (initiator) / 6160 Byte (responder) | 21692 Byte | 22026 Byte |
+| 5639 Byte (initiator) / 6656 Byte (responder) | 5639 Byte (initiator) / 5351 Byte (responder) | 21692 Byte | 22026 Byte |
 
 Notes:
 

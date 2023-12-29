@@ -99,17 +99,17 @@ jobs:
           name: github-pages  
           path: test/lcov_html
 
-#      - name: Upload rom report
-#        uses: actions/upload-pages-artifact@v1
-#        with: 
-#          name: github-pages  
-#          path: build_reports/rom_report_nrf91_with_tinycrypt.txt
+      - name: Upload rom report
+        uses: actions/upload-pages-artifact@v1
+        with: 
+          name: github-pages  
+          path: test/build_reports/rom_report_nrf91_with_tinycrypt.txt
 
       - name: Upload stack report
         uses: actions/upload-pages-artifact@v1
         with: 
           name: github-pages  
-          path: build_reports/stack_report.html
+          path: test/build_reports/stack_report.html
 
 
   # Deploy job
