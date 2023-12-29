@@ -25,6 +25,6 @@ echo "\n\n\n"
 # MBEDTLS     YES
 # MESSAGE_4:    YES
 # VLA:          YES
-#rm -rf build
-#west build -b nrf9160dk_nrf9160 -- -DCOMMAND_LINE_FLAGS="-DMESSAGE_4 -DMBEDTLS"
-#west build -t rom_report > build_reports/rom_report_nrf91_with_mbedtls.txt
+rm -rf build
+west build -b nrf9160dk_nrf9160 -- -DCOMMAND_LINE_FLAGS="-DMESSAGE_4 -DMBEDTLS"
+west build -t rom_report > build_reports/rom_report_nrf91_with_mbedtls.txt
