@@ -81,7 +81,10 @@ jobs:
 ### Generate ROM report
       - name: Genrate ROM report
         run: |
-          bash ci_scripts/flash_report_gen.sh
+           source ~/zephyrproject/zephyr/zephyr-env.sh
+           source ~/zephyrproject/.venv/bin/activate
+           cd test/  
+           bash ci_scripts/flash_report_gen.sh
 
       - name: Upload rom report
         uses: actions/upload-pages-artifact@v1
