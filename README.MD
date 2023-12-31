@@ -22,6 +22,9 @@ For more background and evaluation in terms of speed, RAM and flash requirements
 * [Test coverage report uOSCORE](https://eriptic.github.io/uoscore-uedhoc/src/oscore/index.html)
 * [Test coverage report uEDHOC](https://eriptic.github.io/uoscore-uedhoc/src/edhoc/index.html)
 
+## Benchmarks
+* See [Benchmarks](benchmarks.md)
+
 ## Project (Folder) Structure
 
 ```

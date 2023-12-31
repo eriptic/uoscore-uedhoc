@@ -134,14 +134,6 @@ jobs:
           path: test/lcov_html
 
 
-
-#      - name: Upload stack report
-#        uses: actions/upload-pages-artifact@v1
-#        with: 
-#          name: github-pages  
-#          path: test/build_reports/stack_report.html
-
-
   # Deploy job
   deploy:
     # Add a dependency to the build job
