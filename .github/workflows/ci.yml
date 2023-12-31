@@ -19,6 +19,7 @@ jobs:
           python3 --version
           dtc --version
 
+          pip3 install tabulate
           sudo apt install python3-venv
           python3 -m venv ~/zephyrproject/.venv
           source ~/zephyrproject/.venv/bin/activate
@@ -103,7 +104,6 @@ jobs:
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
-           pip3 install tabulate
            cd test/  
            bash ci_scripts/stack_report_gen.sh
 
