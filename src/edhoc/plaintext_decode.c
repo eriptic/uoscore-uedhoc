@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "edhoc/retrieve_cred.h"
 #include "edhoc/plaintext.h"
@@ -43,13 +44,33 @@ static enum err id_cred_x_encode(enum id_cred_x_label label, int algo,
 
 	switch (label) {
 	case kid:
+	{
 		//todo update that to v15
 		map._id_cred_x_map_kid_present = true;
-		map._id_cred_x_map_kid._id_cred_x_map_kid_choice =
-			_id_cred_x_map_kid_int;
-		map._id_cred_x_map_kid._id_cred_x_map_kid_int =
-			*((const int32_t *)id);
+
+		int32_t kid_as_int = 0;
+		const size_t kid_as_int_len = 
+			(id_len < sizeof(kid_as_int)) ?
+			id_len : sizeof(kid_as_int);
+		memcpy(&kid_as_int, id, kid_as_int_len);
+
+		if (kid_as_int >= ONE_BYTE_CBOR_ENCODED_INT_MIN_VAL &&
+		    kid_as_int <= ONE_BYTE_CBOR_ENCODED_INT_MIN_VAL) {
+			map._id_cred_x_map_kid._id_cred_x_map_kid_choice =
+				_id_cred_x_map_kid_int;
+			map._id_cred_x_map_kid._id_cred_x_map_kid_int =
+				*((const int32_t *)id);
+		} else {
+			map._id_cred_x_map_kid._id_cred_x_map_kid_choice =
+				_id_cred_x_map_kid_bstr;
+			map._id_cred_x_map_kid._id_cred_x_map_kid_bstr.value =
+				(const uint8_t *)id;
+			map._id_cred_x_map_kid._id_cred_x_map_kid_bstr.len =
+				id_len;
+		}
+
 		break;
+	}
 	case x5chain:
 		map._id_cred_x_map_x5chain_present = true;
 		map._id_cred_x_map_x5chain._id_cred_x_map_x5chain.value = id;
@@ -120,7 +141,12 @@ enum err plaintext_split(struct byte_array *ptxt, struct byte_array *id_cred_x,
 				kid, 0, p._plaintext_ID_CRED_x_bstr.value,
 				(uint32_t)p._plaintext_ID_CRED_x_bstr.len,
 				id_cred_x));
-
+		} else if (_plaintext_ID_CRED_x_bstr ==
+			   p._plaintext_ID_CRED_x_choice) {
+			TRY(id_cred_x_encode(
+				kid, 0, p._plaintext_ID_CRED_x_bstr.value,
+              			(uint32_t)p._plaintext_ID_CRED_x_bstr.len,
+               			id_cred_x));
 		} else {
 			int _kid = p._plaintext_ID_CRED_x_int;
 			TRY(id_cred_x_encode(kid, 0, &_kid, 1, id_cred_x));

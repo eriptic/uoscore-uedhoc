@@ -15,6 +15,10 @@
 
 #include "common/oscore_edhoc_error.h"
 
+/* draft-ietf-lake-edhoc-22: 3.3.2. Representation of Byte String Identifiers */
+#define ONE_BYTE_CBOR_ENCODED_INT_MIN_VAL ( -24 )
+#define ONE_BYTE_CBOR_ENCODED_INT_MAX_VAL (  23 )
+
 /**
  * @brief                       Decodes id_cred to kid.
  * 
