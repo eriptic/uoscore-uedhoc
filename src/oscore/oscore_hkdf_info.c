@@ -57,25 +57,25 @@ enum err oscore_create_hkdf_info(struct byte_array *id,
 		break;
 	}
 
-	info_struct._oscore_info_id.value = id->ptr;
-	info_struct._oscore_info_id.len = id->len;
+	info_struct.oscore_info_id.value = id->ptr;
+	info_struct.oscore_info_id.len = id->len;
 
 	if (id_context->len == 0) {
-		info_struct._oscore_info_id_context_choice =
-			_oscore_info_id_context_nil;
+		info_struct.oscore_info_id_context_choice =
+			oscore_info_id_context_nil_c;
 	} else {
-		info_struct._oscore_info_id_context_choice =
-			_oscore_info_id_context_bstr;
-		info_struct._oscore_info_id_context_bstr.value =
+		info_struct.oscore_info_id_context_choice =
+			oscore_info_id_context_bstr_c;
+		info_struct.oscore_info_id_context_bstr.value =
 			id_context->ptr;
-		info_struct._oscore_info_id_context_bstr.len = id_context->len;
+		info_struct.oscore_info_id_context_bstr.len = id_context->len;
 	}
-	info_struct._oscore_info_alg_aead_choice = _oscore_info_alg_aead_int;
-	info_struct._oscore_info_alg_aead_int = (int32_t)aead_alg;
+	info_struct.oscore_info_alg_aead_choice = oscore_info_alg_aead_int_c;
+	info_struct.oscore_info_alg_aead_int = (int32_t)aead_alg;
 
-	info_struct._oscore_info_type.value = (uint8_t *)type_enc;
-	info_struct._oscore_info_type.len = (uint32_t)strlen(type_enc);
-	info_struct._oscore_info_L = len;
+	info_struct.oscore_info_type.value = (uint8_t *)type_enc;
+	info_struct.oscore_info_type.len = (uint32_t)strlen(type_enc);
+	info_struct.oscore_info_L = len;
 
 	size_t payload_len_out;
 
