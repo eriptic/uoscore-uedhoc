@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.0
+ * Generated using zcbor version 0.8.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -10,6 +10,7 @@
 #include <string.h>
 #include "zcbor_decode.h"
 #include "cbor/edhoc_decode_message_1.h"
+#include "zcbor_print.h"
 
 #if DEFAULT_MAX_QTY != 3
 #error "The type file was generated with a different default_max_qty than this file"
@@ -21,19 +22,23 @@ static bool decode_message_1(zcbor_state_t *state, struct message_1 *result);
 static bool decode_message_1(
 		zcbor_state_t *state, struct message_1 *result)
 {
-	zcbor_print("%s\r\n", __func__);
+	zcbor_log("%s\r\n", __func__);
 	bool int_res;
 
-	bool tmp_result = (((((zcbor_int32_decode(state, (&(*result)._message_1_METHOD))))
-	&& ((zcbor_union_start_code(state) && (int_res = ((((zcbor_list_start_decode(state) && ((zcbor_multi_decode(2, 10, &(*result)._SUITES_I__suite_suite_count, (zcbor_decoder_t *)zcbor_int32_decode, state, (&(*result)._SUITES_I__suite_suite), sizeof(int32_t))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_list_end_decode(state))) && (((*result)._message_1_SUITES_I_choice = _SUITES_I__suite), true))
-	|| (zcbor_union_elem_code(state) && (((zcbor_int32_decode(state, (&(*result)._message_1_SUITES_I_int)))) && (((*result)._message_1_SUITES_I_choice = _message_1_SUITES_I_int), true)))), zcbor_union_end_code(state), int_res)))
-	&& ((zcbor_bstr_decode(state, (&(*result)._message_1_G_X))))
-	&& ((zcbor_union_start_code(state) && (int_res = ((((zcbor_int32_decode(state, (&(*result)._message_1_C_I_int)))) && (((*result)._message_1_C_I_choice = _message_1_C_I_int), true))
-	|| (((zcbor_bstr_decode(state, (&(*result)._message_1_C_I_bstr)))) && (((*result)._message_1_C_I_choice = _message_1_C_I_bstr), true))), zcbor_union_end_code(state), int_res)))
-	&& zcbor_present_decode(&((*result)._message_1_ead_1_present), (zcbor_decoder_t *)zcbor_bstr_decode, state, (&(*result)._message_1_ead_1)))));
+	bool tmp_result = (((((zcbor_int32_decode(state, (&(*result).message_1_METHOD))))
+	&& ((zcbor_union_start_code(state) && (int_res = ((((zcbor_list_start_decode(state) && ((zcbor_multi_decode(2, 10, &(*result).SUITES_I_suite_l_suite_count, (zcbor_decoder_t *)zcbor_int32_decode, state, (&(*result).SUITES_I_suite_l_suite), sizeof(int32_t))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_list_end_decode(state))) && (((*result).message_1_SUITES_I_choice = SUITES_I_suite_l_c), true))
+	|| (zcbor_union_elem_code(state) && (((zcbor_int32_decode(state, (&(*result).message_1_SUITES_I_int)))) && (((*result).message_1_SUITES_I_choice = message_1_SUITES_I_int_c), true)))), zcbor_union_end_code(state), int_res)))
+	&& ((zcbor_bstr_decode(state, (&(*result).message_1_G_X))))
+	&& ((zcbor_union_start_code(state) && (int_res = ((((zcbor_int32_decode(state, (&(*result).message_1_C_I_int)))) && (((*result).message_1_C_I_choice = message_1_C_I_int_c), true))
+	|| (((zcbor_bstr_decode(state, (&(*result).message_1_C_I_bstr)))) && (((*result).message_1_C_I_choice = message_1_C_I_bstr_c), true))), zcbor_union_end_code(state), int_res)))
+	&& ((*result).message_1_ead_1_present = ((zcbor_bstr_decode(state, (&(*result).message_1_ead_1)))), 1))));
 
-	if (!tmp_result)
-		zcbor_trace();
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
 
 	return tmp_result;
 }
@@ -47,20 +52,6 @@ int cbor_decode_message_1(
 {
 	zcbor_state_t states[4];
 
-	zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), payload, payload_len, 5);
-
-	bool ret = decode_message_1(states, result);
-
-	if (ret && (payload_len_out != NULL)) {
-		*payload_len_out = MIN(payload_len,
-				(size_t)states[0].payload - (size_t)payload);
-	}
-
-	if (!ret) {
-		int err = zcbor_pop_error(states);
-
-		zcbor_print("Return error: %d\r\n", err);
-		return (err == ZCBOR_SUCCESS) ? ZCBOR_ERR_UNKNOWN : err;
-	}
-	return ZCBOR_SUCCESS;
+	return zcbor_entry_function(payload, payload_len, (void *)result, payload_len_out, states,
+		(zcbor_decoder_t *)decode_message_1, sizeof(states) / sizeof(zcbor_state_t), 5);
 }
