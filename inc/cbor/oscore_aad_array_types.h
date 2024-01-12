@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.0
+ * Generated using zcbor version 0.8.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -26,18 +26,18 @@ extern "C" {
 #define DEFAULT_MAX_QTY 3
 
 struct aad_array {
-	uint32_t _aad_array_oscore_version;
+	uint32_t aad_array_oscore_version;
 	union {
-		int32_t _aad_array_algorithms_alg_aead_int;
-		struct zcbor_string _aad_array_algorithms_alg_aead_tstr;
+		int32_t aad_array_algorithms_alg_aead_int;
+		struct zcbor_string aad_array_algorithms_alg_aead_tstr;
 	};
 	enum {
-		_aad_array_algorithms_alg_aead_int,
-		_aad_array_algorithms_alg_aead_tstr,
-	} _aad_array_algorithms_alg_aead_choice;
-	struct zcbor_string _aad_array_request_kid;
-	struct zcbor_string _aad_array_request_piv;
-	struct zcbor_string _aad_array_options;
+		aad_array_algorithms_alg_aead_int_c,
+		aad_array_algorithms_alg_aead_tstr_c,
+	} aad_array_algorithms_alg_aead_choice;
+	struct zcbor_string aad_array_request_kid;
+	struct zcbor_string aad_array_request_piv;
+	struct zcbor_string aad_array_options;
 };
 
 #ifdef __cplusplus

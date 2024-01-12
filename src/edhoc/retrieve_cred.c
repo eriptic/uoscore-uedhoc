@@ -156,48 +156,48 @@ enum err retrieve_cred(bool static_dh_auth, struct cred_array *cred_array,
 		   0);
 	/*the cred should be locally available on the device if 
 	kid, x5u, x5t, c5u, c5t is used*/
-	if (map._id_cred_x_map_kid_present || map._id_cred_x_map_x5u_present ||
-	    map._id_cred_x_map_x5t_present || map._id_cred_x_map_c5u_present ||
-	    map._id_cred_x_map_c5t_present) {
+	if (map.id_cred_x_map_kid_present || map.id_cred_x_map_x5u_present ||
+	    map.id_cred_x_map_x5t_present || map.id_cred_x_map_c5u_present ||
+	    map.id_cred_x_map_c5t_present) {
 		TRY(get_local_cred(static_dh_auth, cred_array, id_cred, cred,
 				   pk, g));
 		return ok;
 	}
 	/*x5chain*/
-	else if (map._id_cred_x_map_x5chain_present) {
+	else if (map.id_cred_x_map_x5chain_present) {
 		struct const_byte_array cert = BYTE_ARRAY_INIT(
-			map._id_cred_x_map_x5chain._id_cred_x_map_x5chain.value,
-			(uint32_t)map._id_cred_x_map_x5chain
-				._id_cred_x_map_x5chain.len);
+			map.id_cred_x_map_x5chain.id_cred_x_map_x5chain.value,
+			(uint32_t)map.id_cred_x_map_x5chain
+				.id_cred_x_map_x5chain.len);
 
 		TRY(verify_cert2cred(static_dh_auth, cred_array, x5chain, &cert,
 				     cred, pk, g));
 		return ok;
 	}
 	/*x5bag*/
-	else if (map._id_cred_x_map_x5bag_present) {
+	else if (map.id_cred_x_map_x5bag_present) {
 		struct const_byte_array cert = BYTE_ARRAY_INIT(
-			map._id_cred_x_map_x5bag._id_cred_x_map_x5bag.value,
-			(uint32_t)map._id_cred_x_map_x5bag._id_cred_x_map_x5bag
+			map.id_cred_x_map_x5bag.id_cred_x_map_x5bag.value,
+			(uint32_t)map.id_cred_x_map_x5bag.id_cred_x_map_x5bag
 				.len);
 		TRY(verify_cert2cred(static_dh_auth, cred_array, x5bag, &cert,
 				     cred, pk, g));
 		return ok;
 	}
 	/*c5c*/
-	else if (map._id_cred_x_map_c5c_present) {
+	else if (map.id_cred_x_map_c5c_present) {
 		struct const_byte_array cert = BYTE_ARRAY_INIT(
-			map._id_cred_x_map_c5c._id_cred_x_map_c5c.value,
-			(uint32_t)map._id_cred_x_map_c5c._id_cred_x_map_c5c.len);
+			map.id_cred_x_map_c5c.id_cred_x_map_c5c.value,
+			(uint32_t)map.id_cred_x_map_c5c.id_cred_x_map_c5c.len);
 		TRY(verify_cert2cred(static_dh_auth, cred_array, c5c, &cert,
 				     cred, pk, g));
 		return ok;
 	}
 	/*c5b*/
-	else if (map._id_cred_x_map_c5b_present) {
+	else if (map.id_cred_x_map_c5b_present) {
 		struct const_byte_array cert = BYTE_ARRAY_INIT(
-			map._id_cred_x_map_c5b._id_cred_x_map_c5b.value,
-			(uint32_t)map._id_cred_x_map_c5b._id_cred_x_map_c5b.len);
+			map.id_cred_x_map_c5b.id_cred_x_map_c5b.value,
+			(uint32_t)map.id_cred_x_map_c5b.id_cred_x_map_c5b.len);
 		TRY(verify_cert2cred(static_dh_auth, cred_array, c5b, &cert,
 				     cred, pk, g));
 		return ok;

@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.0
+ * Generated using zcbor version 0.8.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -26,9 +26,9 @@ extern "C" {
 #define DEFAULT_MAX_QTY 3
 
 struct edhoc_enc_structure {
-	struct zcbor_string _edhoc_enc_structure_context;
-	struct zcbor_string _edhoc_enc_structure_protected;
-	struct zcbor_string _edhoc_enc_structure_external_aad;
+	struct zcbor_string edhoc_enc_structure_context;
+	struct zcbor_string edhoc_enc_structure_protected;
+	struct zcbor_string edhoc_enc_structure_external_aad;
 };
 
 #ifdef __cplusplus
