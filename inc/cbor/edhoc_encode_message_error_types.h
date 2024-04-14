@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.0
+ * Generated using zcbor version 0.8.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -25,37 +25,37 @@ extern "C" {
  */
 #define DEFAULT_MAX_QTY 3
 
-struct message_error_C_x_ {
+struct message_error_C_x_r {
 	union {
-		struct zcbor_string _message_error_C_x_bstr;
-		int32_t _message_error_C_x_int;
+		struct zcbor_string message_error_C_x_bstr;
+		int32_t message_error_C_x_int;
 	};
 	enum {
-		_message_error_C_x_bstr,
-		_message_error_C_x_int,
-	} _message_error_C_x_choice;
+		message_error_C_x_bstr_c,
+		message_error_C_x_int_c,
+	} message_error_C_x_choice;
 };
 
-struct message_error_SUITES_R_ {
+struct message_error_SUITES_R_r {
 	union {
 		struct {
-			int32_t _SUITES_R__supported_supported[10];
-			size_t _SUITES_R__supported_supported_count;
+			int32_t SUITES_R_supported_l_supported[10];
+			size_t SUITES_R_supported_l_supported_count;
 		};
-		int32_t _message_error_SUITES_R_int;
+		int32_t message_error_SUITES_R_int;
 	};
 	enum {
-		_SUITES_R__supported,
-		_message_error_SUITES_R_int,
-	} _message_error_SUITES_R_choice;
+		SUITES_R_supported_l_c,
+		message_error_SUITES_R_int_c,
+	} message_error_SUITES_R_choice;
 };
 
 struct message_error {
-	struct message_error_C_x_ _message_error_C_x;
-	bool _message_error_C_x_present;
-	struct zcbor_string _message_error_DIAG_MSG;
-	struct message_error_SUITES_R_ _message_error_SUITES_R;
-	bool _message_error_SUITES_R_present;
+	struct message_error_C_x_r message_error_C_x;
+	bool message_error_C_x_present;
+	struct zcbor_string message_error_DIAG_MSG;
+	struct message_error_SUITES_R_r message_error_SUITES_R;
+	bool message_error_SUITES_R_present;
 };
 
 #ifdef __cplusplus

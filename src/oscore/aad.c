@@ -26,14 +26,14 @@ enum err create_aad(struct o_coap_option *options, uint16_t opt_num,
 {
 	struct aad_array aad_array;
 
-	aad_array._aad_array_oscore_version = 1;
-	aad_array._aad_array_algorithms_alg_aead_choice =
-		_aad_array_algorithms_alg_aead_int;
-	aad_array._aad_array_algorithms_alg_aead_int = (int32_t)aead_alg;
-	aad_array._aad_array_request_kid.value = kid->ptr;
-	aad_array._aad_array_request_kid.len = kid->len;
-	aad_array._aad_array_request_piv.value = piv->ptr;
-	aad_array._aad_array_request_piv.len = piv->len;
+	aad_array.aad_array_oscore_version = 1;
+	aad_array.aad_array_algorithms_alg_aead_choice =
+		aad_array_algorithms_alg_aead_int_c;
+	aad_array.aad_array_algorithms_alg_aead_int = (int32_t)aead_alg;
+	aad_array.aad_array_request_kid.value = kid->ptr;
+	aad_array.aad_array_request_kid.len = kid->len;
+	aad_array.aad_array_request_piv.value = piv->ptr;
+	aad_array.aad_array_request_piv.len = piv->len;
 
 	PRINT_ARRAY("request_piv", piv->ptr, piv->len);
 	PRINT_ARRAY("request_kid", kid->ptr, kid->len);
@@ -43,8 +43,8 @@ enum err create_aad(struct o_coap_option *options, uint16_t opt_num,
 	 * If at some later time I options are defined this implementation 
 	 * must  be extended here. 
 	 */
-	aad_array._aad_array_options.len = 0;
-	aad_array._aad_array_options.value = NULL;
+	aad_array.aad_array_options.len = 0;
+	aad_array.aad_array_options.value = NULL;
 
 	size_t payload_len_out;
 	TRY_EXPECT(cbor_encode_aad_array(out->ptr, out->len, &aad_array,

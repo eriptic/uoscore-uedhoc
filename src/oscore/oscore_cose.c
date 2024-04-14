@@ -37,14 +37,14 @@ static enum err create_enc_structure(struct byte_array *external_aad,
 	struct oscore_enc_structure enc_structure;
 
 	uint8_t context[] = { "Encrypt0" };
-	enc_structure._oscore_enc_structure_context.value = context;
-	enc_structure._oscore_enc_structure_context.len =
+	enc_structure.oscore_enc_structure_context.value = context;
+	enc_structure.oscore_enc_structure_context.len =
 		(uint32_t)strlen((char *)context);
-	enc_structure._oscore_enc_structure_protected.value = NULL;
-	enc_structure._oscore_enc_structure_protected.len = 0;
-	enc_structure._oscore_enc_structure_external_aad.value =
+	enc_structure.oscore_enc_structure_protected.value = NULL;
+	enc_structure.oscore_enc_structure_protected.len = 0;
+	enc_structure.oscore_enc_structure_external_aad.value =
 		external_aad->ptr;
-	enc_structure._oscore_enc_structure_external_aad.len =
+	enc_structure.oscore_enc_structure_external_aad.len =
 		external_aad->len;
 
 	size_t payload_len_out = 0;

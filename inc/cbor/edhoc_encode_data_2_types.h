@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.7.0
+ * Generated using zcbor version 0.8.0
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -25,29 +25,29 @@ extern "C" {
  */
 #define DEFAULT_MAX_QTY 3
 
-struct data_2_C_I_ {
+struct data_2_C_I_r {
 	union {
-		int32_t _data_2_C_I_int;
-		struct zcbor_string _data_2_C_I_bstr;
+		int32_t data_2_C_I_int;
+		struct zcbor_string data_2_C_I_bstr;
 	};
 	enum {
-		_data_2_C_I_int,
-		_data_2_C_I_bstr,
-	} _data_2_C_I_choice;
+		data_2_C_I_int_c,
+		data_2_C_I_bstr_c,
+	} data_2_C_I_choice;
 };
 
 struct data_2 {
-	struct data_2_C_I_ _data_2_C_I;
-	bool _data_2_C_I_present;
-	struct zcbor_string _data_2_G_Y;
+	struct data_2_C_I_r data_2_C_I;
+	bool data_2_C_I_present;
+	struct zcbor_string data_2_G_Y;
 	union {
-		int32_t _data_2_C_R_int;
-		struct zcbor_string _data_2_C_R_bstr;
+		int32_t data_2_C_R_int;
+		struct zcbor_string data_2_C_R_bstr;
 	};
 	enum {
-		_data_2_C_R_int,
-		_data_2_C_R_bstr,
-	} _data_2_C_R_choice;
+		data_2_C_R_int_c,
+		data_2_C_R_bstr_c,
+	} data_2_C_R_choice;
 };
 
 #ifdef __cplusplus
