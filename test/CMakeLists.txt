@@ -38,7 +38,7 @@ include_directories(
 add_definitions(
   -DMBEDTLS_CONFIG_FILE="mbedtls_config_uoscore_uedhoc.h"
   -DUNIT_TEST
-  #-DDEBUG_PRINT
+  -DDEBUG_PRINT
   -DZCBOR_CANONICAL
   #-DMEASURE_LATENCY_ON
   #-DREPORT_STACK_USAGE

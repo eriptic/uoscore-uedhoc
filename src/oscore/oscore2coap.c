@@ -365,11 +365,11 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
         and eventually sender sequence number*/
 	if (is_request(&oscore_packet)) {
 		/*Check that the recipient context c->rc has a  Recipient ID that
-			 matches the received with the oscore option KID (Sender ID).
-			 If this is not true return an error which indicates the caller
-			 application to tray another context. This is useful when the caller
-			 app doesn't know in advance to which context an incoming packet 
-             belongs.*/
+		matches the received with the oscore option KID (Sender ID).
+		If this is not true return an error which indicates the caller
+		application to tray another context. This is useful when the caller
+		app doesn't know in advance to which context an incoming packet 
+                belongs.*/
 		if (!array_equals(&c->rc.recipient_id, &oscore_option.kid)) {
 			return oscore_kid_recipient_id_mismatch;
 		}

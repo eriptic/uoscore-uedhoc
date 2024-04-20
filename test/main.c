@@ -61,7 +61,7 @@
 
 // in order to execute only a specific tes set this macro to a specific
 // test macro and comment out EXECUTE_ALL_TESTS
-#define EXECUTE_ONLY_TEST T800_OSCORE_LATENCY_TEST
+#define EXECUTE_ONLY_TEST T2_OSCORE_SERVER_REQUEST_RESPONSE
 
 /**
  * @brief       This function allows to skip a given test if only one other test 
@@ -306,8 +306,6 @@ ZTEST(uoscore_uedhoc, t606_oscore)
 	skip(T606_SERVER_REPLAY_STANDARD_SCENARIO_TEST,
 	     t606_server_replay_standard_scenario_test);
 }
-
-
 
 /*
  * In order to measure the latency of coap2oscore, oscore2coap, 
