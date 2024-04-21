@@ -49,7 +49,7 @@ static void deser_sign_ctx_init(struct deser_sign_ctx_s *ctx, uint8_t *seek,
 }
 
 static int deser_sign_cb(void *void_ctx, int tag, unsigned char *start,
-			 uint32_t len)
+			 size_t len)
 {
 	if (tag == MBEDTLS_ASN1_INTEGER) {
 		struct deser_sign_ctx_s *ctx = void_ctx;
@@ -63,8 +63,7 @@ static int deser_sign_cb(void *void_ctx, int tag, unsigned char *start,
 	return 0;
 }
 
-static int find_pk_cb(void *void_ppk, int tag, unsigned char *start,
-		      uint32_t len)
+static int find_pk_cb(void *void_ppk, int tag, unsigned char *start, size_t len)
 {
 	(void)len;
 
@@ -256,8 +255,7 @@ enum err cert_c509_verify(struct const_byte_array *cert,
 
 	PRINT_MSG("CBOR certificate parsed.\n");
 	PRINTF("Certificate type: %d\n", c.cert_type);
-	PRINT_ARRAY("issuer", c.cert_issuer.value,
-		    (uint32_t)c.cert_issuer.len);
+	PRINT_ARRAY("issuer", c.cert_issuer.value, (uint32_t)c.cert_issuer.len);
 	PRINTF("validity_not_before: %d\n", c.cert_validity_not_before);
 	PRINTF("validity_not_after: %d\n", c.cert_validity_not_after);
 	PRINT_ARRAY("subject", c.cert_subject.value,
@@ -389,7 +387,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 			if (*cpk == 0) {
 				++cpk;
 			}
-			cpk_len = m_cert.pk_raw.len -
+			cpk_len = (uint32_t)m_cert.pk_raw.len -
 				  (uint32_t)(cpk - m_cert.pk_raw.p);
 		}
 		TRY(_memcpy_s(pk->ptr, pk->len, cpk, (uint32_t)cpk_len));
