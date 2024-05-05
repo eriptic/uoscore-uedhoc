@@ -17,17 +17,17 @@
 #include "common/oscore_edhoc_error.h"
 
 /**
- * @brief                       Calculates transcript hash th2. 
+ * @brief                       Calculates transcript hash TH2
+ *                              TH_2 = H( G_Y, H(message_1) ). 
  * 
  * @param alg                   Hash algorithm to be used.
  * @param[in] msg1_hash         Hash of Message 1.
  * @param[in] g_y               Public DH parameter.
- * @param[in] c_r               Connection identifier of the responder.
  * @param[out] th2              The result.
  * @retval                      Ok or error.
  */
 enum err th2_calculate(enum hash_alg alg, struct byte_array *msg1_hash,
-		       struct byte_array *g_y, struct byte_array *c_r,
+		       struct byte_array *g_y,
 		       struct byte_array *th2);
 
 /**

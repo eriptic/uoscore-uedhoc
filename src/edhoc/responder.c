@@ -216,8 +216,7 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 	/******************* create and send message 2*************************/
 	BYTE_ARRAY_NEW(th2, HASH_SIZE, get_hash_len(rc->suite.edhoc_hash));
 	TRY(hash(rc->suite.edhoc_hash, &rc->msg, &rc->msg1_hash));
-	TRY(th2_calculate(rc->suite.edhoc_hash, &rc->msg1_hash, &c->g_y,
-			  &c->c_r, &th2));
+	TRY(th2_calculate(rc->suite.edhoc_hash, &rc->msg1_hash, &c->g_y, &th2));
 
 	/*calculate the DH shared secret*/
 	BYTE_ARRAY_NEW(g_xy, ECDH_SECRET_SIZE, ECDH_SECRET_SIZE);

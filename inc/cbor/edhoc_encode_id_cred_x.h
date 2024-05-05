@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.8.0
+ * Generated using zcbor version 0.8.99
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */

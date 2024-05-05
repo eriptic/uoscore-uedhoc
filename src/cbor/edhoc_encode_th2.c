@@ -1,5 +1,5 @@
 /*
- * Generated using zcbor version 0.8.0
+ * Generated using zcbor version 0.8.99
  * https://github.com/NordicSemiconductor/zcbor
  * Generated with a --default-max-qty of 3
  */
@@ -25,9 +25,6 @@ static bool encode_th2(
 	zcbor_log("%s\r\n", __func__);
 
 	bool tmp_result = (((((zcbor_bstr_encode(state, (&(*input).th2_G_Y))))
-	&& ((((*input).th2_C_R_choice == th2_C_R_bstr_c) ? ((zcbor_bstr_encode(state, (&(*input).th2_C_R_bstr))))
-	: (((*input).th2_C_R_choice == th2_C_R_int_c) ? ((zcbor_int32_encode(state, (&(*input).th2_C_R_int))))
-	: false)))
 	&& ((zcbor_bstr_encode(state, (&(*input).th2_hash_msg1)))))));
 
 	if (!tmp_result) {
@@ -47,8 +44,8 @@ int cbor_encode_th2(
 		const struct th2 *input,
 		size_t *payload_len_out)
 {
-	zcbor_state_t states[3];
+	zcbor_state_t states[2];
 
 	return zcbor_entry_function(payload, payload_len, (void *)input, payload_len_out, states,
-		(zcbor_decoder_t *)encode_th2, sizeof(states) / sizeof(zcbor_state_t), 3);
+		(zcbor_decoder_t *)encode_th2, sizeof(states) / sizeof(zcbor_state_t), 2);
 }

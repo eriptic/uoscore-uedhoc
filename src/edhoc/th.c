@@ -29,13 +29,11 @@
  *
  * @param[in] hash_msg1 	Hash of message 1.
  * @param[in] g_y 		Ephemeral public DH key.
- * @param[in] c_r 		Conception identifier of the responder.
  * @param[out] th2_input	The result.
  * @retval			Ok or error.
  */
 static inline enum err th2_input_encode(struct byte_array *hash_msg1,
 					struct byte_array *g_y,
-					struct byte_array *c_r,
 					struct byte_array *th2_input)
 {
 	size_t payload_len_out;
@@ -49,16 +47,6 @@ static inline enum err th2_input_encode(struct byte_array *hash_msg1,
 	th2.th2_G_Y.value = g_y->ptr;
 	th2.th2_G_Y.len = g_y->len;
 
-	/*Encode C_R as int or byte*/
-	if (c_r->len == 1 && (c_r->ptr[0] < 0x18 ||
-			      (0x1F < c_r->ptr[0] && c_r->ptr[0] <= 0x37))) {
-		th2.th2_C_R_choice = th2_C_R_int_c;
-		TRY(decode_int(c_r, &th2.th2_C_R_int));
-	} else {
-		th2.th2_C_R_choice = th2_C_R_bstr_c;
-		th2.th2_C_R_bstr.value = c_r->ptr;
-		th2.th2_C_R_bstr.len = c_r->len;
-	}
 	TRY_EXPECT(cbor_encode_th2(th2_input->ptr, th2_input->len, &th2,
 				   &payload_len_out),
 		   0);
@@ -135,13 +123,13 @@ enum err th34_calculate(enum hash_alg alg, struct byte_array *th23,
 }
 
 enum err th2_calculate(enum hash_alg alg, struct byte_array *msg1_hash,
-		       struct byte_array *g_y, struct byte_array *c_r,
+		       struct byte_array *g_y,
 		       struct byte_array *th2)
 {
 	BYTE_ARRAY_NEW(th2_input, TH2_DEFAULT_SIZE,
-		       g_y->len + c_r->len + th2->len + ENCODING_OVERHEAD);
+		       g_y->len + th2->len + ENCODING_OVERHEAD);
 	PRINT_ARRAY("hash_msg1_raw", msg1_hash->ptr, msg1_hash->len);
-	TRY(th2_input_encode(msg1_hash, g_y, c_r, &th2_input));
+	TRY(th2_input_encode(msg1_hash, g_y, &th2_input));
 	TRY(hash(alg, &th2_input, th2));
 	PRINT_ARRAY("TH2", th2->ptr, th2->len);
 	return ok;
