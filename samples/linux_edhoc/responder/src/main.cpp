@@ -58,7 +58,7 @@ static int start_coap_server(int *sockfd)
 	//struct sockaddr_in client_addr;
 	client_addr_len = sizeof(client_addr);
 	memset(&client_addr, 0, sizeof(client_addr));
-	const char IPV4_SERVADDR[] = { "0.0.0.0" };
+	const char IPV4_SERVADDR[] = { "127.0.0.1" };
 	//const char IPV4_SERVADDR[] = { "192.168.43.63" };
 	err = sock_init(SOCK_SERVER, IPV4_SERVADDR, IPv4, &servaddr,
 			sizeof(servaddr), sockfd);

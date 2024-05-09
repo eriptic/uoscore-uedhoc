@@ -7,9 +7,6 @@
 # option. This file may not be copied, modified, or distributed
 # except according to those terms.
 
-# in order to rebuild the uoscore-uedhoc.a and responder application call: 
-# make oscore_edhoc; make
-
 include ../../../makefile_config.mk
 
 # toolchain

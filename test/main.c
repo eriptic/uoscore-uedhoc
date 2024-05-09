@@ -57,11 +57,11 @@
 #define T800_OSCORE_LATENCY_TEST 41
 
 // if this macro is defined all tests will be executed
-#define EXECUTE_ALL_TESTS
+//#define EXECUTE_ALL_TESTS
 
 // in order to execute only a specific tes set this macro to a specific
 // test macro and comment out EXECUTE_ALL_TESTS
-#define EXECUTE_ONLY_TEST T2_OSCORE_SERVER_REQUEST_RESPONSE
+#define EXECUTE_ONLY_TEST T1_OSCORE_CLIENT_REQUEST_RESPONSE
 
 /**
  * @brief       This function allows to skip a given test if only one other test 
