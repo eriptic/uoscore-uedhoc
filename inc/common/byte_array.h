@@ -37,6 +37,20 @@ extern struct byte_array EMPTY_ARRAY;
 extern struct byte_array NULL_ARRAY;
 
 /**
+ * @brief                       Appends a source byte array at the end of dest 
+ *                              byte array.
+ * 
+ * @param dest                  Destination array. dest.len MUST indicate the 
+ *                              position at which the source byte array will be 
+ *                              appended.
+ * @param source                The byte array that will be appended 
+ * @param capacity              The total buffer capacity of the dest byte array
+ * @return enum err             Ok or error code.
+ */
+enum err byte_array_append(struct byte_array *dest,
+			   const struct byte_array *source, uint32_t capacity);
+
+/**
  * @brief			Compares if the given two arrays have equal
  * 				content.
  *

@@ -116,7 +116,8 @@ static enum err key_gen(enum ciphertext ctxt, enum hash_alg edhoc_hash,
 }
 
 enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
-				  struct byte_array *id_cred,
+				  struct byte_array *c_r,
+                                  struct byte_array *id_cred,
 				  struct byte_array *sig_or_mac,
 				  struct byte_array *ead,
 				  struct byte_array *prk, struct byte_array *th,
@@ -164,7 +165,14 @@ enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
 		ead->len = 0;
 		PRINT_MSG("No EAD_4\n");
 	} else {
-		TRY(plaintext_split(plaintext, id_cred, sig_or_mac, ead));
+		if (ctxt == CIPHERTEXT2) {
+			TRY(plaintext_split(plaintext, c_r, id_cred, sig_or_mac,
+					    ead));
+			PRINT_ARRAY("C_R", c_r->ptr, c_r->len);
+		} else {
+			TRY(plaintext_split(plaintext, NULL, id_cred,
+					    sig_or_mac, ead));
+		}
 		PRINT_ARRAY("ID_CRED", id_cred->ptr, id_cred->len);
 		PRINT_ARRAY("sign_or_mac", sig_or_mac->ptr, sig_or_mac->len);
 		if (ead->len) {

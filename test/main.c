@@ -55,13 +55,14 @@
 #define T605_SERVER_REPLAY_INSERT_TEST 39
 #define T606_SERVER_REPLAY_STANDARD_SCENARIO_TEST 40
 #define T800_OSCORE_LATENCY_TEST 41
+#define TEST_EDHOC_INITIATOR_X509_X5T_RFC9529 42
 
 // if this macro is defined all tests will be executed
 //#define EXECUTE_ALL_TESTS
 
 // in order to execute only a specific tes set this macro to a specific
 // test macro and comment out EXECUTE_ALL_TESTS
-#define EXECUTE_ONLY_TEST T1_OSCORE_CLIENT_REQUEST_RESPONSE
+#define EXECUTE_ONLY_TEST TEST_EDHOC_INITIATOR_X509_X5T_RFC9529
 
 /**
  * @brief       This function allows to skip a given test if only one other test 
@@ -305,6 +306,12 @@ ZTEST(uoscore_uedhoc, t606_oscore)
 {
 	skip(T606_SERVER_REPLAY_STANDARD_SCENARIO_TEST,
 	     t606_server_replay_standard_scenario_test);
+}
+
+ZTEST(uoscore_uedhoc, test_edhoc_initiator_x509_x5t_rfc9529)
+{
+	skip(TEST_EDHOC_INITIATOR_X509_X5T_RFC9529,
+	     test_edhoc_initiator_x509_x5t_rfc9529);
 }
 
 /*

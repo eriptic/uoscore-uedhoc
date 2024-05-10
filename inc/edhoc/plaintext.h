@@ -28,13 +28,15 @@ enum err id_cred2kid(const struct byte_array *id_cred, struct byte_array *kid);
  * @brief                       Splits the plaintext of message 2. 
  *
  * @param[in] ptxt              Pointer to the plaintext.
+ * @param[out] c_r              Connection identifier of the responder. 
+ *                              This MUST be NULL when used plaintext 3 
  * @param[out] id_cred_x        ID_CRED_x.
  * @param[out] sign_or_mac      Signature or mac.
  * @param[out] ead              External Authorization Data.
  * @retval                      Ok or error code.
  */
-enum err plaintext_split(struct byte_array *ptxt, struct byte_array *id_cred_x,
-			 struct byte_array *sign_or_mac,
-			 struct byte_array *ead);
+enum err plaintext_split(struct byte_array *ptxt, struct byte_array *c_r,
+			 struct byte_array *id_cred_x,
+			 struct byte_array *sign_or_mac, struct byte_array *ad);
 
 #endif

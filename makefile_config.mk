@@ -60,7 +60,7 @@ OSCORE_NVM_SUPPORT += -DOSCORE_NVM_SUPPORT
 ################################################################################
 # In deployments where no protected application message is sent from the 
 # Responder to the Initiator, message_4 MUST be used.
-#FEATURES += -DMESSAGE_4
+FEATURES += -DMESSAGE_4
 
 # If EAD is not used set its buffer size to 0
 FEATURES += -DEAD_SIZE=0
@@ -158,5 +158,5 @@ FEATURES += -DI_OPTIONS_BUFF_MAX_LEN=100
 
 
 CRYPTO_ENGINE += -DTINYCRYPT
-#CRYPTO_ENGINE += -DCOMPACT25519
+CRYPTO_ENGINE += -DCOMPACT25519
 #CRYPTO_ENGINE += -DMBEDTLS

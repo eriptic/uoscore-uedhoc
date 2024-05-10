@@ -39,8 +39,8 @@ enum sgn_or_mac_op { VERIFY, GENERATE };
 enum err
 signature_or_mac(enum sgn_or_mac_op op, bool static_dh, struct suite *suite,
 		 const struct byte_array *sk, const struct byte_array *pk,
-		 const struct byte_array *prk, const struct byte_array *th,
-		 const struct byte_array *id_cred,
+		 const struct byte_array *prk, const struct byte_array *c_r,
+		 const struct byte_array *th, const struct byte_array *id_cred,
 		 const struct byte_array *cred, const struct byte_array *ead,
 		 enum info_label mac_label, struct byte_array *sig_or_mac);
 

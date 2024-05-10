@@ -16,18 +16,15 @@
 #error "The type file was generated with a different default_max_qty than this file"
 #endif
 
-static bool decode_m2(zcbor_state_t *state, struct m2 *result);
+static bool decode_m2_G_Y_CIPHERTEXT_2(zcbor_state_t *state, struct zcbor_string *result);
 
 
-static bool decode_m2(
-		zcbor_state_t *state, struct m2 *result)
+static bool decode_m2_G_Y_CIPHERTEXT_2(
+		zcbor_state_t *state, struct zcbor_string *result)
 {
 	zcbor_log("%s\r\n", __func__);
-	bool int_res;
 
-	bool tmp_result = (((((zcbor_bstr_decode(state, (&(*result).m2_G_Y_CIPHERTEXT_2))))
-	&& ((zcbor_union_start_code(state) && (int_res = ((((zcbor_int32_decode(state, (&(*result).m2_C_R_int)))) && (((*result).m2_C_R_choice = m2_C_R_int_c), true))
-	|| (((zcbor_bstr_decode(state, (&(*result).m2_C_R_bstr)))) && (((*result).m2_C_R_choice = m2_C_R_bstr_c), true))), zcbor_union_end_code(state), int_res))))));
+	bool tmp_result = (((zcbor_bstr_decode(state, (&(*result))))));
 
 	if (!tmp_result) {
 		zcbor_trace_file(state);
@@ -41,13 +38,13 @@ static bool decode_m2(
 
 
 
-int cbor_decode_m2(
+int cbor_decode_m2_G_Y_CIPHERTEXT_2(
 		const uint8_t *payload, size_t payload_len,
-		struct m2 *result,
+		struct zcbor_string *result,
 		size_t *payload_len_out)
 {
-	zcbor_state_t states[3];
+	zcbor_state_t states[2];
 
 	return zcbor_entry_function(payload, payload_len, (void *)result, payload_len_out, states,
-		(zcbor_decoder_t *)decode_m2, sizeof(states) / sizeof(zcbor_state_t), 2);
+		(zcbor_decoder_t *)decode_m2_G_Y_CIPHERTEXT_2, sizeof(states) / sizeof(zcbor_state_t), 1);
 }

@@ -32,6 +32,7 @@
  * 				data items and computes a MAC over it.
  * 
  * @param[in] prk 		The key to be used for the mac.
+ * @param[in] c_r 		Connection identifier of the requester
  * @param[in] th 		Transcript hash.
  * @param[in] id_cred 		ID of the credential.
  * @param[in] cred 		The credential.
@@ -42,7 +43,8 @@
  * @param[out] mac 		The computed mac.
  * @return 			Ok or error code.
  */
-static enum err mac(const struct byte_array *prk, const struct byte_array *th,
+static enum err mac(const struct byte_array *prk, const struct byte_array *c_r,
+		    const struct byte_array *th,
 		    const struct byte_array *id_cred,
 		    const struct byte_array *cred, const struct byte_array *ead,
 		    enum info_label mac_label, bool static_dh,
@@ -50,30 +52,25 @@ static enum err mac(const struct byte_array *prk, const struct byte_array *th,
 {
 	/*encode th as bstr*/
 	BYTE_ARRAY_NEW(th_enc, HASH_SIZE + 2, th->len + 2);
-
 	TRY(encode_bstr(th, &th_enc));
 
 	/**/
 	BYTE_ARRAY_NEW(context_mac, CONTEXT_MAC_SIZE,
-		       id_cred->len + cred->len + ead->len + th_enc.len);
-
-	TRY(_memcpy_s(context_mac.ptr, context_mac.len, id_cred->ptr,
-		      id_cred->len));
-
-	TRY(_memcpy_s((context_mac.ptr + id_cred->len),
-		      (context_mac.len - id_cred->len), th_enc.ptr,
-		      th_enc.len));
-
-	TRY(_memcpy_s((context_mac.ptr + id_cred->len + th_enc.len),
-		      (context_mac.len - id_cred->len - th_enc.len), cred->ptr,
-		      cred->len));
+		       c_r->len + 2 + id_cred->len + cred->len + ead->len +
+			       th_enc.len);
+	uint32_t capacity = context_mac.len;
+	context_mac.len = 0;
+	if (c_r->len != 0) {
+		BYTE_ARRAY_NEW(cr_enc, C_R_SIZE + 2, c_r->len + 2);
+		TRY(encode_bstr(c_r, &cr_enc));
+		TRY(byte_array_append(&context_mac, &cr_enc, capacity));
+	}
+	TRY(byte_array_append(&context_mac, id_cred, capacity));
+	TRY(byte_array_append(&context_mac, &th_enc, capacity));
+	TRY(byte_array_append(&context_mac, cred, capacity));
 
 	if (0 < ead->len) {
-		TRY(_memcpy_s((context_mac.ptr + id_cred->len + th_enc.len +
-			       cred->len),
-			      (context_mac.len - id_cred->len - th_enc.len -
-			       cred->len),
-			      ead->ptr, ead->len));
+		TRY(byte_array_append(&context_mac, ead, capacity));
 	}
 
 	PRINT_ARRAY("MAC context", context_mac.ptr, context_mac.len);
@@ -135,14 +132,14 @@ static enum err signature_struct_gen(const struct byte_array *th,
 enum err
 signature_or_mac(enum sgn_or_mac_op op, bool static_dh, struct suite *suite,
 		 const struct byte_array *sk, const struct byte_array *pk,
-		 const struct byte_array *prk, const struct byte_array *th,
-		 const struct byte_array *id_cred,
+		 const struct byte_array *prk, const struct byte_array *c_r,
+		 const struct byte_array *th, const struct byte_array *id_cred,
 		 const struct byte_array *cred, const struct byte_array *ead,
 		 enum info_label mac_label, struct byte_array *signature_or_mac)
 {
 	if (op == GENERATE) {
 		/*we always calculate the mac*/
-		TRY(mac(prk, th, id_cred, cred, ead, mac_label, static_dh,
+		TRY(mac(prk, c_r, th, id_cred, cred, ead, mac_label, static_dh,
 			suite, signature_or_mac));
 
 		if (static_dh) {
@@ -174,7 +171,7 @@ signature_or_mac(enum sgn_or_mac_op op, bool static_dh, struct suite *suite,
 		BYTE_ARRAY_NEW(_mac, HASH_SIZE,
 			       get_hash_len(suite->edhoc_hash));
 
-		TRY(mac(prk, th, id_cred, cred, ead, mac_label, static_dh,
+		TRY(mac(prk, c_r, th, id_cred, cred, ead, mac_label, static_dh,
 			suite, &_mac));
 
 		if (static_dh) {

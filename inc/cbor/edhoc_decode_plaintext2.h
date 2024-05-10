@@ -4,14 +4,14 @@
  * Generated with a --default-max-qty of 3
  */
 
-#ifndef EDHOC_ENCODE_MESSAGE_2_H__
-#define EDHOC_ENCODE_MESSAGE_2_H__
+#ifndef EDHOC_DECODE_PLAINTEXT2_H__
+#define EDHOC_DECODE_PLAINTEXT2_H__
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
-#include "cbor/edhoc_encode_message_2_types.h"
+#include "cbor/edhoc_decode_plaintext2_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,9 +22,9 @@ extern "C" {
 #endif
 
 
-int cbor_encode_m2_G_Y_CIPHERTEXT_2(
-		uint8_t *payload, size_t payload_len,
-		const struct zcbor_string *input,
+int cbor_decode_plaintext2(
+		const uint8_t *payload, size_t payload_len,
+		struct plaintext2 *result,
 		size_t *payload_len_out);
 
 
@@ -32,4 +32,4 @@ int cbor_encode_m2_G_Y_CIPHERTEXT_2(
 }
 #endif
 
-#endif /* EDHOC_ENCODE_MESSAGE_2_H__ */
+#endif /* EDHOC_DECODE_PLAINTEXT2_H__ */

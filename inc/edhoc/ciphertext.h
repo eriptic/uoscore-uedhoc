@@ -40,6 +40,9 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
  * 
  * @param ctxt 			CIPHERTEXT2, CIPHERTEXT3 or CIPHERTEXT4
  * @param suite 		cipher suite
+ * @param c_r                   Connection identifier of the responder. 
+ *                              Set this to NULL when using with CIPHERTEXT3 
+ *                              or CIPHERTEXT4
  * @param[out] id_cred 		Id of the credential.
  * @param[out] signature_or_mac Signature or a mac byte_array.
  * @param[out] ead 		External authorization data.
@@ -49,12 +52,10 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
  * @param[out] plaintext 	The plaintext.
  * @return 			Ok or error code.
  */
-enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
-				  struct byte_array *id_cred,
-				  struct byte_array *sig_or_mac,
-				  struct byte_array *ead,
-				  struct byte_array *prk, struct byte_array *th,
-				  struct byte_array *ciphertext,
-				  struct byte_array *plaintext);
+enum err ciphertext_decrypt_split(
+	enum ciphertext ctxt, struct suite *suite, struct byte_array *c_r,
+	struct byte_array *id_cred, struct byte_array *sig_or_mac,
+	struct byte_array *ead, struct byte_array *prk, struct byte_array *th,
+	struct byte_array *ciphertext, struct byte_array *plaintext);
 
 #endif

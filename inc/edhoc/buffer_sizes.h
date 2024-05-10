@@ -72,6 +72,7 @@
 	(ID_CRED_R_SIZE + SIG_OR_MAC_SIZE +                                    \
 	 SIG_OR_MAC_SIZE_ENCODING_OVERHEAD + EAD_SIZE)
 #define CIPHERTEXT2_SIZE PLAINTEXT2_SIZE
+#define G_Y_CIPHERTEXT_2 (G_Y_SIZE + CIPHERTEXT2_SIZE )
 
 #define PLAINTEXT3_SIZE                                                        \
 	(ID_CRED_I_SIZE + SIG_OR_MAC_SIZE +                                    \
@@ -99,7 +100,7 @@
 	 CRED_MAX_SIZE + EAD_SIZE + MAC23_SIZE + ENCODING_OVERHEAD)
 
 #define CONTEXT_MAC_SIZE                                                       \
-	(HASH_SIZE + ID_CRED_MAX_SIZE + CRED_MAX_SIZE + EAD_SIZE +             \
+	(C_R_SIZE + ID_CRED_MAX_SIZE + CRED_MAX_SIZE + EAD_SIZE +             \
 	 ENCODING_OVERHEAD)
 #define INFO_MAX_SIZE CONTEXT_MAC_SIZE + ENCODING_OVERHEAD
 

@@ -24,6 +24,18 @@ struct byte_array NULL_ARRAY = {
 	.ptr = NULL,
 };
 
+enum err byte_array_append(struct byte_array *dest,
+			   const struct byte_array *source, uint32_t capacity)
+{
+	if (source->len + dest->len > capacity) {
+		return buffer_to_small;
+	}
+	TRY(_memcpy_s(dest->ptr + dest->len, capacity - dest->len, source->ptr,
+		      source->len));
+	dest->len += source->len;
+	return ok;
+}
+
 enum err byte_array_cpy(struct byte_array *dest, const struct byte_array *src,
 			const uint32_t dest_max_len)
 {

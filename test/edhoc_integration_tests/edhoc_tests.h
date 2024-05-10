@@ -28,14 +28,11 @@ struct messages {
 //extern struct messages_bufs m_bufs;
 extern struct messages m;
 
-enum role { INITIATOR, RESPONDER };
-
 /**
- * @brief       Runs an initiator/responder and compares the results with the  *              official test vectors.
- * @param       p is INITIATOR or RESPONDER
- * @param       vec_num the test vector number
+ * @brief       Test EDHOC initiator according to RFC9529 Section 2.
+ *              Authentication with Signatures, X.509 Identified by 'x5t'
  */
-int test_edhoc(enum role p, uint8_t vec_num);
+void test_edhoc_initiator_x509_x5t_rfc9529();
 
 /**
  * @brief 		Tests the functions of the exporter interface
