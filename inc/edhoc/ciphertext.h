@@ -28,7 +28,8 @@ enum ciphertext { CIPHERTEXT2, CIPHERTEXT3, CIPHERTEXT4 };
  * @return 			Ok or error code. 
  */
 enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
-			const struct byte_array *id_cred,
+			const struct byte_array *c_r,
+                        const struct byte_array *id_cred,
 			struct byte_array *signature_or_mac,
 			const struct byte_array *ead, struct byte_array *prk,
 			struct byte_array *th, struct byte_array *ciphertext,

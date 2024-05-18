@@ -18,6 +18,7 @@
 #include "edhoc/associated_data_encode.h"
 #include "edhoc/suites.h"
 #include "edhoc/bstr_encode_decode.h"
+#include "edhoc/int_encode_decode.h"
 
 #include "common/crypto_wrapper.h"
 #include "common/oscore_edhoc_error.h"
@@ -115,14 +116,11 @@ static enum err key_gen(enum ciphertext ctxt, enum hash_alg edhoc_hash,
 	return ok;
 }
 
-enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
-				  struct byte_array *c_r,
-                                  struct byte_array *id_cred,
-				  struct byte_array *sig_or_mac,
-				  struct byte_array *ead,
-				  struct byte_array *prk, struct byte_array *th,
-				  struct byte_array *ciphertext,
-				  struct byte_array *plaintext)
+enum err ciphertext_decrypt_split(
+	enum ciphertext ctxt, struct suite *suite, struct byte_array *c_r,
+	struct byte_array *id_cred, struct byte_array *sig_or_mac,
+	struct byte_array *ead, struct byte_array *prk, struct byte_array *th,
+	struct byte_array *ciphertext, struct byte_array *plaintext)
 {
 	/*generate key and iv (no iv in for ciphertext 2)*/
 	uint32_t key_len;
@@ -168,7 +166,7 @@ enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
 		if (ctxt == CIPHERTEXT2) {
 			TRY(plaintext_split(plaintext, c_r, id_cred, sig_or_mac,
 					    ead));
-			PRINT_ARRAY("C_R", c_r->ptr, c_r->len);
+			PRINT_ARRAY("C_R (raw)", c_r->ptr, c_r->len);
 		} else {
 			TRY(plaintext_split(plaintext, NULL, id_cred,
 					    sig_or_mac, ead));
@@ -184,17 +182,32 @@ enum err ciphertext_decrypt_split(enum ciphertext ctxt, struct suite *suite,
 }
 
 enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
+			const struct byte_array *c_r,
 			const struct byte_array *id_cred,
 			struct byte_array *signature_or_mac,
 			const struct byte_array *ead, struct byte_array *prk,
 			struct byte_array *th, struct byte_array *ciphertext,
 			struct byte_array *plaintext)
 {
-	uint32_t ptxt_buf_len = plaintext->len;
 	BYTE_ARRAY_NEW(signature_or_mac_enc, SIG_OR_MAC_SIZE + 2,
 		       signature_or_mac->len + 2);
 
 	TRY(encode_bstr(signature_or_mac, &signature_or_mac_enc));
+
+	uint32_t ptxt_buf_capacity = plaintext->len;
+	plaintext->len = 0;
+	if (ctxt == CIPHERTEXT2) {
+		if (c_x_is_encoded_int(c_r)) {
+			TRY(byte_array_append(plaintext, c_r,
+					      ptxt_buf_capacity));
+		} else {
+			BYTE_ARRAY_NEW(c_r_enc, AS_BSTR_SIZE(C_I_SIZE),
+				       AS_BSTR_SIZE(c_r->len));
+			TRY(encode_bstr(c_r, &c_r_enc));
+			TRY(byte_array_append(plaintext, &c_r_enc,
+					      ptxt_buf_capacity));
+		}
+	}
 
 	if (ctxt != CIPHERTEXT4) {
 		BYTE_ARRAY_NEW(kid, KID_SIZE, KID_SIZE);
@@ -204,37 +217,20 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
 
 		if (kid.len != 0) {
 			/*id_cred_x is a KID*/
-			TRY(_memcpy_s(plaintext->ptr, plaintext->len, kid.ptr,
-				      kid.len));
-
-			TRY(_memcpy_s(plaintext->ptr + kid.len,
-				      plaintext->len - kid.len,
-				      signature_or_mac_enc.ptr,
-				      signature_or_mac_enc.len));
-
-			plaintext->len = signature_or_mac_enc.len + kid.len;
+			TRY(byte_array_append(plaintext, &kid,
+					      ptxt_buf_capacity));
 		} else {
 			/*id_cred_x is NOT a KID*/
-			TRY(_memcpy_s(plaintext->ptr, plaintext->len,
-				      id_cred->ptr, id_cred->len));
-
-			TRY(_memcpy_s(plaintext->ptr + id_cred->len,
-				      plaintext->len - id_cred->len,
-				      signature_or_mac_enc.ptr,
-				      signature_or_mac_enc.len));
-
-			plaintext->len =
-				id_cred->len + signature_or_mac_enc.len;
+			TRY(byte_array_append(plaintext, id_cred,
+					      ptxt_buf_capacity));
 		}
+		TRY(byte_array_append(plaintext, &signature_or_mac_enc,
+				      ptxt_buf_capacity));
 	} else {
 		plaintext->len = 0;
 	}
 	if (ead->len > 0) {
-		TRY(_memcpy_s(plaintext->ptr + plaintext->len,
-			      ptxt_buf_len - plaintext->len, ead->ptr,
-			      ead->len));
-
-		plaintext->len += ead->len;
+		TRY(byte_array_append(plaintext, ead, ptxt_buf_capacity));
 	}
 
 	PRINT_ARRAY("plaintext", plaintext->ptr, plaintext->len);

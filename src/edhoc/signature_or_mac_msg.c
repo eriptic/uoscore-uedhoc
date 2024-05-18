@@ -18,6 +18,7 @@
 #include "edhoc/suites.h"
 #include "edhoc/signature_or_mac_msg.h"
 #include "edhoc/bstr_encode_decode.h"
+#include "edhoc/int_encode_decode.h"
 
 #include "common/print_util.h"
 #include "common/crypto_wrapper.h"
@@ -56,14 +57,20 @@ static enum err mac(const struct byte_array *prk, const struct byte_array *c_r,
 
 	/**/
 	BYTE_ARRAY_NEW(context_mac, CONTEXT_MAC_SIZE,
-		       c_r->len + 2 + id_cred->len + cred->len + ead->len +
-			       th_enc.len);
+		       AS_BSTR_SIZE(c_r->len) + id_cred->len + cred->len +
+			       ead->len + th_enc.len);
 	uint32_t capacity = context_mac.len;
 	context_mac.len = 0;
 	if (c_r->len != 0) {
-		BYTE_ARRAY_NEW(cr_enc, C_R_SIZE + 2, c_r->len + 2);
-		TRY(encode_bstr(c_r, &cr_enc));
-		TRY(byte_array_append(&context_mac, &cr_enc, capacity));
+		BYTE_ARRAY_NEW(c_r_enc, AS_BSTR_SIZE(C_R_SIZE),
+			       AS_BSTR_SIZE(c_r->len));
+		if (c_r_is_raw_int(c_r)) {
+			TRY(encode_int((const int32_t *)c_r->ptr, c_r->len,
+				       &c_r_enc));
+		} else {
+			TRY(encode_bstr(c_r, &c_r_enc));
+		}
+		TRY(byte_array_append(&context_mac, &c_r_enc, capacity));
 	}
 	TRY(byte_array_append(&context_mac, id_cred, capacity));
 	TRY(byte_array_append(&context_mac, &th_enc, capacity));

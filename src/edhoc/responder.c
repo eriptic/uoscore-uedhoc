@@ -223,12 +223,11 @@ enum err msg2_gen(struct edhoc_responder_context *c, struct runtime_context *rc,
 
 	/*compute ciphertext_2*/
 	BYTE_ARRAY_NEW(plaintext_2, PLAINTEXT2_SIZE,
-		       c->id_cred_r.len + sign_or_mac_2.len +
-			       SIG_OR_MAC_SIZE_ENCODING_OVERHEAD +
-			       c->ead_2.len);
+		       AS_BSTR_SIZE(c->c_r.len) + c->id_cred_r.len +
+			       AS_BSTR_SIZE(sign_or_mac_2.len) + c->ead_2.len);
 	BYTE_ARRAY_NEW(ciphertext_2, CIPHERTEXT2_SIZE, plaintext_2.len);
 
-	TRY(ciphertext_gen(CIPHERTEXT2, &rc->suite, &c->id_cred_r,
+	TRY(ciphertext_gen(CIPHERTEXT2, &rc->suite, &c->c_r, &c->id_cred_r,
 			   &sign_or_mac_2, &c->ead_2, &PRK_2e, &th2,
 			   &ciphertext_2, &plaintext_2));
 
@@ -296,7 +295,7 @@ enum err msg3_process(struct edhoc_responder_context *c,
 	PRINT_ARRAY("prk_4e3m", rc->prk_4e3m.ptr, rc->prk_4e3m.len);
 
 	TRY(signature_or_mac(VERIFY, rc->static_dh_i, &rc->suite, NULL, &pk,
-			     &rc->prk_4e3m, &c->c_r, &rc->th3, &id_cred_i,
+			     &rc->prk_4e3m, &NULL_ARRAY, &rc->th3, &id_cred_i,
 			     &cred_i, &rc->ead, MAC_3, &sign_or_mac));
 
 	/*TH4*/
@@ -322,7 +321,8 @@ enum err msg4_gen(struct edhoc_responder_context *c, struct runtime_context *rc)
 #endif
 
 	TRY(ciphertext_gen(CIPHERTEXT4, &rc->suite, &NULL_ARRAY, &NULL_ARRAY,
-			   &c->ead_4, &rc->prk_4e3m, &rc->th4, &ctxt4, &ptxt4));
+			   &NULL_ARRAY, &c->ead_4, &rc->prk_4e3m, &rc->th4,
+			   &ctxt4, &ptxt4));
 
 	TRY(encode_bstr(&ctxt4, &rc->msg));
 

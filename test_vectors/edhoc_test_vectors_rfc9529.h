@@ -30,6 +30,7 @@ extern const uint8_t T1_RFC9529__MESSAGE_1[];
 extern const uint8_t T1_RFC9529__MESSAGE_2[];
 extern const uint8_t T1_RFC9529__MESSAGE_3[];
 extern const uint8_t T1_RFC9529__MESSAGE_4[];
+extern const uint8_t T1_RFC9529__PRK_out[];
 
 extern uint32_t T1_RFC9529__SUITES_I_LEN;
 extern uint32_t T1_RFC9529__SUITES_R_LEN;
@@ -51,5 +52,6 @@ extern uint32_t T1_RFC9529__MESSAGE_1_LEN;
 extern uint32_t T1_RFC9529__MESSAGE_2_LEN;
 extern uint32_t T1_RFC9529__MESSAGE_3_LEN;
 extern uint32_t T1_RFC9529__MESSAGE_4_LEN;
+extern uint32_t T1_RFC9529__PRK_out_LEN;
 
 #endif

@@ -33,6 +33,11 @@ extern struct messages m;
  *              Authentication with Signatures, X.509 Identified by 'x5t'
  */
 void test_edhoc_initiator_x509_x5t_rfc9529();
+/**
+ * @brief       Test EDHOC initiator according to RFC9529 Section 2.
+ *              Authentication with Signatures, X.509 Identified by 'x5t'
+ */
+void test_edhoc_responder_x509_x5t_rfc9529();
 
 /**
  * @brief 		Tests the functions of the exporter interface

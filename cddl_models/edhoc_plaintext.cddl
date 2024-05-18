@@ -9,8 +9,7 @@
 
 ; This file should be processed with cddl-gen (https://github.com/NordicSemiconductor/cddl-gen/tree/master) to create cbor encoding and decoding code 
 
-plaintext = ( ID_CRED_x: map / bstr / int, SGN_or_MAC_x: bstr, ? AD_x: bstr)
-plaintext2 = ( ? C_R: bstr, ID_CRED_R: map / bstr / int, SGN_or_MAC_2: bstr, ? EAD_2: bstr)
+plaintext = ( ? C_R: int / bstr, ID_CRED_x: map / bstr / int, SGN_or_MAC_x: bstr, ? AD_x: bstr)
 
 ;currently x5bag and x5u are not supported
 map = {

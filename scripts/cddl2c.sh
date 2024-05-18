@@ -78,8 +78,6 @@ python3 $ZCBOR code -c $MODELS_PATH/edhoc_info.cddl -e -t info --oc $SRC/edhoc_e
 # plaintext
 python3 $ZCBOR code -c $MODELS_PATH/edhoc_plaintext.cddl -d -t plaintext --oc $SRC/edhoc_decode_plaintext.c --include-prefix $INC_PATH_IN_C_FILES --oh $INC/edhoc_decode_plaintext.h
 
-python3 $ZCBOR code -c $MODELS_PATH/edhoc_plaintext.cddl -d -t plaintext2 --oc $SRC/edhoc_decode_plaintext2.c --include-prefix $INC_PATH_IN_C_FILES --oh $INC/edhoc_decode_plaintext2.h
-
 # encode ID_CRED_x
 python3 $ZCBOR code -c $MODELS_PATH/edhoc_plaintext.cddl -e -t id_cred_x_map --oc $SRC/edhoc_encode_id_cred_x.c --include-prefix $INC_PATH_IN_C_FILES --oh $INC/edhoc_encode_id_cred_x.h
 

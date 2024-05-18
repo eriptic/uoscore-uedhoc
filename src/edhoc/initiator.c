@@ -93,9 +93,7 @@ enum err msg1_gen(const struct edhoc_initiator_context *c,
 
 	/* C_I connection ID  of the initiator*/
 	PRINT_ARRAY("C_I", c->c_i.ptr, c->c_i.len);
-	if (c->c_i.len == 1 &&
-	    ((0x00 <= c->c_i.ptr[0] && c->c_i.ptr[0] < 0x18) ||
-	     (0x1F < c->c_i.ptr[0] && c->c_i.ptr[0] <= 0x37))) {
+	if (c_x_is_encoded_int(&c->c_i)) {
 		m1.message_1_C_I_choice = message_1_C_I_int_c;
 		TRY(decode_int(&c->c_i, &m1.message_1_C_I_int));
 	} else {
@@ -220,7 +218,7 @@ static enum err msg3_only_gen(const struct edhoc_initiator_context *c,
 			     &sign_or_mac_3));
 
 	/*create plaintext3 and ciphertext3*/
-	TRY(ciphertext_gen(CIPHERTEXT3, &rc->suite, &c->id_cred_i,
+	TRY(ciphertext_gen(CIPHERTEXT3, &rc->suite, &NULL_ARRAY, &c->id_cred_i,
 			   &sign_or_mac_3, &c->ead_3, PRK_3e2m, th3,
 			   &ciphertext, &plaintext));
 
