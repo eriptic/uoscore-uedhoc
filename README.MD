@@ -1,16 +1,21 @@
-# uOSCORE / uEDHOC 
+# uOSCORE / uEDHOC -- A Lightweight IoT Security Protocol Stack
 
 ![GitHub CI](https://github.com/eriptic/uoscore-uedhoc/actions/workflows/ci.yml/badge.svg)
 
+uOSCORE / uEDHOC is a lightweight C implementation of the IETF protocols [OSCORE (RFC8613)](https://www.rfc-editor.org/rfc/rfc8613.html) and [EDHOC (RFC9528)](https://www.rfc-editor.org/rfc/rfc9528.html), specifically designed for microcontrollers. This implementation is independent of the operating system, cryptographic engine, and, in the case of uEDHOC, the transport protocol. Notably, uOSCORE / uEDHOC operates using only stack memory, avoiding heap allocation.
 
-This repository contains C implementations  for constrained (and non-constrained) devices of the IETF protocols:
+The OSCORE and EDHOC protocols were developed by the IETF to provide a lightweight alternative to (D)TLS for IoT deployments. Unlike (D)TLS, OSCORE and EDHOC function at the application layer, which is typically [CoAP](https://www.rfc-editor.org/rfc/rfc7252.html) rather than at the transport layer. This allows for end-to-end authenticated and encrypted communication through CoAP proxies—a capability that transport layer security protocols like (D)TLS cannot achieve.
 
-* [OSOCRE (RFC8613)](https://tools.ietf.org/html/rfc8613) and
-* [EDHOC (draft-ietf-lake-edhoc-15 )](https://datatracker.ietf.org/doc/html/draft-ietf-lake-edhoc-15). 
+For detailed background information and performance evaluations in terms of speed, RAM, and flash memory requirements, refer to our paper, [The Cost of OSCORE and EDHOC for Constrained Devices](https://arxiv.org/pdf/2103.13832.pdf) and the [Benchmarks](benchmarks.md).
 
-Main features of uOSCORE and uEDHOC are their independence from the OS, cryptographic engine and in the case of uEDHOC transport protocol. Additionally,  uOSCORE and uEDHOC use only stack memory (no heap).
+## Enterprise Support
+[Eriptic Technologies](https://eriptic.com/) has co-developed uOSCORE / uEDHOC and provides enterprise support services centered around it. Our offerings encompass:
+* Integration of uOSCORE / uEDHOC to designated customer platforms. 
+* Tailored threat analysis for unique customer use cases.
+* Designing security architecture for embedded systems.
+* Developing custom embedded security solutions.
 
-For more background and evaluation in terms of speed, RAM and flash requirements see our paper [The Cost of OSCORE and EDHOC for Constrained Devices](https://arxiv.org/pdf/2103.13832.pdf).
+For more information visit our website [eriptic.com](https://eriptic.com/) or send us an email uoscore-uedhoc@eriptic.com 
 
 ## How to Build and Link
 
@@ -22,8 +27,6 @@ For more background and evaluation in terms of speed, RAM and flash requirements
 * [Test coverage report uOSCORE](https://eriptic.github.io/uoscore-uedhoc/src/oscore/index.html)
 * [Test coverage report uEDHOC](https://eriptic.github.io/uoscore-uedhoc/src/edhoc/index.html)
 
-## Benchmarks
-* See [Benchmarks](benchmarks.md)
 
 ## Project (Folder) Structure
 
