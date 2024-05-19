@@ -25,7 +25,7 @@ OPT = -O0
 ################################################################################
 # Print helpful debug messages
 ################################################################################
-DEBUG_PRINT += -DDEBUG_PRINT
+#DEBUG_PRINT += -DDEBUG_PRINT
 
 ################################################################################
 # Use Address Sanitizer, e.g. with native_posix
@@ -46,7 +46,7 @@ UNIT_TEST += -DUNIT_TEST
 CBOR_ENGINE += -DZCBOR
 
 # Uncomment to enable Non-volatile memory (NVM) support for storing security context between device reboots
-OSCORE_NVM_SUPPORT += -DOSCORE_NVM_SUPPORT
+#OSCORE_NVM_SUPPORT += -DOSCORE_NVM_SUPPORT
 
 ################################################################################
 # RAM optimization
@@ -60,7 +60,7 @@ OSCORE_NVM_SUPPORT += -DOSCORE_NVM_SUPPORT
 ################################################################################
 # In deployments where no protected application message is sent from the 
 # Responder to the Initiator, message_4 MUST be used.
-FEATURES += -DMESSAGE_4
+# FEATURES += -DMESSAGE_4
 
 # If EAD is not used set its buffer size to 0
 FEATURES += -DEAD_SIZE=0

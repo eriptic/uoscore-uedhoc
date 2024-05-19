@@ -241,23 +241,32 @@ int main()
 	int32_t n;
 	CoapPDU *protected_pdu = new CoapPDU();
 
-	/*OSCORE contex initialization*/
-	oscore_init_params params = {
+	/*OSCORE context initialization*/
+	struct oscore_init_params p = {
+		/*master secret*/
 		oscore_master_secret.len,
 		oscore_master_secret.ptr,
-		T1__SENDER_ID_LEN,
-		(uint8_t *)T1__SENDER_ID,
-		T1__RECIPIENT_ID_LEN,
-		(uint8_t *)T1__RECIPIENT_ID,
+		/*sender_id*/
+		test_vectors[vec_num_i].c_r_len,
+		(uint8_t *)test_vectors[vec_num_i].c_r,
+		/*recipient_id*/
+		test_vectors[vec_num_i].c_i_len,
+		(uint8_t *)test_vectors[vec_num_i].c_i,
+		/*id_context*/
 		T1__ID_CONTEXT_LEN,
 		(uint8_t *)T1__ID_CONTEXT,
+		/*master_salt*/
 		oscore_master_salt.len,
 		oscore_master_salt.ptr,
+		/*aead_alg*/
 		OSCORE_AES_CCM_16_64_128,
+		/*hkdf*/
 		OSCORE_SHA_256,
+		/*fresh_master_secret_salt*/
 		true,
 	};
-	TRY(oscore_context_init(&params, &c_client));
+
+	TRY(oscore_context_init(&p, &c_client));
 
 	uint8_t buf_oscore[256];
 	uint8_t coap_rx_buf[256];
@@ -284,7 +293,6 @@ int main()
 						 echo_opt_val);
 			second_request = false;
 		}
-
 
 		if (protected_pdu->validate()) {
 			printf("\n=================================================\n");
