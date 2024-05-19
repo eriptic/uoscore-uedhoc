@@ -25,7 +25,8 @@ enum err edhoc_kdf(enum hash_alg hash_alg, const struct byte_array *prk,
 {
 	PRINTF("INFO_MAX_SIZE: %d\n", INFO_MAX_SIZE);
 	PRINTF("context->len: %d\n", context->len);
-	BYTE_ARRAY_NEW(info, INFO_MAX_SIZE, context->len + ENCODING_OVERHEAD);
+	BYTE_ARRAY_NEW(info, INFO_MAX_SIZE,
+		       AS_BSTR_SIZE(context->len) + (2 * CBOR_ENCODED_UINT));
 
 	TRY(create_hkdf_info(label, context, okm->len, &info));
 

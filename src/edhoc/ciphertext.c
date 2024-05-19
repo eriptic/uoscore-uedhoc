@@ -189,8 +189,8 @@ enum err ciphertext_gen(enum ciphertext ctxt, struct suite *suite,
 			struct byte_array *th, struct byte_array *ciphertext,
 			struct byte_array *plaintext)
 {
-	BYTE_ARRAY_NEW(signature_or_mac_enc, SIG_OR_MAC_SIZE + 2,
-		       signature_or_mac->len + 2);
+	BYTE_ARRAY_NEW(signature_or_mac_enc, AS_BSTR_SIZE(SIG_OR_MAC_SIZE),
+		       AS_BSTR_SIZE(signature_or_mac->len));
 
 	TRY(encode_bstr(signature_or_mac, &signature_or_mac_enc));
 

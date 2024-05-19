@@ -113,7 +113,8 @@ enum err th34_calculate(enum hash_alg alg, struct byte_array *th23,
 			struct byte_array *plaintext_23,
 			const struct byte_array *cred, struct byte_array *th34)
 {
-	uint32_t th34_input_len = th23->len + plaintext_23->len + cred->len + 2;
+	uint32_t th34_input_len =
+		AS_BSTR_SIZE(get_hash_len(alg)) + plaintext_23->len + cred->len;
 	BYTE_ARRAY_NEW(th34_input, TH34_INPUT_SIZE, th34_input_len);
 
 	TRY(th34_input_encode(th23, plaintext_23, cred, &th34_input));
@@ -123,11 +124,11 @@ enum err th34_calculate(enum hash_alg alg, struct byte_array *th23,
 }
 
 enum err th2_calculate(enum hash_alg alg, struct byte_array *msg1_hash,
-		       struct byte_array *g_y,
-		       struct byte_array *th2)
+		       struct byte_array *g_y, struct byte_array *th2)
 {
-	BYTE_ARRAY_NEW(th2_input, TH2_DEFAULT_SIZE,
-		       g_y->len + th2->len + ENCODING_OVERHEAD);
+	BYTE_ARRAY_NEW(th2_input, TH2_INPUT_SIZE,
+		       AS_BSTR_SIZE(g_y->len) +
+			       AS_BSTR_SIZE(get_hash_len(alg)));
 	PRINT_ARRAY("hash_msg1_raw", msg1_hash->ptr, msg1_hash->len);
 	TRY(th2_input_encode(msg1_hash, g_y, &th2_input));
 	TRY(hash(alg, &th2_input, th2));
