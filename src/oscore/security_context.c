@@ -119,6 +119,7 @@ enum err oscore_context_init(struct oscore_init_params *params,
 		c->cc.kdf = OSCORE_SHA_256; /*that's the default*/
 	}
 
+        c->cc.fresh_master_secret_salt = params->fresh_master_secret_salt;
 	c->cc.master_secret = params->master_secret;
 	c->cc.master_salt = params->master_salt;
 	c->cc.id_context = params->id_context;

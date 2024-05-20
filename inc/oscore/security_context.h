@@ -54,6 +54,7 @@ struct common_context {
 	struct byte_array id_context; /*optional*/
 	struct byte_array common_iv;
 	uint8_t common_iv_buf[COMMON_IV_LEN];
+        bool fresh_master_secret_salt;
 };
 
 /* Sender Context used for encrypting outbound messages */

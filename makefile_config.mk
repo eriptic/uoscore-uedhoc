@@ -25,7 +25,7 @@ OPT = -O0
 ################################################################################
 # Print helpful debug messages
 ################################################################################
-#DEBUG_PRINT += -DDEBUG_PRINT
+DEBUG_PRINT += -DDEBUG_PRINT
 
 ################################################################################
 # Use Address Sanitizer, e.g. with native_posix
@@ -46,7 +46,7 @@ UNIT_TEST += -DUNIT_TEST
 CBOR_ENGINE += -DZCBOR
 
 # Uncomment to enable Non-volatile memory (NVM) support for storing security context between device reboots
-#OSCORE_NVM_SUPPORT += -DOSCORE_NVM_SUPPORT
+OSCORE_NVM_SUPPORT += -DOSCORE_NVM_SUPPORT
 
 ################################################################################
 # RAM optimization

@@ -83,8 +83,9 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			* Inner option has value NULL if notification or the original value 
 			* in the coap packet if registration/cancellation.
 			*/
-			e_options[*e_options_cnt].delta = (uint16_t)(
-				temp_option_nr - temp_E_option_delta_sum);
+			e_options[*e_options_cnt].delta =
+				(uint16_t)(temp_option_nr -
+					   temp_E_option_delta_sum);
 			if (is_request(in_o_coap)) {
 				/*registrations/cancellations are requests */
 				e_options[*e_options_cnt].len = temp_len;
@@ -118,8 +119,9 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			/*
 			*outer option (value as in the original coap packet
 			*/
-			U_options[*U_options_cnt].delta = (uint16_t)(
-				temp_option_nr - temp_U_option_delta_sum);
+			U_options[*U_options_cnt].delta =
+				(uint16_t)(temp_option_nr -
+					   temp_U_option_delta_sum);
 			U_options[*U_options_cnt].len = temp_len;
 			U_options[*U_options_cnt].value =
 				in_o_coap->options[i].value;
@@ -150,9 +152,10 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 					temp_option_nr;
 
 				/* Update delta sum of E-options */
-				temp_E_option_delta_sum = (uint8_t)(
-					temp_E_option_delta_sum +
-					e_options[*e_options_cnt].delta);
+				temp_E_option_delta_sum =
+					(uint8_t)(temp_E_option_delta_sum +
+						  e_options[*e_options_cnt]
+							  .delta);
 
 				/* Increment E-options count */
 				(*e_options_cnt)++;
@@ -172,9 +175,10 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 					temp_option_nr;
 
 				/* Update delta sum of E-options */
-				temp_U_option_delta_sum = (uint8_t)(
-					temp_U_option_delta_sum +
-					U_options[*U_options_cnt].delta);
+				temp_U_option_delta_sum =
+					(uint8_t)(temp_U_option_delta_sum +
+						  U_options[*U_options_cnt]
+							  .delta);
 
 				/* Increment E-options count */
 				(*U_options_cnt)++;
@@ -212,7 +216,8 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
 					      E_options[i].len);
 	}
 	/* Setup buffer */
-	BYTE_ARRAY_NEW(e_opt_serial, E_OPTIONS_BUFF_MAX_LEN, E_OPTIONS_BUFF_MAX_LEN);
+	BYTE_ARRAY_NEW(e_opt_serial, E_OPTIONS_BUFF_MAX_LEN,
+		       E_OPTIONS_BUFF_MAX_LEN);
 
 	/* Convert all E-options structure to byte string, and copy it to 
 	output*/
@@ -301,9 +306,9 @@ STATIC enum err oscore_option_generate(struct byte_array *piv,
 				(uint8_t)(oscore_option->value[0] | piv->len);
 			/* copy PIV (sender sequence) */
 
-			dest_size = (uint32_t)(
-				oscore_option->len -
-				(temp_ptr + 1 - oscore_option->value));
+			dest_size = (uint32_t)(oscore_option->len -
+					       (temp_ptr + 1 -
+						oscore_option->value));
 			TRY(_memcpy_s(++temp_ptr, dest_size, piv->ptr,
 				      piv->len));
 
@@ -318,9 +323,9 @@ STATIC enum err oscore_option_generate(struct byte_array *piv,
 			/* Copy length and context value */
 			*temp_ptr = (uint8_t)(kid_context->len);
 
-			dest_size = (uint32_t)(
-				oscore_option->len -
-				(temp_ptr + 1 - oscore_option->value));
+			dest_size = (uint32_t)(oscore_option->len -
+					       (temp_ptr + 1 -
+						oscore_option->value));
 			TRY(_memcpy_s(++temp_ptr, dest_size, kid_context->ptr,
 				      kid_context->len));
 
@@ -452,17 +457,20 @@ static enum err generate_new_ssn(struct context *c)
 	}
 
 	c->sc.ssn++;
-
+	if (!c->cc.fresh_master_secret_salt) {
 #ifdef OSCORE_NVM_SUPPORT
-	struct nvm_key_t nvm_key = { .sender_id = c->sc.sender_id,
-				     .recipient_id = c->rc.recipient_id,
-				     .id_context = c->cc.id_context };
-	bool echo_sync_in_progress =
-		(ECHO_SYNCHRONIZED != c->rrc.echo_state_machine);
-	return ssn_store_in_nvm(&nvm_key, c->sc.ssn, echo_sync_in_progress);
+		struct nvm_key_t nvm_key = { .sender_id = c->sc.sender_id,
+					     .recipient_id = c->rc.recipient_id,
+					     .id_context = c->cc.id_context };
+		bool echo_sync_in_progress =
+			(ECHO_SYNCHRONIZED != c->rrc.echo_state_machine);
+		return ssn_store_in_nvm(&nvm_key, c->sc.ssn,
+					echo_sync_in_progress);
 #else
-	return ok;
+		return ok;
 #endif
+	}
+	return ok;
 }
 
 /**
