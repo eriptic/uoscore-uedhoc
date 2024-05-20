@@ -210,7 +210,8 @@ static enum err msg3_only_gen(const struct edhoc_initiator_context *c,
 		       c->id_cred_i.len + AS_BSTR_SIZE(SIG_OR_MAC_SIZE) +
 			       c->ead_3.len);
 	BYTE_ARRAY_NEW(ciphertext, CIPHERTEXT3_SIZE,
-		       AS_BSTR_SIZE(plaintext.len));
+		       AS_BSTR_SIZE(plaintext.len) +
+			       get_aead_mac_len(rc->suite.edhoc_aead));
 	/*calculate Signature_or_MAC_3*/
 	BYTE_ARRAY_NEW(sign_or_mac_3, SIG_OR_MAC_SIZE, SIG_OR_MAC_SIZE);
 	TRY(signature_or_mac(GENERATE, static_dh_i, &rc->suite, &c->sk_i,

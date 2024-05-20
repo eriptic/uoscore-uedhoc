@@ -63,7 +63,7 @@
 
 // in order to execute only a specific tes set this macro to a specific
 // test macro and comment out EXECUTE_ALL_TESTS
-#define EXECUTE_ONLY_TEST TEST_INITIATOR_RESPONDER_INTERACTION1
+#define EXECUTE_ONLY_TEST TEST_EDHOC_INITIATOR_X509_X5T_RFC9529
 
 /**
  * @brief       This function allows to skip a given test if only one other test 
