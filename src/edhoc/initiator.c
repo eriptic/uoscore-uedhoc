@@ -153,7 +153,6 @@ static enum err msg2_process(const struct edhoc_initiator_context *c,
 	BYTE_ARRAY_NEW(th2, HASH_SIZE, get_hash_len(rc->suite.edhoc_hash));
 
 	TRY(th2_calculate(rc->suite.edhoc_hash, &rc->msg1_hash, &g_y, &th2));
-	PRINT_ARRAY("TH_2", th2.ptr, th2.len);
 
 	/*calculate PRK_2e*/
 	BYTE_ARRAY_NEW(PRK_2e, PRK_SIZE, PRK_SIZE);

@@ -23,6 +23,7 @@ extern "C" {
 #include "edhoc.h"
 #include "sock.h"
 #include "edhoc_test_vectors_p256_v16.h"
+#include "edhoc_test_vectors_rfc9529.h"
 }
 #include "cantcoap.h"
 
@@ -55,11 +56,9 @@ static int start_coap_server(int *sockfd)
 	int err;
 #ifdef USE_IPV4
 	struct sockaddr_in servaddr;
-	//struct sockaddr_in client_addr;
 	client_addr_len = sizeof(client_addr);
 	memset(&client_addr, 0, sizeof(client_addr));
 	const char IPV4_SERVADDR[] = { "127.0.0.1" };
-	//const char IPV4_SERVADDR[] = { "192.168.43.63" };
 	err = sock_init(SOCK_SERVER, IPV4_SERVADDR, IPv4, &servaddr,
 			sizeof(servaddr), sockfd);
 	if (err < 0) {
@@ -70,7 +69,6 @@ static int start_coap_server(int *sockfd)
 #endif
 #ifdef USE_IPV6
 	struct sockaddr_in6 servaddr;
-	//struct sockaddr_in6 client_addr;
 	client_addr_len = sizeof(client_addr);
 	memset(&client_addr, 0, sizeof(client_addr));
 	const char IPV6_SERVADDR[] = { "2001:db8::2" };
@@ -180,10 +178,13 @@ int main()
 	struct other_party_cred cred_i;
 	struct edhoc_responder_context c_r;
 
+	TRY_EXPECT(start_coap_server(&sockfd), 0);
+
+#define T1_RFC9529
+#ifdef ORIG
+
 	uint8_t TEST_VEC_NUM = 1;
 	uint8_t vec_num_i = TEST_VEC_NUM - 1;
-
-	TRY_EXPECT(start_coap_server(&sockfd), 0);
 
 	c_r.sock = &sockfd;
 	c_r.c_r.ptr = (uint8_t *)test_vectors[vec_num_i].c_r;
@@ -223,6 +224,48 @@ int main()
 	cred_i.ca.ptr = (uint8_t *)test_vectors[vec_num_i].ca_i;
 	cred_i.ca_pk.len = test_vectors[vec_num_i].ca_i_pk_len;
 	cred_i.ca_pk.ptr = (uint8_t *)test_vectors[vec_num_i].ca_i_pk;
+#endif
+
+#ifdef T1_RFC9529
+	c_r.sock = &sockfd;
+	c_r.c_r.len = T1_RFC9529__C_R_LEN;
+	c_r.c_r.ptr = (uint8_t *)T1_RFC9529__C_R;
+	c_r.suites_r.len = T1_RFC9529__SUITES_R_LEN;
+	c_r.suites_r.ptr = (uint8_t *)T1_RFC9529__SUITES_R;
+	c_r.ead_2.len = 0;
+	c_r.ead_2.ptr = NULL;
+	c_r.ead_4.len = 0;
+	c_r.ead_4.ptr = NULL;
+	c_r.id_cred_r.len = T1_RFC9529__ID_CRED_R_LEN;
+	c_r.id_cred_r.ptr = (uint8_t *)T1_RFC9529__ID_CRED_R;
+	c_r.cred_r.len = T1_RFC9529__CRED_R_LEN;
+	c_r.cred_r.ptr = (uint8_t *)T1_RFC9529__CRED_R;
+	c_r.g_y.len = T1_RFC9529__G_Y_LEN;
+	c_r.g_y.ptr = (uint8_t *)T1_RFC9529__G_Y;
+	c_r.y.len = T1_RFC9529__Y_LEN;
+	c_r.y.ptr = (uint8_t *)T1_RFC9529__Y;
+	c_r.g_r.len = 0;
+	c_r.g_r.ptr = NULL;
+	c_r.r.len = 0;
+	c_r.r.ptr = NULL;
+	c_r.sk_r.len = T1_RFC9529__SK_R_LEN;
+	c_r.sk_r.ptr = (uint8_t *)T1_RFC9529__SK_R;
+	c_r.pk_r.len = T1_RFC9529__PK_R_LEN;
+	c_r.pk_r.ptr = (uint8_t *)T1_RFC9529__PK_R;
+
+	cred_i.id_cred.len = T1_RFC9529__ID_CRED_I_LEN;
+	cred_i.id_cred.ptr = (uint8_t *)T1_RFC9529__ID_CRED_I;
+	cred_i.cred.len = T1_RFC9529__CRED_I_LEN;
+	cred_i.cred.ptr = (uint8_t *)T1_RFC9529__CRED_I;
+	cred_i.g.len = 0;
+	cred_i.g.ptr = NULL;
+	cred_i.pk.len = T1_RFC9529__PK_I_LEN;
+	cred_i.pk.ptr = (uint8_t *)T1_RFC9529__PK_I;
+	cred_i.ca.len = 0;
+	cred_i.ca.ptr = NULL;
+	cred_i.ca_pk.len = 0;
+	cred_i.ca_pk.ptr = NULL;
+#endif
 
 	struct cred_array cred_i_array = { .len = 1, .ptr = &cred_i };
 
@@ -247,7 +290,7 @@ int main()
 		fclose(fp);
 		PRINT_ARRAY("seed", (uint8_t *)&seed, seed_len);
 
-		TRY(ephemeral_dh_key_gen(P256, seed, &Y_random, &G_Y_random));
+		TRY(ephemeral_dh_key_gen(X25519, seed, &Y_random, &G_Y_random));
 		PRINT_ARRAY("secret ephemeral DH key", c_r.g_y.ptr,
 			    c_r.g_y.len);
 		PRINT_ARRAY("public ephemeral DH key", c_r.y.ptr, c_r.y.len);
