@@ -88,7 +88,7 @@ CXXFLAGS += -DLINUX_SOCKETS
 USOCORE_UEDHOC_OBJ = $(wildcard $(USOCORE_UEDHOC_PATH)/*.o) 
 
 INITIATOR_DIR := ${ROOT_DIR}/samples/linux_edhoc/initiator
-INITIATOR_SOURCES := $(wildcard ${INITIATOR_DIR}/src/*.c) $(wildcard ${INITIATOR_DIR}/src/*.cpp)
+INITIATOR_SOURCES := $(wildcard ${INITIATOR_DIR}/src/*.c) $(wildcard ${INITIATOR_DIR}/src/*.cpp ) $(wildcard ${ROOT_DIR}/test_vectors/*.c )  
 INITIATOR_INCLUDES := -I${ROOT_DIR}/inc -I${ROOT_DIR}/test_vectors
 
 COMMON_DIR := ${ROOT_DIR}/samples/common
