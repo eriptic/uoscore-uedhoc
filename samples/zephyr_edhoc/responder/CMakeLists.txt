@@ -10,7 +10,8 @@ FILE(GLOB app_sources
 	../../../externals/zcbor/src/*.c
 	../../../externals/compact25519/src/c25519/*.c
 	../../../externals/compact25519/src/*.c
-	../../../externals/mbedtls/library/*.c)
+	../../../externals/mbedtls/library/*.c
+        ../../../externals/tinycrypt/lib/source/*.c)
 target_sources(app PRIVATE ${app_sources})
 target_include_directories(app PRIVATE $ENV{ZEPHYR_BASE}/subsys/net/ip)
 
@@ -24,7 +25,8 @@ target_include_directories(app PRIVATE
 	../../../externals/mbedtls/library 
 	../../../externals/mbedtls/include 
 	../../../externals/mbedtls/include/mbedtls 
-	../../../externals/mbedtls/include/psa)
+	../../../externals/mbedtls/include/psa
+        ../../../externals/tinycrypt/lib/include)
 
 add_definitions(
 	-DDEBUG_PRINT

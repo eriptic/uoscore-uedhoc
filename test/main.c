@@ -59,11 +59,11 @@
 #define TEST_EDHOC_RESPONDER_X509_X5T_RFC9529 43
 
 // if this macro is defined all tests will be executed
-//#define EXECUTE_ALL_TESTS
+ #define EXECUTE_ALL_TESTS
 
 // in order to execute only a specific tes set this macro to a specific
 // test macro and comment out EXECUTE_ALL_TESTS
-#define EXECUTE_ONLY_TEST T1_OSCORE_CLIENT_REQUEST_RESPONSE
+#define EXECUTE_ONLY_TEST TEST_EDHOC_RESPONDER_X509_X5T_RFC9529
 
 /**
  * @brief       This function allows to skip a given test if only one other test 

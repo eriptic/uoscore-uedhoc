@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdint.h>
 
 /* IMPORTANT! PROVIDE HERE A REAL ENTROPY! */
 int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len,

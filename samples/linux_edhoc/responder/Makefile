@@ -131,6 +131,7 @@ CXXFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
 # required for gddl-gen library
 CFLAGS += -DZCBOR_CANONICAL 
+CFLAGS += -DZCBOR_VERBOSE
 
 # use linux sockets 
 CFLAGS += -DLINUX_SOCKETS
