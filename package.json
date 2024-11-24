@@ -1,5 +1,5 @@
 {
     "_comment": "see https://travishorn.com/semantic-versioning-with-git-tags-1ef2d4aeede6   npm version patch, npm version minor, npm version major, git push --follow-tags",
     "name": "uoscore-uedhoc",
-    "version": "3.0.4"
+    "version": "3.0.5"
 }
