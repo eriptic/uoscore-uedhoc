@@ -305,7 +305,7 @@ struct test_vector {
 
 /***************** test_vector_1 ************/
 
- static const uint8_t test_vector_1_method[] = {
+static const uint8_t test_vector_1_method[] = {
 	0x00};
 static const uint8_t test_vector_1_SUITES_I[] = {
 	0x02};

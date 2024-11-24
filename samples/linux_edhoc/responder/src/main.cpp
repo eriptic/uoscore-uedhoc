@@ -183,7 +183,7 @@ int main()
 #define ORIG
 #ifdef ORIG
 
-	uint8_t TEST_VEC_NUM = 5;
+	uint8_t TEST_VEC_NUM = 2;
 	uint8_t vec_num_i = TEST_VEC_NUM - 1;
 
 	c_r.sock = &sockfd;
