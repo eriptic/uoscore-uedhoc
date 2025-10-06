@@ -52,10 +52,10 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 	/* Initialize to 0 */
 	*e_options_len = 0;
 
-	uint8_t temp_option_nr = 0;
+	uint16_t temp_option_nr = 0;
 	uint16_t temp_len = 0;
-	uint8_t temp_E_option_delta_sum = 0;
-	uint8_t temp_U_option_delta_sum = 0;
+	uint16_t temp_E_option_delta_sum = 0;
+	uint16_t temp_U_option_delta_sum = 0;
 
 	if (MAX_OPTION_COUNT < in_o_coap->options_cnt) {
 		return too_many_options;
@@ -67,11 +67,11 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			opt_extra_bytes(in_o_coap->options[i].len);
 
 		temp_option_nr =
-			(uint8_t)(temp_option_nr + in_o_coap->options[i].delta);
+			(uint16_t)(temp_option_nr + in_o_coap->options[i].delta);
 		temp_len = in_o_coap->options[i].len;
 
 		/* process special options, see 4.1.3 in RFC8613*/
-		/* if the option does not need special processing just put it in the 
+		/* if the option does not need special processing just put it in the
 		E or U array*/
 
 		switch (temp_option_nr) {
@@ -80,7 +80,7 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 			and outer option in a OSCORE packet.*/
 
 			/*
-			* Inner option has value NULL if notification or the original value 
+			* Inner option has value NULL if notification or the original value
 			* in the coap packet if registration/cancellation.
 			*/
 			e_options[*e_options_cnt].delta =
@@ -110,7 +110,7 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 
 			/* Update delta sum of E-options */
 			temp_E_option_delta_sum =
-				(uint8_t)(temp_E_option_delta_sum +
+				(uint16_t)(temp_E_option_delta_sum +
 					  e_options[*e_options_cnt].delta);
 
 			/* Increment E-options count */
@@ -130,7 +130,7 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 
 			/* Update delta sum of E-options */
 			temp_U_option_delta_sum =
-				(uint8_t)(temp_U_option_delta_sum +
+				(uint16_t)(temp_U_option_delta_sum +
 					  U_options[*U_options_cnt].delta);
 
 			/* Increment E-options count */
@@ -151,9 +151,9 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 				e_options[*e_options_cnt].option_number =
 					temp_option_nr;
 
-				/* Update delta sum of E-options */
+					/* Update delta sum of E-options */
 				temp_E_option_delta_sum =
-					(uint8_t)(temp_E_option_delta_sum +
+					(uint16_t)(temp_E_option_delta_sum +
 						  e_options[*e_options_cnt]
 							  .delta);
 
@@ -176,7 +176,7 @@ STATIC enum err inner_outer_option_split(struct o_coap_packet *in_o_coap,
 
 				/* Update delta sum of E-options */
 				temp_U_option_delta_sum =
-					(uint8_t)(temp_U_option_delta_sum +
+					(uint16_t)(temp_U_option_delta_sum +
 						  U_options[*U_options_cnt]
 							  .delta);
 
@@ -208,7 +208,7 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
 	/* Add code to plaintext */
 	*temp_plaintext_ptr = in_o_coap->header.code;
 
-	/* Calculate the maximal length of all options, i.e. all options 
+	/* Calculate the maximal length of all options, i.e. all options
 	have two bytes extra delta and length */
 	uint16_t e_opt_serial_len = 0;
 	for (uint8_t i = 0; i < E_options_cnt; i++) {
@@ -219,7 +219,7 @@ static inline enum err plaintext_setup(struct o_coap_packet *in_o_coap,
 	BYTE_ARRAY_NEW(e_opt_serial, E_OPTIONS_BUFF_MAX_LEN,
 		       E_OPTIONS_BUFF_MAX_LEN);
 
-	/* Convert all E-options structure to byte string, and copy it to 
+	/* Convert all E-options structure to byte string, and copy it to
 	output*/
 	TRY(options_serialize(E_options, E_options_cnt, &e_opt_serial));
 
@@ -268,10 +268,10 @@ static inline uint32_t get_oscore_opt_val_len(uint32_t piv_len,
 
 /**
  * @brief   Generate an OSCORE option.
- * @param   piv set to the trimmed sender sequence number in requests or NULL 
+ * @param   piv set to the trimmed sender sequence number in requests or NULL
  *          in responses
  * @param   kid set to Sender ID in requests or NULL in responses
- * @param   kid_context set to ID context in request when present. If not 
+ * @param   kid_context set to ID context in request when present. If not
  *          present or a response set to NULL
  * @param   oscore_option: output pointer OSCORE option structure
  * @return  err
@@ -446,9 +446,9 @@ STATIC enum err oscore_pkg_generate(struct o_coap_packet *in_o_coap,
 
 /**
  * @brief Increment Sender Sequence Number and call the function to periodically write it to NVM.
- * 
+ *
  * @param c Security context.
- * @return enum err 
+ * @return enum err
  */
 static enum err generate_new_ssn(struct context *c)
 {
@@ -495,13 +495,13 @@ static bool needs_new_piv(enum o_coap_msg msg_type, enum echo_state echo_state)
  * @brief Wrapper function with common operations for encrypting the payload.
  *        These operations are shared in all possible scenarios.
  *        For more info, see RFC8616 8.1 and 8.3.
- * 
+ *
  * @param plaintext Input plaintext to be encrypted.
  * @param ciphertext Output encrypted payload for the OSCORE packet.
  * @param c Security context.
  * @param input_coap Input coap packet.
  * @param oscore_option Output OSCORE option.
- * @return enum err 
+ * @return enum err
  */
 static enum err encrypt_wrapper(struct byte_array *plaintext,
 				struct byte_array *ciphertext,
@@ -541,7 +541,7 @@ static enum err encrypt_wrapper(struct byte_array *plaintext,
 	/* Generate OSCORE option based on selected values. */
 	TRY(oscore_option_generate(&piv, &kid, &kid_context, oscore_option));
 
-	/* AAD shares the same format for both requests and responses, 
+	/* AAD shares the same format for both requests and responses,
 	   yet request_kid and request_piv fields are only used by responses.
 	   For more details, see 5.4. */
 	BYTE_ARRAY_NEW(aad, MAX_AAD_LEN, MAX_AAD_LEN);
@@ -577,7 +577,7 @@ static enum err encrypt_wrapper(struct byte_array *plaintext,
 /**
  *@brief 	Converts a CoAP packet to OSCORE packet
  *@note		For messaging layer packets (simple ACK with no payload, code 0.00),
- *			encryption is dismissed and raw input buffer is copied, 
+ *			encryption is dismissed and raw input buffer is copied,
  *			as specified at section 4.2 in RFC8613.
  *@param	buf_o_coap a buffer containing a CoAP packet
  *@param	buf_o_coap_len length of the CoAP buffer
