@@ -43,7 +43,7 @@ jobs:
           /bin/bash -c "yes | ./setup.sh"
       
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -128,7 +128,7 @@ jobs:
            tar -zcvf github-pages.tar.gz lcov_html
 
       - name: Upload test coverage report
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v4
         with: 
           name: github-pages  
           path: test/lcov_html
@@ -154,4 +154,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
