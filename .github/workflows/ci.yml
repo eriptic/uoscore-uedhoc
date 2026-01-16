@@ -72,37 +72,37 @@ jobs:
           path: test/build/uoscore_uedhoc/libuoscore-uedhoc.a
 
 ### Generate ROM report
-      - name: Genrate ROM report
+      - name: Generate ROM report
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
-           cd test/  
+           cd test/
            bash ci_scripts/flash_report_gen.sh
 
       - name: Upload rom report with tinycrypt
         uses: actions/upload-artifact@v4
-        with: 
-          name: rom-report-tinycrypt-crypto  
+        with:
+          name: rom-report-tinycrypt-crypto
           path: test/build_reports/rom_report_nrf91_with_tinycrypt.txt
 
       - name: Upload rom report with mbedtls
         uses: actions/upload-artifact@v4
-        with: 
-          name: rom-report-mbedtls-crypto  
+        with:
+          name: rom-report-mbedtls-crypto
           path: test/build_reports/rom_report_nrf91_with_mbedtls.txt
 
 ### Generate stack report
-      - name: Genrate stack report
+      - name: Generate stack report
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
-           cd test/  
+           cd test/
            bash ci_scripts/stack_report_gen.sh
 
       - name: Upload stack report
         uses: actions/upload-artifact@v4
-        with: 
-          name: stack-report  
+        with:
+          name: stack-report
           path: test/build_reports/stack_report.html
 
 ### Generate test coverage report
@@ -121,8 +121,8 @@ jobs:
 
       - name: Upload test coverage report
         uses: actions/upload-pages-artifact@v4
-        with: 
-          name: github-pages  
+        with:
+          name: github-pages
           path: test/lcov_html
 
 
