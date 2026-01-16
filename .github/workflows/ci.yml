@@ -43,8 +43,8 @@ jobs:
           submodules: recursive
 
 ### build, test and archive
-# native_posix (0x68)
-      - name: Build native_posix
+# native_sim
+      - name: Build native_sim
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
@@ -54,24 +54,21 @@ jobs:
       - name: Archive static lib
         uses: actions/upload-artifact@v4
         with:
-          name: uoscore-uedhoc-x86
+          name: uoscore-uedhoc-native_sim
           path: test/build/uoscore_uedhoc/libuoscore-uedhoc.a
 
-# native_posix_64 
-      - name: Build native_posix_64
+# native_sim/native/64
+      - name: Build native_sim/native/64
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
            cd test/
-           rm -rf build
-           rm -rf build_lib_test
-           west build -b=native_posix_64
-           west build -t run
+           bash ci_scripts/test_build_options.sh
 
       - name: Archive static lib
         uses: actions/upload-artifact@v4
         with:
-          name: uoscore-uedhoc-x86-64
+          name: uoscore-uedhoc-native_sim64
           path: test/build/uoscore_uedhoc/libuoscore-uedhoc.a
 
 ### Generate ROM report
@@ -109,14 +106,14 @@ jobs:
           path: test/build_reports/stack_report.html
 
 ### Generate test coverage report
-      - name: Build native_posix with coverage information
+      - name: Build native_sim with coverage information
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
            cd test/
            rm -rf build
            rm -rf build_lib_test
-           west build -b native_posix -- -DCONFIG_COVERAGE=y
+           west build -b native_sim -- -DCONFIG_COVERAGE=y
            west build -t run
            lcov --capture --directory ./ --output-file lcov.info -q --rc lcov_branch_coverage=1
            genhtml lcov.info --output-directory lcov_html -q --ignore-errors source --branch-coverage --highlight --legend

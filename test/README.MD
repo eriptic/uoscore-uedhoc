@@ -8,7 +8,7 @@ This folder contains tests for uoscore and uedhoc. The tests can be executed on 
 ```bash
 cd test/
 source <path>/zephyr-env.sh 
-rm -rf build/; west build -b=native_posix
+rm -rf build/; west build -b=native_sim
 west build -t run
 ```
 

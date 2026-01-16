@@ -58,7 +58,7 @@ zephyr_get_compile_options_for_lang_as_string(C options)
 #message("C options is: ${options}")
 
 # To provide flags with west use COMMAND_LINE_FLAGS, e.g.:
-# west build -b native_posix -- -DCOMMAND_LINE_FLAGS="-DVLA"
+# west build -b native_sim -- -DCOMMAND_LINE_FLAGS="-DVLA"
 set(external_project_cflags
   "${COMMAND_LINE_FLAGS} ${includes} ${definitions} ${options} ${system_includes}"
 )

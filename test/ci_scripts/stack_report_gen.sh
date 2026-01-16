@@ -13,7 +13,7 @@ rm -rf build_reports/stack_report.html
 # MESSAGE_4:    YES
 # VLA:          YES
 rm -rf build
-west build -b native_posix -- -DCOMMAND_LINE_FLAGS="-DVLA -DMESSAGE_4 -DTINYCRYPT"
+west build -b native_sim/native/64 -- -DCOMMAND_LINE_FLAGS="-DVLA -DMESSAGE_4 -DTINYCRYPT"
 gdb --batch -ex 'py arg_flags="-DVLA -DMESSAGE_4 -DTINYCRYPT"' -x ci_scripts/stack_watch.py
 
 
@@ -21,7 +21,7 @@ gdb --batch -ex 'py arg_flags="-DVLA -DMESSAGE_4 -DTINYCRYPT"' -x ci_scripts/sta
 # MESSAGE_4:    YES
 # VLA:          YES
 rm -rf build
-west build -b native_posix -- -DCOMMAND_LINE_FLAGS="-DVLA -DMESSAGE_4 -DMBEDTLS"
+west build -b native_sim/native/64 -- -DCOMMAND_LINE_FLAGS="-DVLA -DMESSAGE_4 -DMBEDTLS"
 gdb --batch -ex 'py arg_flags="-DVLA -DMESSAGE_4 -DMBEDTLS"' -x ci_scripts/stack_watch.py
 
 
@@ -29,12 +29,12 @@ gdb --batch -ex 'py arg_flags="-DVLA -DMESSAGE_4 -DMBEDTLS"' -x ci_scripts/stack
 # MESSAGE_4:    YES
 # VLA:          NO
 rm -rf build
-west build -b native_posix -- -DCOMMAND_LINE_FLAGS="-DMESSAGE_4 -DTINYCRYPT"
+west build -b native_sim/native/64 -- -DCOMMAND_LINE_FLAGS="-DMESSAGE_4 -DTINYCRYPT"
 gdb --batch -ex 'py arg_flags="-DMESSAGE_4 -DTINYCRYPT"' -x ci_scripts/stack_watch.py
 
 # MBEDTLS     YES
 # MESSAGE_4:    YES
 # VLA:          NO
 rm -rf build
-west build -b native_posix -- -DCOMMAND_LINE_FLAGS="-DMESSAGE_4 -DMBEDTLS"
+west build -b native_sim/native/64 -- -DCOMMAND_LINE_FLAGS="-DMESSAGE_4 -DMBEDTLS"
 gdb --batch -ex 'py arg_flags="-DMESSAGE_4 -DMBEDTLS"' -x ci_scripts/stack_watch.py
