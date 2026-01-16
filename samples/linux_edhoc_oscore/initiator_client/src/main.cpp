@@ -87,6 +87,7 @@ enum err tx(void *sock, struct byte_array *data)
 	pdu->setVersion(1);
 	pdu->setType(CoapPDU::COAP_CONFIRMABLE);
 	pdu->setCode(CoapPDU::COAP_POST);
+	pdu->setContentFormat(CoapPDU::COAP_CONTENT_FORMAT_APP_CID_EDHOC_CBOR_SEQ);
 	pdu->setToken((uint8_t *)&(++token), sizeof(token));
 	pdu->setMessageID(mid++);
 	pdu->setURI((char *)".well-known/edhoc", 17);
