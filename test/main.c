@@ -327,7 +327,7 @@ ZTEST(uoscore_uedhoc, test_edhoc_responder_x509_x5t_rfc9529)
  * by Zephyr OS, see https://docs.zephyrproject.org/latest/boards/index.html
  * Make sure that MEASURE_LATENCY_ON is enabled in CMakeLists.txt
  * Build flash the test project for your board e.g.,
- * west build -b=nrf9160dk_nrf9160; west flash.
+ * west build -b=nrf9160dk/nrf9160; west flash.
  * make also sure that DEBUG_PRINT is disabled
  */
 #ifdef MEASURE_LATENCY_ON

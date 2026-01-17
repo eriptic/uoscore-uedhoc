@@ -8,19 +8,21 @@ jobs:
   build:
     name: Build uoscore-uedhoc
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Install Zephyr tools
         run: |
-          wget https://apt.kitware.com/kitware-archive.sh
-          sudo bash kitware-archive.sh
-          sudo apt install --no-install-recommends git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1 lcov gdb
+          sudo apt-get update
+          sudo apt-get upgrade
+          sudo apt install --no-install-recommends git cmake ninja-build gperf \
+          ccache dfu-util device-tree-compiler wget python3-dev python3-venv \
+          python3-tk xz-utils file make gcc gcc-multilib g++-multilib gdb \
+          libsdl2-dev libmagic1 python3-tabulate lcov
           cmake --version
           python3 --version
           dtc --version
 
-          pip3 install tabulate
-          sudo apt install python3-venv
+          sudo apt-get install python3-venv
           python3 -m venv ~/zephyrproject/.venv
           source ~/zephyrproject/.venv/bin/activate
 
@@ -30,26 +32,19 @@ jobs:
           west update
 
           west zephyr-export
+          west packages pip --install
 
-          pip install -r ~/zephyrproject/zephyr/scripts/requirements.txt
-          
+          cd ~/zephyrproject/zephyr
+          west sdk install
 
-          cd ~
-          wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.3/zephyr-sdk-0.16.3_linux-x86_64.tar.xz
-          wget -O - https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.3/sha256.sum | shasum --check --ignore-missing
-
-          tar xvf zephyr-sdk-0.16.3_linux-x86_64.tar.xz
-          cd zephyr-sdk-0.16.3
-          /bin/bash -c "yes | ./setup.sh"
-      
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
 ### build, test and archive
-# native_posix (0x68)
-      - name: Build native_posix
+# native_sim
+      - name: Build native_sim
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
@@ -59,78 +54,75 @@ jobs:
       - name: Archive static lib
         uses: actions/upload-artifact@v4
         with:
-          name: uoscore-uedhoc-x86
+          name: uoscore-uedhoc-native_sim
           path: test/build/uoscore_uedhoc/libuoscore-uedhoc.a
 
-# native_posix_64 
-      - name: Build native_posix_64
+# native_sim/native/64
+      - name: Build native_sim/native/64
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
            cd test/
-           rm -rf build
-           rm -rf build_lib_test
-           west build -b=native_posix_64
-           west build -t run
+           bash ci_scripts/test_build_options.sh
 
       - name: Archive static lib
         uses: actions/upload-artifact@v4
         with:
-          name: uoscore-uedhoc-x86-64
+          name: uoscore-uedhoc-native_sim64
           path: test/build/uoscore_uedhoc/libuoscore-uedhoc.a
 
 ### Generate ROM report
-      - name: Genrate ROM report
+      - name: Generate ROM report
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
-           cd test/  
+           cd test/
            bash ci_scripts/flash_report_gen.sh
 
       - name: Upload rom report with tinycrypt
         uses: actions/upload-artifact@v4
-        with: 
-          name: rom-report-tinycrypt-crypto  
+        with:
+          name: rom-report-tinycrypt-crypto
           path: test/build_reports/rom_report_nrf91_with_tinycrypt.txt
 
       - name: Upload rom report with mbedtls
         uses: actions/upload-artifact@v4
-        with: 
-          name: rom-report-mbedtls-crypto  
+        with:
+          name: rom-report-mbedtls-crypto
           path: test/build_reports/rom_report_nrf91_with_mbedtls.txt
 
 ### Generate stack report
-      - name: Genrate stack report
+      - name: Generate stack report
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
-           cd test/  
+           cd test/
            bash ci_scripts/stack_report_gen.sh
 
       - name: Upload stack report
         uses: actions/upload-artifact@v4
-        with: 
-          name: stack-report  
+        with:
+          name: stack-report
           path: test/build_reports/stack_report.html
 
 ### Generate test coverage report
-      - name: Build native_posix with coverage information
+      - name: Build native_sim with coverage information
         run: |
            source ~/zephyrproject/zephyr/zephyr-env.sh
            source ~/zephyrproject/.venv/bin/activate
            cd test/
            rm -rf build
            rm -rf build_lib_test
-           west build -b native_posix -- -DCONFIG_COVERAGE=y
+           west build -b native_sim -- -DCONFIG_COVERAGE=y
            west build -t run
-           lcov --capture --directory ./ --output-file lcov.info -q --rc lcov_branch_coverage=1
-           genhtml lcov.info --output-directory lcov_html -q --ignore-errors source --branch-coverage --highlight --legend
+           lcov --capture --directory ./ --output-file lcov.info -q --rc branch_coverage=1 --ignore-errors inconsistent,mismatch
+           genhtml lcov.info --output-directory lcov_html -q --ignore-errors source,inconsistent,corrupt --branch-coverage --legend
            tar -zcvf github-pages.tar.gz lcov_html
 
       - name: Upload test coverage report
-        uses: actions/upload-pages-artifact@v1
-        with: 
-          name: github-pages  
+        uses: actions/upload-pages-artifact@v4
+        with:
+          name: github-pages
           path: test/lcov_html
 
 
@@ -154,4 +146,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4

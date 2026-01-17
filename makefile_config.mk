@@ -28,7 +28,7 @@ OPT = -O0
 DEBUG_PRINT += -DDEBUG_PRINT
 
 ################################################################################
-# Use Address Sanitizer, e.g. with native_posix
+# Use Address Sanitizer, e.g. with native_sim
 ################################################################################
 #ASAN += -DASAN
 

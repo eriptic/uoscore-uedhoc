@@ -84,7 +84,7 @@ def main():
         fkt_name: str
         max_stack_size: int
 
-    gdb.execute("file " + "build/zephyr/zephyr.elf")
+    gdb.execute("file " + "build/zephyr/zephyr.exe")
 
     functions = [
         Function("coap2oscore", 1500),
