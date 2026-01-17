@@ -11,11 +11,13 @@
 #include "sock.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef LINUX_SOCKETS
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <net/if.h>
 #else
 #include <zephyr/net/net_pkt.h>
 #include <zephyr/net/net_if.h>
@@ -30,6 +32,8 @@ int ipv6_sock_init(enum sock_type sock_t, const char *ipv6_addr_str,
 		   int *sockfd)
 {
 	int r;
+	char* zone;
+	unsigned int index;
 
 	memset(servaddr, 0, servaddr_len);
 
@@ -40,8 +44,25 @@ int ipv6_sock_init(enum sock_type sock_t, const char *ipv6_addr_str,
 
 	servaddr->sin6_family = AF_INET6;
 	servaddr->sin6_port = htons(PORT);
+
+	/* Look for IPv6 zone identifier (RFC6874) */
+	zone = strchr(ipv6_addr_str, '%');
+	if (zone){
+		*zone = '\0';
+		zone++;
+
+		index = if_nametoindex(zone);
+		if (index == 0){
+			/* zone could already be numerical index */
+			index = atoi(zone);
+			if (index == 0) {
+				return -1;
+			}
+		}
+		servaddr->sin6_scope_id = index;
+	}
 	r = inet_pton(AF_INET6, ipv6_addr_str, &servaddr->sin6_addr);
-	if (r < 0)
+	if (r != 1)
 		return r;
 
 	if (sock_t == SOCK_CLIENT) {
