@@ -50,6 +50,7 @@ CPP_SOURCES += ../../../externals/cantcoap/cantcoap.cpp
 $(shell mv ../../../externals/compact25519/src/c25519/sha512.c ../../../externals/compact25519/src/c25519/_sha512.c )
 
 C_SOURCES += src/_entropy.c
+C_SOURCES += ../../../test_vectors/oscore_test_vectors.c
 C_SOURCES += $(wildcard ../../common/*.c)
 C_SOURCES += $(wildcard ../../../externals/zcbor/src/*.c)
 
