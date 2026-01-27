@@ -28,10 +28,12 @@ BUILD_DIR = build
 USOCORE_UEDHOC_PATH = ../../../
 USOCORE_UEDHOC_BUILD_PATH = $(USOCORE_UEDHOC_PATH)build
 
+ifeq ($(ARCH_32_ONLY), 1)
 # build for 32 bit x68 
 # export the variable so that it is available in the uoscore-uedhoc Makefile 
 ARCH = -m32
 export ARCH
+endif
 
 # debug build?
 DEBUG = 1
