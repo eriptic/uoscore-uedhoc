@@ -71,6 +71,12 @@ jobs:
           name: uoscore-uedhoc-native_sim64
           path: test/build/uoscore_uedhoc/libuoscore-uedhoc.a
 
+# Build Linux samples
+      - name: Build linux samples
+        run: |
+           cd test/
+           bash ci_scripts/test_samples.sh
+
 ### Generate ROM report
       - name: Generate ROM report
         run: |

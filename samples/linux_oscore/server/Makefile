@@ -28,10 +28,12 @@ BUILD_DIR = build
 USOCORE_UEDHOC_PATH = ../../../
 USOCORE_UEDHOC_BUILD_PATH = $(USOCORE_UEDHOC_PATH)build
 
+ifeq ($(ARCH_32_ONLY), 1)
 # build for 32 bit x68 
 # export the variable so that it is available in the uoscore-uedhoc Makefile 
 ARCH = -m32
 export ARCH
+endif
 
 # debug build?
 DEBUG = 1
@@ -48,6 +50,7 @@ CPP_SOURCES += ../../../externals/cantcoap/cantcoap.cpp
 $(shell mv ../../../externals/compact25519/src/c25519/sha512.c ../../../externals/compact25519/src/c25519/_sha512.c )
 
 C_SOURCES += src/_entropy.c
+C_SOURCES += ../../../test_vectors/oscore_test_vectors.c
 C_SOURCES += $(wildcard ../../common/*.c)
 C_SOURCES += $(wildcard ../../../externals/zcbor/src/*.c)
 
