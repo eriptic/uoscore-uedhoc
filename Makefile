@@ -93,7 +93,7 @@ EXTENDED_CFLAGS += -Wcast-qual
 #EXTENDED_CFLAGS += -Wstack-usage=9000
 EXTENDED_CFLAGS += -Wconversion
 EXTENDED_CFLAGS += -Wpedantic
-#EXTENDED_CFLAGS += -Werror
+EXTENDED_CFLAGS += -Werror
 
 #Clang warning flags
 else ifeq ($(findstring clang,$(CC)),clang)
@@ -112,7 +112,7 @@ EXTENDED_CFLAGS += -Wextra
 EXTENDED_CFLAGS += -Wpedantic
 EXTENDED_CFLAGS += -Wstack-exhausted
 EXTENDED_CFLAGS += -Wconversion
-#EXTENDED_CFLAGS += -Werror
+EXTENDED_CFLAGS += -Werror
 endif
 
 ifeq ($(findstring ASAN,$(ASAN)),ASAN)
