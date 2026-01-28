@@ -9,6 +9,7 @@
  * SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
+#include <string.h>
 #include <psa/crypto.h>
 #include <edhoc/buffer_sizes.h>
 #include "crypto_p256.h"
