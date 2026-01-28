@@ -115,9 +115,9 @@ CFLAGS += \
 	$(C_DEFS) \
 	$(C_INCLUDES) \
 	$(OPT) \
-	-Wall \
+	-Wall -Werror \
 	-fstack-usage
-CXXFLAGS += $(ARCH) $(C_DEFS) $(C_INCLUDES) $(OPT)
+CXXFLAGS += $(ARCH) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -Werror
 
 # have dubug information
 ifeq ($(DEBUG), 1)
