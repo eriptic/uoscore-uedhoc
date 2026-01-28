@@ -40,7 +40,7 @@ static bool encode_m2_G_Y_CIPHERTEXT_2(
 
 int cbor_encode_m2_G_Y_CIPHERTEXT_2(
 		uint8_t *payload, size_t payload_len,
-		const struct zcbor_string *input,
+		struct zcbor_string *input,
 		size_t *payload_len_out)
 {
 	zcbor_state_t states[2];

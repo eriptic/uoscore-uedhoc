@@ -24,7 +24,7 @@ extern "C" {
 
 int cbor_encode_bstr_type_b_str(
 		uint8_t *payload, size_t payload_len,
-		const struct zcbor_string *input,
+		struct zcbor_string *input,
 		size_t *payload_len_out);
 
 

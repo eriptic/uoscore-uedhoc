@@ -24,7 +24,7 @@ extern "C" {
 
 int cbor_encode_oscore_enc_structure(
 		uint8_t *payload, size_t payload_len,
-		const struct oscore_enc_structure *input,
+		struct oscore_enc_structure *input,
 		size_t *payload_len_out);
 
 

@@ -46,7 +46,7 @@ static bool encode_aad_array(
 
 int cbor_encode_aad_array(
 		uint8_t *payload, size_t payload_len,
-		const struct aad_array *input,
+		struct aad_array *input,
 		size_t *payload_len_out)
 {
 	zcbor_state_t states[5];

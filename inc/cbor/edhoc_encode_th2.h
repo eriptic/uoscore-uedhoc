@@ -24,7 +24,7 @@ extern "C" {
 
 int cbor_encode_th2(
 		uint8_t *payload, size_t payload_len,
-		const struct th2 *input,
+		struct th2 *input,
 		size_t *payload_len_out);
 
 

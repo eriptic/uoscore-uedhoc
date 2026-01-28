@@ -40,7 +40,7 @@ static bool encode_int_type_i(
 
 int cbor_encode_int_type_i(
 		uint8_t *payload, size_t payload_len,
-		const int32_t *input,
+		int32_t *input,
 		size_t *payload_len_out)
 {
 	zcbor_state_t states[2];

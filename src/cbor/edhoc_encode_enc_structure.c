@@ -42,7 +42,7 @@ static bool encode_edhoc_enc_structure(
 
 int cbor_encode_edhoc_enc_structure(
 		uint8_t *payload, size_t payload_len,
-		const struct edhoc_enc_structure *input,
+		struct edhoc_enc_structure *input,
 		size_t *payload_len_out)
 {
 	zcbor_state_t states[3];
