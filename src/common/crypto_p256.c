@@ -261,8 +261,8 @@ static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
 	/* x = xl + 2**16 xh, y = yl + 2**16 yh */
 	const uint16_t xl = (uint16_t) x;
 	const uint16_t yl = (uint16_t) y;
-	const uint16_t xh = x >> 16;
-	const uint16_t yh = y >> 16;
+	const uint16_t xh = (uint16_t)(x >> 16);
+	const uint16_t yh = (uint16_t)(y >> 16);
 
 	/* x*y = xl*yl + 2**16 (xh*yl + yl*yh) + 2**32 xh*yh
 	 *     = lo    + 2**16 (m1    + m2   ) + 2**32 hi    */
