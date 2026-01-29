@@ -105,8 +105,8 @@ LDFLAGS += $(ARCH)
 # CFLAGS
 ##########################################
 #general c flags
-CFLAGS +=  $(ARCH) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall
-CXXFLAGS +=  $(ARCH) $(C_DEFS) $(C_INCLUDES) $(OPT)
+CFLAGS +=  $(ARCH) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -Werror
+CXXFLAGS +=  $(ARCH) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -Werror
 
 # have dubug information
 ifeq ($(DEBUG), 1)

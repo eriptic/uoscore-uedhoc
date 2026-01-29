@@ -24,7 +24,7 @@ extern "C" {
 
 int cbor_encode_id_cred_x_map(
 		uint8_t *payload, size_t payload_len,
-		const struct id_cred_x_map *input,
+		struct id_cred_x_map *input,
 		size_t *payload_len_out);
 
 

@@ -41,7 +41,7 @@ static bool encode_th2(
 
 int cbor_encode_th2(
 		uint8_t *payload, size_t payload_len,
-		const struct th2 *input,
+		struct th2 *input,
 		size_t *payload_len_out)
 {
 	zcbor_state_t states[2];

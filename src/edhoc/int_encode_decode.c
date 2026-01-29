@@ -31,7 +31,7 @@ bool c_r_is_raw_int(const struct byte_array *c_r)
 }
 
 
-enum err encode_int(const int32_t *in, uint32_t in_len, struct byte_array *out)
+enum err encode_int(int32_t *in, uint32_t in_len, struct byte_array *out)
 {
 	size_t payload_len_out;
 	TRY_EXPECT(cbor_encode_int_type_i(out->ptr, out->len, in,
