@@ -45,6 +45,7 @@ modify setting in include/psa/crypto_config.h
 #include "mbedtls/error.h"
 #include "mbedtls/rsa.h"
 #include "mbedtls/x509.h"
+#include "crypto_p256.h"
 
 #endif
 
@@ -76,94 +77,6 @@ modify setting in include/psa/crypto_config.h
 			return err_code;                                       \
 		}                                                              \
 	} while (0)
-
-/**
- * @brief Decompresses an elliptic curve point. 
- * 
- * 
- * @param grp elliptic curve group point
- * @param input the compressed key
- * @param ilen the lenhgt if the compressed key
- * @param output the uncopressed key
- * @param olen the lenhgt of the output
- * @param osize the actual available size of the out buffer
- * @return 0 on success
- */
-static inline int mbedtls_ecp_decompress(const mbedtls_ecp_group *grp,
-					 const unsigned char *input,
-					 size_t ilen, unsigned char *output,
-					 size_t *olen, size_t osize)
-{
-	int ret;
-	size_t plen;
-	mbedtls_mpi r;
-	mbedtls_mpi x;
-	mbedtls_mpi n;
-
-	plen = mbedtls_mpi_size(&grp->P);
-
-	*olen = 2 * plen + 1;
-
-	if (osize < *olen)
-		return (MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL);
-
-	// output will consist of 0x04|X|Y
-	memcpy(output + 1, input, ilen);
-	output[0] = 0x04;
-
-	mbedtls_mpi_init(&r);
-	mbedtls_mpi_init(&x);
-	mbedtls_mpi_init(&n);
-
-	// x <= input
-	MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&x, input, plen));
-
-	// r = x^2
-	MBEDTLS_MPI_CHK(mbedtls_mpi_mul_mpi(&r, &x, &x));
-
-	// r = x^2 + a
-	if (grp->A.p == NULL) {
-		// Special case where a is -3
-		MBEDTLS_MPI_CHK(mbedtls_mpi_sub_int(&r, &r, 3));
-	} else {
-		MBEDTLS_MPI_CHK(mbedtls_mpi_add_mpi(&r, &r, &grp->A));
-	}
-
-	// r = x^3 + ax
-	MBEDTLS_MPI_CHK(mbedtls_mpi_mul_mpi(&r, &r, &x));
-
-	// r = x^3 + ax + b
-	MBEDTLS_MPI_CHK(mbedtls_mpi_add_mpi(&r, &r, &grp->B));
-
-	// Calculate square root of r over finite field P:
-	//   r = sqrt(x^3 + ax + b) = (x^3 + ax + b) ^ ((P + 1) / 4) (mod P)
-
-	// n = P + 1
-	MBEDTLS_MPI_CHK(mbedtls_mpi_add_int(&n, &grp->P, 1));
-
-	// n = (P + 1) / 4
-	MBEDTLS_MPI_CHK(mbedtls_mpi_shift_r(&n, 2));
-
-	// r ^ ((P + 1) / 4) (mod p)
-	MBEDTLS_MPI_CHK(mbedtls_mpi_exp_mod(&r, &r, &n, &grp->P, NULL));
-
-	// Select solution that has the correct "sign" (equals odd/even solution in finite group)
-	if ((input[0] == 0x03) != mbedtls_mpi_get_bit(&r, 0)) {
-		// r = p - r
-		MBEDTLS_MPI_CHK(mbedtls_mpi_sub_mpi(&r, &grp->P, &r));
-	}
-
-	// y => output
-	ret = mbedtls_mpi_write_binary(&r, output + 1 + plen, plen);
-
-cleanup:
-	mbedtls_mpi_free(&r);
-	mbedtls_mpi_free(&x);
-	mbedtls_mpi_free(&n);
-
-	return (ret);
-}
-
 #endif
 
 #ifdef TINYCRYPT
@@ -735,25 +648,10 @@ enum err WEAK shared_secret_derive(enum ecdh_alg alg,
 		size_t pk_decompressed_len;
 		uint8_t pk_decompressed[P_256_PUB_KEY_UNCOMPRESSED_SIZE];
 
-		mbedtls_pk_context ctx_verify = { 0 };
-		mbedtls_pk_init(&ctx_verify);
 		if (PSA_SUCCESS !=
-		    mbedtls_pk_setup(&ctx_verify, mbedtls_pk_info_from_type(
-							  MBEDTLS_PK_ECKEY))) {
-			result = unexpected_result_from_ext_lib;
-			goto cleanup;
-		}
-		if (PSA_SUCCESS !=
-		    mbedtls_ecp_group_load(&mbedtls_pk_ec(ctx_verify)->grp,
-					   MBEDTLS_ECP_DP_SECP256R1)) {
-			result = unexpected_result_from_ext_lib;
-			goto cleanup;
-		}
-		if (PSA_SUCCESS !=
-		    mbedtls_ecp_decompress(&mbedtls_pk_ec(ctx_verify)->grp,
-					   pk->ptr, pk->len, pk_decompressed,
-					   &pk_decompressed_len,
-					   sizeof(pk_decompressed))) {
+			crypto_p256_uncompress_point(pk->ptr, pk->len, pk_decompressed,
+						     &pk_decompressed_len,
+						     sizeof(pk_decompressed))) {
 			result = unexpected_result_from_ext_lib;
 			goto cleanup;
 		}
@@ -772,7 +670,6 @@ enum err WEAK shared_secret_derive(enum ecdh_alg alg,
 		if (PSA_KEY_HANDLE_INIT != key_id) {
 			TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
 		}
-		mbedtls_pk_free(&ctx_verify);
 		return result;
 #endif
 	}
