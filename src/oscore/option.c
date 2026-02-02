@@ -43,8 +43,9 @@ static enum err buffer_append(uint8_t *buffer, uint32_t *current_size,
 bool is_class_e(uint16_t code)
 {
 	// blacklist, because OSCORE dictates that unknown options SHALL be processed as class E
+	// RFC 9668 Section 3.1: EDHOC option (21) is Class U for OSCORE
 	return code != URI_HOST && code != URI_PORT && code != OSCORE &&
-	       code != PROXY_URI && code != PROXY_SCHEME;
+	       code != PROXY_URI && code != PROXY_SCHEME && code != EDHOC;
 }
 
 bool is_observe(struct o_coap_option *options, uint8_t options_cnt)

@@ -36,6 +36,7 @@ enum o_num {
 	URI_QUERY = 15,
 	ACCEPT = 17,
 	LOCATION_QUERY = 20,
+	EDHOC = 21,
 	BLOCK2 = 23,
 	BLOCK1 = 27,
 	SIZE2 = 28,
