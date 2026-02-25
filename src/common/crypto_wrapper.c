@@ -37,13 +37,8 @@ modify setting in include/psa/crypto_config.h
 
 #include <psa/crypto.h>
 
-#include "mbedtls/ecp.h"
 #include "mbedtls/platform.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/ecdsa.h"
 #include "mbedtls/error.h"
-#include "mbedtls/rsa.h"
 #include "mbedtls/x509.h"
 #include "crypto_p256.h"
 
