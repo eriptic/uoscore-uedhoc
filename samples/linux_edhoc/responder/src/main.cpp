@@ -114,6 +114,7 @@ enum err ead_process(void *params, struct byte_array *ead13)
 enum err tx(void *sock, struct byte_array *data)
 {
 	txPDU->setCode(CoapPDU::COAP_CHANGED);
+	txPDU->setContentFormat(CoapPDU::COAP_CONTENT_FORMAT_APP_EDHOC_CBOR_SEQ);
 	txPDU->setPayload(data->ptr, data->len);
 	send_coap_reply(sock, txPDU);
 	return ok;
