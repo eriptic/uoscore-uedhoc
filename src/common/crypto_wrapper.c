@@ -37,13 +37,8 @@ modify setting in include/psa/crypto_config.h
 
 #include <psa/crypto.h>
 
-#include "mbedtls/ecp.h"
 #include "mbedtls/platform.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/ecdsa.h"
 #include "mbedtls/error.h"
-#include "mbedtls/rsa.h"
 #include "mbedtls/x509.h"
 #include "crypto_p256.h"
 
@@ -69,7 +64,7 @@ modify setting in include/psa/crypto_config.h
 	do {                                                                   \
 		int retval = (int)(x);                                         \
 		if ((expected_result) != retval) {                             \
-			if (PSA_KEY_HANDLE_INIT != (key_id)) {                 \
+			if (PSA_KEY_ID_NULL != (key_id)) {                 \
 				psa_destroy_key(key_id);                       \
 			}                                                      \
 			handle_external_runtime_error(retval, __FILE__,        \
@@ -217,7 +212,7 @@ enum err WEAK aead(enum aes_operation op, const struct byte_array *in,
 		memcpy(tag->ptr, out->ptr + out->len, tag->len);
 	}
 #elif defined(MBEDTLS)
-	psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
+	psa_key_id_t key_id = PSA_KEY_ID_NULL;
 
 	TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
 		       unexpected_result_from_ext_lib);
@@ -320,7 +315,7 @@ enum err WEAK sign(enum sign_alg alg, const struct byte_array *sk,
 #elif defined(MBEDTLS)
 		psa_algorithm_t psa_alg;
 		size_t bits;
-		psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
+		psa_key_id_t key_id = PSA_KEY_ID_NULL;
 
 		psa_alg = PSA_ALG_ECDSA(PSA_ALG_SHA_256);
 		bits = PSA_BYTES_TO_BITS((size_t)sk->len);
@@ -381,7 +376,7 @@ enum err WEAK verify(enum sign_alg alg, const struct byte_array *pk,
 		psa_status_t status;
 		psa_algorithm_t psa_alg;
 		size_t bits;
-		psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
+		psa_key_id_t key_id = PSA_KEY_ID_NULL;
 
 		psa_alg = PSA_ALG_ECDSA(PSA_ALG_SHA_256);
 		bits = PSA_BYTES_TO_BITS(P_256_PRIV_KEY_SIZE);
@@ -463,7 +458,7 @@ enum err WEAK hkdf_extract(enum hash_alg alg, const struct byte_array *salt,
 #ifdef MBEDTLS
 	psa_algorithm_t psa_alg = PSA_ALG_HMAC(PSA_ALG_SHA_256);
 	psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
-	psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
+	psa_key_id_t key_id = PSA_KEY_ID_NULL;
 
 	TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
 		       unexpected_result_from_ext_lib);
@@ -530,7 +525,7 @@ enum err WEAK hkdf_expand(enum hash_alg alg, const struct byte_array *prk,
 #ifdef MBEDTLS
 	psa_status_t status;
 	psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
-	psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
+	psa_key_id_t key_id = PSA_KEY_ID_NULL;
 	PRINTF("key_id: %d\n", key_id);
 
 	TRY_EXPECT_PSA(psa_crypto_init(), PSA_SUCCESS, key_id,
@@ -617,7 +612,7 @@ enum err WEAK shared_secret_derive(enum ecdh_alg alg,
 
 		return ok;
 #elif defined(MBEDTLS) /* TINYCRYPT / MBEDTLS */
-		psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
+		psa_key_id_t key_id = PSA_KEY_ID_NULL;
 		psa_algorithm_t psa_alg;
 		size_t bits;
 		psa_status_t result = ok;
@@ -667,7 +662,7 @@ enum err WEAK shared_secret_derive(enum ecdh_alg alg,
 			goto cleanup;
 		}
 	cleanup:
-		if (PSA_KEY_HANDLE_INIT != key_id) {
+		if (PSA_KEY_ID_NULL != key_id) {
 			TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
 		}
 		return result;
@@ -717,7 +712,7 @@ enum err WEAK ephemeral_dh_key_gen(enum ecdh_alg alg, uint32_t seed,
 		pk->len = P_256_PUB_KEY_X_CORD_SIZE;
 		return ok;
 #elif defined(MBEDTLS) /* TINYCRYPT / MBEDTLS */
-		psa_key_id_t key_id = PSA_KEY_HANDLE_INIT;
+		psa_key_id_t key_id = PSA_KEY_ID_NULL;
 		psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 		psa_algorithm_t psa_alg = PSA_ALG_ECDH;
 		uint8_t priv_key_size = P_256_PRIV_KEY_SIZE;
