@@ -55,8 +55,15 @@ static int deser_sign_cb(void *void_ctx, int tag, unsigned char *start,
 		struct deser_sign_ctx_s *ctx = void_ctx;
 		uint8_t *unit_end = ctx->seek + ctx->unit_size;
 		if (unit_end <= ctx->end) {
-			memcpy(ctx->seek, start + len - ctx->unit_size,
-			       (uint32_t)ctx->unit_size);
+			memset(ctx->seek, 0, (size_t)ctx->unit_size);
+			if (len >= (size_t)ctx->unit_size) {
+				memcpy(ctx->seek,
+				       start + len - (size_t)ctx->unit_size,
+				       (size_t)ctx->unit_size);
+			} else {
+				memcpy(ctx->seek + (ctx->unit_size - (int)len),
+				       start, len);
+			}
 			ctx->seek = unit_end;
 		}
 	}
