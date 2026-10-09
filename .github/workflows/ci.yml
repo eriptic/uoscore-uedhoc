@@ -31,8 +31,8 @@ jobs:
           cd ~/zephyrproject
           west update
 
-          west zephyr-export
           west packages pip --install
+          west zephyr-export
 
           cd ~/zephyrproject/zephyr
           west sdk install
