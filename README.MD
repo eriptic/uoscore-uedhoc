@@ -23,6 +23,10 @@ For more information visit our website [eriptic.com](https://eriptic.com/) or se
 * run `make` 
 * link the static library `build/libuoscore-uedhoc.a` in your project
 
+## Dev Container
+
+The repository contains a VS Code dev container with Zephyr, the Zephyr SDK and debug probe tools preinstalled. Open the folder in VS Code and select **Reopen in Container** to build and run the tests without installing a local toolchain. The CI uses the same container. See [.devcontainer/README.md](.devcontainer/README.md) for details.
+
 ## Test coverage
 * [Test coverage report uOSCORE](https://eriptic.github.io/uoscore-uedhoc/src/oscore/index.html)
 * [Test coverage report uEDHOC](https://eriptic.github.io/uoscore-uedhoc/src/edhoc/index.html)
@@ -170,3 +174,19 @@ Note that using NVM support is independent of the parameter above. Although it i
 
 ## Additional configuration options
 The build configuration can be adjusted in the [makefile_config.mk](makefile_config.mk).
+
+## Changelog and Release Process
+All notable changes are documented in [CHANGELOG.md](CHANGELOG.md), following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/).
+
+* **With every pull request:** add a one-line entry with a link to the pull request under `## [Unreleased]` in the matching group (`Added`, `Changed`, `Removed`, `Fixed`, ...). Describe changes that require action from users under `Upgrade notes`.
+* **To create a release:**
+  1. Choose the version: `major` for incompatible API changes, `minor` for new backward-compatible functionality, `patch` for bug fixes only.
+  2. In `CHANGELOG.md`, rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD`, add a new empty `[Unreleased]` section, and update the compare links at the bottom of the file. Commit this change.
+  3. Bump the version, which updates `package.json`, commits it and creates the tag `vX.Y.Z` (requires a clean working tree):
+     ```bash
+     npm version <major|minor|patch> -m "%s"
+     ```
+  4. Push the commit and the tag:
+     ```bash
+     git push --follow-tags
+     ```
