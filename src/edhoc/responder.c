@@ -286,7 +286,8 @@ enum err msg3_process(struct edhoc_responder_context *c,
 
 	/* Export public key. */
 	if ((NULL != initiator_pk) && (NULL != initiator_pk->ptr)) {
-		_memcpy_s(initiator_pk->ptr, initiator_pk->len, pk.ptr, pk.len);
+		TRY(_memcpy_s(initiator_pk->ptr, initiator_pk->len, pk.ptr,
+			      pk.len));
 		initiator_pk->len = pk.len;
 	}
 
