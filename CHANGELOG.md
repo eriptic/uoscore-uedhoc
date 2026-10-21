@@ -10,6 +10,24 @@ version tags.
 
 ## [Unreleased]
 
+### Upgrade notes
+
+- **Responder C_I output:** for an int C_I, `edhoc_responder_run_extended()`
+  now returns its CBOR encoding (e.g. `0x2d` for -14, as in RFC 9528
+  Appendix A.1) instead of the truncated raw value. Check code that derives
+  OSCORE IDs from it.
+- **Cipher suites:** the responder now rejects suites that aren't in
+  `suites_r`.
+
+### Fixed
+
+- edhoc: the responder keeps an int C_I in its CBOR encoding and rejects ints
+  outside -24..23 ([#87]).
+- edhoc: check return values that were ignored in some places ([#87]).
+- edhoc: add length checks to the built-in X.509 parser ([#87]).
+- edhoc: the responder checks that it supports the selected cipher suite
+  ([#87]).
+
 ## [3.1.1] - 2026-10-21
 
 ### Added
@@ -100,3 +118,4 @@ version tags.
 [#84]: https://github.com/eriptic/uoscore-uedhoc/pull/84
 [#85]: https://github.com/eriptic/uoscore-uedhoc/pull/85
 [#86]: https://github.com/eriptic/uoscore-uedhoc/pull/86
+[#87]: https://github.com/eriptic/uoscore-uedhoc/pull/87
