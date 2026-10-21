@@ -134,10 +134,11 @@ static inline bool selected_suite_is_supported(uint8_t selected,
 					       struct byte_array *suites_r)
 {
 	for (uint32_t i = 0; i < suites_r->len; i++) {
-		if (suites_r->ptr[i] == selected)
+		if (suites_r->ptr[i] == selected) {
 			PRINTF("Suite %d will be used in this EDHOC run.\n",
 			       selected);
-		return true;
+			return true;
+		}
 	}
 	return false;
 }
