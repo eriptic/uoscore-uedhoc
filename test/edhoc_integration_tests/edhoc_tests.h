@@ -40,6 +40,44 @@ void test_edhoc_initiator_x509_x5t_rfc9529();
 void test_edhoc_responder_x509_x5t_rfc9529();
 
 /**
+ * @brief       Test EDHOC initiator according to RFC9529 Section 3.
+ *              Static DH authentication, CCS identified by 'kid'.
+ */
+void test_edhoc_initiator_static_dh_kid_rfc9529();
+
+/**
+ * @brief       Test EDHOC responder according to RFC9529 Section 3.
+ *              Static DH authentication, CCS identified by 'kid'.
+ */
+void test_edhoc_responder_static_dh_kid_rfc9529();
+
+/**
+ * @brief       Test EDHOC initiator with RFC9529 Section 3 and C_R = h''.
+ */
+void test_edhoc_initiator_empty_c_r(void);
+
+/**
+ * @brief       Test EDHOC responder with RFC9529 Section 3 and C_R = h''.
+ */
+void test_edhoc_responder_empty_c_r(void);
+
+/**
+ * @brief       Tests the compact encoding of a 'kid' in id_cred2kid().
+ */
+void t_kid_id_cred2kid(void);
+
+/**
+ * @brief       Tests the reconstruction of ID_CRED_x from a 'kid' in
+ *              plaintext_split().
+ */
+void t_kid_plaintext_split(void);
+
+/**
+ * @brief       Tests the credential lookup with RFC 9528 and int 'kid's.
+ */
+void t_kid_retrieve_cred(void);
+
+/**
  * @brief 		Tests the functions of the exporter interface
  */
 void test_exporter(void);

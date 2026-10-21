@@ -61,16 +61,19 @@ static enum err mac(const struct byte_array *prk, const struct byte_array *c_r,
 			       ead->len + th_enc.len);
 	uint32_t capacity = context_mac.len;
 	context_mac.len = 0;
-	if (c_r->len != 0) {
+	/* Only context_2 contains C_R. C_R may be the empty byte string, so
+	 * its length can't tell MAC_2 from MAC_3. */
+	if (mac_label == MAC_2) {
 		BYTE_ARRAY_NEW(c_r_enc, AS_BSTR_SIZE(C_R_SIZE),
 			       AS_BSTR_SIZE(c_r->len));
-		if (c_r_is_raw_int(c_r)) {
-			TRY(encode_int((const int32_t *)c_r->ptr, c_r->len,
-				       &c_r_enc));
+		/* C_R is encoded as in message_2 (RFC 9528 Section 3.3.2) */
+		if (c_x_is_encoded_int(c_r)) {
+			TRY(byte_array_append(&context_mac, c_r, capacity));
 		} else {
 			TRY(encode_bstr(c_r, &c_r_enc));
+			TRY(byte_array_append(&context_mac, &c_r_enc,
+					      capacity));
 		}
-		TRY(byte_array_append(&context_mac, &c_r_enc, capacity));
 	}
 	TRY(byte_array_append(&context_mac, id_cred, capacity));
 	TRY(byte_array_append(&context_mac, &th_enc, capacity));

@@ -45,12 +45,11 @@ static enum err id_cred_x_encode(enum id_cred_x_label label, int algo,
 
 	switch (label) {
 	case kid:
-		//todo update that to v15
 		map.id_cred_x_map_kid_present = true;
 		map.id_cred_x_map_kid.id_cred_x_map_kid_choice =
-			id_cred_x_map_kid_int_c;
-		map.id_cred_x_map_kid.id_cred_x_map_kid_int =
-			*((const int32_t *)id);
+			id_cred_x_map_kid_bstr_c;
+		map.id_cred_x_map_kid.id_cred_x_map_kid_bstr.value = id;
+		map.id_cred_x_map_kid.id_cred_x_map_kid_bstr.len = id_len;
 		break;
 	case x5chain:
 		map.id_cred_x_map_x5chain_present = true;
@@ -73,6 +72,41 @@ static enum err id_cred_x_encode(enum id_cred_x_label label, int algo,
 					     &map, &payload_len_out),
 		   0);
 
+	id_cred_x->len = (uint32_t)payload_len_out;
+
+	return ok;
+}
+
+/**
+ * @brief 			Reconstructs ID_CRED_x = { 4 : kid } from a kid
+ * 				that was conveyed as a CBOR int.
+ * @param kid_int 		The int from the plaintext.
+ * @param[out] id_cred_x	The encoded ID_CRED_x.
+ * @retval			Ok or error.
+ */
+static enum err kid_int2id_cred(int32_t kid_int, struct byte_array *id_cred_x)
+{
+	if (kid_int >= -24 && kid_int <= 23) {
+		/* The int stands for the byte string that holds its CBOR
+		 * encoding (RFC 9528 Section 3.3.2). */
+		BYTE_ARRAY_NEW(kid_bstr, 1, 1);
+		TRY(encode_int(&kid_int, 1, &kid_bstr));
+		return id_cred_x_encode(kid, 0, kid_bstr.ptr, kid_bstr.len,
+					id_cred_x);
+	}
+
+	/* Not a valid compact kid in RFC 9528; keep the int, as in drafts
+	 * before RFC 9528. */
+	struct id_cred_x_map map = { 0 };
+	size_t payload_len_out;
+
+	map.id_cred_x_map_kid_present = true;
+	map.id_cred_x_map_kid.id_cred_x_map_kid_choice =
+		id_cred_x_map_kid_int_c;
+	map.id_cred_x_map_kid.id_cred_x_map_kid_int = kid_int;
+	TRY_EXPECT(cbor_encode_id_cred_x_map(id_cred_x->ptr, id_cred_x->len,
+					     &map, &payload_len_out),
+		   0);
 	id_cred_x->len = (uint32_t)payload_len_out;
 
 	return ok;
@@ -127,15 +161,14 @@ static enum err plaintext2_split(struct byte_array *ptxt,
 		/*Note that if ID_CRED_x contains a single 'kid' parameter,
             i.e., ID_CRED_R = { 4 : kid_x }, only the byte string kid_x
             is conveyed in the plaintext encoded as a bstr or int*/
-		if (p.ptxt2_ID_CRED_R_choice == ptxt2_ID_CRED_R_map2_m_c) {
+		if (p.ptxt2_ID_CRED_R_choice == ptxt2_ID_CRED_R_bstr_c) {
 			TRY(id_cred_x_encode(
 				kid, 0, p.ptxt2_ID_CRED_R_bstr.value,
 				(uint32_t)p.ptxt2_ID_CRED_R_bstr.len,
 				id_cred_r));
 
 		} else {
-			int _kid = p.ptxt2_ID_CRED_R_int;
-			TRY(id_cred_x_encode(kid, 0, &_kid, 1, id_cred_r));
+			TRY(kid_int2id_cred(p.ptxt2_ID_CRED_R_int, id_cred_r));
 		}
 	}
 	TRY(_memcpy_s(sign_or_mac->ptr, sign_or_mac->len,
@@ -193,15 +226,14 @@ static enum err plaintext3_split(struct byte_array *ptxt,
 		/*Note that if ID_CRED_x contains a single 'kid' parameter,
             i.e., ID_CRED_I = { 4 : kid_x }, only the byte string kid_x
             is conveyed in the plaintext encoded as a bstr or int*/
-		if (p.ptxt3_ID_CRED_I_choice == ptxt3_ID_CRED_I_map3_m_c) {
+		if (p.ptxt3_ID_CRED_I_choice == ptxt3_ID_CRED_I_bstr_c) {
 			TRY(id_cred_x_encode(
 				kid, 0, p.ptxt3_ID_CRED_I_bstr.value,
 				(uint32_t)p.ptxt3_ID_CRED_I_bstr.len,
 				id_cred_i));
 
 		} else {
-			int _kid = p.ptxt3_ID_CRED_I_int;
-			TRY(id_cred_x_encode(kid, 0, &_kid, 1, id_cred_i));
+			TRY(kid_int2id_cred(p.ptxt3_ID_CRED_I_int, id_cred_i));
 		}
 	}
 	TRY(_memcpy_s(sign_or_mac->ptr, sign_or_mac->len,
