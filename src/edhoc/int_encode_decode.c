@@ -30,6 +30,18 @@ enum err encode_int(int32_t *in, uint32_t in_len, struct byte_array *out)
 	return ok;
 }
 
+enum err c_x_int_encode(int32_t in, struct byte_array *out)
+{
+	if (in < -24 || in > 23) {
+		return cbor_decoding_error;
+	}
+	TRY(encode_int(&in, 1, out));
+	if (!c_x_is_encoded_int(out)) {
+		return cbor_encoding_error;
+	}
+	return ok;
+}
+
 enum err decode_int(const struct byte_array *in, int32_t *out)
 {
 	size_t decode_len = 0;

@@ -102,8 +102,9 @@ msg1_parse(struct byte_array *msg1, enum method_type *method,
 
 	/*C_I*/
 	if (m.message_1_C_I_choice == message_1_C_I_int_c) {
-		c_i->ptr[0] = (uint8_t)m.message_1_C_I_int;
-		c_i->len = 1;
+		/* keep C_I in its CBOR encoding, as done for C_R in
+		 * plaintext2_split() and as used by the initiator */
+		TRY(c_x_int_encode(m.message_1_C_I_int, c_i));
 	} else {
 		TRY(_memcpy_s(c_i->ptr, c_i->len, m.message_1_C_I_bstr.value,
 			      (uint32_t)m.message_1_C_I_bstr.len));

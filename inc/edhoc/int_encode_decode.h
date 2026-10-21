@@ -41,4 +41,17 @@ enum err encode_int(const int32_t *in, uint32_t in_len, struct byte_array *out);
  */
 bool c_x_is_encoded_int(const struct byte_array *c_i);
 
+/**
+ * @brief                       Encodes a connection identifier received as 
+ *                              CBOR int into its one-byte CBOR encoding, which 
+ *                              is the internal representation of C_I/C_R. 
+ *                              According to RFC 9528 Section 3.3.2 only ints 
+ *                              in the range -24..23 are allowed.
+ * 
+ * @param in                    The decoded int.
+ * @param[out] out              The one-byte CBOR encoding of the int.
+ * @return                      Ok or error code.
+ */
+enum err c_x_int_encode(int32_t in, struct byte_array *out);
+
 #endif
