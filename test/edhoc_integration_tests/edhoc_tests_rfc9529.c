@@ -39,6 +39,14 @@ static const struct rfc9529_messages t2_messages = {
 		 &T2_RFC9529__MESSAGE_3_LEN, &T2_RFC9529__MESSAGE_4_LEN },
 };
 
+/* RFC 9529 Section 3 with C_R = h'', see edhoc_test_vectors_rfc9529.c */
+static const struct rfc9529_messages t2_empty_c_r_messages = {
+	.msg = { T2_EMPTY_C_R__MESSAGE_1, T2_EMPTY_C_R__MESSAGE_2,
+		 T2_EMPTY_C_R__MESSAGE_3, T2_EMPTY_C_R__MESSAGE_4 },
+	.len = { &T2_EMPTY_C_R__MESSAGE_1_LEN, &T2_EMPTY_C_R__MESSAGE_2_LEN,
+		 &T2_EMPTY_C_R__MESSAGE_3_LEN, &T2_EMPTY_C_R__MESSAGE_4_LEN },
+};
+
 static const struct rfc9529_messages *messages = &t1_messages;
 
 enum err tx_fkt(void *sock, struct byte_array *data)
@@ -204,7 +212,8 @@ void test_edhoc_responder_x509_x5t_rfc9529(void)
 	msg_cnt = 1;
 }
 
-void test_edhoc_initiator_static_dh_kid_rfc9529(void)
+static void initiator_static_dh_kid(const struct rfc9529_messages *m,
+				    const uint8_t *prk_out)
 {
 	enum err r;
 	struct other_party_cred cred_r;
@@ -218,7 +227,7 @@ void test_edhoc_initiator_static_dh_kid_rfc9529(void)
 	struct byte_array I_err_msg = { .ptr = I_err_msg_buf,
 					.len = sizeof(I_err_msg_buf) };
 
-	messages = &t2_messages;
+	messages = m;
 	msg_cnt = 1;
 
 	c_i.sock = NULL;
@@ -267,13 +276,15 @@ void test_edhoc_initiator_static_dh_kid_rfc9529(void)
 				tx_fkt, rx_fkt, ead_fkt);
 
 	zassert_equal(r, ok, "edhoc_initiator_run failed: %d", r);
-	zassert_mem_equal__(I_PRK_out.ptr, T2_RFC9529__PRK_out, I_PRK_out.len,
+	zassert_mem_equal__(I_PRK_out.ptr, prk_out, I_PRK_out.len,
 			    "wrong PRK_out");
 
 	msg_cnt = 1;
 }
 
-void test_edhoc_responder_static_dh_kid_rfc9529(void)
+static void responder_static_dh_kid(const struct rfc9529_messages *m,
+				    const uint8_t *id_c_r, uint32_t id_c_r_len,
+				    const uint8_t *prk_out)
 {
 	enum err r;
 	struct other_party_cred cred_i;
@@ -287,12 +298,12 @@ void test_edhoc_responder_static_dh_kid_rfc9529(void)
 	struct byte_array R_err_msg = { .ptr = R_err_msg_buf,
 					.len = sizeof(R_err_msg_buf) };
 
-	messages = &t2_messages;
+	messages = m;
 	msg_cnt = 1;
 
 	c_r.sock = NULL;
-	c_r.c_r.ptr = (uint8_t *)T2_RFC9529__C_R;
-	c_r.c_r.len = T2_RFC9529__C_R_LEN;
+	c_r.c_r.ptr = (uint8_t *)id_c_r;
+	c_r.c_r.len = id_c_r_len;
 	c_r.suites_r.len = T2_RFC9529__SUITES_R_LEN;
 	c_r.suites_r.ptr = (uint8_t *)T2_RFC9529__SUITES_R;
 	c_r.ead_2.len = 0;
@@ -335,8 +346,33 @@ void test_edhoc_responder_static_dh_kid_rfc9529(void)
 				tx_fkt, rx_fkt, ead_fkt);
 
 	zassert_equal(r, ok, "edhoc_responder_run failed: %d", r);
-	zassert_mem_equal__(R_PRK_out.ptr, T2_RFC9529__PRK_out, R_PRK_out.len,
+	zassert_mem_equal__(R_PRK_out.ptr, prk_out, R_PRK_out.len,
 			    "wrong PRK_out");
 
 	msg_cnt = 1;
+}
+
+void test_edhoc_initiator_static_dh_kid_rfc9529(void)
+{
+	initiator_static_dh_kid(&t2_messages, T2_RFC9529__PRK_out);
+}
+
+void test_edhoc_responder_static_dh_kid_rfc9529(void)
+{
+	responder_static_dh_kid(&t2_messages, T2_RFC9529__C_R,
+				T2_RFC9529__C_R_LEN, T2_RFC9529__PRK_out);
+}
+
+void test_edhoc_initiator_empty_c_r(void)
+{
+	initiator_static_dh_kid(&t2_empty_c_r_messages, T2_EMPTY_C_R__PRK_out);
+}
+
+void test_edhoc_responder_empty_c_r(void)
+{
+	/* non-NULL pointer, as an application would pass a buffer */
+	static const uint8_t empty_c_r[1];
+
+	responder_static_dh_kid(&t2_empty_c_r_messages, empty_c_r, 0,
+				T2_EMPTY_C_R__PRK_out);
 }

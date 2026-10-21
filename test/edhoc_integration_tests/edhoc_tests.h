@@ -52,6 +52,16 @@ void test_edhoc_initiator_static_dh_kid_rfc9529();
 void test_edhoc_responder_static_dh_kid_rfc9529();
 
 /**
+ * @brief       Test EDHOC initiator with RFC9529 Section 3 and C_R = h''.
+ */
+void test_edhoc_initiator_empty_c_r(void);
+
+/**
+ * @brief       Test EDHOC responder with RFC9529 Section 3 and C_R = h''.
+ */
+void test_edhoc_responder_empty_c_r(void);
+
+/**
  * @brief       Tests the compact encoding of a 'kid' in id_cred2kid().
  */
 void t_kid_id_cred2kid(void);

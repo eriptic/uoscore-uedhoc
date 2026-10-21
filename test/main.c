@@ -62,6 +62,8 @@
 #define T_KID_ID_CRED2KID 46
 #define T_KID_PLAINTEXT_SPLIT 47
 #define T_KID_RETRIEVE_CRED 48
+#define TEST_EDHOC_INITIATOR_EMPTY_C_R 49
+#define TEST_EDHOC_RESPONDER_EMPTY_C_R 50
 
 // if this macro is defined all tests will be executed
  #define EXECUTE_ALL_TESTS
@@ -336,6 +338,16 @@ ZTEST(uoscore_uedhoc, test_edhoc_responder_static_dh_kid_rfc9529)
 {
 	skip(TEST_EDHOC_RESPONDER_STATIC_DH_KID_RFC9529,
 	     test_edhoc_responder_static_dh_kid_rfc9529);
+}
+
+ZTEST(uoscore_uedhoc, test_edhoc_initiator_empty_c_r)
+{
+	skip(TEST_EDHOC_INITIATOR_EMPTY_C_R, test_edhoc_initiator_empty_c_r);
+}
+
+ZTEST(uoscore_uedhoc, test_edhoc_responder_empty_c_r)
+{
+	skip(TEST_EDHOC_RESPONDER_EMPTY_C_R, test_edhoc_responder_empty_c_r);
 }
 
 ZTEST(uoscore_uedhoc, t_kid_id_cred2kid)
