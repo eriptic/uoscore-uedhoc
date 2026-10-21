@@ -10,14 +10,16 @@ version tags.
 
 ## [Unreleased]
 
+## [3.1.1] - 2026-10-21
+
 ### Added
 
 - VS Code dev container (`.devcontainer/`) with Zephyr, the Zephyr SDK and
-  debug probe tools.
+  debug probe tools ([#86]).
 
 ### Changed
 
-- CI: build and test steps run inside the dev container.
+- CI: build and test steps run inside the dev container ([#86]).
 
 ## [3.1.0] - 2026-10-21
 
@@ -80,7 +82,8 @@ version tags.
 - samples: fix linker errors in the Linux OSCORE server ([#74]).
 - CI: fix `No module named jsonschema` ([#84]).
 
-[Unreleased]: https://github.com/eriptic/uoscore-uedhoc/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/eriptic/uoscore-uedhoc/compare/v3.1.1...HEAD
+[3.1.1]: https://github.com/eriptic/uoscore-uedhoc/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/eriptic/uoscore-uedhoc/compare/v3.0.5...v3.1.0
 [#70]: https://github.com/eriptic/uoscore-uedhoc/pull/70
 [#71]: https://github.com/eriptic/uoscore-uedhoc/pull/71
@@ -96,3 +99,4 @@ version tags.
 [#83]: https://github.com/eriptic/uoscore-uedhoc/pull/83
 [#84]: https://github.com/eriptic/uoscore-uedhoc/pull/84
 [#85]: https://github.com/eriptic/uoscore-uedhoc/pull/85
+[#86]: https://github.com/eriptic/uoscore-uedhoc/pull/86
