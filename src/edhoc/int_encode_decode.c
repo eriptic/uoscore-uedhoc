@@ -20,17 +20,6 @@ bool c_x_is_encoded_int(const struct byte_array *c_i)
 	}
 }
 
-
-bool c_r_is_raw_int(const struct byte_array *c_r)
-{
-	if (c_r->len == 1 && c_r->ptr[0] >= -24 && c_r->ptr[0] <= 23) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
-
 enum err encode_int(int32_t *in, uint32_t in_len, struct byte_array *out)
 {
 	size_t payload_len_out;
