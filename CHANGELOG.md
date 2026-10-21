@@ -15,7 +15,7 @@ version tags.
 ### Added
 
 - VS Code dev container (`.devcontainer/`) with Zephyr, the Zephyr SDK and
-  debug probe tools ([#86]).
+  debug probe tools, plus Node.js/npm for release versioning ([#86]).
 
 ### Changed
 

@@ -17,7 +17,7 @@ sudo apt install --no-install-recommends -y \
     openssh-client python3-dev python3-pip python3-setuptools python3-tk \
     python3-venv python3-wheel xz-utils file make gcc gdb gcc-multilib \
     g++-multilib libsdl2-dev libmagic1 tar unzip bzip2 udev usbutils curl \
-    cu screen net-tools tcpdump xxd lcov python3-tabulate
+    cu screen net-tools tcpdump xxd lcov python3-tabulate nodejs npm
 
 # Cleanup
 echo "Cleaning up..."
