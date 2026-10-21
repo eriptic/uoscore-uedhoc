@@ -1,0 +1,27 @@
+# West manifest for the uoscore-uedhoc dev container.
+# Imports only the Zephyr modules needed to build the tests (native_sim),
+# the ROM report (nrf9160dk) and the Zephyr samples (nrf52840dk) to reduce
+# container build time and size.
+#
+# To add support for new hardware, add the required HAL to name-allowlist
+# below and rebuild the dev container.
+manifest:
+  remotes:
+    - name: zephyrproject-rtos
+      url-base: https://github.com/zephyrproject-rtos
+  projects:
+    - name: zephyr
+      remote: zephyrproject-rtos
+      # Use a release tag here for reproducible builds, or a branch such as
+      # main to track ongoing development.
+      revision: main
+      clone-depth: 1
+      import:
+        name-allowlist:
+          - cmsis                # ARM CMSIS headers (required for all ARM targets)
+          - cmsis_6              # CMSIS v6 core headers (cmsis_core.h, required for Cortex-M)
+          - hal_nordic           # Nordic nRF HAL (nrf52840dk, nrf9160dk)
+          - picolibc             # C library
+          - segger               # SEGGER RTT (used by Nordic boards)
+  self:
+    path: manifest-repo

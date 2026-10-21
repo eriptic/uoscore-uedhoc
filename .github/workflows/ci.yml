@@ -10,46 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install Zephyr tools
-        run: |
-          sudo apt-get update
-          sudo apt-get upgrade
-          sudo apt install --no-install-recommends git cmake ninja-build gperf \
-          ccache dfu-util device-tree-compiler wget python3-dev python3-venv \
-          python3-tk xz-utils file make gcc gcc-multilib g++-multilib gdb \
-          libsdl2-dev libmagic1 python3-tabulate lcov
-          cmake --version
-          python3 --version
-          dtc --version
-
-          sudo apt-get install python3-venv
-          python3 -m venv ~/zephyrproject/.venv
-          source ~/zephyrproject/.venv/bin/activate
-
-          pip3 install west
-          west init ~/zephyrproject
-          cd ~/zephyrproject
-          west update
-
-          west packages pip --install
-          west zephyr-export
-
-          cd ~/zephyrproject/zephyr
-          west sdk install
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
+# All build and test steps run inside the dev container defined in
+# .devcontainer/, so CI uses the same toolchain as local development.
+      - name: Install dev container CLI
+        run: npm install -g @devcontainers/cli@0.89.0
+
+      - name: Build and start dev container
+        run: devcontainer up --workspace-folder .
+
 ### build, test and archive
 # native_sim
       - name: Build native_sim
         run: |
-           source ~/zephyrproject/zephyr/zephyr-env.sh
-           source ~/zephyrproject/.venv/bin/activate
-           cd test/
-           bash ci_scripts/test_build_options.sh
+           devcontainer exec --workspace-folder . bash -ec '
+             cd test/
+             bash ci_scripts/test_build_options.sh'
 
       - name: Archive static lib
         uses: actions/upload-artifact@v4
@@ -60,10 +40,9 @@ jobs:
 # native_sim/native/64
       - name: Build native_sim/native/64
         run: |
-           source ~/zephyrproject/zephyr/zephyr-env.sh
-           source ~/zephyrproject/.venv/bin/activate
-           cd test/
-           bash ci_scripts/test_build_options.sh
+           devcontainer exec --workspace-folder . bash -ec '
+             cd test/
+             bash ci_scripts/test_build_options.sh'
 
       - name: Archive static lib
         uses: actions/upload-artifact@v4
@@ -74,16 +53,16 @@ jobs:
 # Build Linux samples
       - name: Build linux samples
         run: |
-           cd test/
-           bash ci_scripts/test_samples.sh
+           devcontainer exec --workspace-folder . bash -ec '
+             cd test/
+             bash ci_scripts/test_samples.sh'
 
 ### Generate ROM report
       - name: Generate ROM report
         run: |
-           source ~/zephyrproject/zephyr/zephyr-env.sh
-           source ~/zephyrproject/.venv/bin/activate
-           cd test/
-           bash ci_scripts/flash_report_gen.sh
+           devcontainer exec --workspace-folder . bash -ec '
+             cd test/
+             bash ci_scripts/flash_report_gen.sh'
 
       - name: Upload rom report with tinycrypt
         uses: actions/upload-artifact@v4
@@ -100,10 +79,9 @@ jobs:
 ### Generate stack report
       - name: Generate stack report
         run: |
-           source ~/zephyrproject/zephyr/zephyr-env.sh
-           source ~/zephyrproject/.venv/bin/activate
-           cd test/
-           bash ci_scripts/stack_report_gen.sh
+           devcontainer exec --workspace-folder . bash -ec '
+             cd test/
+             bash ci_scripts/stack_report_gen.sh'
 
       - name: Upload stack report
         uses: actions/upload-artifact@v4
@@ -114,16 +92,15 @@ jobs:
 ### Generate test coverage report
       - name: Build native_sim with coverage information
         run: |
-           source ~/zephyrproject/zephyr/zephyr-env.sh
-           source ~/zephyrproject/.venv/bin/activate
-           cd test/
-           rm -rf build
-           rm -rf build_lib_test
-           west build -b native_sim -- -DCONFIG_COVERAGE=y
-           west build -t run
-           lcov --capture --directory ./ --output-file lcov.info -q --rc branch_coverage=1 --ignore-errors inconsistent,mismatch
-           genhtml lcov.info --output-directory lcov_html -q --ignore-errors source,inconsistent,corrupt --branch-coverage --legend
-           tar -zcvf github-pages.tar.gz lcov_html
+           devcontainer exec --workspace-folder . bash -ec '
+             cd test/
+             rm -rf build
+             rm -rf build_lib_test
+             west build -b native_sim -- -DCONFIG_COVERAGE=y
+             west build -t run
+             lcov --capture --directory ./ --output-file lcov.info -q --rc branch_coverage=1 --ignore-errors inconsistent,mismatch
+             genhtml lcov.info --output-directory lcov_html -q --ignore-errors source,inconsistent,corrupt --branch-coverage --legend
+             tar -zcvf github-pages.tar.gz lcov_html'
 
       - name: Upload test coverage report
         uses: actions/upload-pages-artifact@v4

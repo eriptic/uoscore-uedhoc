@@ -1,0 +1,78 @@
+// Dev container for building and testing uoscore-uedhoc with Zephyr.
+// Usage: see .devcontainer/README.md
+// Reference: https://containers.dev/implementors/json_reference/
+{
+	"name": "uoscore-uedhoc Zephyr Dev Container",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	// Privileged container in order to access /dev (USB debug probes)
+	"privileged": true,
+	"remoteUser": "ubuntu",
+	// Make sure the bind-mount sources below exist on the host, otherwise the
+	// container fails to start (e.g. on CI runners without ~/.ssh).
+	"initializeCommand": "mkdir -p -m 700 \"$HOME/.ssh\" && touch \"$HOME/.gitconfig\"",
+	// Mount all of /dev so USB debug probes attached to the host are visible in
+	// the container.
+	// Mount ssh folder read-only for git (container must not modify host keys).
+	// Mount gitconfig in order to use the git name and email of the host.
+	"mounts": [
+		"source=/dev,target=/dev,type=bind",
+		"source=${localEnv:HOME}/.ssh,target=/home/ubuntu/.ssh,type=bind,readonly",
+		"source=${localEnv:HOME}/.gitconfig,target=/home/ubuntu/.gitconfig,type=bind"
+	],
+	// Host networking so the CoAP samples can reach boards connected via
+	// IPv6 over BLE (see scripts/ble_connect.sh) and the Linux samples.
+	"runArgs": [
+		"--hostname=devcontainer",
+		"--network=host",
+		"--add-host",
+		"devcontainer:127.0.0.1"
+	],
+	// The external libraries are git submodules.
+	"postCreateCommand": "git submodule update --init --recursive",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"cmake.sourceDirectory": "${workspaceFolder}/test",
+				"cmake.configureOnOpen": false,
+				"C_Cpp.default.compileCommands": "${workspaceFolder}/test/build/compile_commands.json",
+				"C_Cpp.default.includePath": [
+					"${workspaceFolder}/inc/**",
+					"/home/ubuntu/zephyrproject/zephyr/include"
+				],
+				"editor.rulers": [
+					80
+				],
+				"[c]": {
+					"editor.insertSpaces": false,
+					"editor.tabSize": 8,
+					"editor.defaultFormatter": "xaver.clang-format"
+				},
+				"[cpp]": {
+					"editor.insertSpaces": false,
+					"editor.tabSize": 8,
+					"editor.defaultFormatter": "xaver.clang-format"
+				},
+				"files.associations": {
+					"*.dtsi": "dts",
+					"*.dts": "dts",
+					"*.overlay": "dts"
+				},
+				"dts.zephyr.project-root": "/home/ubuntu/zephyrproject"
+			},
+			"extensions": [
+				"mhutchie.git-graph",
+				"ms-vscode.cpptools-extension-pack",
+				"ms-vscode.cmake-tools",
+				"ms-python.python",
+				"marus25.cortex-debug",
+				"mcu-debug.debug-tracker-vscode",
+				"luveti.kconfig",
+				"nordic-semiconductor.nrf-devicetree",
+				"ms-vscode.vscode-serial-monitor",
+				"xaver.clang-format"
+			]
+		}
+	}
+}

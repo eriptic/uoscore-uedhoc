@@ -23,6 +23,10 @@ For more information visit our website [eriptic.com](https://eriptic.com/) or se
 * run `make` 
 * link the static library `build/libuoscore-uedhoc.a` in your project
 
+## Dev Container
+
+The repository contains a VS Code dev container with Zephyr, the Zephyr SDK and debug probe tools preinstalled. Open the folder in VS Code and select **Reopen in Container** to build and run the tests without installing a local toolchain. The CI uses the same container. See [.devcontainer/README.md](.devcontainer/README.md) for details.
+
 ## Test coverage
 * [Test coverage report uOSCORE](https://eriptic.github.io/uoscore-uedhoc/src/oscore/index.html)
 * [Test coverage report uEDHOC](https://eriptic.github.io/uoscore-uedhoc/src/edhoc/index.html)
