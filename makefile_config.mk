@@ -83,8 +83,8 @@ FEATURES += -DCRED_R_SIZE=293
 # Size of CRED_I
 FEATURES += -DCRED_I_SIZE=293 
 
-# Number of supported suites by the initiator
-FEATURES += -DSUITES_I_SIZE=1 
+# Number of supported suites by the initiator, e.g., [6, 2] as in RFC 9529
+FEATURES += -DSUITES_I_SIZE=2
 
 ################################################################################
 # RAM optimization OSCORE
