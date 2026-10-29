@@ -57,6 +57,6 @@ void test_exporter(void)
 			    master_salt.len, "wrong master_salt");
 
 #ifdef REPORT_STACK_USAGE
-	thread_analyzer_print();
+	thread_analyzer_print(0);
 #endif
 }

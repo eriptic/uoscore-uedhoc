@@ -55,7 +55,9 @@ struct byte_array R_err_msg = { .ptr = R_err_msg_buf,
 				.len = sizeof(R_err_msg_buf) };
 
 /* size of stack area used by each thread */
-#define STACKSIZE 7500
+#ifndef STACKSIZE
+#define STACKSIZE 10240
+#endif
 /* scheduling priority used by each thread */
 #define PRIORITY 7
 K_THREAD_STACK_DEFINE(thread_initiator_stack_area, STACKSIZE);
@@ -231,7 +233,7 @@ void thread_initiator(void *vec_num, void *dummy2, void *dummy3)
 	PRINT_ARRAY("OSCORE Master Salt", I_master_salt.ptr, I_master_salt.len);
 
 #ifdef REPORT_STACK_USAGE
-	thread_analyzer_print();
+	thread_analyzer_print(0);
 #endif
 
 	return;
@@ -329,7 +331,7 @@ void thread_responder(void *vec_num, void *dummy2, void *dummy3)
 	PRINT_ARRAY("OSCORE Master Salt", R_master_salt.ptr, R_master_salt.len);
 
 #ifdef REPORT_STACK_USAGE
-	thread_analyzer_print();
+	thread_analyzer_print(0);
 #endif
 
 	return;
