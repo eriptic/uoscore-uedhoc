@@ -44,7 +44,8 @@ waiting to receive in rx()
 ```
 * On the Linux host in the folder `samples/linux_edhoc/initiator` build and run the initiator:
 ```bash
-make
+cmake -S . -B build
+cmake --build build
 ./build/initiator
 ``` 
 * Both parties should run the EDHOC protocol to an end and derive the same shared secret. The output on both sides -- initiator and responder should look like this:
@@ -85,7 +86,8 @@ sudo ufw status
 ```
 * On the Linux host in the folder `samples/linux_edhoc/responder` build and run the responder:
 ```
-make
+cmake -S . -B build
+cmake --build build
 ./build/responder
 ``` 
 
