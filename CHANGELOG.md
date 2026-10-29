@@ -12,12 +12,98 @@ version tags.
 
 ### Upgrade notes
 
+- **Build system:** the top-level `Makefile`, `makefile_config.mk` and the
+  Linux sample Makefiles are removed. Build the library with CMake
+  (`cmake --preset default && cmake --build --preset default`, or
+  `add_subdirectory()` and link `uoscore-uedhoc::uoscore-uedhoc`). The former
+  `makefile_config.mk` settings are named options; the preset
+  `legacy-makefile-config` reproduces their old values. See "How to Build and
+  Link" and "Additional configuration options" in the README.
+- **CMake 3.28** or newer is required, the same minimum as Zephyr.
+- **C standard:** the standalone CMake build compiles the library as ISO C17
+  without GNU extensions (`-std=c17`), the same as Zephyr. Applications that
+  link the library need at least C17. The former Makefile used `-std=c11`.
+- **Zephyr module:** the module's `CMakeLists.txt`, `Kconfig` and
+  `uoscore_nvm.c` are now in this repository (`zephyr/`), and `zephyr/module.yml`
+  no longer uses `cmake-ext`/`kconfig-ext`. The Kconfig symbols `UOSCORE`,
+  `UEDHOC`, `UOSCORE_NVM_SUPPORT`, `UOSCORE_DEBUG` and `UEDHOC_DEBUG` are
+  unchanged. The copy in the Zephyr tree (`modules/uoscore-uedhoc/`) is no
+  longer used by this revision and can be removed there.
+- **`CONFIG_UOSCORE_NVM_SUPPORT`** still requires `CONFIG_SETTINGS` and uses
+  the settings-based `nvm_write_ssn()`/`nvm_read_ssn()`, unless the new
+  `CONFIG_UOSCORE_NVM_CUSTOM=y` says that the application implements them.
+- **Test debug output is off by default** (about 200 instead of 8,000 lines
+  per run). Use `test/overlay-debug.conf` to turn it on.
+- **Test options:** `-DCOMMAND_LINE_FLAGS="..."` is replaced by Kconfig
+  options, e.g. `-DCONFIG_UOSCORE_UEDHOC_VLA=y -DCONFIG_UEDHOC_MESSAGE_4=y`.
+  The test configurations are Twister scenarios in `test/tests.yaml`; run them
+  with `west twister -T test --integration`.
+- **TinyCrypt** is an add-on to Mbed TLS (`UOSCORE_UEDHOC_TINYCRYPT`), not an
+  alternative: the library needs Mbed TLS/PSA in every configuration.
 - **Responder C_I output:** for an int C_I, `edhoc_responder_run_extended()`
   now returns its CBOR encoding (e.g. `0x2d` for -14, as in RFC 9528
   Appendix A.1) instead of the truncated raw value. Check code that derives
   OSCORE IDs from it.
 - **Cipher suites:** the responder now rejects suites that aren't in
   `suites_r`.
+
+### Added
+
+- CMake build: top-level `CMakeLists.txt` with one `uoscore-uedhoc` target,
+  named configuration options and `CMakePresets.json` with three presets
+  (`default`, `legacy-makefile-config`, `ci`).
+- Twister test scenarios in `test/tests.yaml`. CI runs them with
+  `west twister -T test --integration`: eight scenarios on `native_sim` and
+  `native_sim/native/64` (`uoscore_uedhoc.debug` is built only).
+- `test/overlay-debug.conf`: turns on the debug output of the library and the
+  tests for development, e.g.
+  `west build ... -- -DEXTRA_CONF_FILE=overlay-debug.conf`.
+- CI checks that the API headers `edhoc.h` and `oscore.h` are self-contained:
+  a `.c` file that includes only that header must compile (CMake header set
+  verification).
+- `cmake/uoscore_uedhoc_sources.cmake`: the single list of library sources,
+  used by the CMake and Zephyr builds; `cmake/check_source_list.cmake` checks it
+  in CI.
+- Zephyr Kconfig options `UOSCORE_UEDHOC_EXTERNAL_DEPS`, `UOSCORE_UEDHOC_VLA`,
+  `UEDHOC_MESSAGE_4`, `UOSCORE_UEDHOC_TINYCRYPT`, `UOSCORE_UEDHOC_COMPACT25519`,
+  `UOSCORE_UEDHOC_UNIT_TEST` and `UOSCORE_NVM_CUSTOM`.
+
+### Changed
+
+- The Zephyr tests and samples build the library through the Zephyr module
+  instead of running `make` through `ExternalProject_Add`. The library and the
+  test application now use the same compile definitions (previously the
+  library used the `makefile_config.mk` buffer sizes and the test application
+  the header defaults, and Mbed TLS was configured differently for the two).
+- The Linux samples are standalone CMake projects. They no longer rename files
+  in the `compact25519` and `tinycrypt` submodules.
+- Dev container: Ninja 1.13.2 from PyPI replaces Ubuntu's 1.11.1, so parallel
+  Twister builds share the CPUs through Twister's job server. junit2html
+  (pinned) and the Live Preview extension are installed to view Twister's
+  test report as HTML (see `test/README.MD`). Rebuild the container to get
+  these.
+- Dev container and tests: support for the Infineon KIT_PSE84_AI
+  (`kit_pse84_ai/pse846gps2dbzc4a/m33`). The container fetches the
+  `hal_infineon` and `mcuboot` (imgtool, signs the image) modules and installs
+  Infineon OpenOCD 5.20.0 and probe-rs 0.32.0. The board is in
+  `platform_allow` of `test/tests.yaml`; CI still runs on `native_sim` only.
+- The Zephyr tests use Zephyr's zcbor and Mbed TLS 4 / TF-PSA-Crypto modules
+  instead of `externals/`; only compact25519 is still built from
+  `externals/compact25519`, now by the Zephyr module itself.
+  `uoscore_uedhoc.tinycrypt` keeps building everything from `externals/`
+  (`test/overlay-external-deps.conf`). The dev container fetches the
+  `mbedtls`, `tf-psa-crypto`, `zcbor`, `trusted-firmware-m` and `tf-m-tests`
+  modules.
+- Zephyr Kconfig: `UOSCORE_UEDHOC_COMPACT25519` no longer requires
+  `UOSCORE_UEDHOC_EXTERNAL_DEPS`. With Zephyr's Mbed TLS, `UEDHOC` enables
+  X.509 certificate parsing (`MBEDTLS_X509_CRT_PARSE_C`, `MBEDTLS_MD_C`),
+  which `src/edhoc/cert.c` needs.
+
+### Removed
+
+- `Makefile`, `makefile_config.mk` and the Linux sample Makefiles.
+- `test/ci_scripts/test_build_options.sh`; its configurations are Twister
+  scenarios now.
 
 ### Fixed
 
@@ -27,6 +113,13 @@ version tags.
 - edhoc: add length checks to the built-in X.509 parser ([#87]).
 - edhoc: the responder checks that it supports the selected cipher suite
   ([#87]).
+- edhoc: `src/edhoc/cert.c` builds with Mbed TLS 4 (Zephyr's current Mbed TLS)
+  as well as 3.6.
+- test: the initiator/responder threads of the EDHOC interaction tests had
+  7500-byte stacks; with Zephyr's Mbed TLS they need up to 8336 bytes
+  (measured on the KIT_PSE84_AI), which overflowed. They now have 10240 bytes
+  (`STACKSIZE`, can be overridden at build time). `REPORT_STACK_USAGE` builds
+  again with the current `thread_analyzer_print()` API.
 
 ## [3.1.1] - 2026-10-21
 
