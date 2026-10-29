@@ -323,15 +323,21 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 	/* and find CN (Common Name), further referred to as "issuer_id" */
 	const mbedtls_x509_name *p = &m_cert.issuer;
 
-#ifdef DEBUG_PRINT
+#if defined(DEBUG_PRINT) && MBEDTLS_VERSION_MAJOR < 4
 	const char *short_name;
 #endif
 	const mbedtls_asn1_buf *issuer_id = NULL;
 	while (p) {
 #ifdef DEBUG_PRINT
+#if MBEDTLS_VERSION_MAJOR >= 4
+		/* Mbed TLS 4 has no public OID-to-name lookup. */
+		PRINT_ARRAY("        OID", p->oid.p, (uint32_t)p->oid.len);
+		PRINTF("        value: %.*s\n", (int)p->val.len, p->val.p);
+#else
 		mbedtls_oid_get_attr_short_name(&p->oid, &short_name);
 		PRINTF("        %s: %.*s\n", short_name, (int)p->val.len,
 		       p->val.p);
+#endif
 #endif
 		if (0 == MBEDTLS_OID_CMP(MBEDTLS_OID_AT_CN, &p->oid)) {
 			issuer_id = &p->val;
@@ -344,7 +350,11 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 	enum sign_alg sign_alg;
 
 	/* make sure it is ECDSA */
+#if MBEDTLS_VERSION_MAJOR >= 4
+	if (MBEDTLS_PK_SIGALG_ECDSA == m_cert.sig_pk) {
+#else
 	if (MBEDTLS_PK_ECDSA == m_cert.sig_pk) {
+#endif
 		sign_alg = ES256;
 	} else {
 		mbedtls_x509_crt_free(&m_cert);
