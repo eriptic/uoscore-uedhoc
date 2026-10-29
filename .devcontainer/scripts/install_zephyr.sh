@@ -15,10 +15,10 @@ add_to_bashrc() {
 }
 
 # Pinned Python tool versions for reproducible builds.
-# To update, change the value here and rebuild the dev container. Keep these in
-# sync with the "Tool versions" table in .devcontainer/README.md.
 WEST_VERSION="1.5.0"
 JSONSCHEMA_VERSION="4.21.1"
+NINJA_VERSION="1.13.2"
+JUNIT2HTML_VERSION="31.1.4"
 
 # Install Python virtual environment
 echo "Setting up Python virtual environment..."
@@ -31,7 +31,8 @@ git config --global http.version HTTP/1.1
 
 # Install west and initialize Zephyr project
 echo "Installing West and initializing Zephyr project..."
-pip install "west==${WEST_VERSION}" "jsonschema==${JSONSCHEMA_VERSION}"
+pip install "west==${WEST_VERSION}" "jsonschema==${JSONSCHEMA_VERSION}" "ninja==${NINJA_VERSION}" \
+	"junit2html==${JUNIT2HTML_VERSION}"
 mkdir -p "${ZEPHYR_DIR}/manifest-repo"
 cp /scripts/west.yml "${ZEPHYR_DIR}/manifest-repo/west.yml"
 cd "${ZEPHYR_DIR}"

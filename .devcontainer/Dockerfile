@@ -29,15 +29,15 @@ RUN /scripts/install_zephyr.sh
 COPY scripts/install_zephyr_sdk.sh /scripts/install_zephyr_sdk.sh
 RUN /scripts/install_zephyr_sdk.sh
 
-# Install debug probe tools (J-Link, pyOCD)
+# Install debug probe tools (J-Link, pyOCD, Infineon OpenOCD, probe-rs)
 COPY scripts/install_debuggers.sh /scripts/install_debuggers.sh
 RUN /scripts/install_debuggers.sh
 
-# Make west, the Zephyr environment and J-Link available in non-interactive
+# Make west, the Zephyr environment and the debug probe tools available in non-interactive
 # shells too (e.g. CI steps run via `devcontainer exec`).
 ENV VIRTUAL_ENV=${ZEPHYR_DIR}/.venv
 ENV ZEPHYR_BASE=${ZEPHYR_DIR}/zephyr
-ENV PATH="${VIRTUAL_ENV}/bin:/opt/SEGGER/JLink:${PATH}"
+ENV PATH="${VIRTUAL_ENV}/bin:/opt/SEGGER/JLink:/opt/infineon/openocd/bin:/opt/probe-rs:${PATH}"
 
 # Default shell command
 CMD ["/bin/bash"]

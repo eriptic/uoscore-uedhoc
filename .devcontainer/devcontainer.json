@@ -71,7 +71,9 @@
 				"luveti.kconfig",
 				"nordic-semiconductor.nrf-devicetree",
 				"ms-vscode.vscode-serial-monitor",
-				"xaver.clang-format"
+				"xaver.clang-format",
+				// Live Preview: shows the HTML test report (see test/README.MD)
+				"ms-vscode.live-server"
 			]
 		}
 	}

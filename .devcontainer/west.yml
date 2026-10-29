@@ -1,7 +1,7 @@
 # West manifest for the uoscore-uedhoc dev container.
-# Imports only the Zephyr modules needed to build the tests (native_sim),
-# the ROM report (nrf9160dk) and the Zephyr samples (nrf52840dk) to reduce
-# container build time and size.
+# Imports only the Zephyr modules needed to build the tests, the ROM report
+# (nrf9160dk), the Zephyr samples (nrf52840dk) and the Infineon KIT_PSE84_AI
+# to reduce container build time and size.
 #
 # To add support for new hardware, add the required HAL to name-allowlist
 # below and rebuild the dev container.
@@ -20,8 +20,15 @@ manifest:
         name-allowlist:
           - cmsis                # ARM CMSIS headers (required for all ARM targets)
           - cmsis_6              # CMSIS v6 core headers (cmsis_core.h, required for Cortex-M)
+          - hal_infineon         # Infineon HAL (kit_pse84_ai)
           - hal_nordic           # Nordic nRF HAL (nrf52840dk, nrf9160dk)
+          - mbedtls              # Mbed TLS, PSA Crypto provider used by the library
+          - mcuboot              # imgtool, signs kit_pse84_ai images
           - picolibc             # C library
           - segger               # SEGGER RTT (used by Nordic boards)
+          - tf-m-tests           # TF-M test sources (required by trusted-firmware-m)
+          - tf-psa-crypto        # PSA Crypto implementation (required by mbedtls)
+          - trusted-firmware-m   # TF-M secure firmware (e.g. kit_pse84_ai/.../m33/ns)
+          - zcbor                # CBOR library used by the library
   self:
     path: manifest-repo
