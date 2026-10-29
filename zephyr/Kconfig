@@ -1,0 +1,117 @@
+# Copyright (c) 2022 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+#
+# Moved from the Zephyr tree (modules/uoscore-uedhoc/Kconfig). The symbols
+# UOSCORE, UEDHOC, UOSCORE_NVM_SUPPORT, UOSCORE_DEBUG and UEDHOC_DEBUG keep
+# their meaning; the other options are new.
+
+config UOSCORE_UEDHOC_EXTERNAL_DEPS
+	bool "uoscore/uedhoc dependencies are provided by the application"
+	help
+	  By default the libraries use Zephyr's zcbor module and a PSA Crypto
+	  provider. With this option the application provides zcbor and the
+	  crypto engine as CMake targets instead, and lists them in the CMake
+	  variable UOSCORE_UEDHOC_DEPENDENCY_TARGETS before
+	  find_package(Zephyr). The test scenario uoscore_uedhoc.tinycrypt uses
+	  this to build the dependencies from externals/.
+
+menuconfig UOSCORE
+	bool "UOSCORE library"
+	depends on (ZCBOR && ZCBOR_CANONICAL) || UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select UOSCORE_UEDHOC_CRYPTO_COMMON
+	help
+	  This option enables the UOSCORE library.
+
+if UOSCORE
+
+config UOSCORE_NVM_SUPPORT
+	bool "Non-volatile storage support for OSCORE SSN persistence"
+	depends on SETTINGS || UOSCORE_NVM_CUSTOM
+	help
+	  Store the OSCORE Sender Sequence Number in non-volatile memory, so
+	  that it survives a reboot (defines OSCORE_NVM_SUPPORT). By default
+	  nvm_write_ssn() and nvm_read_ssn() are implemented with the settings
+	  subsystem.
+
+config UOSCORE_NVM_CUSTOM
+	bool "Application implements the OSCORE NVM functions"
+	help
+	  The application provides nvm_write_ssn() and nvm_read_ssn() instead
+	  of the implementation based on the settings subsystem. This also
+	  allows UOSCORE_NVM_SUPPORT without SETTINGS.
+
+config UOSCORE_DEBUG
+	bool "Debug logs in the uoscore library"
+
+endif # UOSCORE
+
+menuconfig UEDHOC
+	bool "UEDHOC library"
+	depends on (ZCBOR && ZCBOR_CANONICAL) || UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select UOSCORE_UEDHOC_CRYPTO_COMMON
+	help
+	  This option enables the UEDHOC library.
+
+if UEDHOC
+
+config UEDHOC_X509_MBEDTLS
+	bool
+	default y if MBEDTLS_BUILTIN && !UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select MBEDTLS_X509_CRT_PARSE_C
+	select MBEDTLS_MD_C
+	help
+	  src/edhoc/cert.c parses X.509 certificates with Mbed TLS.
+
+config UEDHOC_DEBUG
+	bool "Debug logs in the uedhoc library"
+
+config UEDHOC_MESSAGE_4
+	bool "Use EDHOC message_4"
+	help
+	  Send and expect message_4. Use it when no protected application
+	  message is sent from the responder to the initiator.
+
+endif # UEDHOC
+
+if UOSCORE || UEDHOC
+
+config UOSCORE_UEDHOC_CRYPTO_COMMON
+	bool
+	select PSA_CRYPTO if !UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select PSA_WANT_ALG_ECDH if !UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select PSA_WANT_ALG_ECDSA if !UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT if !UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT if !UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE if !UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY if !UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select PSA_WANT_ECC_SECP_R1_256 if !UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select PSA_WANT_KEY_TYPE_AES if !UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select PSA_WANT_ALG_CCM if !UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select PSA_WANT_KEY_TYPE_HMAC if !UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select PSA_WANT_ALG_HMAC if !UOSCORE_UEDHOC_EXTERNAL_DEPS
+	select PSA_WANT_ALG_SHA_256 if !UOSCORE_UEDHOC_EXTERNAL_DEPS
+
+config UOSCORE_UEDHOC_TINYCRYPT
+	bool "Also use TinyCrypt where supported (deprecated)"
+	depends on UOSCORE_UEDHOC_EXTERNAL_DEPS
+	help
+	  Prefer TinyCrypt over Mbed TLS for the operations that
+	  src/common/crypto_wrapper.c implements with TinyCrypt; Mbed TLS is
+	  still used for the rest. TinyCrypt is unmaintained and no longer part
+	  of Zephyr, so it is only available with UOSCORE_UEDHOC_EXTERNAL_DEPS.
+
+config UOSCORE_UEDHOC_COMPACT25519
+	bool "Use compact25519 for X25519 and Ed25519 (EDHOC suites 0 and 1)"
+	help
+	  PSA Crypto has no Ed25519. Without UOSCORE_UEDHOC_EXTERNAL_DEPS the
+	  module builds compact25519 from the externals/compact25519 git
+	  submodule of this repository.
+
+config UOSCORE_UEDHOC_VLA
+	bool "Size buffers at runtime with variable length arrays"
+
+config UOSCORE_UEDHOC_UNIT_TEST
+	bool "Make internal functions visible to unit tests"
+	depends on ZTEST
+
+endif # UOSCORE || UEDHOC
