@@ -14,7 +14,6 @@
 
 cd ../test
 rm -rf build/
-rm -rf ../build/
 rm -rf ../report_coverage/
 rm lcov.info
 west build -b native_sim -- -DCONFIG_COVERAGE=y

@@ -18,7 +18,7 @@ rm -rf build_reports/rom_report_nrf91_with_tinycrypt.txt
 # MESSAGE_4:    YES
 # VLA:          YES
 rm -rf build
-west build -b nrf9160dk/nrf9160 -- -DCOMMAND_LINE_FLAGS="-DMESSAGE_4 -DTINYCRYPT"
+west build -b nrf9160dk/nrf9160 -- -DCONFIG_UEDHOC_MESSAGE_4=y -DCONFIG_UOSCORE_UEDHOC_TINYCRYPT=y -DEXTRA_CONF_FILE=overlay-external-deps.conf
 west build -t rom_report > build_reports/rom_report_nrf91_with_tinycrypt.txt
 echo "\n\n\n"
 
@@ -26,5 +26,5 @@ echo "\n\n\n"
 # MESSAGE_4:    YES
 # VLA:          YES
 rm -rf build
-west build -b nrf9160dk/nrf9160 -- -DCOMMAND_LINE_FLAGS="-DMESSAGE_4 -DMBEDTLS"
+west build -b nrf9160dk/nrf9160 -- -DCONFIG_UEDHOC_MESSAGE_4=y
 west build -t rom_report > build_reports/rom_report_nrf91_with_mbedtls.txt

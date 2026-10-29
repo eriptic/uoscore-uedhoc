@@ -1,0 +1,60 @@
+# Test configurations, run by Twister. See README.MD.
+
+common:
+  tags: [uoscore, uedhoc]
+  platform_allow:
+    - native_sim
+    - native_sim/native/64
+    - nrf52840dk/nrf52840
+    - nrf9160dk/nrf9160
+    - kit_pse84_ai/pse846gps2dbzc4a/m33
+    - kit_pse84_ai/pse846gps2dbzc4a/m33
+  integration_platforms:  # the boards CI uses (--integration)
+    - native_sim
+    - native_sim/native/64
+
+tests:
+  uoscore_uedhoc.default: {}
+
+  uoscore_uedhoc.vla_message_4:
+    extra_configs:
+      - CONFIG_UOSCORE_UEDHOC_VLA=y
+      - CONFIG_UEDHOC_MESSAGE_4=y
+
+  # TinyCrypt is not in Zephyr: zcbor and Mbed TLS come from externals/ too.
+  uoscore_uedhoc.tinycrypt:
+    extra_conf_files:
+      - overlay-external-deps.conf
+    extra_configs:
+      - CONFIG_UOSCORE_UEDHOC_TINYCRYPT=y
+
+  # AddressSanitizer exists only on the posix (native_sim) boards.
+  uoscore_uedhoc.asan:
+    arch_allow: posix
+    extra_configs:
+      - CONFIG_ASAN=y
+
+  uoscore_uedhoc.asan.vla:
+    arch_allow: posix
+    extra_configs:
+      - CONFIG_ASAN=y
+      - CONFIG_UOSCORE_UEDHOC_VLA=y
+
+  uoscore_uedhoc.asan.message_4:
+    arch_allow: posix
+    extra_configs:
+      - CONFIG_ASAN=y
+      - CONFIG_UEDHOC_MESSAGE_4=y
+
+  uoscore_uedhoc.asan.vla_message_4:
+    arch_allow: posix
+    extra_configs:
+      - CONFIG_ASAN=y
+      - CONFIG_UOSCORE_UEDHOC_VLA=y
+      - CONFIG_UEDHOC_MESSAGE_4=y
+
+  # Debug output (overlay-debug.conf) is only built, never run.
+  uoscore_uedhoc.debug:
+    build_only: true
+    extra_conf_files:
+      - overlay-debug.conf
