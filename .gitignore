@@ -7,3 +7,6 @@ build_reports
 *.cproject
 *.project
 TODO.MD
+REFACTROING.MD
+CMakeUserPresets.json
+twister-out*

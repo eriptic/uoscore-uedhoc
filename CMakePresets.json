@@ -1,0 +1,61 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 28, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Library with default options",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "legacy-makefile-config",
+      "displayName": "Example of setting options: the values of the former makefile_config.mk",
+      "inherits": "default",
+      "cacheVariables": {
+        "UOSCORE_UEDHOC_DEBUG_PRINT": "ON",
+        "UOSCORE_UEDHOC_UNIT_TEST": "ON",
+        "UOSCORE_UEDHOC_NVM_SUPPORT": "ON",
+        "UOSCORE_UEDHOC_EAD_SIZE": "0",
+        "UOSCORE_UEDHOC_C_I_SIZE": "1",
+        "UOSCORE_UEDHOC_C_R_SIZE": "1",
+        "UOSCORE_UEDHOC_ID_CRED_I_SIZE": "296",
+        "UOSCORE_UEDHOC_ID_CRED_R_SIZE": "296",
+        "UOSCORE_UEDHOC_CRED_I_SIZE": "293",
+        "UOSCORE_UEDHOC_CRED_R_SIZE": "293",
+        "UOSCORE_UEDHOC_SUITES_I_SIZE": "2",
+        "UOSCORE_UEDHOC_OSCORE_MAX_PLAINTEXT_LEN": "1024",
+        "UOSCORE_UEDHOC_E_OPTIONS_BUFF_MAX_LEN": "100",
+        "UOSCORE_UEDHOC_I_OPTIONS_BUFF_MAX_LEN": "100"
+      }
+    },
+    {
+      "name": "ci",
+      "displayName": "CI check of this build: warnings as errors in all targets, API headers self-contained",
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
+        "CMAKE_VERIFY_INTERFACE_HEADER_SETS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "default", "configurePreset": "default" },
+    { "name": "legacy-makefile-config", "configurePreset": "legacy-makefile-config" },
+    { "name": "ci", "configurePreset": "ci", "targets": ["all", "all_verify_interface_header_sets"] }
+  ],
+  "workflowPresets": [
+    { "name": "default", "steps": [
+      { "type": "configure", "name": "default" },
+      { "type": "build", "name": "default" } ] },
+    { "name": "legacy-makefile-config", "steps": [
+      { "type": "configure", "name": "legacy-makefile-config" },
+      { "type": "build", "name": "legacy-makefile-config" } ] },
+    { "name": "ci", "steps": [
+      { "type": "configure", "name": "ci" },
+      { "type": "build", "name": "ci" } ] }
+  ]
+}
