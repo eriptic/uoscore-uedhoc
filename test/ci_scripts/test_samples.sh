@@ -1,26 +1,23 @@
 #!/bin/bash
 
+# Builds every Linux sample as a standalone CMake project.
+
 set -e
 
-MAKE=make
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 ROOT_DIR="$SCRIPT_DIR/../../"
 SAMPLES_DIR="$ROOT_DIR/samples"
 
-rm -rf "$SAMPLES_DIR/linux_oscore/client/build"
-$MAKE -C "$SAMPLES_DIR/linux_oscore/client" -j
-
-rm -rf "$SAMPLES_DIR/linux_oscore/server/build"
-$MAKE -C "$SAMPLES_DIR/linux_oscore/server" -j
-
-rm -rf "$SAMPLES_DIR/linux_edhoc/initiator/build"
-$MAKE -C "$SAMPLES_DIR/linux_edhoc/initiator" -j
-
-rm -rf "$SAMPLES_DIR/linux_edhoc/responder/build"
-$MAKE -C "$SAMPLES_DIR/linux_edhoc/responder" -j
-
-rm -rf "$SAMPLES_DIR/linux_edhoc_oscore/initiator_client/build"
-$MAKE -C "$SAMPLES_DIR/linux_edhoc_oscore/initiator_client" -j
-
-rm -rf "$SAMPLES_DIR/linux_edhoc_oscore/responder_server/build"
-$MAKE -C "$SAMPLES_DIR/linux_edhoc_oscore/responder_server" -j
+for sample in \
+	linux_oscore/client \
+	linux_oscore/server \
+	linux_edhoc/initiator \
+	linux_edhoc/responder \
+	linux_edhoc_oscore/initiator_client \
+	linux_edhoc_oscore/responder_server
+do
+	echo "=== $sample"
+	rm -rf "$SAMPLES_DIR/$sample/build"
+	cmake -S "$SAMPLES_DIR/$sample" -B "$SAMPLES_DIR/$sample/build" -G Ninja
+	cmake --build "$SAMPLES_DIR/$sample/build"
+done

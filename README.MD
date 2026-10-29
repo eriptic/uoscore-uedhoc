@@ -19,9 +19,56 @@ For more information visit our website [eriptic.com](https://eriptic.com/) or se
 
 ## How to Build and Link
 
-* check the configurations in `makefile_config.mk` and adjust them if necessary
-* run `make` 
-* link the static library `build/libuoscore-uedhoc.a` in your project
+The library is built with CMake 3.28 or newer (the same minimum as Zephyr). The
+source files are listed once, in
+[cmake/uoscore_uedhoc_sources.cmake](cmake/uoscore_uedhoc_sources.cmake), and
+used by every build below.
+
+**Standalone** (for example to get `libuoscore-uedhoc.a`):
+
+```bash
+cmake --workflow --preset default # configure + build -> build/default/libuoscore-uedhoc.a
+# or step by step:
+cmake --preset default            # or: cmake -S . -B build/default -G Ninja
+cmake --build --preset default
+```
+
+`cmake --list-presets` lists the three presets: `default`,
+`legacy-makefile-config` (an example of setting options) and `ci` (the CI
+check: warnings as errors, API headers self-contained). The library's test
+configurations are Zephyr test scenarios in [test/tests.yaml](test/tests.yaml),
+run with Twister (see [test/README.MD](test/README.MD)).
+
+The archive contains only uoscore-uedhoc. A standalone build also builds its
+dependencies from `externals/` as separate libraries (`build/default/externals/`).
+If you link the archive by hand, also link Mbed TLS (`libmbedx509.a`,
+`libmbedcrypto.a`), zcbor and, by default, compact25519.
+
+**From another CMake project** (recommended): add the repository and link the
+target. CMake then passes the library's include paths, its public compile
+definitions and its dependencies to your target:
+
+```cmake
+add_subdirectory(path/to/uoscore-uedhoc uoscore-uedhoc)
+target_link_libraries(my_app PRIVATE uoscore-uedhoc::uoscore-uedhoc)
+```
+
+The library links the dependencies by target name (`MbedTLS::mbedx509`,
+`MbedTLS::mbedcrypto`, `zcbor`, `compact25519`, `tinycrypt`). Define them before
+`add_subdirectory()`, let it find an installed Mbed TLS with `find_package`, or
+set `UOSCORE_UEDHOC_VENDORED_DEPS=ON` to build them from `externals/`. The
+Linux samples show this, see [samples/linux_sample.cmake](samples/linux_sample.cmake).
+
+**Zephyr**: the repository is a Zephyr module. Add it to your west manifest
+(or to `ZEPHYR_EXTRA_MODULES`) and enable it in `prj.conf`:
+
+```
+CONFIG_UOSCORE=y
+CONFIG_UEDHOC=y
+```
+
+The module uses Zephyr's zcbor (`CONFIG_ZCBOR`, `CONFIG_ZCBOR_CANONICAL`) and
+PSA Crypto/Mbed TLS modules. All options are in [zephyr/Kconfig](zephyr/Kconfig).
 
 ## Dev Container
 
@@ -144,7 +191,7 @@ The logic of uOSCORE and uEDHOC is independent form the cryptographic library, i
 
 AES keys should never be used more than once with a given nonce, see [RFC5084](https://datatracker.ietf.org/doc/html/rfc5084). In order to avoid this situation, the user has 2 options while creating context structure:
 - setting `fresh_master_secret_salt = true`, when given context is new (freshly obtained e.g. with EDHOC)
-- setting `fresh_master_secret_salt = false`, when the same context is used between reboots/reconnections. In this case, the user must enable Non-volatile Memory support (see `OSCORE_NVM_SUPPORT` in `makefile_config.mk`) and implement two functions that require access to NVM (see below).
+- setting `fresh_master_secret_salt = false`, when the same context is used between reboots/reconnections. In this case, the user must enable Non-volatile Memory support (`UOSCORE_UEDHOC_NVM_SUPPORT=ON` in CMake, `CONFIG_UOSCORE_NVM_SUPPORT=y` in Zephyr; both define `OSCORE_NVM_SUPPORT`) and implement two functions that require access to NVM (see below). In Zephyr, the module implements them with the settings subsystem; set `CONFIG_UOSCORE_NVM_CUSTOM=y` to provide your own.
 
 Note that using NVM support is independent of the parameter above. Although it is required for using the same context multiple times, it will also be utilized (if enabled) to store context obtained with EDHOC, enabling the user to reuse it after the reboot. This behaviour is useful in situations where multiple sessions need to be stored on a device, while at the same time being able to start a completely new session with EDHOC. When such feature is not needed, `OSCORE_NVM_SUPPORT` can be disabled so only fresh sessions are acceptable.
 
@@ -173,7 +220,43 @@ Note that using NVM support is independent of the parameter above. Although it i
    ```  
 
 ## Additional configuration options
-The build configuration can be adjusted in the [makefile_config.mk](makefile_config.mk).
+
+The configuration is a set of named options. In the standalone/CMake build they
+are cache variables (`-D<name>=<value>` or a preset in
+[CMakePresets.json](CMakePresets.json)); in Zephyr they are Kconfig symbols.
+Options that change public headers are passed to your application as well, so
+the application and the library always use the same values.
+
+| CMake (`-D...`) | Zephyr Kconfig | Defines | CMake default |
+|---|---|---|---|
+| `UOSCORE_UEDHOC_WITH_OSCORE`, `UOSCORE_UEDHOC_WITH_EDHOC` | `CONFIG_UOSCORE`, `CONFIG_UEDHOC` | | ON |
+| `UOSCORE_UEDHOC_COMPACT25519` | `CONFIG_UOSCORE_UEDHOC_COMPACT25519` | `COMPACT25519` | ON |
+| `UOSCORE_UEDHOC_TINYCRYPT` (deprecated) | `CONFIG_UOSCORE_UEDHOC_TINYCRYPT` | `TINYCRYPT` | OFF |
+| `UOSCORE_UEDHOC_DEBUG_PRINT` | `CONFIG_UOSCORE_DEBUG`, `CONFIG_UEDHOC_DEBUG` | `DEBUG_PRINT` | OFF |
+| `UOSCORE_UEDHOC_NVM_SUPPORT` | `CONFIG_UOSCORE_NVM_SUPPORT` | `OSCORE_NVM_SUPPORT` | OFF |
+| `UOSCORE_UEDHOC_VLA` | `CONFIG_UOSCORE_UEDHOC_VLA` | `VLA` | OFF |
+| `UOSCORE_UEDHOC_MESSAGE_4` | `CONFIG_UEDHOC_MESSAGE_4` | `MESSAGE_4` | OFF |
+| `UOSCORE_UEDHOC_UNIT_TEST` | `CONFIG_UOSCORE_UEDHOC_UNIT_TEST` | `UNIT_TEST` | OFF |
+| `UOSCORE_UEDHOC_<SIZE>` | (header default) | `<SIZE>` | header default |
+| `UOSCORE_UEDHOC_WARNINGS_AS_ERRORS`, `UOSCORE_UEDHOC_ASAN` | `CONFIG_COMPILER_WARNINGS_AS_ERRORS`, `CONFIG_ASAN` | | OFF |
+
+`<SIZE>` is one of the buffer sizes in `inc/edhoc/buffer_sizes.h` (`EAD_SIZE`,
+`C_I_SIZE`, `C_R_SIZE`, `ID_CRED_I_SIZE`, `ID_CRED_R_SIZE`, `CRED_I_SIZE`,
+`CRED_R_SIZE`, `SUITES_I_SIZE`) or an OSCORE limit (`OSCORE_MAX_PLAINTEXT_LEN`,
+`E_OPTIONS_BUFF_MAX_LEN`, `I_OPTIONS_BUFF_MAX_LEN`, `K_SSN_NVM_STORE_INTERVAL`,
+`F_NVM_MAX_WRITE_FAILURE`, `OSCORE_INTERACTIONS_COUNT`,
+`OSCORE_SERVER_REPLAY_WINDOW_SIZE`, `OSCORE_MAX_URI_PATH_LEN`). The preset
+`legacy-makefile-config` reproduces the values of the former `makefile_config.mk`.
+
+Mbed TLS (PSA Crypto) is always required; `TINYCRYPT` and `COMPACT25519` add
+alternative implementations for some operations. Supported combinations:
+
+| Protocol | Suite | Method | Engines |
+|---|---|---|---|
+| OSCORE | | | MBEDTLS (optionally with TINYCRYPT) |
+| EDHOC | 0/1 | 0/1/2 | MBEDTLS with COMPACT25519 (Ed25519 signatures) |
+| EDHOC | 0/1 | 3 | MBEDTLS |
+| EDHOC | 2/3 | 0/1/2/3 | MBEDTLS |
 
 ## Changelog and Release Process
 All notable changes are documented in [CHANGELOG.md](CHANGELOG.md), following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/).

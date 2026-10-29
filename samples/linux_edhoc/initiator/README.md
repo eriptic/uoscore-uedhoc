@@ -24,7 +24,8 @@ A CoAP ([RFC7252](https://tools.ietf.org/html/rfc7252)) client alternately reque
 Then build and run:
 
 ```sh
-make
-./build/linux_coap_client 
+cmake -S . -B build
+cmake --build build
+./build/initiator
 ```
 
