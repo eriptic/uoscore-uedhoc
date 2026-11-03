@@ -10,6 +10,14 @@ version tags.
 
 ## [Unreleased]
 
+### Fixed
+
+- EDHOC: a static DH public key given as an uncompressed P-256 point (65
+  bytes) in `other_party_cred.g` is now used as its x-coordinate. It was
+  converted to a 33-byte compressed point, which the TinyCrypt backend misread
+  as an x-coordinate and the Mbed TLS backend rejected, so the session
+  failed.
+
 ## [3.1.1] - 2026-10-21
 
 ### Added

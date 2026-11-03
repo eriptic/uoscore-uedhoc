@@ -64,6 +64,7 @@
 #define T_KID_RETRIEVE_CRED 48
 #define TEST_EDHOC_INITIATOR_EMPTY_C_R 49
 #define TEST_EDHOC_RESPONDER_EMPTY_C_R 50
+#define T_RETRIEVE_CRED_UNCOMPRESSED_G 51
 
 // if this macro is defined all tests will be executed
  #define EXECUTE_ALL_TESTS
@@ -363,6 +364,11 @@ ZTEST(uoscore_uedhoc, t_kid_plaintext_split)
 ZTEST(uoscore_uedhoc, t_kid_retrieve_cred)
 {
 	skip(T_KID_RETRIEVE_CRED, t_kid_retrieve_cred);
+}
+
+ZTEST(uoscore_uedhoc, t_retrieve_cred_uncompressed_g)
+{
+	skip(T_RETRIEVE_CRED_UNCOMPRESSED_G, t_retrieve_cred_uncompressed_g);
 }
 
 /*

@@ -11,6 +11,7 @@
 
 #include <string.h>
 
+#include "edhoc/buffer_sizes.h"
 #include "edhoc/cert.h"
 #include "edhoc/bstr_encode_decode.h"
 #include "edhoc/int_encode_decode.h"
@@ -160,12 +161,14 @@ static enum err get_local_cred(bool static_dh_auth,
 	/*retrieve PK*/
 	if (static_dh_auth) {
 		pk->len = 0;
-		if (cred_array->ptr[i].g.len == 65) {
-			/*decompressed P256 DH pk*/
-			g->ptr[0] = 0x2;
-			TRY(_memcpy_s(&g->ptr[1], g->len - 1,
-				      &cred_array->ptr[i].g.ptr[1], 32));
-			g->len = 33;
+		if (cred_array->ptr[i].g.len ==
+		    P_256_PUB_KEY_UNCOMPRESSED_SIZE) {
+			/*uncompressed P256 DH pk: keep the x-coordinate, the
+			form shared_secret_derive() takes*/
+			TRY(_memcpy_s(g->ptr, g->len,
+				      &cred_array->ptr[i].g.ptr[1],
+				      P_256_PUB_KEY_X_CORD_SIZE));
+			g->len = P_256_PUB_KEY_X_CORD_SIZE;
 
 		} else {
 			TRY(_memcpy_s(g->ptr, g->len, cred_array->ptr[i].g.ptr,
