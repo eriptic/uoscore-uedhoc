@@ -84,6 +84,17 @@ void t_kid_retrieve_cred(void);
 void t_retrieve_cred_uncompressed_g(void);
 
 /**
+ * @brief       Tests that plaintext_split() keeps a map in ID_CRED_x as sent
+ *              and rejects a malformed one.
+ */
+void t_id_cred_map_plaintext_split(void);
+
+/**
+ * @brief       Tests plaintext_split() with a deeply nested map in ID_CRED_x.
+ */
+void t_id_cred_map_nesting(void);
+
+/**
  * @brief 		Tests the functions of the exporter interface
  */
 void test_exporter(void);
