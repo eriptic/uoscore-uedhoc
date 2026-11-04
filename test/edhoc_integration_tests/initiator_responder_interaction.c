@@ -540,3 +540,143 @@ void t_message_3_larger_than_message_2(void)
 	zassert_equal(h.r_result, ok, "responder failed");
 	zassert_mem_equal__(h.i_prk_out, h.r_prk_out, 32, "wrong PRK_out");
 }
+
+/* What the application of a peer expects and answers in the handshakes below */
+struct retrieve_params {
+	const struct byte_array *id_cred;
+	const struct byte_array *cred;
+	const struct byte_array *pk;
+	bool reject;
+	uint32_t calls;
+};
+
+static enum err retrieve(void *params, bool static_dh_auth,
+			 const struct byte_array *id_cred,
+			 struct byte_array *cred, struct byte_array *pk,
+			 struct byte_array *g)
+{
+	struct retrieve_params *p = params;
+
+	p->calls++;
+	if (p->reject || id_cred->len != p->id_cred->len ||
+	    memcmp(id_cred->ptr, p->id_cred->ptr, id_cred->len) != 0) {
+		return certificate_authentication_failed;
+	}
+
+	TRY(_memcpy_s(cred->ptr, cred->len, p->cred->ptr, p->cred->len));
+	cred->len = p->cred->len;
+	TRY(_memcpy_s(pk->ptr, pk->len, p->pk->ptr, p->pk->len));
+	pk->len = p->pk->len;
+	g->len = 0;
+	return ok;
+}
+
+/* A map holding x5chain with two certificates of CHAIN_CERT_LEN bytes */
+#define CHAIN_CERT_LEN 100
+#define CHAIN_LEN (4 + 2 * (2 + CHAIN_CERT_LEN))
+#define CHAIN_CRED_LEN (2 + CHAIN_CERT_LEN)
+
+static void chain_init(uint8_t *chain, uint8_t *cred, uint8_t fill)
+{
+	static const uint8_t head[] = { 0xa1, 0x18, 0x21, 0x82 };
+	uint8_t *cert = chain + sizeof(head);
+
+	memcpy(chain, head, sizeof(head));
+	for (int i = 0; i < 2; i++) {
+		cert[0] = 0x58;
+		cert[1] = CHAIN_CERT_LEN;
+		memset(&cert[2], fill + i, CHAIN_CERT_LEN);
+		cert += CHAIN_CRED_LEN;
+	}
+	memcpy(cred, chain + sizeof(head), CHAIN_CRED_LEN);
+}
+
+static void handshake_with_retrieve(struct byte_array *id_cred_i,
+				    struct byte_array *cred_i,
+				    struct byte_array *id_cred_r,
+				    struct byte_array *cred_r,
+				    struct handshake *h, bool reject_r,
+				    struct byte_array *pk_r_answer)
+{
+	const struct test_vector *v = &test_vectors[0];
+	struct byte_array pk_i = { .ptr = (uint8_t *)v->pk_i_raw,
+				   .len = v->pk_i_raw_len };
+	struct retrieve_params r_params = { .id_cred = id_cred_r,
+					    .cred = cred_r,
+					    .pk = pk_r_answer,
+					    .reject = reject_r };
+	struct retrieve_params i_params = { .id_cred = id_cred_i,
+					    .cred = cred_i,
+					    .pk = &pk_i };
+	struct cred_array cred_r_array = { .retrieve = retrieve,
+					   .params = &r_params };
+	struct cred_array cred_i_array = { .retrieve = retrieve,
+					   .params = &i_params };
+
+	h->id_cred_i = *id_cred_i;
+	h->cred_i = *cred_i;
+	h->id_cred_r = *id_cred_r;
+	h->cred_r = *cred_r;
+	h->cred_i_array = &cred_i_array;
+	h->cred_r_array = &cred_r_array;
+
+	handshake_run(h);
+
+	zassert_equal(r_params.calls, 1,
+		      "ID_CRED_R not given to the application");
+}
+
+void t_retrieve_callback(void)
+{
+	const struct test_vector *v = &test_vectors[0];
+	static uint8_t chain_i_buf[CHAIN_LEN], chain_r_buf[CHAIN_LEN];
+	static uint8_t cred_i_buf[CHAIN_CRED_LEN], cred_r_buf[CHAIN_CRED_LEN];
+	static uint8_t kid_i_buf[] = { 0xa1, 0x04, 0x41, 0x2b };
+	static uint8_t kccs_r_buf[] = { 0xa1, 0x0e, 0xa1, 0x02, 0x60 };
+	struct byte_array chain_i = { .ptr = chain_i_buf, .len = CHAIN_LEN };
+	struct byte_array chain_r = { .ptr = chain_r_buf, .len = CHAIN_LEN };
+	struct byte_array cred_i = { .ptr = cred_i_buf, .len = CHAIN_CRED_LEN };
+	struct byte_array cred_r = { .ptr = cred_r_buf, .len = CHAIN_CRED_LEN };
+	struct byte_array kid_i = { .ptr = kid_i_buf,
+				    .len = sizeof(kid_i_buf) };
+	struct byte_array kccs_r = { .ptr = kccs_r_buf,
+				     .len = sizeof(kccs_r_buf) };
+	struct byte_array ccs_r = { .ptr = &kccs_r_buf[2], .len = 3 };
+	struct byte_array pk_r = { .ptr = (uint8_t *)v->pk_r_raw,
+				   .len = v->pk_r_raw_len };
+	struct byte_array wrong_pk_r = { .ptr = (uint8_t *)v->pk_i_raw,
+					 .len = v->pk_i_raw_len };
+	struct handshake h;
+
+	chain_init(chain_i_buf, cred_i_buf, 0x10);
+	chain_init(chain_r_buf, cred_r_buf, 0x20);
+
+	/* chains in both directions */
+	memset(&h, 0, sizeof(h));
+	handshake_with_retrieve(&chain_i, &cred_i, &chain_r, &cred_r, &h, false,
+				&pk_r);
+	zassert_equal(h.i_result, ok, "chains: initiator failed");
+	zassert_equal(h.r_result, ok, "chains: responder failed");
+	zassert_mem_equal__(h.i_prk_out, h.r_prk_out, 32, "chains: PRK_out");
+
+	/* a compact kid and an unknown label */
+	memset(&h, 0, sizeof(h));
+	handshake_with_retrieve(&kid_i, &cred_i, &kccs_r, &ccs_r, &h, false,
+				&pk_r);
+	zassert_equal(h.i_result, ok, "kccs: initiator failed");
+	zassert_equal(h.r_result, ok, "kccs: responder failed");
+	zassert_mem_equal__(h.i_prk_out, h.r_prk_out, 32, "kccs: PRK_out");
+
+	/* the application rejects the credential */
+	handshake_with_retrieve(&chain_i, &cred_i, &chain_r, &cred_r, &h, true,
+				&pk_r);
+	zassert_equal(h.i_result, certificate_authentication_failed,
+		      "rejected credential accepted");
+	zassert_not_equal(h.r_result, ok, "responder completed");
+
+	/* the key does not belong to the responder */
+	handshake_with_retrieve(&chain_i, &cred_i, &chain_r, &cred_r, &h, false,
+				&wrong_pk_r);
+	zassert_not_equal(h.i_result, ok, "wrong key accepted");
+	zassert_not_equal(h.r_result, ok, "responder completed");
+}

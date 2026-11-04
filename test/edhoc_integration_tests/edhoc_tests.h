@@ -100,6 +100,12 @@ void t_id_cred_map_nesting(void);
 void t_message_3_larger_than_message_2(void);
 
 /**
+ * @brief       Tests handshakes in which the application retrieves the
+ *              credentials from ID_CRED_x.
+ */
+void t_retrieve_callback(void);
+
+/**
  * @brief 		Tests the functions of the exporter interface
  */
 void test_exporter(void);

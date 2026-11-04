@@ -68,6 +68,7 @@
 #define T_MESSAGE_3_LARGER_THAN_MESSAGE_2 60
 #define T_ID_CRED_MAP_PLAINTEXT_SPLIT 61
 #define T_ID_CRED_MAP_NESTING 62
+#define T_RETRIEVE_CALLBACK 63
 
 // if this macro is defined all tests will be executed
  #define EXECUTE_ALL_TESTS
@@ -388,6 +389,11 @@ ZTEST(uoscore_uedhoc, t_message_3_larger_than_message_2)
 {
 	skip(T_MESSAGE_3_LARGER_THAN_MESSAGE_2,
 	     t_message_3_larger_than_message_2);
+}
+
+ZTEST(uoscore_uedhoc, t_retrieve_callback)
+{
+	skip(T_RETRIEVE_CALLBACK, t_retrieve_callback);
 }
 
 /*

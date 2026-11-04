@@ -19,6 +19,13 @@ version tags.
 - **Cipher suites:** the responder now rejects suites that aren't in
   `suites_r`.
 
+### Added
+
+- EDHOC: optional `retrieve` callback in `struct cred_array`. It gives the
+  application the received ID_CRED_x (RFC 9528 Section 3.5) and lets it
+  provide CRED_x and the public key, e.g., after validating a certificate
+  chain ([#95]).
+
 ### Fixed
 - EDHOC: a static DH public key given as an uncompressed P-256 point (65
   bytes) in `other_party_cred.g` is now used as its x-coordinate. It was
@@ -132,3 +139,4 @@ version tags.
 [#89]: https://github.com/eriptic/uoscore-uedhoc/issues/89
 [#92]: https://github.com/eriptic/uoscore-uedhoc/pull/92
 [#94]: https://github.com/eriptic/uoscore-uedhoc/pull/94
+[#95]: https://github.com/eriptic/uoscore-uedhoc/pull/95
