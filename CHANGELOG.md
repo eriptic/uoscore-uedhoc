@@ -35,6 +35,8 @@ version tags.
   certificates (`x5chain`) or with an unknown label (e.g., `kccs`) made a
   message fail to decode or to encode, and other maps were lost or re-encoded
   ([#94]).
+- EDHOC: the initiator now encodes a message_3 larger than the message_2 it
+  received. It reported success but sent a truncated message_3 ([#89], [#92]).
 
 ## [3.2.0] - 2026-10-21
 
@@ -127,4 +129,6 @@ version tags.
 [#85]: https://github.com/eriptic/uoscore-uedhoc/pull/85
 [#86]: https://github.com/eriptic/uoscore-uedhoc/pull/86
 [#87]: https://github.com/eriptic/uoscore-uedhoc/pull/87
+[#89]: https://github.com/eriptic/uoscore-uedhoc/issues/89
+[#92]: https://github.com/eriptic/uoscore-uedhoc/pull/92
 [#94]: https://github.com/eriptic/uoscore-uedhoc/pull/94

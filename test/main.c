@@ -65,6 +65,7 @@
 #define TEST_EDHOC_INITIATOR_EMPTY_C_R 49
 #define TEST_EDHOC_RESPONDER_EMPTY_C_R 50
 #define T_RETRIEVE_CRED_UNCOMPRESSED_G 51
+#define T_MESSAGE_3_LARGER_THAN_MESSAGE_2 60
 #define T_ID_CRED_MAP_PLAINTEXT_SPLIT 61
 #define T_ID_CRED_MAP_NESTING 62
 
@@ -381,6 +382,12 @@ ZTEST(uoscore_uedhoc, t_id_cred_map_plaintext_split)
 ZTEST(uoscore_uedhoc, t_id_cred_map_nesting)
 {
 	skip(T_ID_CRED_MAP_NESTING, t_id_cred_map_nesting);
+}
+
+ZTEST(uoscore_uedhoc, t_message_3_larger_than_message_2)
+{
+	skip(T_MESSAGE_3_LARGER_THAN_MESSAGE_2,
+	     t_message_3_larger_than_message_2);
 }
 
 /*
