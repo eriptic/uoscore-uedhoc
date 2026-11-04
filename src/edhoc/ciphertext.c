@@ -156,7 +156,9 @@ enum err ciphertext_decrypt_split(
 	PRINT_ARRAY("plaintext", plaintext->ptr, plaintext->len);
 
 	if (ctxt == CIPHERTEXT4 && plaintext->len != 0) {
-		TRY(decode_bstr(plaintext, ead));
+		TRY(_memcpy_s(ead->ptr, ead->len, plaintext->ptr,
+			      plaintext->len));
+		ead->len = plaintext->len;
 		PRINT_ARRAY("EAD_4", ead->ptr, ead->len);
 	} else if (ctxt == CIPHERTEXT4 && plaintext->len == 0) {
 		ead->ptr = NULL;

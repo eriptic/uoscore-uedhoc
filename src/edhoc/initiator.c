@@ -267,6 +267,10 @@ enum err msg4_process(struct runtime_context *rc)
 	BYTE_ARRAY_NEW(plaintext4,
 		       PLAINTEXT4_SIZE + get_aead_mac_len(rc->suite.edhoc_aead),
 		       ciphertext4.len);
+#if EAD_SIZE != 0
+	rc->ead.ptr = rc->ead_buf;
+	rc->ead.len = sizeof(rc->ead_buf);
+#endif
 	TRY(ciphertext_decrypt_split(CIPHERTEXT4, &rc->suite, NULL, &NULL_ARRAY,
 				     &NULL_ARRAY, &rc->ead, &rc->prk_4e3m,
 				     &rc->th4, &ciphertext4, &plaintext4));
