@@ -92,7 +92,7 @@ static int find_pk_cb(void *void_ppk, int tag, unsigned char *start, size_t len)
 #define ISSUER_CN_OID "\x55\x04\x03"
 
 #define EXPECTO_TAG(tag, cursor, len)                                          \
-	if (*cursor != tag) {                                                  \
+	if (cursor >= end || *cursor != tag) {                                 \
 		rv = wrong_parameter;                                          \
 		PRINTF(RED                                                     \
 		       "Runtime error: expected %s tag at %s:%d\n\n" RESET,    \
@@ -100,8 +100,11 @@ static int find_pk_cb(void *void_ppk, int tag, unsigned char *start, size_t len)
 		break;                                                         \
 	} else {                                                               \
 		cursor++;                                                      \
-		mbedtls_asn1_get_len(&cursor, end, &len);                      \
-		if (0 == *cursor) {                                            \
+		if (0 != mbedtls_asn1_get_len(&cursor, end, &len)) {           \
+			rv = wrong_parameter;                                  \
+			break;                                                 \
+		}                                                              \
+		if (0 < len && 0 == *cursor) {                                 \
 			cursor++;                                              \
 			len--;                                                 \
 		}                                                              \
@@ -419,7 +422,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 	do {
 		const uint8_t *cursor = cert->ptr;
 		const uint8_t *end = &cert->ptr[cert->len];
-		uint32_t len;
+		uint32_t len = 0;
 
 		/* Get first tag, which should be first sequence */
 		EXPECTO_TAG(ASN1_SEQUENCE, cursor, len);
@@ -432,10 +435,20 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 		/* Iterate over 6 elements to get to public key according to X.509 schema */
 		for (uint32_t iter = 0; iter < 6; iter++) {
 			/* TAG shall not be parsed as it is not used */
+			if (cursor >= end) {
+				rv = wrong_parameter;
+				break;
+			}
 			cursor++;
 			/* Get section length */
-			mbedtls_asn1_get_len(&cursor, end, &len);
+			if (0 != mbedtls_asn1_get_len(&cursor, end, &len)) {
+				rv = wrong_parameter;
+				break;
+			}
 			cursor += len;
+		}
+		if (wrong_parameter == rv) {
+			break;
 		}
 
 		/* Here should be 7th element with information about key */
@@ -450,7 +463,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 		EXPECTO_TAG(ASN1_BIT_STRING, cursor, len);
 
 		/* Now cursor points to public key */
-		_memcpy_s(pk->ptr, pk->len, cursor, (uint32_t)len);
+		TRY(_memcpy_s(pk->ptr, pk->len, cursor, (uint32_t)len));
 		pk->len = (uint32_t)len;
 		PRINT_ARRAY("pk from cert", pk->ptr, pk->len);
 
@@ -471,7 +484,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 		EXPECTO_TAG(ASN1_INTEGER, cursor, len);
 
 		TRY_EXPECT((cursor + len) <= end, 1);
-		_memcpy_s(sig.ptr, SIGNATURE_SIZE, cursor, (uint32_t)len);
+		TRY(_memcpy_s(sig.ptr, SIGNATURE_SIZE, cursor, (uint32_t)len));
 		sig.len = len;
 		cursor += len;
 		PRINT_ARRAY("Certificate signature - part1", sig.ptr,
@@ -479,9 +492,9 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 
 		EXPECTO_TAG(ASN1_INTEGER, cursor, len);
 		TRY_EXPECT((cursor + len) <= end, 1);
-		_memcpy_s(sig.ptr + sig.len,
-			  (uint32_t)(SIGNATURE_SIZE - sig.len), cursor,
-			  (uint32_t)len);
+		TRY(_memcpy_s(sig.ptr + sig.len,
+			      (uint32_t)(SIGNATURE_SIZE - sig.len), cursor,
+			      (uint32_t)len));
 		sig.len += len;
 		rv = ok;
 		PRINT_ARRAY("Certificate signature", sig.ptr,

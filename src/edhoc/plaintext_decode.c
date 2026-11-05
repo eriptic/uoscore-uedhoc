@@ -131,7 +131,7 @@ static enum err plaintext2_split(struct byte_array *ptxt,
 	} else {
 		/*provide C_R in encoded form if it was an int*/
 		/*this is how it C_R was chosen by the responder*/
-		TRY(encode_int(&p.ptxt2_C_R_int, 1, c_r));
+		TRY(c_x_int_encode(p.ptxt2_C_R_int, c_r));
 	}
 
 	/*ID_CRED_R*/
