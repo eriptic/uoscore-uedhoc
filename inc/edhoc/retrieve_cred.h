@@ -48,7 +48,8 @@ enum id_cred_x_label {
  *				when digital signatures are used. 
  *
  * @param static_dh_auth 	True if static DH authentication is used. 
- * @param cred_array 		An array containing credentials. 
+ * @param cred_array 		An array containing credentials, or the
+ *				application's function that retrieves them.
  * @param[in] id_cred 		ID_CRED_x.
  * @param[out] cred 		CRED_x.
  * @param[out] pk 		Public key.

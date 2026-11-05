@@ -224,6 +224,7 @@ static enum err msg3_only_gen(const struct edhoc_initiator_context *c,
 			   &ciphertext, &plaintext));
 
 	/*massage 3 create and send*/
+	rc->msg.len = sizeof(rc->msg_buf);
 	TRY(encode_bstr(&ciphertext, &rc->msg));
 	PRINT_ARRAY("msg3", rc->msg.ptr, rc->msg.len);
 

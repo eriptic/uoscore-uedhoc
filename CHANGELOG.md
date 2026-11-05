@@ -19,6 +19,13 @@ version tags.
 - **Cipher suites:** the responder now rejects suites that aren't in
   `suites_r`.
 
+### Added
+
+- EDHOC: optional `retrieve` callback in `struct cred_array`. It gives the
+  application the received ID_CRED_x (RFC 9528 Section 3.5) and lets it
+  provide CRED_x and the public key, e.g., after validating a certificate
+  chain ([#95]).
+
 ### Fixed
 - EDHOC: a static DH public key given as an uncompressed P-256 point (65
   bytes) in `other_party_cred.g` is now used as its x-coordinate. It was
@@ -31,6 +38,12 @@ version tags.
 - edhoc: add length checks to the built-in X.509 parser ([#87]).
 - edhoc: the responder checks that it supports the selected cipher suite
   ([#87]).
+- EDHOC: a map in ID_CRED_x is kept as sent. A map with a chain of several
+  certificates (`x5chain`) or with an unknown label (e.g., `kccs`) made a
+  message fail to decode or to encode, and other maps were lost or re-encoded
+  ([#94]).
+- EDHOC: the initiator now encodes a message_3 larger than the message_2 it
+  received. It reported success but sent a truncated message_3 ([#89], [#92]).
 
 ## [3.2.0] - 2026-10-21
 
@@ -123,3 +136,7 @@ version tags.
 [#85]: https://github.com/eriptic/uoscore-uedhoc/pull/85
 [#86]: https://github.com/eriptic/uoscore-uedhoc/pull/86
 [#87]: https://github.com/eriptic/uoscore-uedhoc/pull/87
+[#89]: https://github.com/eriptic/uoscore-uedhoc/issues/89
+[#92]: https://github.com/eriptic/uoscore-uedhoc/pull/92
+[#94]: https://github.com/eriptic/uoscore-uedhoc/pull/94
+[#95]: https://github.com/eriptic/uoscore-uedhoc/pull/95
