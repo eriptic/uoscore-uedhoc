@@ -31,6 +31,10 @@ version tags.
 - edhoc: add length checks to the built-in X.509 parser ([#87]).
 - edhoc: the responder checks that it supports the selected cipher suite
   ([#87]).
+- EDHOC: a map in ID_CRED_x is kept as sent. A map with a chain of several
+  certificates (`x5chain`) or with an unknown label (e.g., `kccs`) made a
+  message fail to decode or to encode, and other maps were lost or re-encoded
+  ([#94]).
 
 ## [3.2.0] - 2026-10-21
 
@@ -123,3 +127,4 @@ version tags.
 [#85]: https://github.com/eriptic/uoscore-uedhoc/pull/85
 [#86]: https://github.com/eriptic/uoscore-uedhoc/pull/86
 [#87]: https://github.com/eriptic/uoscore-uedhoc/pull/87
+[#94]: https://github.com/eriptic/uoscore-uedhoc/pull/94
