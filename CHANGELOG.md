@@ -31,6 +31,8 @@ version tags.
 - edhoc: add length checks to the built-in X.509 parser ([#87]).
 - edhoc: the responder checks that it supports the selected cipher suite
   ([#87]).
+- EDHOC: the initiator now encodes a message_3 larger than the message_2 it
+  received. It reported success but sent a truncated message_3 ([#89], [#92]).
 
 ## [3.2.0] - 2026-10-21
 
@@ -123,3 +125,5 @@ version tags.
 [#85]: https://github.com/eriptic/uoscore-uedhoc/pull/85
 [#86]: https://github.com/eriptic/uoscore-uedhoc/pull/86
 [#87]: https://github.com/eriptic/uoscore-uedhoc/pull/87
+[#89]: https://github.com/eriptic/uoscore-uedhoc/issues/89
+[#92]: https://github.com/eriptic/uoscore-uedhoc/pull/92
