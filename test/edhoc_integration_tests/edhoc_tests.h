@@ -78,6 +78,12 @@ void t_kid_plaintext_split(void);
 void t_kid_retrieve_cred(void);
 
 /**
+ * @brief       Tests that an uncompressed static DH public key is retrieved
+ *              as its x-coordinate.
+ */
+void t_retrieve_cred_uncompressed_g(void);
+
+/**
  * @brief 		Tests the functions of the exporter interface
  */
 void test_exporter(void);

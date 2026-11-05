@@ -154,3 +154,37 @@ void t_kid_retrieve_cred(void)
 	zassert_equal(lookup(ARRAY(0xa1, 0x04, 0x18, 0x18), 4, &id_cred),
 		      credential_not_found, "wrong credential found");
 }
+
+void t_retrieve_cred_uncompressed_g(void)
+{
+	static const uint8_t id_cred_x[] = { 0xa1, 0x04, 0x41, 0x2b };
+	static const uint8_t cred_x[] = { 0xa0 };
+	uint8_t g_x[65] = { 0x04 };
+	uint8_t cred_buf[8];
+	uint8_t pk_buf[65];
+	uint8_t g_buf[65];
+	uint8_t id_cred_buf[sizeof(id_cred_x)];
+	struct byte_array cred = { .ptr = cred_buf, .len = sizeof(cred_buf) };
+	struct byte_array pk = { .ptr = pk_buf, .len = sizeof(pk_buf) };
+	struct byte_array g = { .ptr = g_buf, .len = sizeof(g_buf) };
+	struct byte_array id_cred = { .ptr = id_cred_buf,
+				      .len = sizeof(id_cred_buf) };
+
+	for (uint32_t i = 1; i < sizeof(g_x); i++) {
+		g_x[i] = (uint8_t)i;
+	}
+	memcpy(id_cred_buf, id_cred_x, sizeof(id_cred_x));
+
+	struct other_party_cred other = {
+		.id_cred = { .ptr = (uint8_t *)id_cred_x,
+			     .len = sizeof(id_cred_x) },
+		.cred = { .ptr = (uint8_t *)cred_x, .len = sizeof(cred_x) },
+		.g = { .ptr = g_x, .len = sizeof(g_x) },
+	};
+	struct cred_array creds = { .len = 1, .ptr = &other };
+
+	zassert_equal(retrieve_cred(true, &creds, &id_cred, &cred, &pk, &g), ok,
+		      "credential not found");
+	zassert_equal(g.len, 32, "wrong G_X length");
+	zassert_mem_equal__(g.ptr, &g_x[1], 32, "wrong G_X");
+}

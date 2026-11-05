@@ -20,7 +20,11 @@ version tags.
   `suites_r`.
 
 ### Fixed
-
+- EDHOC: a static DH public key given as an uncompressed P-256 point (65
+  bytes) in `other_party_cred.g` is now used as its x-coordinate. It was
+  converted to a 33-byte compressed point, which the TinyCrypt backend misread
+  as an x-coordinate and the Mbed TLS backend rejected, so the session
+  failed.
 - edhoc: the responder keeps an int C_I in its CBOR encoding and rejects ints
   outside -24..23 ([#87]).
 - edhoc: check return values that were ignored in some places ([#87]).
@@ -28,7 +32,7 @@ version tags.
 - edhoc: the responder checks that it supports the selected cipher suite
   ([#87]).
 
-## [3.1.1] - 2026-10-21
+## [3.2.0] - 2026-10-21
 
 ### Added
 
