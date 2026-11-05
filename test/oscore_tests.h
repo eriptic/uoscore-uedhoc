@@ -22,6 +22,7 @@ void t8_oscore_server_response_simple_ack(void);
 void t9_oscore_client_server_observe(void);
 void t10_oscore_client_server_after_reboot(void);
 void t11_oscore_ssn_overflow_protection(void);
+void t12_oscore_server_replay_multi_byte_piv(void);
 
 /*unit tests*/
 void t100_inner_outer_option_split__no_special_options(void);

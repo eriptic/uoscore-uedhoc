@@ -417,8 +417,9 @@ enum err oscore2coap(uint8_t *buf_in, uint32_t buf_in_len, uint8_t *buf_out,
 			/* Normal operation - update replay window. */
 			TRY_EXPECT(c->rrc.echo_state_machine,
 				   ECHO_SYNCHRONIZED);
-			server_replay_window_update(*oscore_option.piv.ptr,
-						    &c->rc.replay_window);
+			uint64_t ssn;
+			TRY(piv2ssn(&oscore_option.piv, &ssn));
+			server_replay_window_update(ssn, &c->rc.replay_window);
 		}
 	} else {
 		/* received any kind of response */
