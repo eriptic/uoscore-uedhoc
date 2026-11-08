@@ -55,6 +55,11 @@ void t_kid_id_cred2kid(void)
 	/* kid as int, as in drafts before RFC 9528 */
 	check_id_cred2kid(ARRAY(0xa1, 0x04, 0x32), 3, ARRAY(0x32), 1);
 
+	/* a map the decoder does not know: no compact encoding */
+	check_id_cred2kid(ARRAY(0xa1, 0x18, 0x21, 0x82, 0x41, 0x01, 0x41, 0x02),
+			  8, NULL, 0);
+	check_id_cred2kid(ARRAY(0xa1, 0x0e, 0xa1, 0x02, 0x60), 5, NULL, 0);
+
 	/* kid together with another parameter: no compact encoding */
 	check_id_cred2kid(ARRAY(0xa2, 0x04, 0x41, 0x05, 0x18, 0x22, 0x82, 0x2e,
 				0x42, 0x01, 0x02),
@@ -96,6 +101,93 @@ void t_kid_plaintext_split(void)
 	/* int outside -24..23, only sent by peers before RFC 9528 */
 	check_plaintext3(ARRAY(0x18, 0x20, MAC_3), 11,
 			 ARRAY(0xa1, 0x04, 0x18, 0x20), 4);
+}
+
+static enum err split_map(const uint8_t *ptxt, uint32_t ptxt_len, bool has_c_r,
+			  const uint8_t *exp, uint32_t exp_len)
+{
+	uint8_t c_r_buf[1];
+	uint8_t id_cred_buf[256];
+	uint8_t mac_buf[16];
+	uint8_t ead_buf[1];
+	struct byte_array in = { .ptr = (uint8_t *)ptxt, .len = ptxt_len };
+	struct byte_array c_r = { .ptr = c_r_buf, .len = sizeof(c_r_buf) };
+	struct byte_array id_cred = { .ptr = id_cred_buf,
+				      .len = sizeof(id_cred_buf) };
+	struct byte_array mac = { .ptr = mac_buf, .len = sizeof(mac_buf) };
+	struct byte_array ead = { .ptr = ead_buf, .len = sizeof(ead_buf) };
+	enum err r = plaintext_split(&in, has_c_r ? &c_r : NULL, &id_cred, &mac,
+				     &ead);
+
+	if (r == ok) {
+		zassert_equal(id_cred.len, exp_len, "wrong ID_CRED_x length");
+		zassert_mem_equal__(id_cred.ptr, exp, exp_len,
+				    "wrong ID_CRED_x");
+		zassert_equal(mac.len, 8, "wrong MAC length");
+	}
+	return r;
+}
+
+void t_id_cred_map_plaintext_split(void)
+{
+	/* x5chain with two certificates */
+	zassert_equal(
+		split_map(ARRAY(0xa1, 0x18, 0x21, 0x82, 0x41, 0x01, 0x41, 0x02,
+				MAC_3),
+			  17, false,
+			  ARRAY(0xa1, 0x18, 0x21, 0x82, 0x41, 0x01, 0x41, 0x02),
+			  8),
+		ok, "x5chain array");
+	/* the same with C_R in front */
+	zassert_equal(
+		split_map(ARRAY(0x27, 0xa1, 0x18, 0x21, 0x82, 0x41, 0x01, 0x41,
+				0x02, MAC_3),
+			  18, true,
+			  ARRAY(0xa1, 0x18, 0x21, 0x82, 0x41, 0x01, 0x41, 0x02),
+			  8),
+		ok, "x5chain array after C_R");
+	/* kccs, an unknown label */
+	zassert_equal(split_map(ARRAY(0xa1, 0x0e, 0xa1, 0x02, 0x60, MAC_3), 14,
+				false, ARRAY(0xa1, 0x0e, 0xa1, 0x02, 0x60), 5),
+		      ok, "kccs");
+	/* x5t with a text string algorithm, which is not re-encoded */
+	zassert_equal(
+		split_map(ARRAY(0xa1, 0x18, 0x22, 0x82, 0x61, 0x61, 0x41, 0x01,
+				MAC_3),
+			  17, false,
+			  ARRAY(0xa1, 0x18, 0x22, 0x82, 0x61, 0x61, 0x41, 0x01),
+			  8),
+		ok, "x5t with tstr algorithm");
+
+	/* a string or an array that does not fit in the plaintext */
+	zassert_not_equal(split_map(ARRAY(0xa1, 0x18, 0x21, 0x43, 0x01), 5,
+				    false, NULL, 0),
+			  ok, "truncated string");
+	zassert_not_equal(split_map(ARRAY(0xa1, 0x18, 0x21, 0x98, 0x20, 0x01),
+				    6, false, NULL, 0),
+			  ok, "truncated array");
+	/* an indefinite length map */
+	zassert_not_equal(split_map(ARRAY(0xbf, 0xff, MAC_3), 11, false, NULL,
+				    0),
+			  ok, "indefinite length map");
+}
+
+void t_id_cred_map_nesting(void)
+{
+	/* { 0 : [[[...]]] }, nested as deep as a large message allows */
+	static uint8_t ptxt[1024];
+	static uint8_t mac[] = { MAC_3 };
+	uint32_t depth = sizeof(ptxt) - sizeof(mac) - 3;
+
+	ptxt[0] = 0xa1;
+	ptxt[1] = 0x00;
+	memset(&ptxt[2], 0x81, depth);
+	ptxt[2 + depth] = 0x00;
+	memcpy(&ptxt[3 + depth], mac, sizeof(mac));
+
+	/* Too long for ID_CRED_x, but it must not exhaust the stack */
+	zassert_equal(split_map(ptxt, sizeof(ptxt), false, NULL, 0),
+		      buffer_to_small, "deeply nested map");
 }
 
 static enum err lookup(const uint8_t *configured, uint32_t configured_len,
