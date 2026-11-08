@@ -394,3 +394,289 @@ void t_initiator_responder_interaction2()
 {
 	MEASURE_LATENCY(test_initiator_responder_interaction(2));
 }
+
+/* A peer that gave up must not block the other one forever */
+#define HANDSHAKE_RX_TIMEOUT K_SECONDS(5)
+
+static enum err handshake_rx(struct k_sem *sem, struct byte_array *data)
+{
+	if (k_sem_take(sem, HANDSHAKE_RX_TIMEOUT) != 0 ||
+	    msg_exchange_buf_len > data->len) {
+		return buffer_to_small;
+	}
+	memcpy(data->ptr, msg_exchange_buf, msg_exchange_buf_len);
+	data->len = msg_exchange_buf_len;
+	return ok;
+}
+
+static enum err handshake_rx_initiator(void *sock, struct byte_array *data)
+{
+	return handshake_rx(&tx_responder_completed, data);
+}
+
+static enum err handshake_rx_responder(void *sock, struct byte_array *data)
+{
+	return handshake_rx(&tx_initiator_completed, data);
+}
+
+/* The credentials of a handshake. The rest comes from test vector 1, which
+ * uses method 0 and suite 2. */
+struct handshake {
+	struct byte_array id_cred_i;
+	struct byte_array cred_i;
+	struct byte_array id_cred_r;
+	struct byte_array cred_r;
+	struct cred_array *cred_i_array;
+	struct cred_array *cred_r_array;
+	uint8_t i_prk_out[32];
+	uint8_t r_prk_out[32];
+	enum err i_result;
+	enum err r_result;
+};
+
+static void handshake_initiator(void *arg, void *dummy2, void *dummy3)
+{
+	struct handshake *h = arg;
+	const struct test_vector *v = &test_vectors[0];
+	struct byte_array prk_out = { .ptr = h->i_prk_out, .len = 32 };
+	struct edhoc_initiator_context c = {
+		.c_i = { .ptr = (uint8_t *)v->c_i, .len = v->c_i_len },
+		.method = (enum method_type) * v->method,
+		.suites_i = { .ptr = (uint8_t *)v->SUITES_I,
+			      .len = v->SUITES_I_len },
+		.id_cred_i = h->id_cred_i,
+		.cred_i = h->cred_i,
+		.g_x = { .ptr = (uint8_t *)v->g_x_raw, .len = v->g_x_raw_len },
+		.x = { .ptr = (uint8_t *)v->x_raw, .len = v->x_raw_len },
+		.sk_i = { .ptr = (uint8_t *)v->sk_i_raw,
+			  .len = v->sk_i_raw_len },
+		.pk_i = { .ptr = (uint8_t *)v->pk_i_raw,
+			  .len = v->pk_i_raw_len },
+	};
+
+	h->i_result = edhoc_initiator_run(&c, h->cred_r_array, &I_err_msg,
+					  &prk_out, tx_initiator,
+					  handshake_rx_initiator, ead_process);
+}
+
+static void handshake_responder(void *arg, void *dummy2, void *dummy3)
+{
+	struct handshake *h = arg;
+	const struct test_vector *v = &test_vectors[0];
+	struct byte_array prk_out = { .ptr = h->r_prk_out, .len = 32 };
+	struct edhoc_responder_context c = {
+		.c_r = { .ptr = (uint8_t *)v->c_r, .len = v->c_r_len },
+		.suites_r = { .ptr = (uint8_t *)v->SUITES_R,
+			      .len = v->SUITES_R_len },
+		.id_cred_r = h->id_cred_r,
+		.cred_r = h->cred_r,
+		.g_y = { .ptr = (uint8_t *)v->g_y_raw, .len = v->g_y_raw_len },
+		.y = { .ptr = (uint8_t *)v->y_raw, .len = v->y_raw_len },
+		.sk_r = { .ptr = (uint8_t *)v->sk_r_raw,
+			  .len = v->sk_r_raw_len },
+		.pk_r = { .ptr = (uint8_t *)v->pk_r_raw,
+			  .len = v->pk_r_raw_len },
+	};
+
+	h->r_result = edhoc_responder_run(&c, h->cred_i_array, &R_err_msg,
+					  &prk_out, tx_responder,
+					  handshake_rx_responder, ead_process);
+}
+
+static void handshake_run(struct handshake *h)
+{
+	h->i_result = unexpected_result_from_ext_lib;
+	h->r_result = unexpected_result_from_ext_lib;
+	k_sem_reset(&tx_initiator_completed);
+	k_sem_reset(&tx_responder_completed);
+
+	k_thread_create(&thread_responder_data, thread_responder_stack_area,
+			K_THREAD_STACK_SIZEOF(thread_responder_stack_area),
+			handshake_responder, h, NULL, NULL, PRIORITY, 0,
+			K_NO_WAIT);
+	k_thread_create(&thread_initiator_data, thread_initiator_stack_area,
+			K_THREAD_STACK_SIZEOF(thread_initiator_stack_area),
+			handshake_initiator, h, NULL, NULL, PRIORITY, 0,
+			K_NO_WAIT);
+
+	k_thread_join(&thread_initiator_data, K_FOREVER);
+	k_thread_join(&thread_responder_data, K_FOREVER);
+}
+
+void t_message_3_larger_than_message_2(void)
+{
+	const struct test_vector *v = &test_vectors[0];
+	static const uint8_t id_cred_r[] = { 0xa1, 0x04, 0x41, 0x32 };
+	/* ID_CRED_R is a compact kid, ID_CRED_I carries a certificate */
+	struct other_party_cred cred_r = {
+		.id_cred = { .ptr = (uint8_t *)id_cred_r,
+			     .len = sizeof(id_cred_r) },
+		.cred = { .ptr = (uint8_t *)v->cred_r, .len = v->cred_r_len },
+		.pk = { .ptr = (uint8_t *)v->pk_r_raw, .len = v->pk_r_raw_len },
+	};
+	struct other_party_cred cred_i = {
+		.id_cred = { .ptr = (uint8_t *)v->id_cred_i,
+			     .len = v->id_cred_i_len },
+		.cred = { .ptr = (uint8_t *)v->cred_i, .len = v->cred_i_len },
+		.pk = { .ptr = (uint8_t *)v->pk_i_raw, .len = v->pk_i_raw_len },
+		.ca = { .ptr = (uint8_t *)v->ca_i, .len = v->ca_i_len },
+		.ca_pk = { .ptr = (uint8_t *)v->ca_i_pk,
+			   .len = v->ca_i_pk_len },
+	};
+	struct cred_array cred_r_array = { .len = 1, .ptr = &cred_r };
+	struct cred_array cred_i_array = { .len = 1, .ptr = &cred_i };
+	struct handshake h = {
+		.id_cred_i = cred_i.id_cred,
+		.cred_i = cred_i.cred,
+		.id_cred_r = cred_r.id_cred,
+		.cred_r = cred_r.cred,
+		.cred_i_array = &cred_i_array,
+		.cred_r_array = &cred_r_array,
+	};
+
+	handshake_run(&h);
+
+	zassert_equal(h.i_result, ok, "initiator failed");
+	zassert_equal(h.r_result, ok, "responder failed");
+	zassert_mem_equal__(h.i_prk_out, h.r_prk_out, 32, "wrong PRK_out");
+}
+
+/* What the application of a peer expects and answers in the handshakes below */
+struct retrieve_params {
+	const struct byte_array *id_cred;
+	const struct byte_array *cred;
+	const struct byte_array *pk;
+	bool reject;
+	uint32_t calls;
+};
+
+static enum err retrieve(void *params, bool static_dh_auth,
+			 const struct byte_array *id_cred,
+			 struct byte_array *cred, struct byte_array *pk,
+			 struct byte_array *g)
+{
+	struct retrieve_params *p = params;
+
+	p->calls++;
+	if (p->reject || id_cred->len != p->id_cred->len ||
+	    memcmp(id_cred->ptr, p->id_cred->ptr, id_cred->len) != 0) {
+		return certificate_authentication_failed;
+	}
+
+	TRY(_memcpy_s(cred->ptr, cred->len, p->cred->ptr, p->cred->len));
+	cred->len = p->cred->len;
+	TRY(_memcpy_s(pk->ptr, pk->len, p->pk->ptr, p->pk->len));
+	pk->len = p->pk->len;
+	g->len = 0;
+	return ok;
+}
+
+/* A map holding x5chain with two certificates of CHAIN_CERT_LEN bytes */
+#define CHAIN_CERT_LEN 100
+#define CHAIN_LEN (4 + 2 * (2 + CHAIN_CERT_LEN))
+#define CHAIN_CRED_LEN (2 + CHAIN_CERT_LEN)
+
+static void chain_init(uint8_t *chain, uint8_t *cred, uint8_t fill)
+{
+	static const uint8_t head[] = { 0xa1, 0x18, 0x21, 0x82 };
+	uint8_t *cert = chain + sizeof(head);
+
+	memcpy(chain, head, sizeof(head));
+	for (int i = 0; i < 2; i++) {
+		cert[0] = 0x58;
+		cert[1] = CHAIN_CERT_LEN;
+		memset(&cert[2], fill + i, CHAIN_CERT_LEN);
+		cert += CHAIN_CRED_LEN;
+	}
+	memcpy(cred, chain + sizeof(head), CHAIN_CRED_LEN);
+}
+
+static void handshake_with_retrieve(struct byte_array *id_cred_i,
+				    struct byte_array *cred_i,
+				    struct byte_array *id_cred_r,
+				    struct byte_array *cred_r,
+				    struct handshake *h, bool reject_r,
+				    struct byte_array *pk_r_answer)
+{
+	const struct test_vector *v = &test_vectors[0];
+	struct byte_array pk_i = { .ptr = (uint8_t *)v->pk_i_raw,
+				   .len = v->pk_i_raw_len };
+	struct retrieve_params r_params = { .id_cred = id_cred_r,
+					    .cred = cred_r,
+					    .pk = pk_r_answer,
+					    .reject = reject_r };
+	struct retrieve_params i_params = { .id_cred = id_cred_i,
+					    .cred = cred_i,
+					    .pk = &pk_i };
+	struct cred_array cred_r_array = { .retrieve = retrieve,
+					   .params = &r_params };
+	struct cred_array cred_i_array = { .retrieve = retrieve,
+					   .params = &i_params };
+
+	h->id_cred_i = *id_cred_i;
+	h->cred_i = *cred_i;
+	h->id_cred_r = *id_cred_r;
+	h->cred_r = *cred_r;
+	h->cred_i_array = &cred_i_array;
+	h->cred_r_array = &cred_r_array;
+
+	handshake_run(h);
+
+	zassert_equal(r_params.calls, 1,
+		      "ID_CRED_R not given to the application");
+}
+
+void t_retrieve_callback(void)
+{
+	const struct test_vector *v = &test_vectors[0];
+	static uint8_t chain_i_buf[CHAIN_LEN], chain_r_buf[CHAIN_LEN];
+	static uint8_t cred_i_buf[CHAIN_CRED_LEN], cred_r_buf[CHAIN_CRED_LEN];
+	static uint8_t kid_i_buf[] = { 0xa1, 0x04, 0x41, 0x2b };
+	static uint8_t kccs_r_buf[] = { 0xa1, 0x0e, 0xa1, 0x02, 0x60 };
+	struct byte_array chain_i = { .ptr = chain_i_buf, .len = CHAIN_LEN };
+	struct byte_array chain_r = { .ptr = chain_r_buf, .len = CHAIN_LEN };
+	struct byte_array cred_i = { .ptr = cred_i_buf, .len = CHAIN_CRED_LEN };
+	struct byte_array cred_r = { .ptr = cred_r_buf, .len = CHAIN_CRED_LEN };
+	struct byte_array kid_i = { .ptr = kid_i_buf,
+				    .len = sizeof(kid_i_buf) };
+	struct byte_array kccs_r = { .ptr = kccs_r_buf,
+				     .len = sizeof(kccs_r_buf) };
+	struct byte_array ccs_r = { .ptr = &kccs_r_buf[2], .len = 3 };
+	struct byte_array pk_r = { .ptr = (uint8_t *)v->pk_r_raw,
+				   .len = v->pk_r_raw_len };
+	struct byte_array wrong_pk_r = { .ptr = (uint8_t *)v->pk_i_raw,
+					 .len = v->pk_i_raw_len };
+	struct handshake h;
+
+	chain_init(chain_i_buf, cred_i_buf, 0x10);
+	chain_init(chain_r_buf, cred_r_buf, 0x20);
+
+	/* chains in both directions */
+	memset(&h, 0, sizeof(h));
+	handshake_with_retrieve(&chain_i, &cred_i, &chain_r, &cred_r, &h, false,
+				&pk_r);
+	zassert_equal(h.i_result, ok, "chains: initiator failed");
+	zassert_equal(h.r_result, ok, "chains: responder failed");
+	zassert_mem_equal__(h.i_prk_out, h.r_prk_out, 32, "chains: PRK_out");
+
+	/* a compact kid and an unknown label */
+	memset(&h, 0, sizeof(h));
+	handshake_with_retrieve(&kid_i, &cred_i, &kccs_r, &ccs_r, &h, false,
+				&pk_r);
+	zassert_equal(h.i_result, ok, "kccs: initiator failed");
+	zassert_equal(h.r_result, ok, "kccs: responder failed");
+	zassert_mem_equal__(h.i_prk_out, h.r_prk_out, 32, "kccs: PRK_out");
+
+	/* the application rejects the credential */
+	handshake_with_retrieve(&chain_i, &cred_i, &chain_r, &cred_r, &h, true,
+				&pk_r);
+	zassert_equal(h.i_result, certificate_authentication_failed,
+		      "rejected credential accepted");
+	zassert_not_equal(h.r_result, ok, "responder completed");
+
+	/* the key does not belong to the responder */
+	handshake_with_retrieve(&chain_i, &cred_i, &chain_r, &cred_r, &h, false,
+				&wrong_pk_r);
+	zassert_not_equal(h.i_result, ok, "wrong key accepted");
+	zassert_not_equal(h.r_result, ok, "responder completed");
+}

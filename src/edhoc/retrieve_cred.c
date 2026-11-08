@@ -189,6 +189,11 @@ enum err retrieve_cred(bool static_dh_auth, struct cred_array *cred_array,
 		       struct byte_array *id_cred, struct byte_array *cred,
 		       struct byte_array *pk, struct byte_array *g)
 {
+	if (cred_array->retrieve != NULL) {
+		return cred_array->retrieve(cred_array->params, static_dh_auth,
+					    id_cred, cred, pk, g);
+	}
+
 	size_t decode_len = 0;
 	struct id_cred_x_map map = { 0 };
 

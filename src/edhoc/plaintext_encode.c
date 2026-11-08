@@ -31,9 +31,12 @@ enum err id_cred2kid(const struct byte_array *id_cred, struct byte_array *kid)
 	struct id_cred_x_map map = { 0 };
 	size_t payload_len_out;
 	size_t decode_len = 0;
-	TRY_EXPECT(cbor_decode_id_cred_x_map(id_cred->ptr, id_cred->len, &map,
-					     &decode_len),
-		   0);
+	/* A map the decoder does not know contains no sole 'kid' */
+	if (cbor_decode_id_cred_x_map(id_cred->ptr, id_cred->len, &map,
+				      &decode_len) != 0) {
+		kid->len = 0;
+		return ok;
+	}
 
 	/* The compact encoding applies only if ID_CRED_x contains a single
 	 * 'kid' parameter (RFC 9528 Section 3.5.3.2). */

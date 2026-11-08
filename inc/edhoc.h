@@ -38,9 +38,36 @@ struct other_party_cred {
 	struct byte_array ca_pk; /*use only when certificates are used*/
 };
 
+/**
+ * @brief			Resolves a received ID_CRED_x and authenticates
+ *				the credential in the application. It is called
+ *				before Signature_or_MAC_x is verified, so
+ *				id_cred is untrusted input.
+ * @param params 		The params field of struct cred_array.
+ * @param static_dh_auth 	True if static DH authentication is used.
+ * @param[in] id_cred 		ID_CRED_x, a CBOR map as it was received, or
+ *				the map holding a kid sent in compact form.
+ * @param[out] cred 		CRED_x. For a chain or a bag this is the end
+ *				entity certificate (RFC 9528 Section 3.5.2).
+ * @param[out] pk 		Public key, when static_dh_auth is false.
+ * @param[out] g 		Static DH public key, when static_dh_auth is
+ *				true.
+ * @return 			Ok, or an error code to abort the session.
+ *
+ * On entry, the len field of cred, pk and g holds the size of the buffer. The
+ * function must set it to the length of the data, or to 0 if it is not used.
+ */
+typedef enum err (*retrieve_cred_fn)(void *params, bool static_dh_auth,
+				     const struct byte_array *id_cred,
+				     struct byte_array *cred,
+				     struct byte_array *pk,
+				     struct byte_array *g);
+
 struct cred_array {
 	uint32_t len;
 	struct other_party_cred *ptr;
+	retrieve_cred_fn retrieve; /*optional, replaces the lookup in ptr*/
+	void *params; /*passed to retrieve*/
 };
 
 struct edhoc_responder_context {
