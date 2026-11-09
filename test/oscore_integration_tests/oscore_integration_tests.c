@@ -1185,3 +1185,47 @@ void t11_oscore_ssn_overflow_protection(void)
 	zassert_equal(result, oscore_ssn_overflow,
 		      "SSN overflow not detected in oscore2coap");
 }
+
+/**
+ * Test 12:
+ * The server's replay window detects a replayed request whose Partial IV is
+ * longer than one byte.
+ */
+void t12_oscore_server_replay_multi_byte_piv(void)
+{
+	enum err r;
+	struct context cc;
+	struct oscore_init_params params_client =
+		get_default_params(NORMAL, FRESH);
+	r = oscore_context_init(&params_client, &cc);
+	zassert_equal(r, ok, "Error in oscore_context_init for client");
+
+	struct context cs;
+	struct oscore_init_params params_server =
+		get_default_params(REVERSED, FRESH);
+	r = oscore_context_init(&params_server, &cs);
+	zassert_equal(r, ok, "Error in oscore_context_init for server");
+
+	/* mimic a client that has already sent 300 requests */
+	cc.sc.ssn = 300;
+
+	uint8_t oscore_pkt[256];
+	uint32_t oscore_pkt_len = sizeof(oscore_pkt);
+	uint8_t coap_pkt[256];
+	uint32_t coap_pkt_len = sizeof(coap_pkt);
+
+	r = coap2oscore((uint8_t *)T1__COAP_REQ, T1__COAP_REQ_LEN, oscore_pkt,
+			&oscore_pkt_len, &cc);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+
+	r = oscore2coap(oscore_pkt, oscore_pkt_len, coap_pkt, &coap_pkt_len,
+			&cs);
+	zassert_equal(r, ok, "Error in oscore2coap!");
+
+	/*try to replay the request*/
+	coap_pkt_len = sizeof(coap_pkt);
+	r = oscore2coap(oscore_pkt, oscore_pkt_len, coap_pkt, &coap_pkt_len,
+			&cs);
+	zassert_equal(r, oscore_replay_window_protection_error,
+		      "Replayed request not detected in oscore2coap");
+}

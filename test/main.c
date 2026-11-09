@@ -65,6 +65,7 @@
 #define TEST_EDHOC_INITIATOR_EMPTY_C_R 49
 #define TEST_EDHOC_RESPONDER_EMPTY_C_R 50
 #define T_RETRIEVE_CRED_UNCOMPRESSED_G 51
+#define T12_OSCORE_SERVER_REPLAY_MULTI_BYTE_PIV 52
 
 // if this macro is defined all tests will be executed
  #define EXECUTE_ALL_TESTS
@@ -158,6 +159,12 @@ ZTEST(uoscore_uedhoc, t10_oscore)
 {
 	skip(T10_OSCORE_CLIENT_SERVER_AFTER_REBOOT,
 	     t10_oscore_client_server_after_reboot);
+}
+
+ZTEST(uoscore_uedhoc, t12_oscore)
+{
+	skip(T12_OSCORE_SERVER_REPLAY_MULTI_BYTE_PIV,
+	     t12_oscore_server_replay_multi_byte_piv);
 }
 
 ZTEST(uoscore_uedhoc, t100_oscore)
