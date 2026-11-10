@@ -101,4 +101,9 @@ void test_initiator_responder_interaction(int vec_num);
 
 void t_initiator_responder_interaction1();
 void t_initiator_responder_interaction2();
+
+/**
+ * @brief       Tests that the initiator receives a non-empty EAD_4 as sent.
+ */
+void t_message_4_ead(void);
 #endif
