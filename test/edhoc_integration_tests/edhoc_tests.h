@@ -84,6 +84,11 @@ void t_kid_retrieve_cred(void);
 void t_retrieve_cred_uncompressed_g(void);
 
 /**
+ * @brief       Tests a handshake in which message_3 is larger than message_2.
+ */
+void t_message_3_larger_than_message_2(void);
+
+/**
  * @brief 		Tests the functions of the exporter interface
  */
 void test_exporter(void);
