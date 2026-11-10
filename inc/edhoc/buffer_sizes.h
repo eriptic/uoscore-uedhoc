@@ -71,7 +71,7 @@
 #define CBOR_ARRAY_4_ELEMENTS_OVERHEAD 1
 
 #define PLAINTEXT2_SIZE                                                        \
-	(AS_BSTR_SIZE(C_R_SIZE) + ID_CRED_I_SIZE +                             \
+	(AS_BSTR_SIZE(C_R_SIZE) + ID_CRED_R_SIZE +                             \
 	 AS_BSTR_SIZE(SIG_OR_MAC_SIZE) + EAD_SIZE)
 #define CIPHERTEXT2_SIZE PLAINTEXT2_SIZE
 #define G_Y_CIPHERTEXT_2 (G_Y_SIZE + CIPHERTEXT2_SIZE)

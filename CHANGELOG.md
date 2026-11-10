@@ -31,6 +31,9 @@ version tags.
 - edhoc: add length checks to the built-in X.509 parser ([#87]).
 - edhoc: the responder checks that it supports the selected cipher suite
   ([#87]).
+- EDHOC: `PLAINTEXT2_SIZE` is computed from `ID_CRED_R_SIZE`. It used
+  `ID_CRED_I_SIZE`, so a message_2 with an ID_CRED_R larger than
+  `ID_CRED_I_SIZE` was rejected ([#93]).
 
 ## [3.2.0] - 2026-10-21
 
@@ -123,3 +126,4 @@ version tags.
 [#85]: https://github.com/eriptic/uoscore-uedhoc/pull/85
 [#86]: https://github.com/eriptic/uoscore-uedhoc/pull/86
 [#87]: https://github.com/eriptic/uoscore-uedhoc/pull/87
+[#93]: https://github.com/eriptic/uoscore-uedhoc/pull/93
