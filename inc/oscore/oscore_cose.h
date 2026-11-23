@@ -22,12 +22,14 @@
  * @param nonce the nonce
  * @param aad the aad
  * @param recipient_key the recipient key
+ * @param recipient_key_id PSA key ID of the recipient key or 0
  * @return err
  */
 enum err oscore_cose_decrypt(struct byte_array *in_ciphertext,
 			     struct byte_array *out_plaintext,
 			     struct byte_array *nonce, struct byte_array *aad,
-			     struct byte_array *recipient_key);
+			     struct byte_array *recipient_key,
+			     uint32_t recipient_key_id);
 
 /**
  * @brief Encrypt the plaintext
@@ -36,11 +38,12 @@ enum err oscore_cose_decrypt(struct byte_array *in_ciphertext,
  * @param nonce the nonce
  * @param sender_aad the aad
  * @param key the sender key
+ * @param key_id PSA key ID of the sender key or 0
  * @return err
  */
 enum err oscore_cose_encrypt(struct byte_array *in_plaintext,
 			     struct byte_array *out_ciphertext,
 			     struct byte_array *nonce,
 			     struct byte_array *sender_aad,
-			     struct byte_array *key);
+			     struct byte_array *key, uint32_t key_id);
 #endif

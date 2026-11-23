@@ -50,6 +50,7 @@ struct common_context {
 	enum AEAD_algorithm aead_alg;
 	enum hkdf kdf;
 	struct byte_array master_secret;
+	uint32_t master_secret_id; /*PSA key ID or 0*/
 	struct byte_array master_salt; /*optional*/
 	struct byte_array id_context; /*optional*/
 	struct byte_array common_iv;
@@ -63,6 +64,7 @@ struct sender_context {
 	uint8_t sender_id_buf[7];
 	struct byte_array sender_key;
 	uint8_t sender_key_buf[SENDER_KEY_LEN_];
+	uint32_t sender_key_id; /*PSA key ID or 0*/
 	uint64_t ssn;
 };
 
@@ -71,6 +73,7 @@ struct recipient_context {
 	struct byte_array recipient_id;
 	struct byte_array recipient_key;
 	uint8_t recipient_key_buf[RECIPIENT_KEY_LEN_];
+	uint32_t recipient_key_id; /*PSA key ID or 0*/
 	uint8_t recipient_id_buf[RECIPIENT_ID_BUFF_LEN];
 	struct server_replay_window_t replay_window;
 	uint64_t notification_num;

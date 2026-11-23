@@ -66,7 +66,8 @@
  * small set of input parameters.
  */
 struct oscore_init_params {
-	/*master_secret must be provided. Currently 16 byte secrets are supported*/
+	/*master_secret must be provided unless master_secret_id is set.
+	Currently 16 byte secrets are supported*/
 	const struct byte_array master_secret;
 	/*sender_id must be provided*/
 	const struct byte_array sender_id;
@@ -85,6 +86,11 @@ struct oscore_init_params {
 	/*True if the combination of master secret and master salt are unique at every boot of the device, e.g., they are computed with EDHOC.
 	If not, OSCORE_NVM_SUPPORT flag must be defined, for proper non-volatile memory management.*/
 	const bool fresh_master_secret_salt;
+	/*master_secret_id is optional. A PSA key ID (PSA_KEY_TYPE_DERIVE,
+	PSA_ALG_HKDF(PSA_ALG_SHA_256), PSA_KEY_USAGE_DERIVE) used instead of
+	master_secret. The Sender and Recipient Keys are then derived into
+	volatile PSA keys. MBEDTLS only.*/
+	const uint32_t master_secret_id;
 };
 
 /**
@@ -97,6 +103,17 @@ struct oscore_init_params {
  */
 enum err oscore_context_init(struct oscore_init_params *params,
 			     struct context *c);
+
+/**
+ * @brief Destroys the PSA keys derived by oscore_context_init() and zeroes
+ * the key buffers. When master_secret_id was used, call it before the
+ * context is initialized again or discarded. The master secret key is owned
+ * by the caller and is not destroyed.
+ *
+ * @param	c the context
+ * @return  err
+ */
+enum err oscore_context_deinit(struct context *c);
 
 /**
  * @brief  	Checks if the packet in buf_in is a OSCORE packet.

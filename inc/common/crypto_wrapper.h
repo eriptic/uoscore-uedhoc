@@ -40,6 +40,26 @@ enum err aead(enum aes_operation op, const struct byte_array *in,
 	      struct byte_array *tag);
 
 /**
+ * @brief			Calculates AEAD encryption decryption with a raw
+ *				key or, when key_id is not 0, with a PSA key.
+ *				PSA keys are supported with MBEDTLS only.
+ *
+ * @param op 			Operation to be executed (ENCRYPT or DECRYPT).
+ * @param[in] in		Input message.
+ * @param[in] key 		The symmetric key, ignored when key_id is not 0.
+ * @param key_id 		PSA key ID of the symmetric key or 0.
+ * @param[in] nonce 		The nonce.
+ * @param[in] aad 		Additional authenticated data.
+ * @param[out] out 		The cipher text.
+ * @param[in,out] tag 		The authentication tag.
+ * @return 			Ok or error code.
+ */
+enum err aead_key(enum aes_operation op, const struct byte_array *in,
+		  const struct byte_array *key, uint32_t key_id,
+		  struct byte_array *nonce, const struct byte_array *aad,
+		  struct byte_array *out, struct byte_array *tag);
+
+/**
  * @brief			Derives ECDH shared secret.
  * 
  * @param alg			The ECDH algorithm to be used.
@@ -128,6 +148,49 @@ enum err verify(enum sign_alg alg, const struct byte_array *pk,
 enum err hkdf_sha_256(struct byte_array *master_secret,
 		      struct byte_array *master_salt, struct byte_array *info,
 		      struct byte_array *out);
+
+/**
+ * @brief			Same as hkdf_sha_256(), with the master secret
+ *				held as a PSA key. MBEDTLS only.
+ *
+ * @param master_secret_id	PSA key ID of the master secret.
+ * @param[in] master_salt 	The master salt.
+ * @param[in] info 		A CBOR structure containing id, id_context,
+ * 				alg_aead, type, L.
+ * @param[out] out 		The derived Common IV.
+ * @return 			Ok or error code.
+ */
+enum err hkdf_sha_256_key_id(uint32_t master_secret_id,
+			     struct byte_array *master_salt,
+			     struct byte_array *info, struct byte_array *out);
+
+/**
+ * @brief			Derives a Recipient/Sender key from a master
+ *				secret held as a PSA key into a volatile PSA
+ *				key for AES-CCM with an 8 byte tag. MBEDTLS
+ *				only. Release the key with destroy_key().
+ *
+ * @param master_secret_id	PSA key ID of the master secret.
+ * @param[in] master_salt 	The master salt.
+ * @param[in] info 		A CBOR structure containing id, id_context,
+ * 				alg_aead, type, L.
+ * @param key_len 		Length of the derived key in bytes.
+ * @param[out] key_id 		PSA key ID of the derived key.
+ * @return 			Ok or error code.
+ */
+enum err hkdf_sha_256_aead_key(uint32_t master_secret_id,
+			       struct byte_array *master_salt,
+			       struct byte_array *info, uint32_t key_len,
+			       uint32_t *key_id);
+
+/**
+ * @brief			Destroys a PSA key. Does nothing when key_id
+ *				is 0.
+ *
+ * @param key_id 		PSA key ID or 0.
+ * @return 			Ok or error code.
+ */
+enum err destroy_key(uint32_t key_id);
 
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
 /*

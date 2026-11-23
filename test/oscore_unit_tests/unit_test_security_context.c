@@ -168,3 +168,37 @@ void t504_context_freshness(void)
 	result = check_context_freshness(&security_context);
 	zassert_equal(result, oscore_ssn_overflow, "");
 }
+
+void t505_oscore_context_deinit(void)
+{
+	enum err result;
+	struct context c;
+	uint8_t master_secret[16] = { 0x01 };
+	uint8_t sender_id[] = { 0x00 };
+	uint8_t recipient_id[] = { 0x01 };
+	uint8_t zeros[sizeof(c.sc.sender_key_buf)] = { 0 };
+
+	result = oscore_context_deinit(NULL);
+	zassert_equal(result, wrong_parameter, "");
+
+	struct oscore_init_params params = {
+		.master_secret =
+			BYTE_ARRAY_INIT(master_secret, sizeof(master_secret)),
+		.sender_id = BYTE_ARRAY_INIT(sender_id, sizeof(sender_id)),
+		.recipient_id =
+			BYTE_ARRAY_INIT(recipient_id, sizeof(recipient_id)),
+		.aead_alg = OSCORE_AES_CCM_16_64_128,
+		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = true,
+	};
+
+	result = oscore_context_init(&params, &c);
+	zassert_equal(result, ok, "");
+	zassert_equal(c.sc.sender_key_id, 0, "");
+	zassert_equal(c.rc.recipient_key_id, 0, "");
+
+	result = oscore_context_deinit(&c);
+	zassert_equal(result, ok, "");
+	zassert_mem_equal(c.sc.sender_key_buf, zeros, sizeof(zeros), "");
+	zassert_mem_equal(c.rc.recipient_key_buf, zeros, sizeof(zeros), "");
+}

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/ztest.h>
+#include <psa/crypto.h>
 #include "oscore.h"
 
 #include "oscore_test_vectors.h"
@@ -1184,4 +1185,84 @@ void t11_oscore_ssn_overflow_protection(void)
 			     &security_context);
 	zassert_equal(result, oscore_ssn_overflow,
 		      "SSN overflow not detected in oscore2coap");
+}
+
+/**
+ * Test 12:
+ * - Test 1 with the master secret held as a PSA key
+ * - oscore_context_deinit() destroys the derived keys but not the master
+ *   secret key
+ */
+void t12_oscore_master_secret_key_id(void)
+{
+	enum err r;
+	struct context c_client;
+	psa_key_id_t master_secret_id = PSA_KEY_ID_NULL;
+	psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+
+	zassert_equal(psa_crypto_init(), PSA_SUCCESS, "psa_crypto_init failed");
+	psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DERIVE);
+	psa_set_key_algorithm(&attr, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+	psa_set_key_type(&attr, PSA_KEY_TYPE_DERIVE);
+	zassert_equal(psa_import_key(&attr, T1__MASTER_SECRET,
+				     T1__MASTER_SECRET_LEN, &master_secret_id),
+		      PSA_SUCCESS, "psa_import_key failed");
+
+	struct oscore_init_params params = {
+		.sender_id.ptr = (uint8_t *)T1__SENDER_ID,
+		.sender_id.len = T1__SENDER_ID_LEN,
+		.recipient_id.ptr = (uint8_t *)T1__RECIPIENT_ID,
+		.recipient_id.len = T1__RECIPIENT_ID_LEN,
+		.master_salt.ptr = (uint8_t *)T1__MASTER_SALT,
+		.master_salt.len = T1__MASTER_SALT_LEN,
+		.id_context.ptr = (uint8_t *)T1__ID_CONTEXT,
+		.id_context.len = T1__ID_CONTEXT_LEN,
+		.aead_alg = OSCORE_AES_CCM_16_64_128,
+		.hkdf = OSCORE_SHA_256,
+		.fresh_master_secret_salt = false,
+		.master_secret_id = master_secret_id,
+	};
+
+	r = oscore_context_init(&params, &c_client);
+	zassert_equal(r, ok, "Error in oscore_context_init");
+	zassert_not_equal(c_client.sc.sender_key_id, 0, "no sender key ID");
+	zassert_not_equal(c_client.rc.recipient_key_id, 0,
+			  "no recipient key ID");
+	zassert_equal(c_client.sc.sender_key.len, 0, "sender key in RAM");
+	zassert_equal(c_client.rc.recipient_key.len, 0, "recipient key in RAM");
+	zassert_mem_equal__(c_client.cc.common_iv.ptr, T1__COMMON_IV,
+			    c_client.cc.common_iv.len,
+			    "T12 common IV derivation failed");
+
+	uint8_t buf_oscore[256];
+	uint32_t buf_oscore_len = sizeof(buf_oscore);
+	uint8_t buf_coap[256];
+	uint32_t buf_coap_len = sizeof(buf_coap);
+
+	r = coap2oscore((uint8_t *)T1__COAP_REQ, T1__COAP_REQ_LEN,
+			(uint8_t *)&buf_oscore, &buf_oscore_len, &c_client);
+	zassert_equal(r, ok, "Error in coap2oscore!");
+	zassert_mem_equal__(&buf_oscore, T1__OSCORE_REQ, T1__OSCORE_REQ_LEN,
+			    "coap2oscore failed");
+
+	r = oscore2coap((uint8_t *)T1__OSCORE_RESP, T1__OSCORE_RESP_LEN,
+			(uint8_t *)&buf_coap, &buf_coap_len, &c_client);
+	zassert_equal(r, ok, "Error in oscore2coap!");
+	zassert_mem_equal__(&buf_coap, T1__COAP_RESPONSE, T1__COAP_RESPONSE_LEN,
+			    "oscore2coap failed");
+
+	psa_key_id_t sender_key_id = c_client.sc.sender_key_id;
+	psa_key_id_t recipient_key_id = c_client.rc.recipient_key_id;
+
+	r = oscore_context_deinit(&c_client);
+	zassert_equal(r, ok, "Error in oscore_context_deinit");
+	zassert_not_equal(psa_get_key_attributes(sender_key_id, &attr),
+			  PSA_SUCCESS, "sender key not destroyed");
+	zassert_not_equal(psa_get_key_attributes(recipient_key_id, &attr),
+			  PSA_SUCCESS, "recipient key not destroyed");
+	zassert_equal(psa_get_key_attributes(master_secret_id, &attr),
+		      PSA_SUCCESS, "master secret key destroyed");
+	psa_reset_key_attributes(&attr);
+	zassert_equal(psa_destroy_key(master_secret_id), PSA_SUCCESS,
+		      "psa_destroy_key failed");
 }

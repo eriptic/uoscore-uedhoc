@@ -49,8 +49,42 @@ STATIC enum err derive(struct common_context *cc, struct byte_array *id,
 
 	switch (cc->kdf) {
 	case OSCORE_SHA_256:
-		TRY(hkdf_sha_256(&cc->master_secret, &cc->master_salt, &info,
-				 out));
+		if (0 != cc->master_secret_id) {
+			TRY(hkdf_sha_256_key_id(cc->master_secret_id,
+						&cc->master_salt, &info, out));
+		} else {
+			TRY(hkdf_sha_256(&cc->master_secret, &cc->master_salt,
+					 &info, out));
+		}
+		break;
+	default:
+		return oscore_unknown_hkdf;
+		break;
+	}
+	return ok;
+}
+
+/**
+ * @brief       Derives a Sender / Recipient Key from a master secret held as
+ *              a PSA key into a volatile PSA key
+ * @param cc    pointer to the common context
+ * @param id    sender / recipient ID
+ * @param len   length of the key in bytes
+ * @param key_id out-parameter for the PSA key ID
+ * @return      err
+ */
+static enum err derive_key_id(struct common_context *cc, struct byte_array *id,
+			      uint32_t len, uint32_t *key_id)
+{
+	BYTE_ARRAY_NEW(info, MAX_INFO_LEN, MAX_INFO_LEN);
+	TRY(oscore_create_hkdf_info(id, &cc->id_context, cc->aead_alg, KEY,
+				    &info));
+
+	switch (cc->kdf) {
+	case OSCORE_SHA_256:
+		TRY(hkdf_sha_256_aead_key(cc->master_secret_id,
+					  &cc->master_salt, &info, len,
+					  key_id));
 		break;
 	default:
 		return oscore_unknown_hkdf;
@@ -80,6 +114,12 @@ static enum err derive_common_iv(struct common_context *cc)
 static enum err derive_sender_key(struct common_context *cc,
 				  struct sender_context *sc)
 {
+	if (0 != cc->master_secret_id) {
+		sc->sender_key.len = 0;
+		return derive_key_id(cc, &sc->sender_id,
+				     sizeof(sc->sender_key_buf),
+				     &sc->sender_key_id);
+	}
 	TRY(derive(cc, &sc->sender_id, KEY, &sc->sender_key));
 	PRINT_ARRAY("Sender Key", sc->sender_key.ptr, sc->sender_key.len);
 	return ok;
@@ -94,6 +134,12 @@ static enum err derive_sender_key(struct common_context *cc,
 static enum err derive_recipient_key(struct common_context *cc,
 				     struct recipient_context *rc)
 {
+	if (0 != cc->master_secret_id) {
+		rc->recipient_key.len = 0;
+		return derive_key_id(cc, &rc->recipient_id,
+				     sizeof(rc->recipient_key_buf),
+				     &rc->recipient_key_id);
+	}
 	TRY(derive(cc, &rc->recipient_id, KEY, &rc->recipient_key));
 
 	PRINT_ARRAY("Recipient Key", rc->recipient_key.ptr,
@@ -121,6 +167,9 @@ enum err oscore_context_init(struct oscore_init_params *params,
 
         c->cc.fresh_master_secret_salt = params->fresh_master_secret_salt;
 	c->cc.master_secret = params->master_secret;
+	c->cc.master_secret_id = params->master_secret_id;
+	c->sc.sender_key_id = 0;
+	c->rc.recipient_key_id = 0;
 	c->cc.master_salt = params->master_salt;
 	c->cc.id_context = params->id_context;
 	c->cc.common_iv.len = sizeof(c->cc.common_iv_buf);
@@ -146,8 +195,15 @@ enum err oscore_context_init(struct oscore_init_params *params,
 				     .recipient_id = c->rc.recipient_id,
 				     .id_context = c->cc.id_context };
 
-	TRY(ssn_init(&nvm_key, &c->sc.ssn, params->fresh_master_secret_salt));
-	TRY(derive_sender_key(&c->cc, &c->sc));
+	enum err r = ssn_init(&nvm_key, &c->sc.ssn,
+			      params->fresh_master_secret_salt);
+	if (ok == r) {
+		r = derive_sender_key(&c->cc, &c->sc);
+	}
+	if (ok != r) {
+		oscore_context_deinit(c);
+		return r;
+	}
 
 	/*set up the request response context**********************************/
 	oscore_interactions_init(c->rrc.interactions);
@@ -161,6 +217,25 @@ enum err oscore_context_init(struct oscore_init_params *params,
 		(params->fresh_master_secret_salt ? ECHO_SYNCHRONIZED :
 						    ECHO_REBOOT);
 
+	return ok;
+}
+
+enum err oscore_context_deinit(struct context *c)
+{
+	if (NULL == c) {
+		return wrong_parameter;
+	}
+
+	enum err r_sender = destroy_key(c->sc.sender_key_id);
+	enum err r_recipient = destroy_key(c->rc.recipient_key_id);
+
+	c->sc.sender_key_id = 0;
+	c->rc.recipient_key_id = 0;
+	memset(c->sc.sender_key_buf, 0, sizeof(c->sc.sender_key_buf));
+	memset(c->rc.recipient_key_buf, 0, sizeof(c->rc.recipient_key_buf));
+
+	TRY(r_sender);
+	TRY(r_recipient);
 	return ok;
 }
 

@@ -32,6 +32,7 @@
 //SHA256 support
 #define MBEDTLS_SHA224_C /*required by MBEDTLS_SHA256_C*/
 #define MBEDTLS_SHA256_C
+#define MBEDTLS_HKDF_C /*required by master_secret_id in OSCORE*/
 
 //ECDH, ECDSA and P256
 #define MBEDTLS_ASN1_WRITE_C /*required by MBEDTLS_ECDSA_C*/
