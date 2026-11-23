@@ -170,6 +170,38 @@ aead_mock_args_match_predefined(struct edhoc_mock_aead_in_out *predefined,
 }
 #endif // EDHOC_MOCK_CRYPTO_WRAPPER
 
+#ifdef MBEDTLS
+static enum err aead_psa(enum aes_operation op, const struct byte_array *in,
+			 psa_key_id_t key_id, struct byte_array *nonce,
+			 const struct byte_array *aad, struct byte_array *out,
+			 struct byte_array *tag)
+{
+	psa_algorithm_t alg = PSA_ALG_AEAD_WITH_SHORTENED_TAG(
+		PSA_ALG_CCM, (uint32_t)tag->len);
+
+	if (op == DECRYPT) {
+		size_t out_len_re = 0;
+		TRY_EXPECT_PSA(psa_aead_decrypt(key_id, alg, nonce->ptr,
+						nonce->len, aad->ptr, aad->len,
+						in->ptr, in->len, out->ptr,
+						out->len, &out_len_re),
+			       PSA_SUCCESS, PSA_KEY_ID_NULL,
+			       unexpected_result_from_ext_lib);
+	} else {
+		size_t out_len_re;
+		TRY_EXPECT_PSA(psa_aead_encrypt(key_id, alg, nonce->ptr,
+						nonce->len, aad->ptr, aad->len,
+						in->ptr, in->len, out->ptr,
+						(size_t)(in->len + tag->len),
+						&out_len_re),
+			       PSA_SUCCESS, PSA_KEY_ID_NULL,
+			       unexpected_result_from_ext_lib);
+		memcpy(tag->ptr, out->ptr + out_len_re - tag->len, tag->len);
+	}
+	return ok;
+}
+#endif /* MBEDTLS */
+
 enum err WEAK aead(enum aes_operation op, const struct byte_array *in,
 		   const struct byte_array *key, struct byte_array *nonce,
 		   const struct byte_array *aad, struct byte_array *out,
@@ -230,27 +262,26 @@ enum err WEAK aead(enum aes_operation op, const struct byte_array *in,
 	TRY_EXPECT_PSA(psa_import_key(&attr, key->ptr, key->len, &key_id),
 		       PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
 
-	if (op == DECRYPT) {
-		size_t out_len_re = 0;
-		TRY_EXPECT_PSA(
-			psa_aead_decrypt(key_id, alg, nonce->ptr, nonce->len,
-					 aad->ptr, aad->len, in->ptr, in->len,
-					 out->ptr, out->len, &out_len_re),
-			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
-	} else {
-		size_t out_len_re;
-		TRY_EXPECT_PSA(
-			psa_aead_encrypt(key_id, alg, nonce->ptr, nonce->len,
-					 aad->ptr, aad->len, in->ptr, in->len,
-					 out->ptr, (size_t)(in->len + tag->len),
-					 &out_len_re),
-			PSA_SUCCESS, key_id, unexpected_result_from_ext_lib);
-		memcpy(tag->ptr, out->ptr + out_len_re - tag->len, tag->len);
-	}
+	enum err r = aead_psa(op, in, key_id, nonce, aad, out, tag);
 	TRY_EXPECT(psa_destroy_key(key_id), PSA_SUCCESS);
-
+	TRY(r);
 #endif
 	return ok;
+}
+
+enum err WEAK aead_key(enum aes_operation op, const struct byte_array *in,
+		       const struct byte_array *key, uint32_t key_id,
+		       struct byte_array *nonce, const struct byte_array *aad,
+		       struct byte_array *out, struct byte_array *tag)
+{
+	if (0 == key_id) {
+		return aead(op, in, key, nonce, aad, out, tag);
+	}
+#ifdef MBEDTLS
+	return aead_psa(op, in, (psa_key_id_t)key_id, nonce, aad, out, tag);
+#else
+	return crypto_operation_not_implemented;
+#endif
 }
 
 #ifdef EDHOC_MOCK_CRYPTO_WRAPPER
@@ -580,6 +611,113 @@ enum err WEAK hkdf_sha_256(struct byte_array *master_secret,
 	TRY(hkdf_extract(SHA_256, master_salt, master_secret, prk.ptr));
 	TRY(hkdf_expand(SHA_256, &prk, info, out));
 	return ok;
+}
+
+#ifdef MBEDTLS
+static psa_status_t hkdf_sha_256_psa_setup(psa_key_derivation_operation_t *op,
+					   psa_key_id_t master_secret_id,
+					   const struct byte_array *master_salt,
+					   const struct byte_array *info)
+{
+	psa_status_t status =
+		psa_key_derivation_setup(op, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+
+	if ((PSA_SUCCESS == status) && (0 != master_salt->len)) {
+		status = psa_key_derivation_input_bytes(
+			op, PSA_KEY_DERIVATION_INPUT_SALT, master_salt->ptr,
+			master_salt->len);
+	}
+	if (PSA_SUCCESS == status) {
+		status = psa_key_derivation_input_key(
+			op, PSA_KEY_DERIVATION_INPUT_SECRET, master_secret_id);
+	}
+	if (PSA_SUCCESS == status) {
+		status = psa_key_derivation_input_bytes(
+			op, PSA_KEY_DERIVATION_INPUT_INFO, info->ptr,
+			info->len);
+	}
+	return status;
+}
+#endif /* MBEDTLS */
+
+enum err WEAK hkdf_sha_256_key_id(uint32_t master_secret_id,
+				  struct byte_array *master_salt,
+				  struct byte_array *info,
+				  struct byte_array *out)
+{
+#ifdef MBEDTLS
+	psa_key_derivation_operation_t op = PSA_KEY_DERIVATION_OPERATION_INIT;
+	psa_status_t status = hkdf_sha_256_psa_setup(
+		&op, (psa_key_id_t)master_secret_id, master_salt, info);
+
+	if (PSA_SUCCESS == status) {
+		status = psa_key_derivation_output_bytes(&op, out->ptr,
+							 out->len);
+	}
+	psa_key_derivation_abort(&op);
+	TRY_EXPECT_PSA(status, PSA_SUCCESS, PSA_KEY_ID_NULL,
+		       unexpected_result_from_ext_lib);
+	return ok;
+#else
+	(void)master_secret_id;
+	(void)master_salt;
+	(void)info;
+	(void)out;
+	return crypto_operation_not_implemented;
+#endif
+}
+
+enum err WEAK hkdf_sha_256_aead_key(uint32_t master_secret_id,
+				    struct byte_array *master_salt,
+				    struct byte_array *info, uint32_t key_len,
+				    uint32_t *key_id)
+{
+#ifdef MBEDTLS
+	psa_key_id_t derived_key_id = PSA_KEY_ID_NULL;
+	psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+	psa_key_derivation_operation_t op = PSA_KEY_DERIVATION_OPERATION_INIT;
+
+	psa_set_key_usage_flags(&attr,
+				PSA_KEY_USAGE_DECRYPT | PSA_KEY_USAGE_ENCRYPT);
+	psa_set_key_algorithm(&attr,
+			      PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 8));
+	psa_set_key_type(&attr, PSA_KEY_TYPE_AES);
+	psa_set_key_bits(&attr, PSA_BYTES_TO_BITS(key_len));
+	psa_set_key_lifetime(&attr, PSA_KEY_LIFETIME_VOLATILE);
+
+	psa_status_t status = hkdf_sha_256_psa_setup(
+		&op, (psa_key_id_t)master_secret_id, master_salt, info);
+	if (PSA_SUCCESS == status) {
+		status = psa_key_derivation_output_key(&attr, &op,
+						       &derived_key_id);
+	}
+	psa_key_derivation_abort(&op);
+	TRY_EXPECT_PSA(status, PSA_SUCCESS, PSA_KEY_ID_NULL,
+		       unexpected_result_from_ext_lib);
+	*key_id = derived_key_id;
+	return ok;
+#else
+	(void)master_secret_id;
+	(void)master_salt;
+	(void)info;
+	(void)key_len;
+	(void)key_id;
+	return crypto_operation_not_implemented;
+#endif
+}
+
+enum err WEAK destroy_key(uint32_t key_id)
+{
+	if (0 == key_id) {
+		return ok;
+	}
+#ifdef MBEDTLS
+	TRY_EXPECT_PSA(psa_destroy_key((psa_key_id_t)key_id), PSA_SUCCESS,
+		       PSA_KEY_ID_NULL, unexpected_result_from_ext_lib);
+	return ok;
+#else
+	return crypto_operation_not_implemented;
+#endif
 }
 
 enum err WEAK shared_secret_derive(enum ecdh_alg alg,

@@ -22,6 +22,7 @@ void t8_oscore_server_response_simple_ack(void);
 void t9_oscore_client_server_observe(void);
 void t10_oscore_client_server_after_reboot(void);
 void t11_oscore_ssn_overflow_protection(void);
+void t12_oscore_master_secret_key_id(void);
 
 /*unit tests*/
 void t100_inner_outer_option_split__no_special_options(void);
@@ -53,6 +54,7 @@ void t501_piv2ssn(void);
 void t502_ssn2piv(void);
 void t503_derive_corner_case(void);
 void t504_context_freshness(void);
+void t505_oscore_context_deinit(void);
 
 void t600_server_replay_init_test(void);
 void t601_server_replay_reinit_test(void);

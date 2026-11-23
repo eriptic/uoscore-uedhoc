@@ -19,6 +19,13 @@ version tags.
 - **Cipher suites:** the responder now rejects suites that aren't in
   `suites_r`.
 
+### Added
+
+- oscore: the master secret can be given as a PSA key ID
+  (`master_secret_id` in `struct oscore_init_params`, Mbed TLS only). The
+  Sender and Recipient Keys are then derived into volatile PSA keys, so no
+  key bytes are held in RAM. New `oscore_context_deinit()` releases them.
+
 ### Fixed
 - EDHOC: a static DH public key given as an uncompressed P-256 point (65
   bytes) in `other_party_cred.g` is now used as its x-coordinate. It was
