@@ -34,6 +34,12 @@
 #include <mbedtls/x509.h>
 #include <mbedtls/x509_crt.h>
 
+#if MBEDTLS_VERSION_MAJOR >= 4
+#define X509_SIG_PK_ECDSA MBEDTLS_PK_SIGALG_ECDSA
+#else
+#define X509_SIG_PK_ECDSA MBEDTLS_PK_ECDSA
+#endif
+
 struct deser_sign_ctx_s {
 	uint8_t *seek;
 	uint8_t *end;
@@ -324,15 +330,13 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 	const mbedtls_x509_name *p = &m_cert.issuer;
 
 #ifdef DEBUG_PRINT
-	const char *short_name;
+	char issuer_name[256];
+	if (0 < mbedtls_x509_dn_gets(issuer_name, sizeof(issuer_name), p)) {
+		PRINTF("        %s\n", issuer_name);
+	}
 #endif
 	const mbedtls_asn1_buf *issuer_id = NULL;
 	while (p) {
-#ifdef DEBUG_PRINT
-		mbedtls_oid_get_attr_short_name(&p->oid, &short_name);
-		PRINTF("        %s: %.*s\n", short_name, (int)p->val.len,
-		       p->val.p);
-#endif
 		if (0 == MBEDTLS_OID_CMP(MBEDTLS_OID_AT_CN, &p->oid)) {
 			issuer_id = &p->val;
 		}
@@ -344,7 +348,7 @@ enum err cert_x509_verify(struct const_byte_array *cert,
 	enum sign_alg sign_alg;
 
 	/* make sure it is ECDSA */
-	if (MBEDTLS_PK_ECDSA == m_cert.sig_pk) {
+	if (X509_SIG_PK_ECDSA == m_cert.sig_pk) {
 		sign_alg = ES256;
 	} else {
 		mbedtls_x509_crt_free(&m_cert);
